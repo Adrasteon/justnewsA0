@@ -18,9 +18,9 @@ def _slugify(title: str) -> str:
 
 
 def _publisher_db_path() -> Path:
-    # project root -> agents/publisher/db.sqlite3
+    # project root -> db.sqlite3
     repo_root = Path(__file__).resolve().parents[3]
-    return repo_root / "agents" / "publisher" / "db.sqlite3"
+    return repo_root / "db.sqlite3"
 
 
 def publish_normalized_article(

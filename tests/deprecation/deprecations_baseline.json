@@ -1,160 +1,1038 @@
 {
-  "\\bdatetime\\.utcnow\\(": [
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_utcnow.py",
-      "line": 16,
-      "content": "f1.write_text(\"from datetime import datetime\\nnow = datetime.utcnow()\\n\")"
-    },
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_utcnow.py",
-      "line": 19,
-      "content": "f2.write_text(\"import datetime\\nnow = datetime.utcnow()\\n\")"
-    },
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_utcnow.py",
-      "line": 22,
-      "content": "f3.write_text(\"import datetime as dt\\nnow = dt.datetime.utcnow()\\n\")"
-    },
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_utcnow.py",
-      "line": 25,
-      "content": "assert \"Found 3 datetime.utcnow() occurrences\" in out or \"Found 3\" in out"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_utcnow.py",
-      "line": 2,
-      "content": "\"\"\"A small codemod to find and optionally replace `datetime.utcnow()` calls"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_utcnow.py",
-      "line": 130,
-      "content": "print(\"No datetime.utcnow() occurrences found.\")"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_utcnow.py",
-      "line": 133,
-      "content": "print(f\"Found {len(matches)} datetime.utcnow() occurrences:\")"
-    }
-  ],
-  "asyncio\\.get_event_loop\\(\\)\\.run_until_complete": [
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_run_until_complete.py",
-      "line": 20,
-      "content": "f.write_text(\"import asyncio\\nasyncio.get_event_loop().run_until_complete(foo())\\n\")"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_run_until_complete.py",
-      "line": 5,
-      "content": "- Replaces `asyncio.get_event_loop().run_until_complete(expr)` -> `asyncio.run(expr)`"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_run_until_complete.py",
-      "line": 33,
-      "content": "# Match asyncio.get_event_loop().run_until_complete(xxx)"
-    }
-  ],
-  "\\.run_until_complete\\(": [
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_run_until_complete.py",
-      "line": 20,
-      "content": "f.write_text(\"import asyncio\\nasyncio.get_event_loop().run_until_complete(foo())\\n\")"
-    },
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_run_until_complete.py",
-      "line": 35,
-      "content": "\"import asyncio\\nloop = asyncio.new_event_loop()\\nloop.run_until_complete(foo())\\n\""
-    },
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_run_until_complete.py",
-      "line": 51,
-      "content": "\"import asyncio\\nloop = asyncio.get_event_loop()\\nloop.run_until_complete(foo())\\n\""
-    },
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_run_until_complete.py",
-      "line": 67,
-      "content": "\"import asyncio\\nloop = some_running_loop\\nloop.run_until_complete(foo())\\n\""
-    },
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_run_until_complete.py",
-      "line": 80,
-      "content": "assert \"loop.run_until_complete(foo())\" in txt"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_run_until_complete.py",
-      "line": 5,
-      "content": "- Replaces `asyncio.get_event_loop().run_until_complete(expr)` -> `asyncio.run(expr)`"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_run_until_complete.py",
-      "line": 6,
-      "content": "- Replaces `loop.run_until_complete(expr)` -> `asyncio.run(expr)` when the file"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_run_until_complete.py",
-      "line": 33,
-      "content": "# Match asyncio.get_event_loop().run_until_complete(xxx)"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_run_until_complete.py",
-      "line": 38,
-      "content": "# Match <name>.run_until_complete(expr) \u2014 we'll replace only when the file contains new_event_loop"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_run_until_complete.py",
-      "line": 86,
-      "content": "# Replace direct get_event_loop().run_until_complete(...)"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_run_until_complete.py",
-      "line": 89,
-      "content": "# For var.run_until_complete(...) only replace when we detected the variable was"
-    }
-  ],
-  "\\.dict\\(\\)": [
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_pydantic_dict.py",
-      "line": 18,
-      "content": "assert \"Found 1 .dict() occurrences\" in out"
-    },
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_pydantic_dict.py",
-      "line": 34,
-      "content": "assert \"Found 0\" in out or \"No .dict() occurrences\" in out or True"
-    },
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_pydantic_dict.py",
-      "line": 45,
-      "content": "\"import json\\nexport_data = MyModel()\\njson.dump(export_data.dict(), f)\\n\""
-    },
-    {
-      "path": "/home/adra/JustNews/tests/codemod/test_replace_pydantic_dict.py",
-      "line": 49,
-      "content": "assert \"Found 1 .dict() occurrences\" in out"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_pydantic_dict.py",
-      "line": 2,
-      "content": "\"\"\"Codemod to replace Pydantic `.dict()` calls with `.model_dump()`."
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_pydantic_dict.py",
-      "line": 50,
-      "content": "# blindly replace the fallback `.dict()` call (it would create a broken call)."
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_pydantic_dict.py",
-      "line": 108,
-      "content": "print(\"No .dict() occurrences found (excluding patch.dict).\")"
-    },
-    {
-      "path": "/home/adra/JustNews/scripts/codemods/replace_pydantic_dict.py",
-      "line": 111,
-      "content": "print(f\"Found {len(matches)} .dict() occurrences (candidates):\")"
-    },
-    {
-      "path": "/home/adra/JustNews/agents/dashboard/dashboard_engine.py",
-      "line": 449,
-      "content": "call.model_dump() if hasattr(call, \"model_dump\") else call.dict()"
-    }
-  ]
+  "patterns": {
+    "\\.dict\\(\\)": "Pydantic v2: prefer model_dump() instead of dict() where appropriate",
+    "\\.parse_obj\\(\\)": "Pydantic v2: use model_validate() instead of parse_obj()",
+    "\\.parse_raw\\(\\)": "Pydantic v2: use model_validate_json() instead of parse_raw()",
+    "\\.json\\(\\)": "Pydantic v2: use model_dump_json() instead of json()",
+    "\\.copy\\(\\)": "Pydantic v2: use model_copy() instead of copy()",
+    "\\.construct\\(\\)": "Pydantic v2: avoid construct() in favor of proper validation",
+    "\\.schema\\(\\)": "Pydantic v2: use model_json_schema() instead of schema()",
+    "\\.schema_json\\(\\)": "Pydantic v2: use model_json_schema() instead of schema_json()",
+    "\\.validate\\(\\)": "Pydantic v2: use model_validate() instead of validate()",
+    "\\.from_orm\\(\\)": "Pydantic v2: use model_validate() with from_attributes=True",
+    "\\.parse_file\\(\\)": "Pydantic v2: use model_validate_json() with file operations"
+  },
+  "matches": {
+    "\\.json\\(\\)": [
+      {
+        "path": "agents/analytics/tools.py",
+        "line": "38",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/analytics/tools.py",
+        "line": "75",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/analytics/tools.py",
+        "line": "113",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/analytics/tools.py",
+        "line": "150",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/analytics/tools.py",
+        "line": "194",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/analytics/tools.py",
+        "line": "229",
+        "content": "\"details\": response.json(),"
+      },
+      {
+        "path": "agents/analytics/tools.py",
+        "line": "279",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/analytics/tools.py",
+        "line": "308",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/auth/tools.py",
+        "line": "42",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/auth/tools.py",
+        "line": "87",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/auth/tools.py",
+        "line": "124",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/auth/tools.py",
+        "line": "213",
+        "content": "\"details\": response.json(),"
+      },
+      {
+        "path": "agents/auth/tools.py",
+        "line": "245",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/c4ai/bridge.py",
+        "line": "52",
+        "content": "data = await resp.json()"
+      },
+      {
+        "path": "agents/chief_editor/tools.py",
+        "line": "336",
+        "content": "mcp_result = resp.json()"
+      },
+      {
+        "path": "agents/common/consent_ui_components.py",
+        "line": "955",
+        "content": ".then(response => response.json())"
+      },
+      {
+        "path": "agents/common/consent_ui_components.py",
+        "line": "1045",
+        "content": ".then(response => response.json())"
+      },
+      {
+        "path": "agents/common/consent_ui_components.py",
+        "line": "1070",
+        "content": ".then(response => response.json())"
+      },
+      {
+        "path": "agents/common/consent_ui_components.py",
+        "line": "1121",
+        "content": ".then(response => response.json())"
+      },
+      {
+        "path": "agents/common/consent_ui_components.py",
+        "line": "1155",
+        "content": ".then(response => response.json())"
+      },
+      {
+        "path": "agents/common/consent_ui_components.py",
+        "line": "1197",
+        "content": ".then(response => response.json())"
+      },
+      {
+        "path": "agents/common/evidence.py",
+        "line": "65",
+        "content": "return resp.json()"
+      },
+      {
+        "path": "agents/common/gpu_dashboard_api.py",
+        "line": "186",
+        "content": "const data = await response.json();"
+      },
+      {
+        "path": "agents/common/gpu_dashboard_api.py",
+        "line": "254",
+        "content": "const data = await response.json();"
+      },
+      {
+        "path": "agents/common/gpu_orchestrator_client.py",
+        "line": "87",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "agents/common/gpu_orchestrator_client.py",
+        "line": "121",
+        "content": "policy = resp.json()"
+      },
+      {
+        "path": "agents/common/publisher_integration.py",
+        "line": "69",
+        "content": "return resp.status_code == 200 and resp.json().get(\"result\") == \"ok\""
+      },
+      {
+        "path": "agents/common/reload.py",
+        "line": "56",
+        "content": "body = await request.json()"
+      },
+      {
+        "path": "agents/crawler/crawler_engine.py",
+        "line": "78",
+        "content": "return resp.json().get(\"data\")"
+      },
+      {
+        "path": "agents/crawler/crawler_engine.py",
+        "line": "1313",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler/crawler_engine.py",
+        "line": "1457",
+        "content": "result = response.json()"
+      },
+      {
+        "path": "agents/crawler/enhancements/paywall_detector.py",
+        "line": "129",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/crawler/tests/test_endpoints.py",
+        "line": "19",
+        "content": "assert \"Cleared\" in resp.json().get(\"message\", \"\")"
+      },
+      {
+        "path": "agents/crawler/tests/test_stop_jobs.py",
+        "line": "54",
+        "content": "job_id = resp.json()[\"job_id\"]"
+      },
+      {
+        "path": "agents/crawler/tests/test_stop_jobs.py",
+        "line": "57",
+        "content": "jobs = client.get(\"/jobs\").json()"
+      },
+      {
+        "path": "agents/crawler/tests/test_stop_jobs.py",
+        "line": "63",
+        "content": "assert stop_resp.json().get(\"status\") == \"cancelled\""
+      },
+      {
+        "path": "agents/crawler/tests/test_stop_jobs.py",
+        "line": "71",
+        "content": "data = status_resp.json()"
+      },
+      {
+        "path": "agents/crawler_control/crawler_control_engine.py",
+        "line": "43",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/crawler_control_engine.py",
+        "line": "54",
+        "content": "jobs = response.json()"
+      },
+      {
+        "path": "agents/crawler_control/crawler_control_engine.py",
+        "line": "79",
+        "content": "jobs = response.json()"
+      },
+      {
+        "path": "agents/crawler_control/crawler_control_engine.py",
+        "line": "89",
+        "content": "job_details[job_id] = detail_response.json()"
+      },
+      {
+        "path": "agents/crawler_control/crawler_control_engine.py",
+        "line": "104",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/crawler_control_engine.py",
+        "line": "114",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/crawler_control_engine.py",
+        "line": "124",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/crawler_control_engine.py",
+        "line": "139",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/crawler_control_engine.py",
+        "line": "149",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "230",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "247",
+        "content": "jobs = response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "280",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "293",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "306",
+        "content": "jobs = response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "316",
+        "content": "job_details[job_id] = detail_response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "333",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "350",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "362",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "442",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "459",
+        "content": "jobs = response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "490",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "503",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "516",
+        "content": "jobs = response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "526",
+        "content": "job_details[job_id] = detail_response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "543",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "560",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/crawler_control/main.py",
+        "line": "572",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/dashboard/dashboard_engine.py",
+        "line": "437",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/dashboard/dashboard_engine.py",
+        "line": "453",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/dashboard/dashboard_engine.py",
+        "line": "464",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/dashboard/dashboard_engine.py",
+        "line": "485",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/dashboard/dashboard_engine.py",
+        "line": "1009",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/dashboard/main.py",
+        "line": "796",
+        "content": "return r.json()"
+      },
+      {
+        "path": "agents/dashboard/main.py",
+        "line": "807",
+        "content": "return r.json()"
+      },
+      {
+        "path": "agents/dashboard/main.py",
+        "line": "871",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/dashboard/main.py",
+        "line": "887",
+        "content": "jobs = response.json()"
+      },
+      {
+        "path": "agents/dashboard/main.py",
+        "line": "903",
+        "content": "job_details[job_id] = detail_response.json()"
+      },
+      {
+        "path": "agents/dashboard/main.py",
+        "line": "945",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/dashboard/main.py",
+        "line": "998",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/dashboard/main.py",
+        "line": "1012",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/dashboard/main.py",
+        "line": "1101",
+        "content": "const data = await response.json();"
+      },
+      {
+        "path": "agents/dashboard/main.py",
+        "line": "1246",
+        "content": "const data = await response.json();"
+      },
+      {
+        "path": "agents/hitl_service/app.py",
+        "line": "214",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/hitl_service/app.py",
+        "line": "235",
+        "content": "return response.json()"
+      },
+      {
+        "path": "agents/hitl_service/app.py",
+        "line": "240",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "agents/mcp_bus/mcp_bus_engine.py",
+        "line": "193",
+        "content": "return {\"status\": \"success\", \"data\": response.json()}"
+      },
+      {
+        "path": "agents/mcp_bus/mcp_bus_engine.py",
+        "line": "321",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "agents/memory/main.py",
+        "line": "332",
+        "content": "payload = await request.json()"
+      },
+      {
+        "path": "agents/memory/tools.py",
+        "line": "552",
+        "content": "res = response.json()"
+      },
+      {
+        "path": "agents/synthesizer/main.py",
+        "line": "149",
+        "content": "payload: dict[str, Any] = response.json()"
+      },
+      {
+        "path": "monitoring/dashboards/dashboard_generator.py",
+        "line": "840",
+        "content": "result = await response.json()"
+      },
+      {
+        "path": "monitoring/dashboards/grafana_integration.py",
+        "line": "349",
+        "content": "folders = await response.json()"
+      },
+      {
+        "path": "monitoring/dashboards/grafana_integration.py",
+        "line": "403",
+        "content": "result = await response.json()"
+      },
+      {
+        "path": "monitoring/dashboards/grafana_integration.py",
+        "line": "468",
+        "content": "current = await response.json()"
+      },
+      {
+        "path": "monitoring/dashboards/grafana_integration.py",
+        "line": "645",
+        "content": "dashboard_data = await response.json()"
+      },
+      {
+        "path": "monitoring/dashboards/grafana_integration.py",
+        "line": "682",
+        "content": "dashboard_data = await response.json()"
+      },
+      {
+        "path": "monitoring/dashboards/grafana_integration.py",
+        "line": "720",
+        "content": "result = await response.json()"
+      },
+      {
+        "path": "monitoring/dashboards/grafana_integration.py",
+        "line": "751",
+        "content": "dashboards = await response.json()"
+      },
+      {
+        "path": "monitoring/dashboards/grafana_integration.py",
+        "line": "769",
+        "content": "status = await response.json()"
+      },
+      {
+        "path": "scripts/archive/run_safe_mode_demo.py",
+        "line": "57",
+        "content": "r.json()"
+      },
+      {
+        "path": "scripts/archive/run_safe_mode_demo.py",
+        "line": "64",
+        "content": "record[\"lease\"] = lr.json()"
+      },
+      {
+        "path": "scripts/ops/adapter_worker_pool.py",
+        "line": "67",
+        "content": "return resp.json()"
+      },
+      {
+        "path": "scripts/ops/adapter_worker_pool.py",
+        "line": "79",
+        "content": "return resp.json()"
+      },
+      {
+        "path": "scripts/ops/adapter_worker_pool.py",
+        "line": "95",
+        "content": "return resp.json()"
+      },
+      {
+        "path": "scripts/ops/run_crawl_schedule.py",
+        "line": "220",
+        "content": "payload = response.json()"
+      },
+      {
+        "path": "scripts/ops/run_crawl_schedule.py",
+        "line": "472",
+        "content": "submission = response.json()"
+      },
+      {
+        "path": "scripts/perf/stress_test_context_window.py",
+        "line": "55",
+        "content": "usage = response.json().get(\"usage\", {})"
+      },
+      {
+        "path": "tests/test_c4ai_metadata.py",
+        "line": "179",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/test_c4ai_paywall_integration.py",
+        "line": "145",
+        "content": "j1 = r1.json()"
+      },
+      {
+        "path": "tests/test_c4ai_paywall_integration.py",
+        "line": "153",
+        "content": "j2 = r2.json()"
+      },
+      {
+        "path": "tests/test_c4ai_server.py",
+        "line": "10",
+        "content": "j = r.json()"
+      },
+      {
+        "path": "tests/agents/test_analyst.py",
+        "line": "262",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "tests/agents/test_analyst.py",
+        "line": "289",
+        "content": "in response.json()[\"detail\"]"
+      },
+      {
+        "path": "tests/agents/test_analyst.py",
+        "line": "316",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "tests/agents/test_analyst.py",
+        "line": "334",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "tests/agents/test_auth.py",
+        "line": "215",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "tests/agents/test_fact_checker.py",
+        "line": "285",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "tests/agents/test_fact_checker.py",
+        "line": "307",
+        "content": "assert \"Content too large\" in response.json()[\"detail\"]"
+      },
+      {
+        "path": "tests/agents/test_fact_checker.py",
+        "line": "335",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "tests/agents/test_fact_checker.py",
+        "line": "353",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "tests/agents/test_gpu_orchestrator_api.py",
+        "line": "17",
+        "content": "assert r.json().get(\"heartbeat\") is True"
+      },
+      {
+        "path": "tests/agents/test_gpu_orchestrator_api.py",
+        "line": "39",
+        "content": "body = r.json()"
+      },
+      {
+        "path": "tests/agents/test_gpu_orchestrator_leader_api.py",
+        "line": "18",
+        "content": "body = r.json()"
+      },
+      {
+        "path": "tests/agents/test_hitl_programmatic_flow.py",
+        "line": "60",
+        "content": "data = r.json()"
+      },
+      {
+        "path": "tests/agents/test_hitl_programmatic_flow.py",
+        "line": "65",
+        "content": "nb = client.get(\"/api/next?batch=10\").json()"
+      },
+      {
+        "path": "tests/agents/test_hitl_programmatic_flow.py",
+        "line": "82",
+        "content": "ldata = lr.json()"
+      },
+      {
+        "path": "tests/agents/test_hitl_service_qa_endpoints.py",
+        "line": "94",
+        "content": "pending_data = pending_resp.json()"
+      },
+      {
+        "path": "tests/agents/test_hitl_service_qa_endpoints.py",
+        "line": "105",
+        "content": "history_data = history_resp.json()"
+      },
+      {
+        "path": "tests/agents/chief_editor/test_list_drafts.py",
+        "line": "69",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/agents/crawler_control/test_web_interface.py",
+        "line": "48",
+        "content": "data = response.json()"
+      },
+      {
+        "path": "tests/agents/crawler_control/test_web_interface.py",
+        "line": "72",
+        "content": "assert r.json().get(\"ready\") in (True, False)"
+      },
+      {
+        "path": "tests/agents/dashboard/test_admin_jwt_auth.py",
+        "line": "63",
+        "content": "assert resp.json().get(\"status\") == \"success\""
+      },
+      {
+        "path": "tests/agents/dashboard/test_dashboard_pages_api.py",
+        "line": "15",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/agents/dashboard/test_get_publishing_config.py",
+        "line": "16",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/agents/dashboard/test_public_articles.py",
+        "line": "42",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/agents/dashboard/test_public_articles.py",
+        "line": "81",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/agents/dashboard/test_set_publishing_config.py",
+        "line": "21",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/agents/dashboard/test_transparency_router.py",
+        "line": "19",
+        "content": "payload = response.json()"
+      },
+      {
+        "path": "tests/agents/dashboard/test_transparency_router.py",
+        "line": "28",
+        "content": "payload = response.json()"
+      },
+      {
+        "path": "tests/agents/mcp_bus/test_health_integration.py",
+        "line": "23",
+        "content": "payload = res.json()"
+      },
+      {
+        "path": "tests/agents/mcp_bus/test_health_integration.py",
+        "line": "59",
+        "content": "payload = res.json()"
+      },
+      {
+        "path": "tests/agents/mcp_bus/test_health_integration.py",
+        "line": "96",
+        "content": "payload = res.json()"
+      },
+      {
+        "path": "tests/agents/synthesizer/test_job_api.py",
+        "line": "36",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/agents/synthesizer/test_job_api.py",
+        "line": "46",
+        "content": "job = r2.json()"
+      },
+      {
+        "path": "tests/agents/synthesizer/test_synthesizer_publish_e2e.py",
+        "line": "98",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/agents/synthesizer/test_synthesizer_publish_e2e.py",
+        "line": "173",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/integration/test_full_pipeline_5_variations.py",
+        "line": "183",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/integration/test_full_pipeline_5_variations.py",
+        "line": "221",
+        "content": "page_data = resp2.json()"
+      },
+      {
+        "path": "tests/integration/test_vllm_mistral_7b_smoke.py",
+        "line": "85",
+        "content": "models = resp.json()"
+      },
+      {
+        "path": "tests/integration/test_vllm_mistral_7b_smoke.py",
+        "line": "159",
+        "content": "result = resp.json()"
+      },
+      {
+        "path": "tests/unit/test_gpu_orchestrator_jobs.py",
+        "line": "69",
+        "content": "assert r.json()[\"job_id\"] == \"jid\""
+      },
+      {
+        "path": "tests/unit/test_gpu_orchestrator_jobs.py",
+        "line": "75",
+        "content": "assert r2.json()[\"job_id\"] == \"jid\""
+      },
+      {
+        "path": "tests/unit/test_gpu_orchestrator_workers_api.py",
+        "line": "29",
+        "content": "data = resp.json()"
+      },
+      {
+        "path": "tests/unit/test_gpu_orchestrator_workers_api.py",
+        "line": "35",
+        "content": "pools = resp.json()"
+      },
+      {
+        "path": "tests/unit/test_gpu_orchestrator_workers_api.py",
+        "line": "49",
+        "content": "assert s.json().get(\"status\") == \"swapped\""
+      },
+      {
+        "path": "tests/unit/test_gpu_orchestrator_workers_api.py",
+        "line": "53",
+        "content": "assert d.json().get(\"status\") == \"stopped\""
+      },
+      {
+        "path": "training_system/mcp_integration.py",
+        "line": "255",
+        "content": "return response.json()"
+      },
+      {
+        "path": "training_system/tests/test_hitl_label_forward.py",
+        "line": "66",
+        "content": "payload = response.json()"
+      }
+    ],
+    "\\.copy\\(\\)": [
+      {
+        "path": "agents/common/auth_models.py",
+        "line": "303",
+        "content": "to_encode = data.copy()"
+      },
+      {
+        "path": "agents/common/auth_models.py",
+        "line": "316",
+        "content": "to_encode = data.copy()"
+      },
+      {
+        "path": "agents/common/compliance_retention.py",
+        "line": "165",
+        "content": "return self.default_policies.copy()"
+      },
+      {
+        "path": "agents/common/gpu_config_manager.py",
+        "line": "275",
+        "content": "result = base.copy()"
+      },
+      {
+        "path": "agents/common/gpu_config_manager.py",
+        "line": "338",
+        "content": "config = self.main_config.copy()"
+      },
+      {
+        "path": "agents/common/gpu_config_manager.py",
+        "line": "430",
+        "content": "config = self.model_config[\"model_defaults\"].copy()"
+      },
+      {
+        "path": "agents/common/gpu_config_manager.py",
+        "line": "434",
+        "content": "return self.model_config[\"model_defaults\"].copy()"
+      },
+      {
+        "path": "agents/common/gpu_config_manager.py",
+        "line": "634",
+        "content": "profile_config = config.copy()"
+      },
+      {
+        "path": "agents/common/gpu_manager_production.py",
+        "line": "951",
+        "content": "\"metrics\": self.metrics.copy(),"
+      },
+      {
+        "path": "agents/crawler/enhancements/stealth_browser.py",
+        "line": "34",
+        "content": "merged: MutableMapping[str, str] = session.headers.copy()"
+      },
+      {
+        "path": "agents/mcp_bus/mcp_bus_engine.py",
+        "line": "99",
+        "content": "return self.agents.copy()"
+      },
+      {
+        "path": "agents/mcp_bus/mcp_bus_engine.py",
+        "line": "243",
+        "content": "return self.circuit_breaker_state.copy()"
+      },
+      {
+        "path": "agents/newsreader/tools.py",
+        "line": "100",
+        "content": "return self.memory_stats.copy()"
+      },
+      {
+        "path": "agents/reasoning/reasoning_engine.py",
+        "line": "656",
+        "content": "return self.facts_store.copy()"
+      },
+      {
+        "path": "agents/reasoning/reasoning_engine.py",
+        "line": "660",
+        "content": "return self.rules_store.copy()"
+      },
+      {
+        "path": "agents/scout/scout_engine.py",
+        "line": "801",
+        "content": "return self.processing_stats.copy()"
+      },
+      {
+        "path": "agents/synthesizer/persistence.py",
+        "line": "12",
+        "content": "safe = metadata.copy() if metadata is not None else {}"
+      },
+      {
+        "path": "agents/synthesizer/synthesizer_engine.py",
+        "line": "1446",
+        "content": "return self.performance_stats.copy()"
+      },
+      {
+        "path": "common/version_utils.py",
+        "line": "35",
+        "content": "return VERSION_INFO.copy()"
+      },
+      {
+        "path": "config/core/__init__.py",
+        "line": "458",
+        "content": "return self._audit_log.copy()"
+      },
+      {
+        "path": "database/core/backup_manager.py",
+        "line": "367",
+        "content": "env = os.environ.copy()"
+      },
+      {
+        "path": "database/core/backup_manager.py",
+        "line": "402",
+        "content": "env = os.environ.copy()"
+      },
+      {
+        "path": "infrastructure/scripts/generate-config.py",
+        "line": "96",
+        "content": "env_config = config_values.copy()"
+      },
+      {
+        "path": "monitoring/core/log_aggregator.py",
+        "line": "82",
+        "content": "agg_data = self.config.get(\"aggregation\", {}).copy()"
+      },
+      {
+        "path": "monitoring/core/log_aggregator.py",
+        "line": "88",
+        "content": "store_data = self.config.get(\"storage\", {}).copy()"
+      },
+      {
+        "path": "monitoring/core/trace_analyzer.py",
+        "line": "684",
+        "content": "return self.service_health_scores.copy()"
+      },
+      {
+        "path": "monitoring/core/trace_processor.py",
+        "line": "496",
+        "content": "return self.performance_baselines.copy()"
+      },
+      {
+        "path": "monitoring/dashboards/alert_dashboard.py",
+        "line": "380",
+        "content": "labels=rule.labels.copy(),"
+      },
+      {
+        "path": "monitoring/dashboards/alert_dashboard.py",
+        "line": "381",
+        "content": "annotations=rule.annotations.copy(),"
+      },
+      {
+        "path": "monitoring/dashboards/alert_dashboard.py",
+        "line": "569",
+        "content": "return self.stats.copy()"
+      },
+      {
+        "path": "monitoring/dashboards/dashboard_generator.py",
+        "line": "727",
+        "content": "updated_template = template.copy()"
+      },
+      {
+        "path": "monitoring/dashboards/realtime_monitor.py",
+        "line": "633",
+        "content": "return buffer.copy()"
+      },
+      {
+        "path": "monitoring/dashboards/realtime_monitor.py",
+        "line": "634",
+        "content": "return buffer[-limit:] if len(buffer) > limit else buffer.copy()"
+      },
+      {
+        "path": "scripts/archive/run_safe_mode_demo.py",
+        "line": "85",
+        "content": "env = os.environ.copy()"
+      },
+      {
+        "path": "tests/mcp_scaffold.py",
+        "line": "150",
+        "content": "self._write_json(200, parent._agents.copy())"
+      },
+      {
+        "path": "tests/test_backup_conda_env.py",
+        "line": "10",
+        "content": "env = os.environ.copy()"
+      },
+      {
+        "path": "tests/test_preflight_safe_mode.py",
+        "line": "51",
+        "content": "env = os.environ.copy()"
+      },
+      {
+        "path": "tests/test_security.py",
+        "line": "506",
+        "content": "sanitized = input_data.copy()"
+      },
+      {
+        "path": "tests/test_utils.py",
+        "line": "108",
+        "content": "return self.call_history.copy()"
+      },
+      {
+        "path": "tests/test_utils.py",
+        "line": "270",
+        "content": "return self.calls.copy()"
+      },
+      {
+        "path": "tests/e2e/test_publisher_publish_api_flow.py",
+        "line": "15",
+        "content": "env = os.environ.copy()"
+      },
+      {
+        "path": "tests/e2e/test_publisher_publish_flow.py",
+        "line": "17",
+        "content": "env = os.environ.copy()"
+      }
+    ],
+    "\\.validate\\(\\)": [
+      {
+        "path": "config/test_config_system.py",
+        "line": "191",
+        "content": "errors = profile.validate()"
+      },
+      {
+        "path": "config/test_config_system.py",
+        "line": "201",
+        "content": "errors = invalid_profile.validate()"
+      },
+      {
+        "path": "config/environments/__init__.py",
+        "line": "318",
+        "content": "errors = profile.validate()"
+      },
+      {
+        "path": "config/environments/__init__.py",
+        "line": "400",
+        "content": "errors = profile.validate()"
+      },
+      {
+        "path": "config/environments/__init__.py",
+        "line": "477",
+        "content": "errors = profile.validate()"
+      }
+    ]
+  },
+  "summary": {
+    "total_files_scanned": 202,
+    "patterns_found": 3,
+    "total_occurrences": 202
+  }
 }

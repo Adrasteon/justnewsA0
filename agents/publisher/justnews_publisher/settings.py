@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 # Add project root to path to allow importing common modules
-# Assuming structure: /JustNews/agents/publisher/justnews_publisher/settings.py
+# Assuming structure: /JustNews/justnews_publisher/settings.py
 # Root is at ../../../../
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:

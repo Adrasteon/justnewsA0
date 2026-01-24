@@ -446,7 +446,7 @@ class DashboardEngine:
             response = requests.post(
                 f"{MCP_BUS_URL}/call",
                 json=(
-                    call.model_dump() if hasattr(call, "model_dump") else call.dict()
+                    call.model_dump() if hasattr(call, "model_dump") else call.model_dump()
                 ),
             )
             response.raise_for_status()

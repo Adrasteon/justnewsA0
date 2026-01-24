@@ -76,7 +76,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt django
           export DJANGO_SETTINGS_MODULE=justnews_publisher.settings
-          pushd agents/publisher
+          pushd .
           python manage.py migrate --noinput
           # provide a short-lived API key for the publisher
           export PUBLISHER_API_KEY=$(python -c "import secrets,sys;print(secrets.token_urlsafe(16))")

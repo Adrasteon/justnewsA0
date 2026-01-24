@@ -10,7 +10,22 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
+import sys
 from pathlib import Path
+
+# Add project root to path to allow importing common modules
+# Assuming structure: /JustNews/justnews_publisher/settings.py
+# Root is at ../../../../
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+try:
+    from common.observability import bootstrap_observability
+    bootstrap_observability("publisher")
+except ImportError:
+    pass # Failed to load observability, likely running in isolation
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +35,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-dzo7251n#joelyd*w#^=b6-ie_ex^e@z0uv_o_p^z&4t7yg^r3"
+SECRET_KEY = "django-insecure-#77=-)ax60sdst$(j#tgbacvs1=mhi3s$#vxij5*h-p)sceq-="
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,6 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "news",
 ]
 
 MIDDLEWARE = [
@@ -114,9 +130,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Optional publisher API key for staging/CI integration
+PUBLISHER_API_KEY = os.environ.get("PUBLISHER_API_KEY")
+
+# Expose a metrics endpoint via prometheus_client when enabled in views
+ENABLE_PROMETHEUS_METRICS = True

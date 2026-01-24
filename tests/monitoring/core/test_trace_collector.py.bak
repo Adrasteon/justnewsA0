@@ -45,13 +45,6 @@ def mock_otel():
         
         mock_trace.SpanContext.side_effect = SpanContext_mock
         
-        resource = MagicMock()
-        resource.attributes = {"service.name": "test_service"}
-        # Setup Resource.create mock
-        mock_resource.create.return_value = resource
-        resource = MagicMock()
-        resource.attributes = {"service.name": "test_service"}
-        
         yield mock_trace, tracer, span
 
 @pytest.fixture

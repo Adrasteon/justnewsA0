@@ -106,6 +106,7 @@ def run_scheduler(
         testrun=True,
         db_limit=None,
         db_chunk_size=10,
+        NoFollow=None,
     )
 
     reference_time = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)

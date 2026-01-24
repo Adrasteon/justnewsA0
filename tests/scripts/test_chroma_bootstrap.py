@@ -13,7 +13,7 @@ def run_script_main(monkeypatch, **env):
     import scripts.chroma_bootstrap as cb
 
     # Clear sys.argv so argparse doesn't pick test runner args
-    monkeypatch.setattr("sys.argv", ["chroma_bootstrap.py"])
+    monkeypatch.setattr("sys.argv", ["chroma_bootstrap.py", "--require-canonical"])
     with pytest.raises(SystemExit) as excinfo:
         cb.main()
     return excinfo.value.code

@@ -176,7 +176,7 @@ class TraceCollector:
         self.service_name = service_name
         self.agent_name = agent_name
         self.config = get_config()
-        self.metrics = JustNewsMetrics()
+        self.metrics = JustNewsMetrics(self.agent_name)
 
         # Initialize OpenTelemetry (best-effort) — skip if OTel unavailable
         if _OTEL_AVAILABLE:
@@ -204,17 +204,9 @@ class TraceCollector:
         self.trace_retention_hours = 24
 
         # Performance tracking
-        self.collection_latency = self.metrics.create_histogram(
-            "trace_collection_latency_seconds",
-            "Time spent collecting traces",
-            ["operation"],
-        )
-        self.span_count = self.metrics.create_counter(
-            "trace_spans_total",
-            "Total number of spans collected",
-            ["service", "status"],
-        )
-        self.trace_count = self.metrics.create_counter(
+        self.collection_latency = self.metrics._get_or_create_histogram("trace_collection_latency_seconds")
+        self.span_count = self.metrics._get_or_create_counter("trace_spans_total")
+        self.trace_count = self.metrics._get_or_create_counter(
             "traces_total", "Total number of traces processed", ["status"]
         )
 
