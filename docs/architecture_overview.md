@@ -70,6 +70,22 @@ improvements.
 
 - `infrastructure/` contains Prometheus/Grafana templates, systemd scripts, and deployment helpers.
 
+## Model Inference Strategy (GPU Architecture)
+
+JustNews relies on a highly optimized **Single-GPU (24GB VRAM)** architecture designed to balance deep reasoning capabilities with multi-modal support.
+
+### Core Intelligence
+- **Primary Model**: `Qwen 2.5 14B Instruct (AWQ/Int4)` served via vLLM.
+- **Role**: Handles all text synthesis, fact-checking, editorial review, and reasoning tasks.
+- **Performance**: Consumes ~14.7GB VRAM (Weights + Context), leaving ~9GB headroom.
+
+### Multi-modal & On-Demand Support
+Due to VRAM constraints, we employ a **load-swap strategy** for specialized models:
+- **Vision (Qwen-VL 2B)**: Loaded temporarily for image analysis, then unloaded.
+- **Audio (Whisper Large V3)**: Loaded temporarily for transcription, then unloaded.
+
+This strategy ensures that the Primary Model has maximum context window access (up to 32k tokens) during complex reasoning tasks, rather than permanently reserving VRAM for idling operational models.
+
 ## Per-agent functional responsibilities and completion status
 
 The table below lists agents, their functional intent, and current level of implementation (Done / Partial / Stub /

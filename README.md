@@ -57,6 +57,11 @@ key components:
 - **Shared Libraries**: located in `common/` and `agents/common/`
 - **Infrastructure**: located in `infrastructure/` (Systemd services, configurations)
 
+### Hardware & Inference Strategy
+- **Primary Intelligence**: Qwen 2.5 14B Instruct (AWQ/Int4) served via vLLM.
+- **Multi-modal Support**: Whisper (Audio) and Qwen-VL (Vision) loaded on-demand via a **Model Swapping** strategy to maximize VRAM availability for reasoning context.
+- **Hardware Requirement**: Single NVIDIA GPU with 24GB VRAM (e.g., RTX 3090/4090) is required for the full pipeline.
+
 ## 🤝 Contributing
 
 Please read [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
