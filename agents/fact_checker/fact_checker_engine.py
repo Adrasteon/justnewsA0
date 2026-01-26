@@ -126,6 +126,9 @@ class FactCheckerEngine:
         self.mistral_adapter: MistralAdapter | None = None
         self._mistral_cache: dict[str, ClaimAssessment] = {}
 
+        # Investigator (Enterprise Researcher)
+        self.investigator = None
+
         # Initialize models
         self._initialize_models()
 
@@ -133,6 +136,16 @@ class FactCheckerEngine:
         """Initialize all AI models with proper error handling."""
         try:
             self.logger.info("🔧 Initializing Fact Checker Engine models...")
+
+            # Initialize Investigator
+            try:
+                from .investigator import Investigator
+                self.investigator = Investigator()
+                self.logger.info("✅ Investigator module initialized for deep research")
+            except ImportError:
+                self.logger.warning("⚠️ Investigator module not found")
+            except Exception as e:
+                self.logger.warning(f"⚠️ Investigator initialization failed: {e}")
 
             # Initialize spaCy (lightweight, always available)
             try:
@@ -324,6 +337,38 @@ class FactCheckerEngine:
                 self.last_model_update
             ).isoformat(),
         }
+
+    async def verify_claim_deep(self, claim: str) -> dict[str, Any]:
+        """
+        Perform a deep investigation of a claim using the Investigator.
+        
+        This triggers:
+        1. Research planning (Mistral)
+        2. Web/Archive Search & Crawl (Crawl4AI)
+        3. Visual/Text Evidence extraction (NewsReader/Llava)
+        4. Verdict synthesis
+        """
+        if not self.investigator:
+            return {"error": "Investigator not available", "verdict": "UNVERIFIED"}
+            
+        try:
+            report = await self.investigator.investigate(claim)
+            return {
+                "claim": claim,
+                "verdict": report.verdict,
+                "reasoning": report.reasoning,
+                "evidence_count": len(report.evidence),
+                "traceability": [
+                    {
+                        "source": e.source_url, 
+                        "type": e.media_type.value, 
+                        "confidence": e.confidence
+                    } for e in report.evidence
+                ]
+            }
+        except Exception as e:
+            self.logger.error(f"Deep verification failed: {e}")
+            return {"error": str(e), "verdict": "ERROR"}
 
     def verify_facts(
         self, content: str, source_url: str | None = None, context: str | None = None

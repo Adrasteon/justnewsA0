@@ -48,6 +48,10 @@ dependencies:
   - httptools
   - watchfiles
 
+  # Enterprise Research Stack (Recommended)
+  - duckduckgo-search>=5.0  # Privacy-friendly search
+  # - faster-whisper>=0.10  # Traceable audio transcription (Uncomment to enable AV)
+
   # Browser Automation
   - playwright
 
