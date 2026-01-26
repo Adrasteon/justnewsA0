@@ -1,0 +1,41 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}JustNews{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body>
+    <header class="bbc-banner">
+        <div class="bbc-banner-content">
+            <a href="/" class="bbc-logo">JustNews</a>
+            <span class="bbc-tagline">Trusted, accurate news. Evidence-based journalism.</span>
+        </div>
+    </header>
+    <nav class="bbc-navbar">
+        <ul class="bbc-nav-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/archive/">Archive</a></li>
+            <li><a href="/world/">World</a></li>
+            <li><a href="/uk/">UK</a></li>
+            <li><a href="/business/">Business</a></li>
+            <li><a href="/politics/">Politics</a></li>
+            <li><a href="/health/">Health</a></li>
+            <li><a href="/science/">Science</a></li>
+            <li><a href="/technology/">Tech</a></li>
+            <li><a href="/entertainment/">Entertainment</a></li>
+            <li><a href="/sport/">Sport</a></li>
+        </ul>
+    </nav>
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 JustNews. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

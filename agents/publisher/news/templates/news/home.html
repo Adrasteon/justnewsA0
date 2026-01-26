@@ -1,0 +1,37 @@
+{% extends "news/base.html" %}
+{% block title %}JustNews - Home{% endblock %}
+{% block content %}
+<section class="featured">
+    <h2>Featured News</h2>
+    <ul>
+        {% for article in featured %}
+        <li>
+            <a href="{% url 'article_detail' article.slug %}">{{ article.title }}</a>
+            <span class="score">Score: {{ article.score }}</span>
+            <span class="date">{{ article.published_at|date:"M d, Y" }}</span>
+        </li>
+        {% empty %}
+        <li>No featured articles available.</li>
+        {% endfor %}
+    </ul>
+</section>
+<section class="latest">
+    <h2>Latest News</h2>
+    <ul>
+        {% for article in latest %}
+        <div class="card">
+            <div class="card-title">{{ article.title }}</div>
+            <div class="card-summary">{{ article.summary }}</div>
+            <div>{{ article.body|truncatewords:50 }}</div>
+            <div class="card-footer">
+                <a href="{% url 'article_detail' article.slug %}" class="button">Read More</a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card">
+            <div class="card-title">No recent articles.</div>
+        </div>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

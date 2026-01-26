@@ -1,0 +1,27 @@
+{% extends "news/base.html" %}
+{% block title %}JustNews - {{ category }} News{% endblock %}
+{% block content %}
+<section class="category">
+    <h2>{{ category }} News</h2>
+    {% if invalid %}
+        <div class="card">
+            <div class="card-title">Invalid category: {{ category }}</div>
+        </div>
+    {% else %}
+        {% for article in articles %}
+        <div class="card">
+            <div class="card-title">{{ article.title }}</div>
+            <div class="card-summary">{{ article.summary }}</div>
+            <div>{{ article.body|truncatewords:50 }}</div>
+            <div class="card-footer">
+                <a href="{% url 'article_detail' article.slug %}" class="button">Read More</a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card">
+            <div class="card-title">No articles found in this category.</div>
+        </div>
+        {% endfor %}
+    {% endif %}
+</section>
+{% endblock %}

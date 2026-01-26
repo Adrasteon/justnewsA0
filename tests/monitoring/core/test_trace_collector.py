@@ -20,8 +20,18 @@ def mock_otel():
     with patch("monitoring.core.trace_collector.trace") as mock_trace, \
          patch("monitoring.core.trace_collector.TracerProvider") as mock_provider, \
          patch("monitoring.core.trace_collector.Resource") as mock_resource, \
+         patch("monitoring.core.trace_collector.ResourceAttributes") as mock_resource_attributes, \
+         patch("monitoring.core.trace_collector.SpanKind") as mock_span_kind, \
+         patch("monitoring.core.trace_collector.Status") as mock_status, \
+         patch("monitoring.core.trace_collector.StatusCode") as mock_status_code, \
          patch("monitoring.core.trace_collector._OTEL_AVAILABLE", True):
          
+        # Setup mocks for attributes
+        mock_resource_attributes.SERVICE_NAME = "service.name"
+        mock_span_kind.INTERNAL = "INTERNAL"
+        mock_status.return_value = MagicMock()
+        mock_status_code.ERROR = "ERROR"
+
         # Setup tracer mock
         tracer = MagicMock()
         mock_trace.get_tracer.return_value = tracer

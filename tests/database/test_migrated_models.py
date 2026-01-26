@@ -522,8 +522,9 @@ class TestMigratedDatabaseService:
 
                     yield service
 
-    def test_service_init(self, mock_config):
+    def test_service_init(self, mock_config, monkeypatch):
         """Test service initialization"""
+        monkeypatch.setenv("CHROMADB_MODEL_SCOPED_COLLECTION", "1")
         with patch("mysql.connector.connect") as mock_mb_connect:
             with patch("chromadb.HttpClient") as mock_chroma_client:
                 with patch(

@@ -1,0 +1,57 @@
+[
+  {
+    "title": "Global Climate Accord Reached in Paris",
+    "slug": "global-climate-accord-paris",
+    "summary": "World leaders have agreed on a historic climate accord to limit global warming.",
+    "body": "In a landmark summit held in Paris, representatives from over 190 countries reached a consensus on a global climate accord. The agreement aims to limit global temperature rise to below 2 degrees Celsius, with nations committing to significant reductions in carbon emissions. Experts hailed the accord as a major step forward, though challenges remain in implementation and enforcement. The summit featured passionate speeches from youth activists, scientists, and heads of state, all emphasizing the urgent need for action. The accord will be reviewed every five years, with countries expected to update their commitments. Environmental groups welcomed the deal but called for even stronger measures to protect vulnerable communities and ecosystems.",
+    "author": "Jane Smith",
+    "score": 9.2,
+    "evidence": "UN Climate Report, IPCC findings, Paris Summit transcripts",
+    "is_featured": true,
+    "category": "world"
+  },
+  {
+    "title": "UK Parliament Passes New Education Bill",
+    "slug": "uk-parliament-education-bill",
+    "summary": "The UK government has passed a sweeping education reform bill.",
+    "body": "The UK Parliament today approved a new education bill designed to modernize the national curriculum and increase funding for schools. The bill introduces mandatory computer science classes, expands arts education, and provides additional resources for disadvantaged students. Lawmakers debated the bill for several weeks, with strong support from educators and parents. Critics argue that more funding is needed to address teacher shortages and aging infrastructure. The government has pledged to monitor the impact of the reforms and make adjustments as necessary. The bill is expected to take effect in the next academic year, with schools preparing for the transition.",
+    "author": "John Doe",
+    "score": 8.7,
+    "evidence": "Parliament records, Department for Education analysis",
+    "is_featured": false,
+    "category": "uk"
+  },
+  {
+    "title": "Tech Giants Announce Major AI Breakthrough",
+    "slug": "tech-giants-ai-breakthrough",
+    "summary": "Leading technology companies have unveiled a new AI model with unprecedented capabilities.",
+    "body": "In a joint press conference, several major tech companies revealed a new artificial intelligence model that surpasses previous benchmarks in natural language understanding and image recognition. The model, developed through collaborative research, is expected to revolutionize industries ranging from healthcare to finance. Experts caution that ethical considerations and regulatory oversight will be crucial as AI systems become more powerful. The announcement included demonstrations of the model's ability to generate realistic text, analyze medical images, and assist in complex decision-making. Industry leaders emphasized their commitment to responsible AI development and transparency.",
+    "author": "Alex Lee",
+    "score": 9.5,
+    "evidence": "Company press releases, peer-reviewed research",
+    "is_featured": true,
+    "category": "technology"
+  },
+  {
+    "title": "Breakthrough in Cancer Research Announced",
+    "slug": "breakthrough-cancer-research",
+    "summary": "Scientists have announced a major breakthrough in cancer treatment.",
+    "body": "A team of international researchers has developed a new therapy that significantly improves survival rates for patients with advanced cancer. The treatment, which targets specific genetic mutations, has shown promising results in clinical trials. Medical experts believe this could lead to more personalized and effective cancer care. The research was published in a leading medical journal and has been widely praised by the scientific community. Patients participating in the trials reported fewer side effects and improved quality of life. The therapy is expected to be available in hospitals within the next year, pending regulatory approval.",
+    "author": "Dr. Emily Carter",
+    "score": 9.8,
+    "evidence": "Clinical trial data, peer-reviewed publications",
+    "is_featured": false,
+    "category": "health"
+  },
+  {
+    "title": "Business Leaders Forecast Economic Recovery",
+    "slug": "business-leaders-economic-recovery",
+    "summary": "Top business leaders are optimistic about economic recovery in the coming year.",
+    "body": "At the annual World Business Forum, CEOs and economists expressed confidence in a robust economic recovery following recent global challenges. Factors contributing to the positive outlook include increased consumer spending, technological innovation, and supportive government policies. However, experts warn that inflation and supply chain disruptions could pose risks. The forum featured panel discussions on sustainable growth, digital transformation, and workforce development. Business leaders called for continued investment in education and infrastructure to sustain long-term progress. The event concluded with a commitment to collaboration and resilience in the face of uncertainty.",
+    "author": "Samantha Green",
+    "score": 8.9,
+    "evidence": "World Business Forum reports, economic forecasts",
+    "is_featured": false,
+    "category": "business"
+  }
+]
