@@ -1,18 +1,21 @@
 from __future__ import annotations
 
+import json
+import logging
 import os
 import time
 from typing import Any
 
 from .adapter_base import AdapterError, BaseAdapter
-from .base_mistral_json_adapter import BaseMistralJSONAdapter
+from .openai_adapter import OpenAIAdapter
 
+logger = logging.getLogger(__name__)
 
 class MistralAdapter(BaseAdapter):
-    """Adapter wrapper exposing a small sync API over the BaseMistralJSONAdapter.
-
-    Supports dry-run/modelstore modes by returning simulated outputs when the
-    underlying loader is in dry-run mode (to avoid loading heavy weights in tests).
+    """
+    shim-adapter for v4.0.0 migration:
+    Redirects legacy 'MistralAdapter' calls to the centralized Qwen/vLLM instance
+    via OpenAI-compatible API.
     """
 
     def __init__(
@@ -23,12 +26,27 @@ class MistralAdapter(BaseAdapter):
         system_prompt: str = "",
         disable_env: str = "",
     ) -> None:
-        super().__init__(name=f"mistral:{agent}")
+        super().__init__(name=f"mistral-shim:{agent}")
         self.agent = agent
         self.adapter_name = adapter_name
         self.system_prompt = system_prompt or ""
         self.disable_env = disable_env or f"{agent.upper()}_DISABLE_MISTRAL"
-        self._base: BaseMistralJSONAdapter | None = None
+        
+        # Read vLLM config
+        self.vllm_base_url = os.environ.get("VLLM_BASE_URL", "http://127.0.0.1:8010/v1")
+        self.vllm_api_key = os.environ.get("VLLM_API_KEY", "unused")
+        self.vllm_model = os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ")
+        
+        # Instantiate the actual worker
+        self.openai = OpenAIAdapter(
+            api_key=self.vllm_api_key,
+            base_url=self.vllm_base_url,
+            model=self.vllm_model,
+            system_prompt=self.system_prompt,
+        )
+        
+        # self.openai.load() is called later in self.load()
+
         self._agent_impl: object | None = None
         # Try to eager-populate a per-agent implementation if available.
         try:
@@ -49,155 +67,75 @@ class MistralAdapter(BaseAdapter):
                             self._agent_impl = cls()
                             break
                         except Exception:
-                            # ignore instantiation errors
                             self._agent_impl = None
                 except Exception:
                     continue
         except Exception:
             self._agent_impl = None
+            
+        # Dry run logic
         env_dry_run = (
             os.environ.get("MODEL_STORE_DRY_RUN") == "1"
             or os.environ.get("DRY_RUN") == "1"
         )
         self._dry_run = self.dry_run or env_dry_run
+        if self._dry_run:
+            self.openai.dry_run = True
 
     def load(self, model_id: str | None = None, config: dict | None = None) -> None:
-        # Build internal base helper using existing shared class
-        if self._base is None:
-            self._base = BaseMistralJSONAdapter(
-                agent_name=self.agent,
-                adapter_name=self.adapter_name,
-                system_prompt=self.system_prompt,
-                disable_env=self.disable_env,
-            )
-
-        # _ensure_loaded performs loading via mistral_loader which respects dry-run
-        ok = self._base._ensure_loaded()
-        if not ok:
-            # loader left an error (or not enabled)
-            if getattr(self._base, "_load_error", None):
-                raise AdapterError(f"mistral-load-error: {self._base._load_error}")
-            raise AdapterError("mistral-adapter-not-available")
-
-        # Try to lazy-load any per-agent adapter implementation so we can
-        # delegate specialized helpers (classify, review, evaluate_claim,
-        # generate_story_brief) without duplicating normalization code.
-        # If we haven't already found an agent implementation try again (post-load)
-        if self._agent_impl is None:
-            try:
-                module_name = f"agents.{self.agent}.mistral_adapter"
-                mod = __import__(module_name, fromlist=["*"])
-                parts = [p.capitalize() for p in self.agent.split("_")]
-                class_name = "".join(parts) + "MistralAdapter"
-                cls = getattr(mod, class_name, None)
-                if cls:
-                    try:
-                        self._agent_impl = cls()
-                    except Exception:
-                        self._agent_impl = None
-            except Exception:
-                # best-effort only
-                self._agent_impl = None
-        self.mark_loaded()
+        """Connect to vLLM (check health)."""
+        try:
+            self.openai.load()
+            self.mark_loaded()
+            logger.info(f"MistralAdapter (Shim) connected to vLLM: {self.vllm_model}")
+        except Exception as e:
+            raise AdapterError(f"vllm-connection-failed: {e}")
 
     def infer(self, prompt: str, **kwargs: Any) -> dict:
-        if self._base is None:
-            raise AdapterError("adapter-not-loaded")
-
-        # If we are in dry-run or the loaded handles are not actual model/tokenizer objects
-        if (
-            self._dry_run
-            or isinstance(self._base.model, dict)
-            and self._base.model.get("dry_run")
-        ):
-            # simulate an output
-            start = time.time()
-            text = f"[DRYRUN-{self.agent}:{self.adapter_name}] Simulated reply to: {prompt[:120]}"
-            return {
-                "text": text,
-                "raw": {"simulated": True},
-                "tokens": len(prompt.split()),
-                "latency": time.time() - start,
-            }
-
-        # Real run path
-        completion = self._base._chat(
-            [
-                {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": prompt},
-            ]
-        )
-        if completion is None:
-            raise AdapterError("mistral-infer-failed")
-        return {
-            "text": completion,
-            "raw": completion,
-            "tokens": len(completion.split()),
-            "latency": 0.0,
-        }
+        """Forward inference to vLLM/OpenAI."""
+        return self.openai.infer(prompt, **kwargs)
 
     def summarize_cluster(
         self, articles: list[str], context: str | None = None
     ) -> dict | None:
-        """Create a cluster-level synthesis JSON using the underlying BaseMistralJSONAdapter.
-
-        Returns a dict containing at least keys like `summary` and `key_points` or None
-        when unavailable. In dry-run mode returns a simulated structure.
-        """
-        if self._base is None:
-            # lazy init path — mirror load() behaviour and allow a dry-run short-circuit
-            self._base = BaseMistralJSONAdapter(
-                agent_name=self.agent,
-                adapter_name=self.adapter_name,
-                system_prompt=self.system_prompt,
-                disable_env=self.disable_env,
-            )
-
-        # Dry-run: return a small simulated JSON payload consistent with other tests
-        if self._dry_run or (
-            isinstance(self._base.model, dict) and self._base.model.get("dry_run")
-        ):
-            joined = " \n---\n ".join([a[:200] for a in articles if a])
-            text = f"[DRYRUN-{self.agent}:{self.adapter_name}] Simulated cluster summary for {len(articles)} articles: {joined[:240]}"
-            return {
-                "summary": text,
-                "key_points": [
-                    f"Simulated keypoint {i + 1}" for i in range(min(3, len(articles)))
-                ],
-                "confidence": 0.9,
+        """Shim methodology for clustering using the shared LLM."""
+        if self._dry_run:
+             return {
+                "summary": f"[DRYRUN] Summary for {len(articles)} articles",
+                "key_points": ["Point A", "Point B"],
+                "confidence": 0.9
             }
-
-        # Real path: ensure loader is loaded and delegate to _chat_json on the base adapter
-        ok = self._base._ensure_loaded()
-        if not ok:
-            return None
-
-        snippets = [self._base._truncate_content(a) for a in articles if a]
-        if not snippets:
-            return None
-
-        joined = "\n---\n".join(snippets)
-        prefix = f"Context: {context}\n" if context else ""
-        user_block = f"{prefix}Articles:\n'''{joined}'''"
-        messages = [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": user_block},
-        ]
-
-        return self._base._chat_json(messages)
+            
+        prompt = f"Summarize these {len(articles)} articles."
+        if context:
+            prompt += f" Context: {context}"
+        
+        joined = "\n\n".join(articles[:5]) # Limit context
+        prompt += f"\n\nArticles:\n{joined}"
+        
+        # Simplified logic: just ask for JSON
+        res = self.infer(prompt + "\n\nProvide output in valid JSON with keys: summary, key_points, confidence.")
+        text = res["text"]
+        try:
+            # Basic cleanup
+            text = text.replace("```json", "").replace("```", "").strip()
+            return json.loads(text)
+        except:
+             logger.warning(f"Failed to parse JSON from vLLM shim: {text[:100]}")
+             return None
 
     def batch_infer(self, prompts: list[str], **kwargs: Any) -> list[dict]:
         return [self.infer(p, **kwargs) for p in prompts]
 
     def __getattr__(self, name: str):
         # Delegate unknown attribute access to per-agent implementation if present.
-        # Use object.__getattribute__ to avoid triggering this __getattr__ again
-        # when internal attributes like `_agent_impl` are missing and thereby
-        # prevent infinite recursion.
         try:
             agent_impl = object.__getattribute__(self, "_agent_impl")
         except AttributeError:
-            agent_impl = None
+            agent_impl = None 
+        if agent_impl and hasattr(agent_impl, name):
+            return getattr(agent_impl, name)
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
         if agent_impl is not None:
             # Guard against accidentally delegating to the same object instance

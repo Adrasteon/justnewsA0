@@ -20,6 +20,7 @@ class OpenAIAdapter(BaseAdapter):
     def __init__(
         self,
         api_key: str | None = None,
+        base_url: str | None = None,
         *,
         name: str = "openai",
         model: str = "gpt-3.5-turbo",
@@ -43,12 +44,13 @@ class OpenAIAdapter(BaseAdapter):
         self._backoff_base = float(backoff_base)
         self._extra_headers = extra_headers or {}
         self._api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        self._base_url = base_url or os.environ.get("OPENAI_BASE_URL") or os.environ.get("OPENAI_API_BASE")
         try:
             self._metrics = get_metrics(self.name)
         except Exception:
             self._metrics = None
         self._client = None
-
+    
     # ------------------------------------------------------------------
     def _build_messages(self, prompt: str) -> list[dict[str, str]]:
         messages: list[dict[str, str]] = []
@@ -61,14 +63,14 @@ class OpenAIAdapter(BaseAdapter):
         data: dict[str, Any] = {
             "model": self._model,
             "temperature": self._temperature,
-            "request_timeout": self._timeout,
+            "timeout": self._timeout,
         }
         if self._max_tokens:
             data["max_tokens"] = self._max_tokens
         if self._user:
             data["user"] = self._user
         if self._extra_headers:
-            data["extra_headers"] = self._extra_headers
+             data["extra_headers"] = self._extra_headers
         return data
 
     # ------------------------------------------------------------------
@@ -80,18 +82,23 @@ class OpenAIAdapter(BaseAdapter):
             return
 
         if not self._api_key:
-            raise AdapterError("openai-missing-api-key")
+            # For vLLM, API key might be optional, but OpenAI client usually requires it.
+            # We'll allow a dummy key if base_url is set, to support vLLM usage easily.
+            if self._base_url:
+                self._api_key = "unused"
+            else:
+               raise AdapterError("openai-missing-api-key")
 
         try:
-            import openai  # type: ignore
-
-            openai.api_key = self._api_key
+            from openai import OpenAI
+            
+            client_args = {"api_key": self._api_key}
+            if self._base_url:
+                client_args["base_url"] = self._base_url
             if self._extra_headers:
-                openai.default_headers = {
-                    **getattr(openai, "default_headers", {}),
-                    **self._extra_headers,
-                }
-            self._client = openai
+                client_args["default_headers"] = self._extra_headers
+
+            self._client = OpenAI(**client_args)
             self.mark_loaded()
         except Exception as exc:  # pragma: no cover
             raise AdapterError(f"openai-load-failed: {exc}") from exc
@@ -118,19 +125,34 @@ class OpenAIAdapter(BaseAdapter):
             raise AdapterError("openai-client-uninitialized")
 
         payload = self._client_kwargs()
+        # Clean up legacy timeouts
+        if "request_timeout" in payload:
+             del payload["request_timeout"]
+        payload["timeout"] = self._timeout
+
         payload.update({k: v for k, v in overrides.items() if v is not None})
         messages = self._build_messages(prompt)
         payload["messages"] = messages
+        
+        # Handle extra_headers manually if invalid for create()
+        # In v1, extra_headers are usually passed to the client, or via explicit extra_headers param in some calls?
+        # create() allows extra_headers/extra_query
+        if "extra_headers" in payload:
+             extra_headers = payload.pop("extra_headers")
+             payload["extra_headers"] = extra_headers
 
         last_exc: Exception | None = None
         for attempt in range(1, self._max_retries + 1):
             start = time.time()
             try:
-                resp = self._client.ChatCompletion.create(**payload)  # type: ignore[attr-defined]
+                resp = self._client.chat.completions.create(**payload)
                 duration = time.time() - start
-                text = getattr(resp.choices[0].message, "content", "") or ""
-                if not text:
-                    text = str(resp)
+                
+                # Extract content
+                text = ""
+                if resp.choices:
+                    text = resp.choices[0].message.content or ""
+                
                 if self._metrics:
                     with suppress(Exception):
                         self._metrics.timing("openai_infer_latency_seconds", duration)
