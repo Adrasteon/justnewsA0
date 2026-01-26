@@ -1,52 +1,52 @@
 {
-  "_comment": "Set VLLM_ENABLED=true to enable vLLM mode; default model is mistralai/Mistral-7B-Instruct-v0.3. Legacy Qwen2 adapters are archived.",
+  "_comment": "Set VLLM_ENABLED=true to enable vLLM mode; default model is Qwen/Qwen2.5-14B-Instruct-AWQ. Legacy Mistral adapters specific to 7B are removed.",
   "synthesizer": {
-    "default": "mistralai/Mistral-7B-Instruct-v0.3",
-    "vllm_default": "mistralai/Mistral-7B-Instruct-v0.3",
+    "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "vllm_default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "fallbacks": [],
-    "notes": "Uses ModelStore adapter mistral_synth_v1 by default; legacy Qwen2 adapters have been archived."
+    "notes": "Uses ModelStore adapter qwen_synth_v1 by default."
   },
   "re_ranker": {
-    "default": "mistralai/Mistral-7B-Instruct-v0.3",
-    "vllm_default": "mistralai/Mistral-7B-Instruct-v0.3",
+    "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "vllm_default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "fallbacks": [],
-    "notes": "Uses ModelStore adapter mistral_re_ranker_v1 by default; legacy Qwen2 adapters have been archived."
+    "notes": "Uses ModelStore adapter qwen_re_ranker_v1 by default."
   },
   "fact_checker": {
-    "default": "mistralai/Mistral-7B-Instruct-v0.3",
-    "vllm_default": "mistralai/Mistral-7B-Instruct-v0.3",
+    "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "vllm_default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "fallbacks": [],
-    "notes": "Uses ModelStore adapter mistral_fact_checker_v1 by default; legacy Qwen2 adapters have been archived."
+    "notes": "Uses ModelStore adapter qwen_fact_checker_v1 by default."
   },
   "critic": {
-    "default": "mistralai/Mistral-7B-Instruct-v0.3",
-    "vllm_default": "mistralai/Mistral-7B-Instruct-v0.3",
+    "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "vllm_default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "fallbacks": [],
-    "notes": "Uses ModelStore adapter mistral_critic_v1 by default; legacy Qwen2 adapters have been archived."
+    "notes": "Uses ModelStore adapter qwen_critic_v1 by default."
   },
   "journalist": {
-    "default": "mistralai/Mistral-7B-Instruct-v0.3",
-    "vllm_default": "mistralai/Mistral-7B-Instruct-v0.3",
+    "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "vllm_default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "fallbacks": [],
-    "notes": "Uses ModelStore adapter mistral_journalist_v1 by default; legacy Qwen2 adapters have been archived."
+    "notes": "Uses ModelStore adapter qwen_journalist_v1 by default."
   },
   "chief_editor": {
-    "default": "mistralai/Mistral-7B-Instruct-v0.3",
-    "vllm_default": "mistralai/Mistral-7B-Instruct-v0.3",
+    "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "vllm_default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "fallbacks": [],
-    "notes": "Uses ModelStore adapter mistral_chief_editor_v1 by default; legacy Qwen2 adapters have been archived."
+    "notes": "Uses ModelStore adapter qwen_chief_editor_v1 by default."
   },
   "reasoning": {
-    "default": "mistralai/Mistral-7B-Instruct-v0.3",
-    "vllm_default": "mistralai/Mistral-7B-Instruct-v0.3",
+    "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "vllm_default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "fallbacks": [],
-    "notes": "Uses ModelStore adapter mistral_reasoning_v1 by default; legacy Qwen2 adapters have been archived."
+    "notes": "Uses ModelStore adapter qwen_reasoning_v1 by default."
   },
   "analyst": {
-    "default": "mistralai/Mistral-7B-Instruct-v0.3",
-    "vllm_default": "mistralai/Mistral-7B-Instruct-v0.3",
+    "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "vllm_default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "fallbacks": [],
-    "notes": "Uses ModelStore adapter mistral_analyst_v1 by default; legacy Qwen2 adapters have been archived."
+    "notes": "Uses ModelStore adapter qwen_analyst_v1 by default."
   },
   "scout": {
     "default": "sentence-transformers/all-MiniLM-L6-v2",

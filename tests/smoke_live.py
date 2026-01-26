@@ -69,9 +69,9 @@ def test_database_connection():
     return False
 
 def test_vllm_load():
-    print("\n[LLM] Testing vLLM Model Loading (Mistral-7B)...")
+    print("\n[LLM] Testing vLLM Model Loading (Qwen 2.5 14B AWQ)...")
     
-    model_name = os.environ.get("VLLM_MODEL", "mistralai/Mistral-7B-Instruct-v0.3")
+    model_name = os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ")
     print(f"Target Model: {model_name}")
 
     try:
