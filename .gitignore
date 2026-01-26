@@ -114,3 +114,4 @@ backups/
 run/
 *.gz
 model_store/
+db.sqlite3

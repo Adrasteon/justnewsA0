@@ -21,6 +21,11 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+# Add the publisher app directory to path so 'news' module can be found
+PUBLISHER_DIR = Path(__file__).resolve().parent
+if str(PUBLISHER_DIR) not in sys.path:
+    sys.path.insert(0, str(PUBLISHER_DIR))
+
 try:
     from common.observability import bootstrap_observability
     bootstrap_observability("publisher")
@@ -90,8 +95,16 @@ WSGI_APPLICATION = "justnews_publisher.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "mysql.connector.django",
+        "NAME": os.environ.get("MARIADB_DB", "justnews"),
+        "USER": os.environ.get("MARIADB_USER", "justnews_user"),
+        "PASSWORD": os.environ.get("MARIADB_PASSWORD", "password123"),
+        "HOST": os.environ.get("MARIADB_HOST", "127.0.0.1"),
+        "PORT": os.environ.get("MARIADB_PORT", "3309"),
+        "OPTIONS": {
+            "autocommit": True,
+            "use_pure": True,
+        },
     }
 }
 

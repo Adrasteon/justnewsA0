@@ -20,6 +20,9 @@ Create the Python environment
 conda env create -f environment.yml -n ${CANONICAL_ENV:-justnews-py312} || conda env update -f environment.yml -n ${CANONICAL_ENV:-justnews-py312}
 conda activate ${CANONICAL_ENV:-justnews-py312}
 
+# Install playwright browsers
+playwright install
+
 ## install dev extras if required
 
 pip install -r requirements.txt || true

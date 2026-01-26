@@ -15,7 +15,6 @@
         "models": ["cardiffnlp/twitter-roberta-base-sentiment-latest", "unitary/toxic-bert"],
         "description": "Two RoBERTa/BERT models for sentiment analysis and bias detection - GPU accelerated with MPS"
       },
-      # balancer removed: allocation entries removed
       "chief_editor": {
         "mps_memory_limit_gb": 2.0,
         "calculated_requirement_gb": 1.0,

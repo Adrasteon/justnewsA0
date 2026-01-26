@@ -575,6 +575,41 @@ conda install --file requirements.txt
 
 ```
 
+### Protocol Buffers / SentencePiece Errors
+
+#### "Descriptors cannot be created directly" Error
+
+If you see an error like `TypeError: Descriptors cannot be created directly` when loading models (especially Mistral/Llama):
+
+1. **Check Protobuf Version**: We require a custom-built protobuf package for Python 3.12 compatibility.
+   ```bash
+   conda list protobuf
+   # Should show version 4.25.x from 'local' channel, NOT 5.x or 6.x from conda-forge
+   ```
+
+2. **Re-install Custom Protobuf**:
+   If the version is incorrect or missing:
+   ```bash
+   # Build local package
+   conda build conda/recipes/protobuf
+   
+   # Install local package
+   conda install -n justnews-py312 --use-local protobuf=4.25.8 -y
+   ```
+
+3. **Check SentencePiece Version**:
+   Must be `>=0.2.1` to be compatible with the newer protobuf descriptors.
+   ```bash
+   conda list sentencepiece
+   # If < 0.2.1:
+   pip install "sentencepiece>=0.2.1"
+   ```
+
+4. **Verify Imports**:
+   ```bash
+   python -c "from transformers import AutoTokenizer; print('Success')"
+   ```
+
 ### Database Permission Denied
 
 ```bash
