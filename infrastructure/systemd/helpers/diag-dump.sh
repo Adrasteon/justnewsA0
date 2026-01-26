@@ -6,7 +6,7 @@ TS="$(date +%Y%m%d_%H%M%S)"
 OUT_DIR="$OUT_ROOT/diag_$TS"
 mkdir -p "$OUT_DIR/logs" "$OUT_DIR/status"
 # Save service list (order consistent with health_check)
-services=(mcp_bus chief_editor scout fact_checker analyst synthesizer critic memory reasoning newsreader analytics archive dashboard gpu_orchestrator)
+services=(mcp_bus chief_editor fact_checker analyst synthesizer critic memory reasoning newsreader analytics archive dashboard gpu_orchestrator)
 printf "%s\n" "${services[@]}" > "$OUT_DIR/services.txt"
 # Systemctl status and last 200 logs
 for s in "${services[@]}"; do

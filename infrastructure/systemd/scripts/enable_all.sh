@@ -13,7 +13,7 @@ SERVICES=(
     "gpu_orchestrator" # GPU Orchestrator (port 8014) — MUST start before mcp_bus
     "mcp_bus"
     "chief_editor"
-    "scout"
+    # "scout" (Deprecated)
     "fact_checker"
     "analyst"
     "synthesizer"

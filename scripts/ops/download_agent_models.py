@@ -16,10 +16,10 @@ from common.observability import get_logger
 
 logger = get_logger(__name__)
 
-# Mapping of agents -> list of model ids to download. The value is a list of tuples (type, hf_id, prefer_sentence_transformers_bool)
-# (type, hf_id, prefer_sentence_transformers_bool)  # model_type: 'transformers' or 'sentence-transformers'
+# Mapping of agents -> list of model ids to download
 AGENT_MODEL_MAP = {
-    "scout": [
+    # scout is deprecated
+    # "scout": [ ... ] 
         (
             "transformers",
             "google/bert_uncased_L-2_H-128_A-2",

@@ -84,7 +84,7 @@ validate_agent_name() {
     if [[ -z "$agent" ]]; then
         log_error "Agent name is required"
         log_info "Usage: $SCRIPT_NAME <agent_name>"
-        log_info "Available agents: mcp_bus, chief_editor, scout, fact_checker, analyst, synthesizer, critic, memory, reasoning, newsreader, dashboard, analytics, archive, hitl_service, crawl4ai, gpu_orchestrator, crawler, crawler_control"
+        log_info "Available agents: mcp_bus, chief_editor, fact_checker, analyst, synthesizer, critic, memory, reasoning, newsreader, dashboard, analytics, archive, hitl_service, crawl4ai, gpu_orchestrator, crawler, crawler_control"
         exit 1
     fi
 
@@ -92,7 +92,7 @@ validate_agent_name() {
     local valid_agents=(
         "mcp_bus"
         "chief_editor"
-        "scout"
+        # "scout" (Deprecated)
         "fact_checker"
         "analyst"
         "synthesizer"
@@ -255,9 +255,9 @@ wait_for_dependencies() {
 
     # Agent-specific dependencies
     case "$agent" in
-        "scout")
-            # Scout may depend on memory agent
-            ;;
+        #"scout")
+        #    # Scout may depend on memory agent
+        #    ;;
         "analyst")
             # Analyst may depend on memory agent
             ;;

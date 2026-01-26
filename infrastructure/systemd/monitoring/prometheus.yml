@@ -29,7 +29,7 @@ scrape_configs:
     static_configs:
       - targets:
           - '127.0.0.1:8001'  # chief_editor
-          - '127.0.0.1:8002'  # scout
+          # - '127.0.0.1:8002'  # scout
           - '127.0.0.1:8003'  # fact_checker
           - '127.0.0.1:8004'  # analyst
           - '127.0.0.1:8005'  # synthesizer

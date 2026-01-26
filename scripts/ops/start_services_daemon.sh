@@ -20,7 +20,7 @@ HEALTH_TIMEOUT=10
 AGENTS=(
   "mcp_bus|agents.mcp_bus.main:app|8000"
   "chief_editor|agents.chief_editor.main:app|8001"
-  "scout|agents.scout.main:app|8002"
+  # "scout|agents.scout.main:app|8002"
   "fact_checker|agents.fact_checker.main:app|8003"
   "analyst|agents.analyst.main:app|8004"
   "synthesizer|agents.synthesizer.main:app|8005"

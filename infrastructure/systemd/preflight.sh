@@ -165,7 +165,7 @@ check_conda_env_exists() {
 check_systemd_enabled_status() {
     log_info "Checking systemd unit enablement (warning-only)..."
     local services=(
-        "mcp_bus" "chief_editor" "scout" "fact_checker" "analyst" "synthesizer"
+        "mcp_bus" "chief_editor" "fact_checker" "analyst" "synthesizer"
         "critic" "memory" "reasoning" "newsreader" "dashboard" "analytics" "archive"
     )
     for service in "${services[@]}"; do
@@ -247,7 +247,6 @@ check_systemd_services() {
     local services=(
         "mcp_bus"
         "chief_editor"
-        "scout"
         "fact_checker"
         "analyst"
         "synthesizer"
@@ -354,7 +353,7 @@ stop_occupied_services() {
         ["8000"]="mcp_bus"
         ["8001"]="chief_editor"
         ["8002"]="scout"
-        ["8003"]="fact_checker"
+        # ["8002"]="scout" # DEPRECATEDhecker"
         ["8004"]="analyst"
         ["8005"]="synthesizer"
         ["8006"]="critic"
@@ -420,7 +419,7 @@ check_project_structure() {
 
     local required_files=(
         "agents/mcp_bus/main.py"
-        "agents/scout/main.py"
+        # "agents/scout/main.py" (Deprecated)
         "agents/analyst/main.py"
         "agents/synthesizer/main.py"
         "start_services_daemon.sh"

@@ -3,7 +3,7 @@
 set -euo pipefail
 if [[ $# -lt 1 ]]; then
   echo "Usage: $0 <service> [service...]" >&2
-  echo "Example: $0 analyst scout mcp_bus" >&2
+  echo "Example: $0 analyst fact_checker mcp_bus" >&2
   exit 1
 fi
 # Build journalctl arguments

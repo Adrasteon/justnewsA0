@@ -79,11 +79,12 @@ services:
       redis:
         condition: service_started
 
-  scout:
-    build:
-      context: ../../
-      dockerfile: infrastructure/docker/agent-dockerfiles/Dockerfile.scout
-    container_name: justnews-scout
+  # Scout is deprecated
+  # scout:
+  #   build:
+  #     context: ../../
+  #     dockerfile: infrastructure/docker/agent-dockerfiles/Dockerfile.scout
+  #   container_name: justnews-scout
     environment:
       DEPLOY_ENV: development
       LOG_LEVEL: INFO

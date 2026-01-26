@@ -10,7 +10,7 @@ PROJECT_ROOT="$(cd "$SYSTEMD_ROOT/../.." && pwd)"
 
 # Crawler service definitions
 CRAWLER_SERVICES=(
-    "scout"            # Original Scout Agent crawler
+    # "scout"          # Deprecated - Replaced by Crawler/FactChecker(Investigator)
     "crawler"          # Unified Production Crawler (updated from unified-crawler)
 )
 

@@ -55,14 +55,6 @@
         "models": ["sentence-transformers/all-MiniLM-L6-v2"],
         "description": "Single lightweight embedding model for multimodal content analysis"
       },
-      "scout": {
-        "mps_memory_limit_gb": 4.0,
-        "calculated_requirement_gb": 3.0,
-        "safety_margin_gb": 1.0,
-        "priority": "high",
-        "models": ["google/bert_uncased_L-2_H-128_A-2", "cardiffnlp/twitter-roberta-base-sentiment-latest", "martin-ha/toxic-comment-model"],
-        "description": "Three models for content discovery, classification, and quality assessment"
-      },
       "synthesizer": {
         "mps_memory_limit_gb": 4.0,
         "calculated_requirement_gb": 3.0,
