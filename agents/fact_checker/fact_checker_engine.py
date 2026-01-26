@@ -345,7 +345,7 @@ class FactCheckerEngine:
         This triggers:
         1. Research planning (Mistral)
         2. Web/Archive Search & Crawl (Crawl4AI)
-        3. Visual/Text Evidence extraction (NewsReader/Llava)
+        3. Visual/Text Evidence extraction (Qwen2-VL)
         4. Verdict synthesis
         """
         if not self.investigator:

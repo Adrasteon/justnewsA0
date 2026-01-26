@@ -137,7 +137,7 @@ async def test_training_forward_flow_updates_metrics(tmp_path, monkeypatch):
 
     manager = training_system_manager.get_system_training_manager()
     if manager.coordinator:
-        manager.coordinator.training_buffers.get("scout", []).clear()
+        manager.coordinator.training_buffers.get("fact_checker", []).clear()
 
     def _counter_value() -> float:
         counter = hitl_module.metrics._custom_counters.get(
@@ -198,7 +198,7 @@ async def test_training_forward_flow_updates_metrics(tmp_path, monkeypatch):
         example_type_display_name="hitl-label",
     )._value.get()
 
-    buffer = manager.coordinator.training_buffers["scout"]
+    buffer = manager.coordinator.training_buffers["fact_checker"]
 
     assert counter_after == pytest.approx(counter_before + 1.0)
     assert metric_after == pytest.approx(metric_before + 1.0)

@@ -84,7 +84,7 @@ validate_agent_name() {
     if [[ -z "$agent" ]]; then
         log_error "Agent name is required"
         log_info "Usage: $SCRIPT_NAME <agent_name>"
-        log_info "Available agents: mcp_bus, chief_editor, fact_checker, analyst, synthesizer, critic, memory, reasoning, newsreader, dashboard, analytics, archive, hitl_service, crawl4ai, gpu_orchestrator, crawler, crawler_control"
+        log_info "Available agents: mcp_bus, chief_editor, fact_checker, analyst, synthesizer, critic, memory, reasoning, dashboard, analytics, archive, hitl_service, crawl4ai, gpu_orchestrator, crawler, crawler_control"
         exit 1
     fi
 
@@ -99,7 +99,7 @@ validate_agent_name() {
         "critic"
         "memory"
         "reasoning"
-        "newsreader"
+        # "newsreader"
         "dashboard"
         "analytics"
         "archive"
@@ -528,14 +528,14 @@ USAGE:
 AGENTS:
     mcp_bus         Central communication hub
     chief_editor    Workflow orchestration
-    scout           Content discovery
+    # scout           Content discovery (Deprecated, see crawler)
     fact_checker    Fact verification
     analyst         Sentiment analysis
     synthesizer     Content synthesis
     critic          Quality assessment
     memory          Data storage
     reasoning       Logical reasoning
-    newsreader      News processing
+    # newsreader      News processing (Deprecated)
     dashboard       Web interface
     analytics       System analytics and monitoring
     # balancer removed: responsibilities moved to critic/analytics/gpu_orchestrator

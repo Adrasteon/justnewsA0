@@ -51,7 +51,7 @@
   "scout": {
     "default": "sentence-transformers/all-MiniLM-L6-v2",
     "fallbacks": [],
-    "notes": "Embeddings-only agent; unchanged"
+    "notes": "[DEPRECATED] Embeddings-only agent; functionality moved to Investigator"
   },
   "memory": {
     "default": "sentence-transformers/all-MiniLM-L6-v2",
@@ -61,6 +61,12 @@
   "newsreader": {
     "default": "sentence-transformers/all-MiniLM-L6-v2",
     "fallbacks": [],
-    "notes": "Embeddings/multimodal agent; unchanged"
+    "notes": "[DEPRECATED] Use visual_investigator instead."
+  },
+  "visual_investigator": {
+    "default": "Qwen/Qwen2-VL-2B-Instruct",
+    "vllm_default": "Qwen/Qwen2-VL-2B-Instruct",
+    "fallbacks": [],
+    "notes": "Used by Investigator agent for multi-modal evidence analysis (Visual Question Answering)."
   }
 }

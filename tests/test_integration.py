@@ -55,7 +55,7 @@ class TestMCPBusIntegration:
     async def test_inter_agent_communication(self):
         """Test communication between agents via MCP Bus"""
         # Setup mock agents
-        scout_response = {
+        crawler_response = {
             "articles": [
                 {"id": "1", "title": "Test Article", "content": "Test content"}
             ]
@@ -70,15 +70,15 @@ class TestMCPBusIntegration:
         # Mock MCP Bus calls
         with patch("httpx.AsyncClient") as mock_client:
             # Setup response sequence
-            scout_call = AsyncMock()
-            scout_call.json.return_value = scout_response
+            crawler_call = AsyncMock()
+            crawler_call.json.return_value = crawler_response
 
             analyst_call = AsyncMock()
             analyst_call.json.return_value = analyst_response
 
-            mock_client.return_value.post.side_effect = [scout_call, analyst_call]
+            mock_client.return_value.post.side_effect = [crawler_call, analyst_call]
 
-            # Simulate workflow: Scout -> Analyst
+            # Simulate workflow: Crawler -> Analyst
             workflow_result = await self._simulate_news_analysis_workflow()
 
             # Verify workflow completed successfully
@@ -93,7 +93,7 @@ class TestMCPBusIntegration:
         """Test complete news processing pipeline"""
         # Mock all agents in the pipeline
         mock_responses = {
-            "scout": {
+            "crawler": {
                 "articles": [
                     {
                         "id": "test_123",
@@ -272,7 +272,7 @@ class TestMCPBusIntegration:
 
     async def _simulate_news_analysis_workflow(self) -> dict[str, Any]:
         """Simulate a basic news analysis workflow"""
-        # This would normally orchestrate Scout -> Analyst communication
+        # This would normally orchestrate Crawler -> Analyst communication
         return {
             "articles": [{"id": "1", "title": "Test"}],
             "analysis": {"sentiment": "neutral", "confidence": 0.9},

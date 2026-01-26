@@ -19,15 +19,7 @@ logger = get_logger(__name__)
 # Mapping of agents -> list of model ids to download
 AGENT_MODEL_MAP = {
     # scout is deprecated
-    # "scout": [ ... ] 
-        (
-            "transformers",
-            "google/bert_uncased_L-2_H-128_A-2",
-            False,
-        ),  # small bert variant used for fast tests
-        ("transformers", "cardiffnlp/twitter-roberta-base-sentiment-latest", False),
-        ("transformers", "martin-ha/toxic-comment-model", False),
-    ],
+    # newsreader is deprecated
     "fact_checker": [
         ("transformers", "distilbert-base-uncased", False),
         ("transformers", "roberta-base", False),
@@ -47,9 +39,9 @@ AGENT_MODEL_MAP = {
     "analyst": [
         ("transformers", "google/bert_uncased_L-2_H-128_A-2", False),
     ],
-    "newsreader": [
-        ("sentence-transformers", "all-MiniLM-L6-v2", True),
-    ],
+    # "newsreader": [
+    #     ("sentence-transformers", "all-MiniLM-L6-v2", True),
+    # ],
     # balancer removed - models migrated to critic/chief_editor/analytics
     "chief_editor": [
         ("transformers", "distilbert-base-uncased", False),

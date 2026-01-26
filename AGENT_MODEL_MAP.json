@@ -17,6 +17,24 @@
       "quantized_variants": ["awq", "fp16"],
       "inference_mode": "vllm",
       "vllm_endpoint": "http://127.0.0.1:8010/v1"
+    },
+    "qwen2-vl-2b-instruct": {
+      "hf_id": "Qwen/Qwen2-VL-2B-Instruct",
+      "model_store_agent": "base_models",
+      "variant_preference": "fp16",
+      "quantized_variants": ["fp16", "awq"],
+      "approx_vram_mb": 4096,
+      "inference_mode": "local",
+      "peft_support": true
+    },
+    "whisper-distil-large-v3": {
+      "hf_id": "Systran/faster-distil-whisper-large-v3",
+      "model_store_agent": "base_models",
+      "variant_preference": "default",
+      "quantized_variants": ["int8", "float16"],
+      "approx_vram_mb": 2048,
+      "inference_mode": "local",
+      "peft_support": false
     }
   },
   "agents": {
@@ -42,6 +60,12 @@
         "adapter_name": "mistral_fact_checker_v1",
         "adapter_model_store_path": "fact_checker/adapters/mistral_fact_checker_v1",
         "variant_preference": "bnb-int8"
+      },
+      {
+        "base_ref": "qwen2-vl-2b-instruct",
+        "adapter_name": "qwen_investigator_v1",
+        "adapter_model_store_path": "fact_checker/adapters/qwen_investigator_v1",
+        "variant_preference": "fp16"
       }
     ],
     "critic": [

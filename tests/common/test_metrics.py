@@ -30,10 +30,10 @@ class TestJustNewsMetrics:
 
     def test_initialization_with_display_name_mapping(self):
         """Test initialization with known agent display name"""
-        metrics = JustNewsMetrics("scout")
+        metrics = JustNewsMetrics("crawler")
 
-        assert metrics.agent_name == "scout"
-        assert metrics.display_name == "content-discovery-agent"
+        assert metrics.agent_name == "crawler"
+        assert metrics.display_name == "content-crawling-agent"
 
     def test_record_request(self):
         """Test recording HTTP requests"""

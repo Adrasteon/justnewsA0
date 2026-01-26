@@ -33,7 +33,8 @@ class JustNewsMetrics:
 
     # Agent display names for clearer labeling
     AGENT_DISPLAY_NAMES = {
-        "scout": "content-discovery-agent",
+        # "scout": "content-discovery-agent", (Deprecated)
+        # "crawler": "content-discovery-agent", (Duplicated)
         "analyst": "sentiment-analysis-agent",
         "synthesizer": "content-synthesis-agent",
         "fact_checker": "fact-verification-agent",

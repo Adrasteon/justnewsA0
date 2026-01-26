@@ -1,19 +1,12 @@
 """
-Scout Engine - AI-Powered Web Crawling and Analysis
+Scout Engine - AI-Powered Web Crawling and Analysis [DEPRECATED]
+
+DEPRECATION WARNING:
+This engine is deprecated. Use `agents.fact_checker.investigator` or 
+`agents.crawler.crawler_engine` instead.
 
 This module implements the core Scout engine for web crawling, content discovery,
-and AI-powered analysis using BERT, DeBERTa, and RoBERTa models.
-
-Features:
-- Intelligent web crawling with Crawl4AI
-- BERT-based content classification
-- DeBERTa content quality assessment
-- RoBERTa bias detection
-- GPU acceleration with CPU fallbacks
-- Production-ready error handling
-
-Architecture: Streamlined for AI-first approach with specialized models for
-different analysis tasks.
+and AI-powered analysis.
 """
 
 import os
@@ -143,6 +136,11 @@ class ScoutEngine:
     """
 
     def __init__(self, config: ScoutConfig):
+        warnings.warn(
+            "ScoutEngine is deprecated. Use Investigator or Crawler instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         self.config = config
         self.device = self._setup_device()
 

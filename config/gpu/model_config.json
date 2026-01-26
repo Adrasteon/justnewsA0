@@ -33,20 +33,15 @@
       "batch_size_recommendation": 64,
       "use_flash_attention": false
     },
-    "cardiffnlp/twitter-roberta-base-sentiment-latest": {
-      "max_memory_usage_gb": 1.5,
-      "batch_size_recommendation": 16,
-      "use_flash_attention": false
-    },
-    "martin-ha/toxic-comment-model": {
-      "max_memory_usage_gb": 1.0,
-      "batch_size_recommendation": 16,
-      "use_flash_attention": false
-    },
     "distilbert-base-uncased": {
       "max_memory_usage_gb": 1.0,
       "batch_size_recommendation": 16,
       "use_flash_attention": false
+    },
+    "Qwen/Qwen2-VL-2B-Instruct": {
+      "max_memory_usage_gb": 4.5,
+      "batch_size_recommendation": 1,
+      "use_flash_attention": true
     },
     "roberta-base": {
       "max_memory_usage_gb": 2.0,
@@ -76,11 +71,9 @@
   },
   "agent_model_assignments": {
     "synthesizer": ["gpt2-medium", "distilgpt2", "google/flan-t5-small"],
-    "fact_checker": ["distilbert-base-uncased", "roberta-base", "sentence-transformers/all-mpnet-base-v2"],
+    "fact_checker": ["distilbert-base-uncased", "roberta-base", "sentence-transformers/all-mpnet-base-v2", "Qwen/Qwen2-VL-2B-Instruct"],
     "analyst": ["google/bert_uncased_L-2_H-128_A-2"],
-    "scout": ["google/bert_uncased_L-2_H-128_A-2", "cardiffnlp/twitter-roberta-base-sentiment-latest", "martin-ha/toxic-comment-model"],
     "memory": ["sentence-transformers/all-MiniLM-L6-v2"],
-    "newsreader": ["sentence-transformers/all-MiniLM-L6-v2"],
     "critic": ["unitary/unbiased-toxic-roberta", "unitary/toxic-bert"],
     # balancer removed: assignment moved to critic/analytics/gpu_orchestrator
     "chief_editor": ["distilbert-base-uncased"]

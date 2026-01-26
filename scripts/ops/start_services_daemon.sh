@@ -27,7 +27,7 @@ AGENTS=(
   "critic|agents.critic.main:app|8006"
   "memory|agents.memory.main:app|8007"
   "reasoning|agents.reasoning.main:app|8008"
-  "newsreader|agents.newsreader.main:app|8009"
+  # "newsreader|agents.newsreader.main:app|8009"
   "db_worker|agents.db_worker.worker:app|8010"
   "dashboard|agents.dashboard.main:app|8011"
   "analytics|agents.analytics.dashboard:analytics_app|8012"

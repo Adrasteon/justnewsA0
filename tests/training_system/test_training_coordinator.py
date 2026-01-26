@@ -26,27 +26,27 @@ def make_coordinator(monkeypatch):
 def test_add_training_example_buffers_and_persists(monkeypatch):
     coord = make_coordinator(monkeypatch)
 
-    assert len(coord.training_buffers["scout"]) == 0
+    assert len(coord.training_buffers["fact_checker"]) == 0
 
     coord.add_training_example(
-        agent_name="scout",
+        agent_name="fact_checker",
         task_type="sentiment",
         input_text="x",
         expected_output=1,
         uncertainty_score=0.9,
     )
 
-    assert len(coord.training_buffers["scout"]) == 1
+    assert len(coord.training_buffers["fact_checker"]) == 1
 
     # Add another and ensure buffer keeps both
     coord.add_training_example(
-        agent_name="scout",
+        agent_name="fact_checker",
         task_type="sentiment",
         input_text="y",
         expected_output=0,
         uncertainty_score=0.95,
     )
-    assert len(coord.training_buffers["scout"]) == 2
+    assert len(coord.training_buffers["fact_checker"]) == 2
 
 
 def test_add_prediction_feedback_adds_only_high_uncertainty(monkeypatch):
@@ -87,11 +87,11 @@ def test_force_update_agent_triggers_update(monkeypatch):
     coord._update_agent_model = fake_update
 
     # add example so buffer is non-empty
-    coord.add_training_example("scout", "sentiment", "x", 1, 0.9)
+    coord.add_training_example("fact_checker", "sentiment", "x", 1, 0.9)
 
-    ok = coord.force_update_agent("scout")
+    ok = coord.force_update_agent("fact_checker")
     assert ok is True
-    assert called["agent"] == "scout"
+    assert called["agent"] == "fact_checker"
     assert called["immediate"] is True
 
 
@@ -101,7 +101,7 @@ def test_update_agent_model_performance_drop_triggers_rollback(monkeypatch):
     # add several examples so update will proceed
     for i in range(4):
         coord.add_training_example(
-            "scout", "sentiment", f"t{i}", expected_output=i % 2, uncertainty_score=0.9
+            "fact_checker", "sentiment", f"t{i}", expected_output=i % 2, uncertainty_score=0.9
         )
 
     # Make perform update succeed
@@ -124,9 +124,9 @@ def test_update_agent_model_performance_drop_triggers_rollback(monkeypatch):
     )
 
     # Run update directly (synchronous)
-    coord._update_agent_model("scout", immediate=False)
+    coord._update_agent_model("fact_checker", immediate=False)
 
     # After update, because a rollback was triggered, examples should remain in the
     # buffer (rollback prevents clearing) and training should have finished.
-    assert len(coord.training_buffers["scout"]) >= 1
+    assert len(coord.training_buffers["fact_checker"]) >= 1
     assert coord.is_training is False

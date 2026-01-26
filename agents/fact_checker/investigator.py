@@ -4,7 +4,7 @@ Investigator Module - Enterprise-Grade Multi-Modal Fact Retrieval & Analysis
 This module implements the `Investigator` agent capabilities, replacing the legacy Scout.
 It provides:
 1. Intelligent Research Planning (using Mistral)
-2. Multi-Modal Evidence Retrieval (Text via Crawl4AI, Vision via NewsReader/Llava)
+2. Multi-Modal Evidence Retrieval (Text via Crawl4AI, Vision via Qwen2-VL)
 3. Traceability & auditing of all evidence sources.
 
 Architecture:
@@ -33,19 +33,31 @@ except ImportError:
     CRAWLER_AVAILABLE = False
 
 try:
-    from agents.newsreader.newsreader_engine import NewsReaderEngine, NewsReaderConfig, ProcessingMode
-    VISION_AVAILABLE = True
+    from common.web_capture import WebCaptureService, ScreenshotConfig
+    try:
+        import qwen_vl_utils
+        VISION_AVAILABLE = True
+    except ImportError:
+        import logging 
+        logging.getLogger(__name__).warning("qwen_vl_utils not found. Vision disabled.")
+        VISION_AVAILABLE = False
 except ImportError:
     VISION_AVAILABLE = False
 
 try:
-    from duckduckgo_search import DDGS
+    from DuckDuckGoSearch import DDGS
     SEARCH_AVAILABLE = True
 except ImportError:
-    SEARCH_AVAILABLE = False
-
+    try: 
+        from duckduckgo_search import DDGS
+        SEARCH_AVAILABLE = True
+    except ImportError:
+        SEARCH_AVAILABLE = False
+        
 # Local imports
 from .mistral_adapter import MistralAdapter, MODEL_ADAPTER_NAME, SYSTEM_PROMPT
+from common.audio_processing import AudioTranscriber, TranscriptionConfig, WHISPER_AVAILABLE
+
 
 logger = get_logger(__name__)
 
@@ -94,7 +106,7 @@ class Investigator:
     1. Plan: Analyze claim -> Generate search queries.
     2. Search: Execute queries -> Get URLs.
     3. Retrieval: Crawl URLs -> Extract Text/Images.
-    4. Analysis: Analyze Images (Llava) / Text (Mistral).
+    4. Analysis: Analyze Images (Qwen2-VL) / Text (Mistral).
     5. Report: Compile findings.
     """
     
@@ -110,11 +122,15 @@ class Investigator:
             system_prompt=SYSTEM_PROMPT
         )
         
+        # Initialize Audio (Whisper) - Lazy Loaded
+        self._audio_transcriber: AudioTranscriber | None = None
+
+        
         # Initialize Crawler (Replaces Scout)
         self.crawler = CrawlerEngine() if CRAWLER_AVAILABLE else None
         
-        # Initialize Vision (NewsReader/Llava) - Lazy Loaded
-        self._vision_engine: NewsReaderEngine | None = None
+        # Initialize Vision (Qwen2-VL) - Lazy Loaded
+        self._web_capture: WebCaptureService | None = None
         
     async def investigate(self, claim: str) -> InvestigationReport:
         """
@@ -244,63 +260,163 @@ class Investigator:
             vision_result = await self._analyze_visuals(url, claim)
             if vision_result:
                 evidence.append(vision_result)
-        
-        # 3. Audio/Video Analysis (Placeholder)
-        # if self.config.enable_audio and self._is_audio_content(url): ...
+        self.logger.info(f"🎤 Analyzing audio/video content: {url}")
+            av_result = await self._analyze_audiovisual(url, claim)
+            if av_result:
+                evidence.append(av_result)
                 
         return evidence
-
-    async def _analyze_visuals(self, url: str, claim: str) -> EvidencePiece | None:
-        """Use NewsReader/Llava to analyze images."""
-        if not VISION_AVAILABLE:
+    
+    async def _analyze_audiovisual(self, url: str, claim: str) -> EvidencePiece | None:
+        """Analyze Audio/Video content using Whisper (Audio) and Qwen (Video Frames)."""
+        # Note: In a real implementation, we need to download the file first.
+        # This is a stub to demonstrate the integration architecture.
+        # Ideally, we would use `yt-dlp` or similar to fetch the media.
+        
+        if not WHISPER_AVAILABLE:
             return None
             
+        evidence_text = []
+        
+        # 1. Transcribe Audio
+        if not self._audio_transcriber:
+            self._audio_transcriber = AudioTranscriber()
+            
+        # Placeholder: Assume we have a local path for now (in prod, download here)
+        # local_media_path = await self._download_media(url)
+        local_media_path = None 
+        
+        if local_media_path and os.path.exists(local_media_path):
+            try:
+                transcript = self._audio_transcriber.transcribe(local_media_path)
+                if "text" in transcript:
+                    evidence_text.append(f"AUDIO TRANSCRIPT: {transcript['text']}")
+            except Exception as e:
+                self.logger.error(f"Audio transcription failed: {e}")
+                
+        # 2. Analyze Video Frames (if video) with Qwen integration logic
+        # ... logic to extract frames ...
+        
+        if not evidence_text:
+            return None
+            
+        return EvidencePiece(
+            content="\n".join(evidence_text),
+            source_url=url,
+            media_type=MediaType.VIDEO, # Or AUDIO
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            confidence=0.9,
+            metadata={"model": "Faster-Whisper"}
+        )
+les Video (Visuals only). Audio requires Faster-Whisper.
+        if self.config.enable_audio and self._is_audio_content(url):
+             self.logger.info("TODO: Implement Audio/Video transcription via Faster-Whisper")
+             # await self._transcribe_audio(url)                
+        return evidence
+    async def _analyze_visuals(self, url: str, claim: str) -> EvidencePiece | None:
+        """Use Qwen2-VL to analyze images (replacing legacy NewsReader/Llava)."""
+        if not VISION_AVAILABLE:
+            return None
+
         screenshot_path = f"temp_evidence_{hash(url)}.png"
         result_piece = None
         
         try:
-            # Initialize engine in context manager to ensure cleanup
-            async with NewsReaderEngine(NewsReaderConfig(
-                default_mode=ProcessingMode.FAST,
-                headless=True,
-                device="cuda" # Use GPU for Llava
-            )) as engine:
-                
-                # 1. Capture content as visual receipt (Traceability)
-                await engine.capture_webpage_screenshot(url, screenshot_path)
-                
-                # 2. Analyze with Vision Model
-                # Prompt Llava specifically to verify the claim against the image
-                prompt = (
-                    f"Analyze this webpage screenshot carefully. "
-                    f"I am verifying the claim: '{claim}'. "
-                    f"Does this image/webpage contain visual evidence supporting or refuting this? "
-                    f"Describe any relevant text, charts, or scenes."
-                )
-                
-                analysis = engine.analyze_screenshot_with_llava(screenshot_path, custom_prompt=prompt)
-                
-                if analysis.get("success", True) is not False: # Handle various return shapes
-                    # Extract text content from analysis result
-                    text_content = analysis.get("extracted_text", "") or str(analysis)
-                    
-                    result_piece = EvidencePiece(
-                        content=f"VISUAL ANALYSIS: {text_content}",
-                        source_url=url,
-                        media_type=MediaType.IMAGE,
-                        timestamp=datetime.now(timezone.utc).isoformat(),
-                        confidence=0.85,
-                        metadata={
-                            "screenshot_path": screenshot_path, 
-                            "model": "Llava-OneVision"
-                        }
-                    )
-                    
+            # 1. Capture content using common WebCaptureService
+            if not self._web_capture:
+                 self._web_capture = WebCaptureService(ScreenshotConfig(
+                    headless=True,
+                ))
+
+            await self._web_capture.capture_screenshot(url, screenshot_path)
+            
+            # 2. Analyze with Qwen2-VL (Transformers implementation)
+            # Efficient & Stable for RTX3090 (2B version uses <2GB VRAM)
+            from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
+            from qwen_vl_utils import process_vision_info
+            import torch
+            
+            # Lazy load Qwen model locally to avoid holding VRAM
+            # Using Qwen2-VL-2B-Instruct for extreme efficiency alongside Mistral 7B
+            # We attempt to load the model name from recommendations, defaulting to 2B if missing.
+            model_name = "Qwen/Qwen2-VL-2B-Instruct"
+            try:
+                base_path = os.getcwd() # Assumes running from root
+                rec_path = os.path.join(base_path, "AGENT_MODEL_RECOMMENDED.json")
+                if os.path.exists(rec_path):
+                    with open(rec_path, 'r') as f:
+                        data = json.load(f)
+                        # Check new key 'visual_investigator'
+                        if "visual_investigator" in data:
+                            model_name = data["visual_investigator"].get("default", model_name)
+                        elif "fact_checker" in data and "visual_fallback" in data["fact_checker"]:
+                             model_name = data["fact_checker"]["visual_fallback"]
+            except Exception as e:
+                self.logger.warning(f"Could not load model recommendation: {e}, using default {model_name}")
+
+            self.logger.info(f"🧠 Loading {model_name} for visual analysis...")
+            
+            model = Qwen2VLForConditionalGeneration.from_pretrained(
+                model_name,
+                torch_dtype=torch.float16, 
+                device_map="auto",
+                attn_implementation="flash_attention_2"
+            )
+            processor = AutoProcessor.from_pretrained(model_name)
+            
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "image": screenshot_path,
+                        },
+                        {"type": "text", "text": f"Analyze this webpage screenshot. Does it contain evidence for: '{claim}'? Describe charts or headlines."},
+                    ],
+                }
+            ]
+            
+            # Inference
+            text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+            image_inputs, video_inputs = process_vision_info(messages)
+            inputs = processor(
+                text=[text],
+                images=image_inputs,
+                videos=video_inputs,
+                padding=True,
+                return_tensors="pt",
+            )
+            inputs = inputs.to("cuda")
+            
+            generated_ids = model.generate(**inputs, max_new_tokens=256)
+            generated_ids_trimmed = [
+                out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
+            ]
+            output_text = processor.batch_decode(
+                generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+            )[0]
+            
+            result_piece = EvidencePiece(
+                content=f"VISUAL ANALYSIS (Qwen2-VL): {output_text}",
+                source_url=url,
+                media_type=MediaType.IMAGE,
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                confidence=0.85,
+                metadata={
+                    "screenshot_path": screenshot_path, 
+                    "model": model_name
+                }
+            )
+            
+            # Cleanup Qwen immediately to free VRAM for Mistral
+            del model
+            del processor
+            torch.cuda.empty_cache()
+            
         except Exception as e:
             self.logger.error(f"Visual analysis failed: {e}")
         finally:
-            # Cleanup temp file if needed, or keep for audit? 
-            # Ideally keep for audit, but clean for disk space.
             if os.path.exists(screenshot_path) and self.config.visual_model_unload_after_use:
                 try:
                     os.remove(screenshot_path)
@@ -311,8 +427,13 @@ class Investigator:
 
     def _is_visual_content(self, url: str) -> bool:
         """Heuristic to check if URL implies visual content."""
-        visual_exts = ['.jpg', '.png', '.jpeg', '.webp', 'youtube.com', 'instagram.com']
+        visual_exts = ['.jpg', '.png', '.jpeg', '.webp', 'youtube.com', 'instagram.com', 'tiktok.com']
         return any(ext in url.lower() for ext in visual_exts)
+
+    def _is_audio_content(self, url: str) -> bool:
+        """Heuristic to check if URL implies audio/video content."""
+        audio_exts = ['.mp3', '.wav', '.mp4', '.avi', '.mov', 'youtube.com', 'spotify.com', 'soundcloud.com']
+        return any(ext in url.lower() for ext in audio_exts)
 
     async def _synthesize_verdict(self, claim: str, evidence: list[EvidencePiece]) -> dict:
         """Synthesize findings into a verdict using Mistral."""

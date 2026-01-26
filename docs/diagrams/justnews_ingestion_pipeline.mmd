@@ -1,7 +1,7 @@
 C4Context
   title JustNews - Ingestion Pipeline
   Enterprise_Boundary(b0, "Ingestion & Store") {
-    System(scout, "Scout", "Source discovery & discovery seeds")
+    System(scout, "Scout [DEPRECATED]", "Source discovery & discovery seeds (Use Crawler/FactChecker)")
     System(c4ai, "C4AI Bridge", "External Crawl4AI integration")
     System(crawler, "Crawler", "Crawl + extractor + job store")
     System(journalist, "Journalist", "Publishing-driven discovery & assembly")

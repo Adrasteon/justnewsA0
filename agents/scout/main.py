@@ -1,29 +1,28 @@
 """
-Scout Agent - Main FastAPI Application
+Scout Agent - Main FastAPI Application [DEPRECATED]
+
+DEPRECATION WARNING:
+The Scout Agent is deprecated and will be removed in a future release.
+Functionality has been migrated to:
+- Retrieval & Analysis -> agents/fact_checker/investigator.py
+- General Crawling -> agents/crawler/crawler_engine.py
 
 This is the main entry point for the Scout agent, providing RESTful APIs
 for web crawling, content discovery, and AI-powered analysis.
-
-Features:
-- FastAPI web server with MCP bus integration
-- Web crawling and content discovery endpoints
-- AI-powered sentiment and bias analysis
-- Production-ready error handling and logging
-
-Endpoints:
-- POST /discover_sources: Discover news sources
-- POST /crawl_url: Crawl a specific URL
-- POST /deep_crawl_site: Deep crawl a website
-- POST /analyze_sentiment: Analyze sentiment in text
-- POST /detect_bias: Detect bias in text
-- GET /health: Health check endpoint
-- GET /stats: Processing statistics
 """
 
 import os
 import time
+import warnings
 from contextlib import asynccontextmanager
 from typing import Any
+
+# Emit deprecation warning on import
+warnings.warn(
+    "The Scout Agent is deprecated. Use Investigator (agents/fact_checker) or Crawler (agents/crawler) instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

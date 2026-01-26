@@ -42,9 +42,14 @@ def _import_trainer_and_args():
 
 # Import feedback logging utility
 try:
-    from agents.newsreader.newsreader_v2_true_engine import log_feedback
+    # Use common logger instead of deprecated newsreader module
+    from common.observability import get_logger
+    _logger = get_logger(__name__)
+    
+    def log_feedback(event: str, details: dict):
+        _logger.info(f"TRAINING_FEEDBACK: {event} - {details}")
 except ImportError:
-    # Fallback log_feedback function if NewsReader engine not available
+    # Fallback log_feedback function if observability not available
     def log_feedback(event: str, details: dict):
         with open("training_feedback.log", "a", encoding="utf-8") as f:
             f.write(f"{datetime.now(UTC).isoformat()}\t{event}\t{details}\n")
@@ -110,11 +115,11 @@ class OnTheFlyTrainingCoordinator:
 
         # Training buffers for each agent
         self.training_buffers = {
-            "scout": deque(maxlen=max_buffer_size),
+            # "scout": deque(maxlen=max_buffer_size), # Deprecated in favor of Investigator
             "analyst": deque(maxlen=max_buffer_size),
             "critic": deque(maxlen=max_buffer_size),
             "fact_checker": deque(maxlen=max_buffer_size),
-            "newsreader": deque(maxlen=max_buffer_size),
+            # "newsreader": deque(maxlen=max_buffer_size), # Deprecated in favor of Qwen2-VL
             "synthesizer": deque(maxlen=max_buffer_size),
             "chief_editor": deque(maxlen=max_buffer_size),
             "memory": deque(maxlen=max_buffer_size),
@@ -361,7 +366,9 @@ class OnTheFlyTrainingCoordinator:
         try:
             # Route to appropriate agent's training method
             if agent_name == "scout":
-                return self._update_scout_models(training_examples)
+                # return self._update_scout_models(training_examples)
+                logger.warning("Scout model update requested but agent is deprecated.")
+                return True
             elif agent_name == "analyst":
                 return self._update_analyst_models(training_examples)
             elif agent_name == "critic":
@@ -369,7 +376,9 @@ class OnTheFlyTrainingCoordinator:
             elif agent_name == "fact_checker":
                 return self._update_fact_checker_models(training_examples)
             elif agent_name == "newsreader":
-                return self._update_newsreader_models(training_examples)
+                # return self._update_newsreader_models(training_examples)
+                logger.warning("NewsReader model update requested but agent is deprecated.")
+                return True
             elif agent_name == "synthesizer":
                 return self._update_synthesizer_models(training_examples)
             elif agent_name == "chief_editor":
@@ -385,44 +394,9 @@ class OnTheFlyTrainingCoordinator:
             return False
 
     def _update_scout_models(self, examples: list[TrainingExample]) -> bool:
-        """Update Scout V2 models with new training data via MCP Bus"""
-        try:
-            # Use MCP Bus to call Scout agent for model updates
-            from training_system.mcp_integration import mcp_client
-
-            # Prepare training data for Scout
-            training_data = {
-                "examples": [
-                    {
-                        "task_type": ex.task_type,
-                        "input_text": ex.input_text,
-                        "expected_output": ex.expected_output,
-                        "importance_score": ex.importance_score,
-                    }
-                    for ex in examples
-                ]
-            }
-
-            # Call Scout's training endpoint via MCP Bus
-            response = mcp_client.call_agent_tool(
-                agent="scout", tool="update_models", kwargs=training_data
-            )
-
-            success = response.get("status") == "success"
-            if success:
-                logger.info(
-                    f"✅ Scout models updated via MCP Bus with {len(examples)} examples"
-                )
-            else:
-                logger.warning(
-                    f"❌ Scout model update failed: {response.get('message', 'Unknown error')}"
-                )
-
-            return success
-
-        except Exception as e:
-            logger.error(f"Scout model update error: {e}")
-            return False
+        """DEPRECATED: Scout agent retired."""
+        logger.warning("Scout model update called on deprecated agent.")
+        return True
 
     def _update_fact_checker_models(self, examples: list[TrainingExample]) -> bool:
         """Update Fact Checker V2 models with new training data via MCP Bus"""
@@ -465,56 +439,9 @@ class OnTheFlyTrainingCoordinator:
             return False
 
     def _update_newsreader_models(self, examples: list[TrainingExample]) -> bool:
-        """Update NewsReader V2 models with new training data via MCP Bus"""
-        try:
-            # Use MCP Bus to call NewsReader agent for model updates
-            from training_system.mcp_integration import mcp_client
-
-            # Prepare training data for NewsReader
-            training_data = {
-                "examples": [
-                    {
-                        "task_type": ex.task_type,
-                        "input_text": ex.input_text,
-                        "expected_output": ex.expected_output,
-                        "importance_score": ex.importance_score,
-                    }
-                    for ex in examples
-                ]
-            }
-
-            # Call NewsReader's training endpoint via MCP Bus
-            response = mcp_client.call_agent_tool(
-                agent="newsreader", tool="update_models", kwargs=training_data
-            )
-
-            success = response.get("status") == "success"
-            if success:
-                logger.info(
-                    f"✅ NewsReader models updated via MCP Bus with {len(examples)} examples"
-                )
-            else:
-                logger.warning(
-                    f"❌ NewsReader model update failed: {response.get('message', 'Unknown error')}"
-                )
-
-            # Also log examples for future LLaVA fine-tuning (maintaining existing behavior)
-            for example in examples:
-                log_feedback(
-                    "newsreader_training_example",
-                    {
-                        "task_type": example.task_type,
-                        "input": example.input_text,
-                        "expected_output": example.expected_output,
-                        "timestamp": datetime.now(UTC).isoformat(),
-                    },
-                )
-
-            return success
-
-        except Exception as e:
-            logger.error(f"NewsReader model update error: {e}")
-            return False
+        """DEPRECATED: NewsReader agent retired."""
+        logger.warning("NewsReader model update called on deprecated agent.")
+        return True
 
     def _update_analyst_models(self, examples: list[TrainingExample]) -> bool:
         """Update Analyst V2 models with new training data via MCP Bus"""

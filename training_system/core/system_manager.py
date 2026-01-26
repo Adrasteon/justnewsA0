@@ -464,7 +464,8 @@ class SystemWideTrainingManager:
         if self.coordinator is None:
             raise RuntimeError("Training coordinator is not initialized")
 
-        agent_name = "scout"
+        # agent_name = "scout" (Deprecated)
+        agent_name = "fact_checker"  # Defaulting to fact_checker as crawler is not a training target
         task_type = "news_classification"
 
         text_candidates = [

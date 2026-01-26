@@ -152,7 +152,7 @@
   },
   "agents": {
     "ports": {
-      "_scout": 8002,
+      "scout": 8002,
       "analyst": 8004,
       "fact_checker": 8003,
       "synthesizer": 8005,
@@ -167,7 +167,7 @@
       "health_check_timeout_seconds": 10
     },
     "batch_sizes": {
-      "_scout_batch_size": 10,
+      "scout_batch_size": 10,
       "analyst_batch_size": 16,
       "synthesizer_batch_size": 8
     },

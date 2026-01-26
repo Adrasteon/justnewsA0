@@ -413,7 +413,7 @@ def create_mock_requests() -> types.ModuleType:
                     "analyst": "http://localhost:8004",
                     "fact_checker": "http://localhost:8003",
                     "synthesizer": "http://localhost:8005",
-                    "scout": "http://localhost:8002",
+                    # "scout": "http://localhost:8002", (Deprecated)
                     "critic": "http://localhost:8006",
                     "memory": "http://localhost:8007",
                     "reasoning": "http://localhost:8008",

@@ -45,7 +45,7 @@ add_failure() {
 SERVICES=(
     "mcp-bus:8000"
     "chief-editor:8001"
-    "scout:8002"
+    # "scout:8002"
     "fact-checker:8003"
     "analyst:8004"
     "synthesizer:8005"

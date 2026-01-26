@@ -53,7 +53,7 @@ A production-ready multi-agent news analysis system featuring GPU-accelerated pr
 JustNews employs a multi-agent architecture coordinated via the Model Context Protocol (MCP).
 
 key components:
-- **Agents**: located in `agents/` (Scout, Journalist, Editor, Publisher, etc.)
+- **Agents**: located in `agents/` (Fact Checker, Crawler, Journalist, Editor, Publisher, etc.)
 - **Shared Libraries**: located in `common/` and `agents/common/`
 - **Infrastructure**: located in `infrastructure/` (Systemd services, configurations)
 
