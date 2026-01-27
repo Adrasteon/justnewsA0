@@ -3,20 +3,18 @@ Main file for the Analyst Agent.
 """
 
 import os
-import time
 from contextlib import asynccontextmanager
 from typing import Any
 
-import requests
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel
 
-from common.metrics import JustNewsMetrics
-from common.observability import get_logger, bootstrap_observability
-from common.otel import init_telemetry, instrument_fastapi
 from agents.common.mcp_bus_client import MCPBusClient
+from common.metrics import JustNewsMetrics
+from common.observability import bootstrap_observability, get_logger
+from common.otel import init_telemetry, instrument_fastapi
 from database.utils.migrated_database_utils import create_database_service
 
 # Compatibility: expose create_database_service for tests that patch agent modules

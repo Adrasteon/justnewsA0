@@ -1,7 +1,7 @@
 import re
 
 # Read the file
-with open('monitoring/core/trace_collector.py', 'r') as f:
+with open('monitoring/core/trace_collector.py') as f:
     content = f.read()
 
 # Replace the trace_count counter method call

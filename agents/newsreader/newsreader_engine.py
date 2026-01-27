@@ -1,7 +1,6 @@
 """
 DEPRECATED: This module is deprecated. Use common.web_capture or Investigator instead.
-"""
-"""
+
 NewsReader Engine - Simplified Multi-Modal Vision Processing
 
 Core functionality: Screenshot-based webpage processing using LLaVA vision-language model.

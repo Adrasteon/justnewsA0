@@ -113,7 +113,7 @@ def bootstrap_observability(
         # Note: These require an event loop to run fully, usually provided by the agent using them
         _ = LogAggregator()
         _ = TraceProcessor()
-        
+
         logging.getLogger(__name__).info(f"Initialized Monitoring Core for {service_name}")
     except ImportError:
         logging.getLogger(__name__).debug("Monitoring Core not found, skipping initialization.")

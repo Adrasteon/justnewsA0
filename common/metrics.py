@@ -117,7 +117,9 @@ class JustNewsMetrics:
         # initializes its own JustNewsMetrics instance)
         if enable_enhanced:
             try:
-                from monitoring.core.metrics_collector import get_enhanced_metrics_collector
+                from monitoring.core.metrics_collector import (
+                    get_enhanced_metrics_collector,
+                )
 
                 # We don't replace self yet to maintain backward compatibility,
                 # but we ensure the enhanced collector is initialized.

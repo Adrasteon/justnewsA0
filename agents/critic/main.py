@@ -23,10 +23,11 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from agents.common.mcp_bus_client import MCPBusClient
+
 # Import metrics library
 from common.metrics import JustNewsMetrics
-from common.observability import get_logger, bootstrap_observability
-from agents.common.mcp_bus_client import MCPBusClient
+from common.observability import bootstrap_observability, get_logger
 
 # Configure logging
 bootstrap_observability("critic")

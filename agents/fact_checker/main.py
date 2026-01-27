@@ -32,14 +32,14 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
 
-import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from agents.common.mcp_bus_client import MCPBusClient
+
 # Import metrics library
 from common.metrics import JustNewsMetrics
-from common.observability import get_logger, bootstrap_observability
-from agents.common.mcp_bus_client import MCPBusClient
+from common.observability import bootstrap_observability, get_logger
 
 bootstrap_observability("fact_checker")
 logger = get_logger(__name__)
@@ -62,39 +62,17 @@ FACT_CHECKER_AGENT_PORT = int(os.environ.get("FACT_CHECKER_AGENT_PORT", 8003))
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
 
 
-class MCPBusClient:
-    """MCP Bus client for inter-agent communication."""
-
-    def __init__(self, base_url: str = MCP_BUS_URL):
-        self.base_url = base_url
-
-    def register_agent(self, agent_name: str, tools: list):
-        """Register agent with MCP Bus."""
-        registration_data = {
-            "name": agent_name,
-            "address": f"http://localhost:{FACT_CHECKER_AGENT_PORT}",
-            "tools": tools,
-        }
-        try:
-            response = requests.post(
-                f"{self.base_url}/register", json=registration_data, timeout=(2, 5)
-            )
-            response.raise_for_status()
-            logger.info(f"Successfully registered {agent_name} with MCP Bus.")
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to register {agent_name} with MCP Bus: {e}")
-            raise
-
-
 # Define the lifespan context manager
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager for startup and shutdown."""
     logger.info("Fact Checker agent is starting up.")
-    mcp_bus_client = MCPBusClient()
+    mcp_bus_client = MCPBusClient(base_url=MCP_BUS_URL)
+    agent_address = f"http://localhost:{FACT_CHECKER_AGENT_PORT}"
     try:
         mcp_bus_client.register_agent(
             agent_name="fact_checker",
+            agent_address=agent_address,
             tools=[
                 "verify_facts",
                 "validate_sources",

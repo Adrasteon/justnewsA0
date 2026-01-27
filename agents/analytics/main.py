@@ -21,9 +21,9 @@ from agents.analytics.analytics_engine import (
     shutdown_analytics_engine,
 )
 from agents.analytics.dashboard import create_analytics_app
-from common.metrics import JustNewsMetrics
-from common.observability import get_logger, bootstrap_observability
 from agents.common.mcp_bus_client import MCPBusClient
+from common.metrics import JustNewsMetrics
+from common.observability import bootstrap_observability, get_logger
 
 bootstrap_observability("analytics")
 logger = get_logger(__name__)

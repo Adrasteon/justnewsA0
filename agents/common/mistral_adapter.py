@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import time
 from typing import Any
 
 from .adapter_base import AdapterError, BaseAdapter
@@ -31,12 +30,12 @@ class MistralAdapter(BaseAdapter):
         self.adapter_name = adapter_name
         self.system_prompt = system_prompt or ""
         self.disable_env = disable_env or f"{agent.upper()}_DISABLE_MISTRAL"
-        
+
         # Read vLLM config
         self.vllm_base_url = os.environ.get("VLLM_BASE_URL", "http://127.0.0.1:8010/v1")
         self.vllm_api_key = os.environ.get("VLLM_API_KEY", "unused")
         self.vllm_model = os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ")
-        
+
         # Instantiate the actual worker
         self.openai = OpenAIAdapter(
             api_key=self.vllm_api_key,
@@ -44,7 +43,7 @@ class MistralAdapter(BaseAdapter):
             model=self.vllm_model,
             system_prompt=self.system_prompt,
         )
-        
+
         # self.openai.load() is called later in self.load()
 
         self._agent_impl: object | None = None
@@ -72,7 +71,7 @@ class MistralAdapter(BaseAdapter):
                     continue
         except Exception:
             self._agent_impl = None
-            
+
         # Dry run logic
         env_dry_run = (
             os.environ.get("MODEL_STORE_DRY_RUN") == "1"
@@ -105,14 +104,14 @@ class MistralAdapter(BaseAdapter):
                 "key_points": ["Point A", "Point B"],
                 "confidence": 0.9
             }
-            
+
         prompt = f"Summarize these {len(articles)} articles."
         if context:
             prompt += f" Context: {context}"
-        
+
         joined = "\n\n".join(articles[:5]) # Limit context
         prompt += f"\n\nArticles:\n{joined}"
-        
+
         # Simplified logic: just ask for JSON
         res = self.infer(prompt + "\n\nProvide output in valid JSON with keys: summary, key_points, confidence.")
         text = res["text"]
@@ -132,7 +131,7 @@ class MistralAdapter(BaseAdapter):
         try:
             agent_impl = object.__getattribute__(self, "_agent_impl")
         except AttributeError:
-            agent_impl = None 
+            agent_impl = None
         if agent_impl and hasattr(agent_impl, name):
             return getattr(agent_impl, name)
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")

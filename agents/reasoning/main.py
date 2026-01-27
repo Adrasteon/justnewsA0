@@ -15,7 +15,6 @@ Key Features:
 All functions include robust error handling, validation, and fallbacks.
 """
 
-import asyncio
 import json
 import os
 from contextlib import asynccontextmanager
@@ -26,9 +25,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from common.metrics import JustNewsMetrics
-from common.observability import get_logger, bootstrap_observability
 from agents.common.mcp_bus_client import MCPBusClient
+from common.metrics import JustNewsMetrics
+from common.observability import bootstrap_observability, get_logger
 
 # Configure logging
 bootstrap_observability("reasoning")
@@ -117,30 +116,7 @@ class FactValidation(BaseModel):
     context: dict[str, Any] | None = None
 
 
-# MCP Bus Client
-class MCPBusClient:
-    """MCP Bus client for agent registration and communication."""
 
-    def __init__(self, base_url: str = MCP_BUS_URL):
-        self.base_url = base_url
-
-    def register_agent(self, agent_name: str, agent_address: str, tools: list[str]):
-        """Register agent with MCP Bus."""
-        import requests
-
-        registration_data = {
-            "name": agent_name,
-            "address": agent_address,
-        }
-        try:
-            response = requests.post(
-                f"{self.base_url}/register", json=registration_data, timeout=(2, 5)
-            )
-            response.raise_for_status()
-            logger.info(f"✅ Successfully registered {agent_name} with MCP Bus")
-        except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Failed to register {agent_name} with MCP Bus: {e}")
-            raise
 
 
 # FastAPI app setup
@@ -172,38 +148,21 @@ async def lifespan(app: FastAPI):
         _enhanced_engine = None
 
     # MCP Bus registration
-    mcp_bus_client = MCPBusClient()
-    retries = int(os.environ.get("MCP_REGISTER_RETRIES", "3"))
-    backoff = float(os.environ.get("MCP_REGISTER_BACKOFF", "2.0"))
-
-    for attempt in range(1, retries + 1):
-        try:
-            mcp_bus_client.register_agent(
-                agent_name="reasoning",
-                agent_address=f"http://localhost:{REASONING_AGENT_PORT}",
-                tools=[
-                    "add_fact",
-                    "add_facts",
-                    "add_rule",
-                    "query",
-                    "evaluate",
-                    "validate_claim",
-                    "explain_reasoning",
-                    "pipeline_validate",
-                ],
-            )
-            logger.info("✅ Registered tools with MCP Bus")
-            break
-        except Exception as e:
-            logger.warning(f"⚠️ MCP registration attempt {attempt} failed: {e}")
-            if attempt < retries:
-                sleep_time = backoff * attempt
-                logger.info(f"⏳ Retrying MCP registration in {sleep_time}s...")
-                await asyncio.sleep(sleep_time)
-            else:
-                logger.warning(
-                    "⚠️ MCP registration failed after retries; running in standalone mode"
-                )
+    mcp_bus_client = MCPBusClient(base_url=MCP_BUS_URL)
+    mcp_bus_client.register_agent(
+        agent_name="reasoning",
+        agent_address=f"http://localhost:{REASONING_AGENT_PORT}",
+        tools=[
+            "add_fact",
+            "add_facts",
+            "add_rule",
+            "query",
+            "evaluate",
+            "validate_claim",
+            "explain_reasoning",
+            "pipeline_validate",
+        ],
+    )
 
     logger.info("✅ Reasoning agent startup complete")
 

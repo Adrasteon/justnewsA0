@@ -8,6 +8,7 @@ caused the editor to crash when running the full suite with GPUs enabled).
 """
 
 import os
+
 import pytest
 
 
@@ -20,7 +21,7 @@ def test_gpu_env_default_is_off():
     val = os.environ.get("TEST_GPU_AVAILABLE", "false").lower()
     if val == "true":
         pytest.skip("Test skipped because TEST_GPU_AVAILABLE is explicitly set to true")
-    
+
     assert val == "false"
 
 

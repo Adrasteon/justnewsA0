@@ -1,5 +1,4 @@
 import subprocess
-import pytest
 
 
 def test_checker_runs_successfully():

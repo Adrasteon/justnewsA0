@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
-from agents.mcp_bus.main import app
 from agents.mcp_bus import tools
+from agents.mcp_bus.main import app
 
 
 def setup_function():

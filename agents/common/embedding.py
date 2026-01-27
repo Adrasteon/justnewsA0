@@ -418,7 +418,7 @@ def get_shared_embedding_model(
 
                         if candidate is not None and candidate.exists():
                             try:
-                                model = SentenceTransformer(str(candidate))
+                                model = SentenceTransformer(str(candidate), device=device)
                                 logger.info(
                                     "Loaded embedding model from ModelStore %s for agent %s (using %s)",
                                     cur,
@@ -465,12 +465,14 @@ def get_shared_embedding_model(
             # If ensure_agent_model_exists is available, use it to guarantee a local model dir
             try:
                 model_dir = ensure_agent_model_exists(model_name, cache_folder)
-                model = SentenceTransformer(str(model_dir))
+                model = SentenceTransformer(str(model_dir), device=device)
             except Exception:
                 # Fallback: let SentenceTransformer handle download into cache_folder
-                model = SentenceTransformer(model_name, cache_folder=cache_folder)
+                model = SentenceTransformer(
+                    model_name, cache_folder=cache_folder, device=device
+                )
         else:
-            model = SentenceTransformer(model_name)
+            model = SentenceTransformer(model_name, device=device)
 
     # Try to move to requested device if possible
     try:

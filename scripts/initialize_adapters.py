@@ -14,11 +14,14 @@ basedir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if basedir not in sys.path:
     sys.path.insert(0, basedir)
 
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from peft import get_peft_model, LoraConfig, TaskType
-from agents.common.model_store import ModelStore
 import logging
+
+import torch
+from peft import LoraConfig, TaskType, get_peft_model
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from agents.common.model_store import ModelStore
+
 # from common.observability import get_logger
 
 logging.basicConfig(level=logging.INFO)
@@ -41,16 +44,16 @@ def main():
 
     # We assume all agents currently share the same base model (Mistral 7B)
     # in the 'agents' section. We'll load it once.
-    base_model_ref = "mistral-7b-v0.3" 
+    base_model_ref = "mistral-7b-v0.3"
     # Verify this base ref is used
-    
+
     logger.info(f"Loading base model: {base_model_ref}...")
-    # In a real scenario, use specific path from base_models section, 
+    # In a real scenario, use specific path from base_models section,
     # but for initialization we can often rely on HF cache or model store.
-    # Here we assume standard HF ID for simplicity of initialization script, 
+    # Here we assume standard HF ID for simplicity of initialization script,
     # or we could parse the model store path if strictly required.
     base_model_id = model_map["base_models"][base_model_ref]["hf_id"]
-    
+
     # Init ModelStore
     model_store_root = Path(os.environ.get("MODEL_STORE_ROOT", project_root / "model_store"))
     store = ModelStore(model_store_root)
@@ -85,47 +88,47 @@ def main():
     )
 
     agents = model_map.get("agents", {})
-    
+
     for agent_name, variants in agents.items():
         if not isinstance(variants, list):
             variants = [variants]
-            
+
         for variant in variants:
             if variant.get("base_ref") != base_model_ref:
                 logger.warning(f"Skipping {agent_name} (base_ref mismatch or not supported yet)")
                 continue
-                
+
             adapter_name = variant["adapter_name"]
             # Construct the relative path expected by the system
             # AGENT_MODEL_MAP says: "adapter_model_store_path": "synthesizer/adapters/mistral_synth_v1"
             # ModelStore expects: root / agent / versions / version
-            
+
             # We treat the adapter_name as the 'version' for the model store in this context?
             # Or does the system expect a specific structure?
             # Looking at AGENT_MODEL_MAP: "adapter_model_store_path": "synthesizer/adapters/mistral_synth_v1"
-            
+
             # It seems the config path is a relative path inside the model store.
             # Let's clean it up.
-            
+
             target_path_rel = variant["adapter_model_store_path"]
             # e.g. synthesizer/adapters/mistral_synth_v1
-            
+
             # We want to use the ModelStore API to "stage" and "finalize" this.
             # The ModelStore usually does root/agent/versions/version
-            # But here the map defines a deeper structure. 
+            # But here the map defines a deeper structure.
             # Let's write directly to the path defined to ensure it matches exactly what the loader expects.
-            
+
             full_output_path = model_store_root / target_path_rel
-            
+
             if full_output_path.exists():
                 logger.info(f"Adapter for {agent_name} already exists at {full_output_path}, skipping.")
                 continue
 
             logger.info(f"Initializing adapter for {agent_name} at {full_output_path}")
-            
+
             # Create a PEFT model
             peft_model = get_peft_model(model, lora_config)
-            
+
             # Save it
             peft_model.save_pretrained(full_output_path)
             logger.info(f"Saved {adapter_name}")

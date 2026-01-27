@@ -1366,9 +1366,13 @@ class CrawlerEngine:
 
                 # Build SQL statements for source upsert and article insertion
                 # This mirrors the logic from the site-specific crawlers
+                # Use ON DUPLICATE KEY UPDATE to handle existing sources gracefully
                 source_sql = """
                 INSERT INTO sources (name, domain, url, last_verified, metadata)
                 VALUES (%s, %s, %s, NOW(), %s)
+                ON DUPLICATE KEY UPDATE
+                    last_verified = NOW(),
+                    metadata = VALUES(metadata)
                 RETURNING id
                 """
 
@@ -1451,7 +1455,7 @@ class CrawlerEngine:
                     f"{MCP_BUS_URL}/call",
                     data=payload_json,
                     headers={"Content-Type": "application/json"},
-                    timeout=(2, 10),
+                    timeout=(5, 60),
                 )
                 response.raise_for_status()
                 result = response.json()

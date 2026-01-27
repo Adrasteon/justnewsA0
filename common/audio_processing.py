@@ -10,11 +10,13 @@ Implementation:
 - Returns timestamped segments suitable for cross-referencing with video frames.
 """
 from __future__ import annotations
+
 import logging
 import os
-import torch
 from dataclasses import dataclass
-from typing import List, Any, Optional
+from typing import Any
+
+import torch
 
 try:
     from faster_whisper import WhisperModel
@@ -27,13 +29,13 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TranscriptionConfig:
     model_size: str = "distil-large-v3" # or "large-v3" for max accuracy
-    device: str = "auto" 
+    device: str = "auto"
     compute_type: str = "float16" # or "int8"
     beam_size: int = 5
     language: str = "en" # Start with English, can be None for auto-detect
 
 class AudioTranscriber:
-    def __init__(self, config: Optional[TranscriptionConfig] = None):
+    def __init__(self, config: TranscriptionConfig | None = None):
         self.config = config or TranscriptionConfig()
         if not WHISPER_AVAILABLE:
             logger.warning("faster-whisper not installed. AudioTranscriber will fail.")
@@ -49,12 +51,12 @@ class AudioTranscriber:
         device = self.config.device
         if device == "auto":
             device = "cuda" if torch.cuda.is_available() else "cpu"
-        
+
         logger.info(f"🎤 Loading Whisper model ({self.config.model_size}) on {device}...")
         try:
             self.model = WhisperModel(
-                self.config.model_size, 
-                device=device, 
+                self.config.model_size,
+                device=device,
                 compute_type=self.config.compute_type
             )
         except Exception as e:
@@ -78,18 +80,18 @@ class AudioTranscriber:
             raise FileNotFoundError(f"Audio file not found: {audio_path}")
 
         self._load_model()
-        
+
         logger.info(f"🎤 Transcribing: {audio_path}")
         segments, info = self.model.transcribe(
-            audio_path, 
+            audio_path,
             beam_size=self.config.beam_size,
             language=self.config.language
         )
-        
+
         # Segments is a generator, consume it
         results = []
         full_text = []
-        
+
         for segment in segments:
             results.append({
                 "start": segment.start,
@@ -97,7 +99,7 @@ class AudioTranscriber:
                 "text": segment.text
             })
             full_text.append(segment.text)
-            
+
         return {
             "text": " ".join(full_text),
             "segments": results,

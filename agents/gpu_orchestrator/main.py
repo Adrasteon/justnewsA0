@@ -19,8 +19,8 @@ from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict, Field
 
-from common.observability import bootstrap_observability
 from agents.common.mcp_bus_client import MCPBusClient
+from common.observability import bootstrap_observability
 
 from .gpu_orchestrator_engine import engine
 from .tools import (

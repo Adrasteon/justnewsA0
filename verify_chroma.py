@@ -1,7 +1,8 @@
 
-import chromadb
-from chromadb.config import Settings
 import sys
+
+import chromadb
+
 
 def check_chroma():
     print(f"ChromaDB Library Version: {chromadb.__version__}")

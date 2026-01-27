@@ -350,7 +350,7 @@ class FactCheckerEngine:
         """
         if not self.investigator:
             return {"error": "Investigator not available", "verdict": "UNVERIFIED"}
-            
+
         try:
             report = await self.investigator.investigate(claim)
             return {
@@ -360,8 +360,8 @@ class FactCheckerEngine:
                 "evidence_count": len(report.evidence),
                 "traceability": [
                     {
-                        "source": e.source_url, 
-                        "type": e.media_type.value, 
+                        "source": e.source_url,
+                        "type": e.media_type.value,
                         "confidence": e.confidence
                     } for e in report.evidence
                 ]

@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import functools
 import inspect
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from typing import Any, Callable, Generator, TypeVar
+from typing import Any, TypeVar
 
 from opentelemetry import propagate, trace
 from opentelemetry.context import Context
@@ -54,14 +55,14 @@ def extract_trace_context(carrier: dict[str | bytes, Any]) -> Context:
     """
     if not carrier:
         return propagate.extract({})
-        
+
     # Standardize keys to strings for OTel propagator
     safe_carrier = {}
     for k, v in carrier.items():
         key_str = k.decode("utf-8") if isinstance(k, bytes) else str(k)
         val_str = v.decode("utf-8") if isinstance(v, bytes) else str(v)
         safe_carrier[key_str] = val_str
-        
+
     return propagate.extract(safe_carrier)
 
 
@@ -86,7 +87,7 @@ def traced(
         module_name = func.__module__
         qualname = func.__qualname__
         span_name = name or f"{module_name}.{qualname}"
-        
+
         tracer = get_tracer(module_name)
 
         if inspect.iscoroutinefunction(func):
@@ -100,7 +101,7 @@ def traced(
                 ) as span:
                     if record_args:
                         _record_arguments(span, func, args, kwargs)
-                    
+
                     try:
                         return await func(*args, **kwargs)
                     except Exception as e:
@@ -118,7 +119,7 @@ def traced(
                 ) as span:
                     if record_args:
                         _record_arguments(span, func, args, kwargs)
-                    
+
                     try:
                         return func(*args, **kwargs)
                     except Exception as e:
@@ -166,23 +167,23 @@ def _record_arguments(
         sig = inspect.signature(func)
         bound = sig.bind(*args, **kwargs)
         bound.apply_defaults()
-        
+
         for param_name, value in bound.arguments.items():
             # Skip 'self' or 'cls' for methods
             if param_name in ("self", "cls"):
                 continue
-                
+
             # Naive safety check: skip arguments that look like secrets
             if any(s in param_name.lower() for s in ("token", "key", "password", "secret", "auth")):
                 span.set_attribute(f"arg.{param_name}", "[REDACTED]")
                 continue
-            
+
             # Convert complex types to string representation if needed
             if isinstance(value, (str, int, float, bool)):
                 span.set_attribute(f"arg.{param_name}", value)
             else:
                 span.set_attribute(f"arg.{param_name}", str(value)[:1024]) # Truncate large objects
-                
+
     except Exception:
         # Never fail the app logic because of telemetry errors
         pass

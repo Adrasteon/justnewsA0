@@ -12,7 +12,7 @@ if (os.environ.get("PYTEST_RUNNING") == "1" or os.environ.get("CI") == "true") a
         # Avoid infinite recursion by setting skip flag in subprocess environment
         check_env = os.environ.copy()
         check_env["JUSTNEWS_PREFLIGHT_SKIP"] = "1"
-        
+
         r = subprocess.run([py, "scripts/checks/check_protobuf_version.py"], check=False, env=check_env)
         if r.returncode != 0:
             raise SystemExit(

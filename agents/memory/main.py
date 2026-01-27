@@ -22,13 +22,12 @@ import os
 from contextlib import asynccontextmanager
 from typing import Any
 
-import requests
 from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, ConfigDict
 
-from common.metrics import JustNewsMetrics
-from common.observability import get_logger, bootstrap_observability
 from agents.common.mcp_bus_client import MCPBusClient
+from common.metrics import JustNewsMetrics
+from common.observability import bootstrap_observability, get_logger
 
 # Compatibility: expose create_database_service for tests that patch agent modules
 try:
@@ -111,45 +110,7 @@ class ToolCall(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
-class MCPBusClient:
-    """MCP Bus client for agent registration and communication"""
 
-    def __init__(self, base_url: str = MCP_BUS_URL):
-        self.base_url = base_url
-
-    def register_agent(self, agent_name: str, agent_address: str, tools: list):
-        registration_data = {
-            "name": agent_name,
-            "address": agent_address,
-            "tools": tools,
-        }
-
-        max_retries = 5
-        backoff_factor = 2
-
-        for attempt in range(max_retries):
-            try:
-                response = requests.post(
-                    f"{self.base_url}/register", json=registration_data, timeout=(3, 10)
-                )
-                response.raise_for_status()
-                logger.info(f"Successfully registered {agent_name} with MCP Bus.")
-                return
-            except requests.exceptions.RequestException as e:
-                logger.warning(
-                    f"Attempt {attempt + 1}/{max_retries} failed to register {agent_name} with MCP Bus: {e}"
-                )
-                if attempt < max_retries - 1:
-                    import time
-
-                    sleep_time = backoff_factor**attempt
-                    logger.info(f"Retrying in {sleep_time} seconds...")
-                    time.sleep(sleep_time)
-                else:
-                    logger.error(
-                        f"Failed to register {agent_name} with MCP Bus after {max_retries} attempts."
-                    )
-                    raise
 
 
 @asynccontextmanager
@@ -184,7 +145,7 @@ async def lifespan(app: FastAPI):
         await worker_engine.initialize(memory_engine, vector_engine)
 
         # Register agent with MCP Bus
-        mcp_bus_client = MCPBusClient()
+        mcp_bus_client = MCPBusClient(base_url=MCP_BUS_URL)
         try:
             mcp_bus_client.register_agent(
                 agent_name="memory",

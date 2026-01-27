@@ -32,9 +32,9 @@ import requests
 from fastapi import FastAPI, HTTPException, Response
 from pydantic import BaseModel
 
-from common.metrics import JustNewsMetrics
-from common.observability import get_logger, bootstrap_observability
 from agents.common.mcp_bus_client import MCPBusClient
+from common.metrics import JustNewsMetrics
+from common.observability import bootstrap_observability, get_logger
 
 bootstrap_observability("synthesizer")
 
@@ -99,32 +99,7 @@ def generate_summary(text: str, max_length: int = 256) -> dict[str, Any]:
     return {"summary": preview, "truncated": len(text) > len(preview)}
 
 
-class MCPBusClient:
-    """Lightweight client for registering the agent with the central MCP Bus."""
 
-    def __init__(self, base_url: str = MCP_BUS_URL) -> None:
-        self.base_url = base_url
-
-    def register_agent(
-        self, agent_name: str, agent_address: str, tools: list[str]
-    ) -> None:
-        """Register an agent with the MCP bus."""
-        import requests
-
-        registration_data = {
-            "name": agent_name,
-            "address": agent_address,
-            "tools": tools,
-        }
-        try:
-            response = requests.post(
-                f"{self.base_url}/register", json=registration_data, timeout=(2, 5)
-            )
-            response.raise_for_status()
-            logger.info("Successfully registered %s with MCP Bus.", agent_name)
-        except Exception:
-            logger.warning("MCP Bus unavailable; running in standalone mode.")
-            raise
 
 
 def check_transparency_gateway(
@@ -211,7 +186,7 @@ async def lifespan(app: FastAPI):
             raise
 
     # Register with MCP bus
-    mcp_bus_client = MCPBusClient()
+    mcp_bus_client = MCPBusClient(base_url=MCP_BUS_URL)
     try:
         mcp_bus_client.register_agent(
             agent_name="synthesizer",

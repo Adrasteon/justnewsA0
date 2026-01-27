@@ -9,14 +9,13 @@ import os
 from contextlib import asynccontextmanager
 from typing import Any
 
-import requests
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from agents.archive.archive_engine import get_archive_engine
 from agents.archive.metrics_registry import metrics
-from common.observability import get_logger, bootstrap_observability
 from agents.common.mcp_bus_client import MCPBusClient
+from common.observability import bootstrap_observability, get_logger
 
 bootstrap_observability("archive")
 logger = get_logger(__name__)

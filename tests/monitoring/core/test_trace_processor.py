@@ -1,7 +1,13 @@
+from datetime import UTC, datetime, timedelta
+
 import pytest
-from datetime import datetime, timedelta, timezone
-from monitoring.core.trace_processor import TraceProcessor, PerformanceBottleneck, TraceAnalysis
+
 from monitoring.core.trace_collector import TraceData, TraceSpan
+from monitoring.core.trace_processor import (
+    TraceAnalysis,
+    TraceProcessor,
+)
+
 
 @pytest.fixture
 def processor():
@@ -19,8 +25,8 @@ def sample_trace_span():
         start_time=None
     ):
         if start_time is None:
-            start_time = datetime.now(timezone.utc)
-        
+            start_time = datetime.now(UTC)
+
         return TraceSpan(
             trace_id="trace-1",
             span_id=span_id,
@@ -47,8 +53,8 @@ def sample_trace_data(sample_trace_span):
     ):
         if spans is None:
             spans = [sample_trace_span()]
-            
-        start_time = datetime.now(timezone.utc)
+
+        start_time = datetime.now(UTC)
         return TraceData(
             trace_id=trace_id,
             root_span_id=spans[0].span_id if spans else "root",
@@ -64,7 +70,7 @@ def sample_trace_data(sample_trace_span):
     return _create_trace
 
 class TestTraceProcessor:
-    
+
     def test_initialization(self, processor):
         assert processor.max_trace_buffer == 100
         assert len(processor.processed_traces) == 0
@@ -72,7 +78,7 @@ class TestTraceProcessor:
     def test_process_trace_basic(self, processor, sample_trace_data):
         trace = sample_trace_data()
         analysis = processor.process_trace(trace)
-        
+
         assert isinstance(analysis, TraceAnalysis)
         assert analysis.trace_id == trace.trace_id
         assert processor.trace_index.get(trace.trace_id) == trace
@@ -80,21 +86,21 @@ class TestTraceProcessor:
 
     def test_critical_path(self, processor, sample_trace_data, sample_trace_span):
         # A -> B
-        start = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
         span_a = sample_trace_span(
-            span_id="A", 
-            duration_ms=100.0, 
+            span_id="A",
+            duration_ms=100.0,
             start_time=start
         )
         span_b = sample_trace_span(
-            span_id="B", 
-            parent_span_id="A", 
-            duration_ms=50.0, 
+            span_id="B",
+            parent_span_id="A",
+            duration_ms=50.0,
             start_time=start + timedelta(milliseconds=20)
         )
-        
+
         trace = sample_trace_data(spans=[span_a, span_b])
-        
+
         # In this simple case, A wraps B. Does critical path imply strict parent-child accumulation?
         # The logic in trace_processor uses specific graph traversal.
         # path(A) = A + max(path(children))
@@ -102,7 +108,7 @@ class TestTraceProcessor:
         # duration = duration(A) + duration(B) = 100 + 50 = 150
         # If A completely encloses B, typically we sum unique time or just longest path in dag.
         # The code implementation sums durations along the path: total_duration = node["duration"] + child_duration
-        
+
         # Verify
         path = processor._find_critical_path(trace)
         # Expected: A, B
@@ -114,11 +120,11 @@ class TestTraceProcessor:
             "p95": 100.0,
             "count": 10
         }
-        
+
         # Trace with high latency (350ms > 2*100ms threshold)
         span = sample_trace_span(duration_ms=350.0)
         trace = sample_trace_data(spans=[span])
-        
+
         bottlenecks = processor._detect_bottlenecks(trace)
         assert len(bottlenecks) > 0
         assert bottlenecks[0].bottleneck_type == "latency"
@@ -128,9 +134,9 @@ class TestTraceProcessor:
         # Service A -> Service B
         span_a = sample_trace_span(span_id="A", service_name="ServiceA")
         span_b = sample_trace_span(span_id="B", parent_span_id="A", service_name="ServiceB")
-        
+
         trace = sample_trace_data(spans=[span_a, span_b])
-        
+
         dependencies = processor._analyze_dependencies(trace)
         assert len(dependencies) == 1
         assert dependencies[0].source_service == "ServiceA"
@@ -143,12 +149,12 @@ class TestTraceProcessor:
         for d in durations:
             trace = sample_trace_data(spans=[sample_trace_span(duration_ms=float(d))], duration_ms=float(d))
             processor.processed_traces.append(trace)
-            
+
         # Calling process_trace triggers update, but we added manually.
         # Let's call _update_baselines directly or via process_trace with a dummy one.
         dummy_trace = sample_trace_data()
         processor._update_baselines(dummy_trace)
-        
+
         baseline = processor.performance_baselines.get("test-service:test-op")
         assert baseline is not None
         assert baseline["count"] >= 10
@@ -158,10 +164,10 @@ class TestTraceProcessor:
     def test_find_similar_traces(self, processor, sample_trace_data, sample_trace_span):
         trace1 = sample_trace_data(trace_id="t1", duration_ms=100.0, spans=[sample_trace_span()])
         trace2 = sample_trace_data(trace_id="t2", duration_ms=100.0, spans=[sample_trace_span()])
-        
+
         processor.trace_index["t1"] = trace1
         processor.trace_index["t2"] = trace2
-        
+
         similar = processor.find_similar_traces("t1")
         assert len(similar) == 1
         assert similar[0][0] == "t2"

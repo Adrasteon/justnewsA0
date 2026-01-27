@@ -619,6 +619,13 @@ def create_database_service(
             if config and getattr(_cached_service, "config", None) == {
                 "database": config
             }:
+                # Ensure connection is active in case previous consumer closed it
+                if hasattr(_cached_service, "ensure_conn"):
+                    try:
+                        _cached_service.ensure_conn()
+                    except Exception:
+                        # If ensure_conn fails, let it slide; caller might not need it or will fail later
+                        pass
                 return _cached_service
     except Exception:
         # If comparing configs fails for any reason, ignore and recreate service
@@ -706,14 +713,13 @@ def check_database_connections(service: MigratedDatabaseService) -> bool:
                     cursor.close()
             except Exception:
                 pass
-            try:
-                if conn:
-                    try:
-                        conn.close()
-                    except Exception:
-                        pass
-            except Exception:
-                pass
+            # Connection is likely shared from service.mb_conn; do NOT close it here
+            # as it will break the service instance.
+            # try:
+            #     if conn:
+            #         conn.close()
+            # except Exception:
+            #     pass
 
         if not result or result[0] != 1:
             logger.error("MariaDB connection test failed - unexpected result")

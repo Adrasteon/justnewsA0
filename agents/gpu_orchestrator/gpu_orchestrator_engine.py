@@ -22,9 +22,9 @@ import sys
 import threading
 import time
 import uuid
-from pathlib import Path
-from typing import Any, Optional
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
 
 try:  # NVML bindings became optional once we moved to the conda-provided nvidia-ml-py package
     import pynvml  # type: ignore
@@ -466,7 +466,7 @@ class GPUOrchestratorEngine:
     # -------------------------------
     # Model Specification & Management
     # -------------------------------
-    
+
     @dataclass
     class ModelSpec:
         id: str
@@ -477,12 +477,12 @@ class GPUOrchestratorEngine:
         num_workers: int = 1
         gpu_memory_util: float = 0.75
         py_torch_alloc_conf: str = "expandable_segments:True"
-        service_unit: Optional[str] = None
-        memory_max: Optional[str] = None
-        cpu_quota: Optional[str] = None
+        service_unit: str | None = None
+        memory_max: str | None = None
+        cpu_quota: str | None = None
         adapter_paths: list[str] = field(default_factory=list)
 
-    def ensure_model_installed(self, spec: "GPUOrchestratorEngine.ModelSpec") -> Optional[Path]:
+    def ensure_model_installed(self, spec: "GPUOrchestratorEngine.ModelSpec") -> Path | None:
         """Check ModelStore or HF availability for the given spec. Returns a Path if a local path is resolved."""
         try:
             from models import model_loader
@@ -498,7 +498,7 @@ class GPUOrchestratorEngine:
                     if am.exists():
                         j = json.loads(am.read_text())
                         adapters = []
-                        for agent, arr in j.get("agents", {}).items():
+                        for _agent, arr in j.get("agents", {}).items():
                             for item in arr:
                                 if item.get("base_ref") and item.get("base_ref").startswith("mistral-7b"):
                                     adapters.append(item.get("adapter_model_store_path"))
@@ -517,7 +517,7 @@ class GPUOrchestratorEngine:
             if am.exists():
                 j = json.loads(am.read_text())
                 adapters = []
-                for agent, arr in j.get("agents", {}).items():
+                for _agent, arr in j.get("agents", {}).items():
                     for item in arr:
                         if item.get("base_ref") and item.get("base_ref").startswith("mistral-7b"):
                             adapters.append(item.get("adapter_model_store_path"))
@@ -1633,15 +1633,35 @@ class GPUOrchestratorEngine:
         """Attempt to acquire a MariaDB GET_LOCK for leader role.
 
         Returns True if lock acquired and False otherwise.
-        This is best-effort and uses the current db connection associated with the
-        engine's `db_service`. If no DB is available or an error occurs, returns False.
+        This uses a dedicated connection stored in `self._leader_conn` to ensure
+        the lock persists for the lifetime of the leadership.
         """
         if not self.db_service:
             return False
         try:
             if timeout is None:
                 timeout = self._leader_try_timeout
-            cursor, conn = self._get_safe_cursor(per_call=True, buffered=True)
+
+            # Reuse existing connection if healthy
+            conn = getattr(self, '_leader_conn', None)
+            if conn:
+                try:
+                    # Do not reconnect automatically; we want to know if it dropped
+                    conn.ping(reconnect=False)
+                except Exception:
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
+                    conn = None
+            
+            if not conn:
+                # Create new dedicated connection
+                _, conn = self._get_safe_cursor(per_call=True, buffered=True)
+                _.close() # We only need the connection object
+                self._leader_conn = conn
+            
+            cursor = self._leader_conn.cursor()
             try:
                 cursor.execute(
                     "SELECT GET_LOCK(%s,%s)", (self._leader_lock_name, int(timeout))
@@ -1652,10 +1672,8 @@ class GPUOrchestratorEngine:
                     cursor.close()
                 except Exception:
                     pass
-                try:
-                    conn.close()
-                except Exception:
-                    pass
+                # Do NOT close conn; we must hold it to keep the lock
+            
             locked = bool(res and int(res[0]) == 1)
             if locked:
                 self.is_leader = True
@@ -1663,6 +1681,14 @@ class GPUOrchestratorEngine:
             return locked
         except Exception as e:
             self.logger.debug(f"Leader lock attempt failed: {e}")
+            # On error, clean up connection
+            conn = getattr(self, '_leader_conn', None)
+            if conn:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+                self._leader_conn = None
             return False
 
     def release_leader_lock(self) -> bool:
@@ -1672,8 +1698,13 @@ class GPUOrchestratorEngine:
         """
         if not self.db_service:
             return False
+            
+        conn = getattr(self, '_leader_conn', None)
+        if not conn:
+            return False
+
         try:
-            cursor, conn = self._get_safe_cursor(per_call=True, buffered=True)
+            cursor = conn.cursor()
             try:
                 cursor.execute("SELECT RELEASE_LOCK(%s)", (self._leader_lock_name,))
                 res = cursor.fetchone()
@@ -1686,6 +1717,8 @@ class GPUOrchestratorEngine:
                     conn.close()
                 except Exception:
                     pass
+                self._leader_conn = None
+
             released = bool(res and res[0] == 1)
             if released:
                 self.is_leader = False
@@ -1724,25 +1757,22 @@ class GPUOrchestratorEngine:
                 else:
                     # we are leader; verify connection still healthy (best-effort)
                     try:
-                        # a simple no-op query to detect dead connection
-                        cursor, conn = self._get_safe_cursor(per_call=True, buffered=True)
-                        try:
-                            cursor.execute("SELECT 1")
-                            cursor.fetchone()
-                        finally:
-                            try:
-                                cursor.close()
-                            except Exception:
-                                pass
-                            try:
-                                conn.close()
-                            except Exception:
-                                pass
+                        # Check the actual leader connection, not a new one
+                        if (
+                            not hasattr(self, "_leader_conn")
+                            or self._leader_conn is None
+                        ):
+                            raise Exception("No leader connection found")
+
+                        # Use the raw connection to ping
+                        # This verifies the session holding the lock is still alive
+                        self._leader_conn.ping(reconnect=False, attempts=1, delay=0)
                     except Exception:
                         # lost DB connection -> lose leadership
                         self.logger.warning(
                             "Leader DB connection lost, relinquishing leadership"
                         )
+                        self.release_leader_lock()
                         self.is_leader = False
                 time.sleep(int(os.environ.get("GPU_ORCHESTRATOR_LEADER_LOOP_S", "2")))
             except Exception:

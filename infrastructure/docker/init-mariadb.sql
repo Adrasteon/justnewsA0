@@ -140,3 +140,23 @@ CREATE TABLE IF NOT EXISTS bias_analysis (
 -- Create indexes for bias analysis
 CREATE INDEX IF NOT EXISTS idx_bias_analysis_article_id ON bias_analysis(article_id);
 CREATE INDEX IF NOT EXISTS idx_bias_analysis_bias_category ON bias_analysis(bias_category);
+-- Create sources table
+CREATE TABLE IF NOT EXISTS sources (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE PRIMARY KEY,
+    domain VARCHAR(255) UNIQUE,
+    url VARCHAR(500),
+    name VARCHAR(255),
+    description TEXT,
+    country VARCHAR(10),
+    language VARCHAR(10),
+    last_verified TIMESTAMP NULL,
+    paywall BOOLEAN DEFAULT FALSE,
+    paywall_type VARCHAR(50),
+    metadata JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Create indexes for sources
+CREATE INDEX IF NOT EXISTS idx_sources_domain ON sources(domain);
+CREATE INDEX IF NOT EXISTS idx_sources_country_lang ON sources(country, language);

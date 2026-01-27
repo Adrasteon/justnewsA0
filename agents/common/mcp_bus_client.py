@@ -5,6 +5,7 @@ Shared logic for all agents to register with the central MCP Bus.
 
 import logging
 import time
+
 import requests
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ class MCPBusClient:
             "address": agent_address,
             "tools": tools
         }
-        
+
         max_retries = 3
         backoff_factor = 2
 

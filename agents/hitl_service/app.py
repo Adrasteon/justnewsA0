@@ -7,7 +7,7 @@ import sqlite3
 import time
 import uuid
 from collections.abc import Awaitable, Callable
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from io import StringIO
 from typing import Any
 

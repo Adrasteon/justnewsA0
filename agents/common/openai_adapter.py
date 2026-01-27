@@ -50,7 +50,7 @@ class OpenAIAdapter(BaseAdapter):
         except Exception:
             self._metrics = None
         self._client = None
-    
+
     # ------------------------------------------------------------------
     def _build_messages(self, prompt: str) -> list[dict[str, str]]:
         messages: list[dict[str, str]] = []
@@ -91,7 +91,7 @@ class OpenAIAdapter(BaseAdapter):
 
         try:
             from openai import OpenAI
-            
+
             client_args = {"api_key": self._api_key}
             if self._base_url:
                 client_args["base_url"] = self._base_url
@@ -133,7 +133,7 @@ class OpenAIAdapter(BaseAdapter):
         payload.update({k: v for k, v in overrides.items() if v is not None})
         messages = self._build_messages(prompt)
         payload["messages"] = messages
-        
+
         # Handle extra_headers manually if invalid for create()
         # In v1, extra_headers are usually passed to the client, or via explicit extra_headers param in some calls?
         # create() allows extra_headers/extra_query
@@ -147,12 +147,12 @@ class OpenAIAdapter(BaseAdapter):
             try:
                 resp = self._client.chat.completions.create(**payload)
                 duration = time.time() - start
-                
+
                 # Extract content
                 text = ""
                 if resp.choices:
                     text = resp.choices[0].message.content or ""
-                
+
                 if self._metrics:
                     with suppress(Exception):
                         self._metrics.timing("openai_infer_latency_seconds", duration)

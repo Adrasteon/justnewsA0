@@ -17,7 +17,8 @@ import os
 import time
 from typing import Any
 
-from common.tracing import extract_trace_context, get_tracer, trace
+from common.tracing import extract_trace_context, get_tracer
+
 
 class Worker:
     def __init__(

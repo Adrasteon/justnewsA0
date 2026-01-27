@@ -6,11 +6,11 @@ Validates OpenAI-compatible API, basic chat completion, and optional adapter rou
 
 import os
 import sys
+import time
 
+import pytest
 import requests
 import yaml
-import pytest
-import time
 
 
 def load_vllm_config(config_path: str = "config/vllm_mistral_7b.yaml") -> dict:

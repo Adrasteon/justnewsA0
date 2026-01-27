@@ -20,7 +20,7 @@ Date: October 22, 2025
 
 import logging  # noqa: E402
 from dataclasses import dataclass, field  # noqa: E402
-from datetime import datetime, timedelta, UTC  # noqa: E402
+from datetime import UTC, datetime, timedelta  # noqa: E402
 from typing import Any  # noqa: E402
 
 try:
@@ -53,8 +53,8 @@ except Exception:
     TraceContextTextMapPropagator = None
     _OTEL_AVAILABLE = False
 
-from config import get_config  # noqa: E402
 from common.metrics import JustNewsMetrics  # noqa: E402
+from config import get_config  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

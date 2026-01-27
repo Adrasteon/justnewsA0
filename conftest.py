@@ -102,7 +102,6 @@ if os.environ.get("SKIP_PREFLIGHT", "0") != "1":
             # Treat deprecation warnings as warnings for test runs to avoid
             # failing the CI/test run; tests should still signal via logs
             # for maintainers to upgrade compiled wheels when needed.
-            import warnings as _warnings
 
             # Include stacklevel so the warning points to the caller in test runs
             # Emit a non-fatal log message for third-party compiled extension

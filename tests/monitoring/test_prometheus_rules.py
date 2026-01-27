@@ -1,6 +1,6 @@
 import os
-import yaml
 
+import yaml
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 PROM_CONFIG = os.path.join(REPO_ROOT, "infrastructure/systemd/monitoring/prometheus.yml")
@@ -11,7 +11,7 @@ def test_prometheus_config_exists():
 
 
 def test_prometheus_has_rule_files():
-    with open(PROM_CONFIG, "r", encoding="utf-8") as fh:
+    with open(PROM_CONFIG, encoding="utf-8") as fh:
         cfg = yaml.safe_load(fh)
 
     assert "rule_files" in cfg, "prometheus.yml missing 'rule_files' key"
@@ -34,7 +34,7 @@ def test_mcp_bus_alerts_valid_yaml():
     path = os.path.join(REPO_ROOT, "monitoring/alerts/mcp_bus_alerts.yml")
     assert os.path.exists(path), f"mcp_bus alerts file missing: {path}"
 
-    with open(path, "r", encoding="utf-8") as fh:
+    with open(path, encoding="utf-8") as fh:
         parsed = yaml.safe_load(fh)
 
     assert isinstance(parsed, dict) and "groups" in parsed, "mcp_bus_alerts.yml malformed or missing 'groups'"

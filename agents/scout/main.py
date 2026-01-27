@@ -30,7 +30,7 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 
 from common.metrics import JustNewsMetrics
-from common.observability import get_logger, bootstrap_observability
+from common.observability import bootstrap_observability, get_logger
 
 from .scout_engine import CrawlMode, ScoutConfig, ScoutEngine
 from .tools import (
@@ -212,7 +212,7 @@ async def register_with_mcp_bus():
         client = MCPBusClient(mcp_bus_url)
 
         host = os.getenv("SCOUT_HOST", "localhost")
-        port = os.getenv("SCOUT_PORT", "8002") 
+        port = os.getenv("SCOUT_PORT", "8002")
         agent_address = f"http://{host}:{port}"
 
         # Register synchronously (MCPBusClient.register_agent is sync)
@@ -222,7 +222,7 @@ async def register_with_mcp_bus():
             tools=[
                 "source_discovery",
                 "web_crawling",
-                "deep_crawling", 
+                "deep_crawling",
                 "sentiment_analysis",
                 "bias_detection"
             ]

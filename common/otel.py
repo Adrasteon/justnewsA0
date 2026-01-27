@@ -16,6 +16,10 @@ logger = get_logger(__name__)
 try:  # Optional dependency: we only configure OpenTelemetry when installed.
     from opentelemetry import trace
     from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
+    # Instrumentation packages
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    from opentelemetry.instrumentation.requests import RequestsInstrumentor
     from opentelemetry.sdk.resources import (
         DEPLOYMENT_ENVIRONMENT,
         SERVICE_NAME,
@@ -23,10 +27,6 @@ try:  # Optional dependency: we only configure OpenTelemetry when installed.
     )
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
-    # Instrumentation packages
-    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-    from opentelemetry.instrumentation.requests import RequestsInstrumentor
 except ImportError:  # pragma: no cover - optional dependency
     trace = None  # type: ignore
     Resource = None  # type: ignore
@@ -119,7 +119,7 @@ def instrument_requests() -> None:
     """Enable auto-instrumentation for the requests library."""
     if not _STATE.enabled or RequestsInstrumentor is None:
         return
-    
+
     RequestsInstrumentor().instrument()
     logger.debug("Requests library instrumented with OpenTelemetry")
 

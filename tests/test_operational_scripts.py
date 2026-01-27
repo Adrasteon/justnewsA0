@@ -12,11 +12,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from scripts.admin.manage_secrets import SecretManagerCLI
 from scripts.deploy.init_database import (
     create_initial_admin_user,
     create_knowledge_graph_tables,
 )
-from scripts.admin.manage_secrets import SecretManagerCLI
 
 
 class TestDatabaseInitialization:

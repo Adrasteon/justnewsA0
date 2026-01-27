@@ -27,7 +27,7 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field, HttpUrl
 
 from common.metrics import JustNewsMetrics
-from common.observability import get_logger, bootstrap_observability
+from common.observability import bootstrap_observability, get_logger
 
 # Compatibility: expose create_database_service for tests that patch agent modules
 try:

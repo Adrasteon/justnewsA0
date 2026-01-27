@@ -5,10 +5,10 @@ Provides robust screenshot capture capabilities using Playwright.
 Extracted from legacy NewsReader agent for common usage.
 """
 from __future__ import annotations
-import os
+
 import logging
+import os
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 try:
     from playwright.async_api import async_playwright
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class ScreenshotConfig:
     headless: bool = True
     timeout: int = 30000
-    browser_args: List[str] = field(default_factory=lambda: [
+    browser_args: list[str] = field(default_factory=lambda: [
         "--no-sandbox",
         "--disable-dev-shm-usage",
         "--disable-background-timer-throttling",
@@ -32,7 +32,7 @@ class ScreenshotConfig:
     ])
 
 class WebCaptureService:
-    def __init__(self, config: Optional[ScreenshotConfig] = None):
+    def __init__(self, config: ScreenshotConfig | None = None):
         self.config = config or ScreenshotConfig()
         if not PLAYWRIGHT_AVAILABLE:
             logger.warning("Playwright not installed. WebCaptureService will fail.")
@@ -55,9 +55,9 @@ class WebCaptureService:
             raise ValueError(f"Invalid URL: {url}")
 
         os.makedirs(os.path.dirname(os.path.abspath(save_path)), exist_ok=True)
-        
+
         logger.info(f"📸 Capturing screenshot: {url}")
-        
+
         async with async_playwright() as p:
             browser = await p.chromium.launch(
                 headless=self.config.headless,
@@ -67,17 +67,17 @@ class WebCaptureService:
             try:
                 page = await browser.new_page()
                 await page.goto(
-                    url, 
-                    wait_until="domcontentloaded", 
+                    url,
+                    wait_until="domcontentloaded",
                     timeout=self.config.timeout
                 )
                 # Brief wait for dynamic content
                 await page.wait_for_timeout(2000)
-                
+
                 await page.screenshot(path=save_path, full_page=False)
                 logger.info(f"✅ Screenshot saved: {save_path}")
                 return save_path
-                
+
             except Exception as e:
                 logger.error(f"❌ Screenshot failed: {e}")
                 raise

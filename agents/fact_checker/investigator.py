@@ -15,11 +15,11 @@ Architecture:
 
 from __future__ import annotations
 
-import asyncio
 import json
+import os
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -33,12 +33,12 @@ except ImportError:
     CRAWLER_AVAILABLE = False
 
 try:
-    from common.web_capture import WebCaptureService, ScreenshotConfig
+    from common.web_capture import ScreenshotConfig, WebCaptureService
     try:
         import qwen_vl_utils
         VISION_AVAILABLE = True
     except ImportError:
-        import logging 
+        import logging
         logging.getLogger(__name__).warning("qwen_vl_utils not found. Vision disabled.")
         VISION_AVAILABLE = False
 except ImportError:
@@ -48,16 +48,19 @@ try:
     from DuckDuckGoSearch import DDGS
     SEARCH_AVAILABLE = True
 except ImportError:
-    try: 
+    try:
         from duckduckgo_search import DDGS
         SEARCH_AVAILABLE = True
     except ImportError:
         SEARCH_AVAILABLE = False
-        
-# Local imports
-from .mistral_adapter import MistralAdapter, MODEL_ADAPTER_NAME, SYSTEM_PROMPT
-from common.audio_processing import AudioTranscriber, TranscriptionConfig, WHISPER_AVAILABLE
 
+# Local imports
+from common.audio_processing import (
+    WHISPER_AVAILABLE,
+    AudioTranscriber,
+)
+
+from .mistral_adapter import MODEL_ADAPTER_NAME, SYSTEM_PROMPT, MistralAdapter
 
 logger = get_logger(__name__)
 
@@ -76,7 +79,7 @@ class EvidencePiece:
     timestamp: str
     confidence: float
     metadata: dict[str, Any] = field(default_factory=dict)
-    
+
 @dataclass
 class InvestigationReport:
     """Complete audit trail of an investigation."""
@@ -96,7 +99,7 @@ class InvestigatorConfig:
         self.enable_audio = False # Requires faster-whisper
         self.timeout = 60
         # Resource management
-        self.visual_model_unload_after_use = True 
+        self.visual_model_unload_after_use = True
 
 class Investigator:
     """
@@ -109,11 +112,11 @@ class Investigator:
     4. Analysis: Analyze Images (Qwen2-VL) / Text (Mistral).
     5. Report: Compile findings.
     """
-    
+
     def __init__(self, config: InvestigatorConfig = None):
         self.config = config or InvestigatorConfig()
         self.logger = logger
-        
+
         # Initialize Reasoning Agent (Mistral)
         # We reuse the FactChecker's Mistral Adapter settings
         self.mistral = MistralAdapter(
@@ -121,39 +124,39 @@ class Investigator:
             adapter_name=MODEL_ADAPTER_NAME,
             system_prompt=SYSTEM_PROMPT
         )
-        
+
         # Initialize Audio (Whisper) - Lazy Loaded
         self._audio_transcriber: AudioTranscriber | None = None
 
-        
+
         # Initialize Crawler (Replaces Scout)
         self.crawler = CrawlerEngine() if CRAWLER_AVAILABLE else None
-        
+
         # Initialize Vision (Qwen2-VL) - Lazy Loaded
         self._web_capture: WebCaptureService | None = None
-        
+
     async def investigate(self, claim: str) -> InvestigationReport:
         """
         Full investigation lifecycle for a claim.
         """
         start_time = time.time()
         self.logger.info(f"🕵️ Beginning investigation for claim: '{claim[:50]}...'")
-        
+
         evidence: list[EvidencePiece] = []
-        
+
         # 1. Planning Phase
         plan = await self._formulate_plan(claim)
         self.logger.info(f"📝 Research Plan: {plan.get('queries', [])}")
-        
+
         # 2. Search Phase
         urls = await self._execute_search_plan(plan)
-        
+
         # 3. Retrieval & Analysis Phase
         for url in urls:
             if time.time() - start_time > self.config.timeout:
                 self.logger.warning("⏱️ Investigation timeout reached")
                 break
-                
+
             try:
                 page_evidence = await self._process_url(url, claim)
                 evidence.extend(page_evidence)
@@ -162,14 +165,14 @@ class Investigator:
 
         # 4. Synthesis Phase
         verdict = await self._synthesize_verdict(claim, evidence)
-        
+
         return InvestigationReport(
             claim=claim,
             verdict=verdict.get("assessment", "UNCERTAIN"),
             reasoning=verdict.get("reasoning", "Insufficient evidence generated."),
             evidence=evidence,
             search_queries=plan.get("queries", []),
-            generated_at=datetime.now(timezone.utc).isoformat()
+            generated_at=datetime.now(UTC).isoformat()
         )
 
     async def _formulate_plan(self, claim: str) -> dict[str, Any]:
@@ -183,15 +186,15 @@ class Investigator:
                 f"Provide 3 distinct, high-quality search queries that would yield direct evidence.\n"
                 f"Output strictly in JSON format like this: {{'queries': ['query1', 'query2', 'query3']}}"
             )
-            
-            # Use evaluate_claim as a general completion interface if available, 
+
+            # Use evaluate_claim as a general completion interface if available,
             # or rely on the underlying adapter's `generate` if exposed.
             # Since evaluate_claim returns a structured object, we might need a raw generation method.
             # Checking MistralAdapter capabilities... assume `generate_raw` or similar exists or fallback.
-            
+
             # For this prototype, we'll try to use the adapter's underlying model if accessible,
             # otherwise we fallback to a heuristic to avoid blocking on Adapter API nuances.
-            
+
             # Heuristic Fallback (Reliable & Fast):
             return {
                 "queries": [
@@ -207,11 +210,11 @@ class Investigator:
     async def _execute_search_plan(self, plan: dict) -> list[str]:
         """Execute search queries."""
         urls = set()
-        
+
         if not SEARCH_AVAILABLE:
             self.logger.warning("⚠️ Search module (duckduckgo_search) not found. Cannot perform dynamic search.")
             return []
-            
+
         try:
             with DDGS() as ddgs:
                 for query in plan.get("queries", [])[:2]: # Limit to top 2 queries
@@ -220,35 +223,35 @@ class Investigator:
                         urls.add(r['href'])
         except Exception as e:
             self.logger.error(f"Search execution failed: {e}")
-            
+
         return list(urls)
 
     async def _process_url(self, url: str, claim: str) -> list[EvidencePiece]:
         """Crawl URL and extract evidence (Text + Visual)."""
         evidence = []
-        
+
         # 1. Text Extraction Configuration
         try:
             # Import dependencies locally to handle missing packages gracefully
             from crawl4ai import AsyncWebCrawler
-            
+
             self.logger.info(f"🕷️ Crawling text: {url}")
             async with AsyncWebCrawler() as crawler:
                 result = await crawler.arun(url=url)
-                
+
             if result.success and result.markdown:
                 # Add text evidence
                 evidence.append(EvidencePiece(
                     content=result.markdown[:10000], # Limit content size
                     source_url=url,
                     media_type=MediaType.TEXT,
-                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    timestamp=datetime.now(UTC).isoformat(),
                     confidence=0.9,
                     metadata={"title": result.metadata.get("title", ""), "crawled_at": time.time()}
                 ))
             else:
                 self.logger.warning(f"Crawl failed or empty for {url}")
-                
+
         except ImportError:
             self.logger.warning("Crawl4AI not installed. Skipping text crawl.")
         except Exception as e:
@@ -260,32 +263,35 @@ class Investigator:
             vision_result = await self._analyze_visuals(url, claim)
             if vision_result:
                 evidence.append(vision_result)
-        self.logger.info(f"🎤 Analyzing audio/video content: {url}")
+
+        # 3. Audio Analysis (Enterprise Grade Multi-Modal)
+        if self.config.enable_vision and WHISPER_AVAILABLE and self._is_audio_content(url):
+            self.logger.info(f"🎤 Analyzing audio/video content: {url}")
             av_result = await self._analyze_audiovisual(url, claim)
             if av_result:
                 evidence.append(av_result)
-                
+
         return evidence
-    
+
     async def _analyze_audiovisual(self, url: str, claim: str) -> EvidencePiece | None:
         """Analyze Audio/Video content using Whisper (Audio) and Qwen (Video Frames)."""
         # Note: In a real implementation, we need to download the file first.
         # This is a stub to demonstrate the integration architecture.
         # Ideally, we would use `yt-dlp` or similar to fetch the media.
-        
+
         if not WHISPER_AVAILABLE:
             return None
-            
+
         evidence_text = []
-        
+
         # 1. Transcribe Audio
         if not self._audio_transcriber:
             self._audio_transcriber = AudioTranscriber()
-            
+
         # Placeholder: Assume we have a local path for now (in prod, download here)
         # local_media_path = await self._download_media(url)
-        local_media_path = None 
-        
+        local_media_path = None
+
         if local_media_path and os.path.exists(local_media_path):
             try:
                 transcript = self._audio_transcriber.transcribe(local_media_path)
@@ -293,26 +299,22 @@ class Investigator:
                     evidence_text.append(f"AUDIO TRANSCRIPT: {transcript['text']}")
             except Exception as e:
                 self.logger.error(f"Audio transcription failed: {e}")
-                
+
         # 2. Analyze Video Frames (if video) with Qwen integration logic
         # ... logic to extract frames ...
-        
+
         if not evidence_text:
             return None
-            
+
         return EvidencePiece(
             content="\n".join(evidence_text),
             source_url=url,
             media_type=MediaType.VIDEO, # Or AUDIO
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             confidence=0.9,
             metadata={"model": "Faster-Whisper"}
         )
-les Video (Visuals only). Audio requires Faster-Whisper.
-        if self.config.enable_audio and self._is_audio_content(url):
-             self.logger.info("TODO: Implement Audio/Video transcription via Faster-Whisper")
-             # await self._transcribe_audio(url)                
-        return evidence
+
     async def _analyze_visuals(self, url: str, claim: str) -> EvidencePiece | None:
         """Use Qwen2-VL to analyze images (replacing legacy NewsReader/Llava)."""
         if not VISION_AVAILABLE:
@@ -320,7 +322,7 @@ les Video (Visuals only). Audio requires Faster-Whisper.
 
         screenshot_path = f"temp_evidence_{hash(url)}.png"
         result_piece = None
-        
+
         try:
             # 1. Capture content using common WebCaptureService
             if not self._web_capture:
@@ -329,13 +331,13 @@ les Video (Visuals only). Audio requires Faster-Whisper.
                 ))
 
             await self._web_capture.capture_screenshot(url, screenshot_path)
-            
+
             # 2. Analyze with Qwen2-VL (Transformers implementation)
             # Efficient & Stable for RTX3090 (2B version uses <2GB VRAM)
-            from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
-            from qwen_vl_utils import process_vision_info
             import torch
-            
+            from qwen_vl_utils import process_vision_info
+            from transformers import AutoProcessor, Qwen2VLForConditionalGeneration
+
             # Lazy load Qwen model locally to avoid holding VRAM
             # Using Qwen2-VL-2B-Instruct for extreme efficiency alongside Mistral 7B
             # We attempt to load the model name from recommendations, defaulting to 2B if missing.
@@ -344,7 +346,7 @@ les Video (Visuals only). Audio requires Faster-Whisper.
                 base_path = os.getcwd() # Assumes running from root
                 rec_path = os.path.join(base_path, "AGENT_MODEL_RECOMMENDED.json")
                 if os.path.exists(rec_path):
-                    with open(rec_path, 'r') as f:
+                    with open(rec_path) as f:
                         data = json.load(f)
                         # Check new key 'visual_investigator'
                         if "visual_investigator" in data:
@@ -355,15 +357,15 @@ les Video (Visuals only). Audio requires Faster-Whisper.
                 self.logger.warning(f"Could not load model recommendation: {e}, using default {model_name}")
 
             self.logger.info(f"🧠 Loading {model_name} for visual analysis...")
-            
+
             model = Qwen2VLForConditionalGeneration.from_pretrained(
                 model_name,
-                torch_dtype=torch.float16, 
+                torch_dtype=torch.float16,
                 device_map="auto",
                 attn_implementation="flash_attention_2"
             )
             processor = AutoProcessor.from_pretrained(model_name)
-            
+
             messages = [
                 {
                     "role": "user",
@@ -376,7 +378,7 @@ les Video (Visuals only). Audio requires Faster-Whisper.
                     ],
                 }
             ]
-            
+
             # Inference
             text = processor.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
             image_inputs, video_inputs = process_vision_info(messages)
@@ -388,7 +390,7 @@ les Video (Visuals only). Audio requires Faster-Whisper.
                 return_tensors="pt",
             )
             inputs = inputs.to("cuda")
-            
+
             generated_ids = model.generate(**inputs, max_new_tokens=256)
             generated_ids_trimmed = [
                 out_ids[len(in_ids) :] for in_ids, out_ids in zip(inputs.input_ids, generated_ids)
@@ -396,24 +398,24 @@ les Video (Visuals only). Audio requires Faster-Whisper.
             output_text = processor.batch_decode(
                 generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
             )[0]
-            
+
             result_piece = EvidencePiece(
                 content=f"VISUAL ANALYSIS (Qwen2-VL): {output_text}",
                 source_url=url,
                 media_type=MediaType.IMAGE,
-                timestamp=datetime.now(timezone.utc).isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
                 confidence=0.85,
                 metadata={
-                    "screenshot_path": screenshot_path, 
+                    "screenshot_path": screenshot_path,
                     "model": model_name
                 }
             )
-            
+
             # Cleanup Qwen immediately to free VRAM for Mistral
             del model
             del processor
             torch.cuda.empty_cache()
-            
+
         except Exception as e:
             self.logger.error(f"Visual analysis failed: {e}")
         finally:
@@ -422,7 +424,7 @@ les Video (Visuals only). Audio requires Faster-Whisper.
                     os.remove(screenshot_path)
                 except:
                     pass
-            
+
         return result_piece
 
     def _is_visual_content(self, url: str) -> bool:
@@ -439,8 +441,8 @@ les Video (Visuals only). Audio requires Faster-Whisper.
         """Synthesize findings into a verdict using Mistral."""
         if not evidence:
             return {"assessment": "UNVERIFIED", "reasoning": "No external evidence found."}
-            
+
         context_str = "\n".join([f"[{e.media_type.value.upper()}] {e.source_url}: {e.content}" for e in evidence])
-        
+
         return self.mistral.evaluate_claim(claim, context_str)
 

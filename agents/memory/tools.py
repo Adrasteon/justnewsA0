@@ -69,11 +69,9 @@ def get_embedding_model():
         from agents.common.embedding import get_shared_embedding_model
 
         # Use a canonical cache folder and device so cached instances are reused
-        device = None
-        if torch is not None:
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # Pass device=None to allow get_shared_embedding_model to handle FORCE_CPU/SAFE_MODE logic
         return get_shared_embedding_model(
-            EMBEDDING_MODEL_NAME, cache_folder=DEFAULT_MODEL_CACHE, device=device
+            EMBEDDING_MODEL_NAME, cache_folder=DEFAULT_MODEL_CACHE, device=None
         )
     except Exception:
         # Fallback: use agent-local models directory
@@ -83,11 +81,9 @@ def get_embedding_model():
             agent_cache = os.environ.get("MEMORY_MODEL_CACHE") or str(
                 Path("./agents/memory/models").resolve()
             )
-            device = None
-            if torch is not None:
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            # Pass device=None to allow get_shared_embedding_model to handle FORCE_CPU/SAFE_MODE logic
             return get_shared_embedding_model(
-                EMBEDDING_MODEL_NAME, cache_folder=agent_cache, device=device
+                EMBEDDING_MODEL_NAME, cache_folder=agent_cache, device=None
             )
         except Exception as e:
             logger.warning(f"Could not load shared embedding model: {e}")
@@ -414,7 +410,7 @@ def save_article(
 
             insert_query = """
             INSERT INTO articles (
-                url,
+                source_url,
                 title,
                 content,
                 summary,

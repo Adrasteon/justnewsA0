@@ -7,7 +7,7 @@ DASH_JSON = os.path.join(REPO_ROOT, "monitoring/dashboards/generated/system_over
 
 def load_dashboard():
     assert os.path.exists(DASH_JSON), f"Dashboard JSON missing: {DASH_JSON}"
-    with open(DASH_JSON, "r", encoding="utf-8") as fh:
+    with open(DASH_JSON, encoding="utf-8") as fh:
         return json.load(fh)
 
 

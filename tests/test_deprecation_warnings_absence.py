@@ -1,5 +1,4 @@
 import os
-import shutil
 import subprocess
 import sys
 
@@ -16,8 +15,8 @@ def test_no_upb_deprecation_warnings():
     else:
         cmd = [sys.executable]
     res = subprocess.run(cmd + ["scripts/checks/check_deprecation_warnings.py"])
-    
-    # Assert that the script returns 0 (no warnings). 
+
+    # Assert that the script returns 0 (no warnings).
     # If it returns non-zero, it means warnings were found, and we want to fail the test
     # (so we can see what they are) rather than skipping it.
     assert res.returncode == 0, "Deprecation warnings detected during imports"

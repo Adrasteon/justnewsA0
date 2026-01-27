@@ -7,10 +7,10 @@ This script verifies:
 2. Ability to load the Mistral-7B model into VRAM via vLLM.
 """
 
+import multiprocessing
 import os
 import sys
-import time
-import multiprocessing
+
 import pymysql
 
 # Set start method to 'spawn' for CUDA compatibility in vLLM/PyTorch
@@ -26,7 +26,7 @@ sys.path.append(os.getcwd())
 def load_env_file(path):
     if not os.path.exists(path):
         return
-    with open(path, "r") as f:
+    with open(path) as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith("#"):
@@ -70,12 +70,12 @@ def test_database_connection():
 
 def test_vllm_load():
     print("\n[LLM] Testing vLLM Model Loading (Qwen 2.5 14B AWQ)...")
-    
+
     model_name = os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ")
     print(f"Target Model: {model_name}")
 
     try:
-        # NOTE: We avoid 'import torch; torch.cuda.is_available()' here because 
+        # NOTE: We avoid 'import torch; torch.cuda.is_available()' here because
         # initializing CUDA in the main process before vLLM forks/spawns workers
         # can cause "Cannot re-initialize CUDA in forked subprocess" errors.
         # We rely on vLLM to detect the GPU or fail.
@@ -84,16 +84,16 @@ def test_vllm_load():
         # but enough to prove it works.
         llm = LLM(
             model=model_name,
-            dtype="auto", 
+            dtype="auto",
             gpu_memory_utilization=0.75, # Use 75% to ensure model fits (13.5GB+) + KV Cache
             max_model_len=2048 # Restrict context handling for startup speed
         )
         print("[SUCCESS] vLLM initialized successfully")
-        
+
         # Optional: Run a tiny inference?
         # output = llm.generate(["Hello, are you working?"])
         # print(f"Output: {output[0].outputs[0].text}")
-        
+
         # For now, just initialization is enough to prove VRAM fit
         return True
     except Exception as e:
@@ -102,10 +102,10 @@ def test_vllm_load():
 
 def main():
     print("=== LIVE SMOKE TEST ===")
-    
+
     db_ok = test_database_connection()
     llm_ok = test_vllm_load()
-    
+
     if db_ok and llm_ok:
         print("\n>>> ALL SYSTEMS GO <<<")
         sys.exit(0)

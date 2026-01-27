@@ -10,17 +10,16 @@ import uuid
 from contextlib import asynccontextmanager
 from typing import Any
 
-import requests
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel
 
-from common.metrics import JustNewsMetrics
-from common.observability import get_logger, bootstrap_observability
-from common.otel import init_telemetry, instrument_fastapi
 from agents.common.mcp_bus_client import MCPBusClient
+from common.metrics import JustNewsMetrics
+from common.observability import bootstrap_observability, get_logger
+from common.otel import init_telemetry, instrument_fastapi
 
 # Compatibility: expose create_database_service for tests that patch agent modules
 try:
@@ -50,30 +49,6 @@ logger = get_logger(__name__)
 ready = False
 # In-memory storage of crawl job statuses
 crawl_jobs: dict[str, Any] = {}
-
-MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
-CRAWLER_PORT = int(os.environ.get("CRAWLER_PORT", 8014))
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Registration with MCP Bus
-    try:
-        mcp_client = MCPBusClient(base_url=MCP_BUS_URL)
-        mcp_client.register_agent(
-            agent_name="crawler",
-            agent_address=f"http://localhost:{CRAWLER_PORT}",
-            tools=["crawl_url", "get_status", "cancel_job"]
-        )
-    except Exception as e:
-        logger.warning(f"MCP Bus registration failed: {e}")
-
-    # Recover running jobs on startup
-    await recover_running_jobs()
-    global ready
-    ready = True
-    yield
-    ready = False
-
 
 # Map job_id -> asyncio.Task for running background crawl jobs so they can be cancelled
 crawl_task_map: dict[str, asyncio.Task] = {}
@@ -154,26 +129,6 @@ async def run_crawl_background(
         logger.error(f"Traceback: {traceback.format_exc()}")
 
 
-class MCPBusClient:
-    def __init__(self, base_url: str = MCP_BUS_URL):
-        self.base_url = base_url
-
-    def register_agent(self, agent_name: str, agent_address: str, tools: list):
-        registration_data = {
-            "name": agent_name,
-            "address": agent_address,
-        }
-        try:
-            response = requests.post(
-                f"{self.base_url}/register", json=registration_data, timeout=(1, 2)
-            )
-            response.raise_for_status()
-            logger.info(f"Successfully registered {agent_name} with MCP Bus.")
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Failed to register {agent_name} with MCP Bus: {e}")
-            raise
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Crawler agent is starting up.")
@@ -182,7 +137,7 @@ async def lifespan(app: FastAPI):
     init_telemetry("crawler-agent")
     instrument_fastapi(app)
 
-    mcp_bus_client = MCPBusClient()
+    mcp_bus_client = MCPBusClient(base_url=MCP_BUS_URL)
     try:
         mcp_bus_client.register_agent(
             agent_name="crawler",

@@ -45,7 +45,7 @@ try:
     # Use common logger instead of deprecated newsreader module
     from common.observability import get_logger
     _logger = get_logger(__name__)
-    
+
     def log_feedback(event: str, details: dict):
         _logger.info(f"TRAINING_FEEDBACK: {event} - {details}")
 except ImportError:
