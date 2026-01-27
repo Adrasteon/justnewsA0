@@ -178,7 +178,7 @@ def main():
 
     # Get configuration from environment
     host = "0.0.0.0"  # Bind to all interfaces
-    port = int(os.environ.get("AUTH_SERVICE_PORT", "8009"))
+    port = int(os.environ.get("AUTH_SERVICE_PORT", "8018"))
     workers = int(os.environ.get("AUTH_WORKERS", "1"))
     reload = os.environ.get("AUTH_RELOAD", "false").lower() == "true"
 

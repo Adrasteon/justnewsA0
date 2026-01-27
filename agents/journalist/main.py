@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 engine: JournalistEngine | None = None
 MCP_BUS_URL = "http://localhost:8000" # Default
-JOURNALIST_PORT = 8016
+JOURNALIST_PORT = 8017
 
 
 @asynccontextmanager
