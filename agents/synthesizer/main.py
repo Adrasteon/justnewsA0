@@ -58,9 +58,11 @@ from .tools import (
     health_check,
     neutralize_text_tool,
     synthesize_gpu_tool,
+    summarize_article_tool,
 )
 
 logger = get_logger(__name__)
+
 
 # Environment variables
 SYNTHESIZER_AGENT_PORT: int = int(os.environ.get("SYNTHESIZER_AGENT_PORT", 8005))
@@ -197,6 +199,7 @@ async def lifespan(app: FastAPI):
                 "aggregate_cluster",
                 "synthesize_news_articles_gpu",
                 "get_synthesizer_performance",
+                "summarize_article",
             ],
         )
         logger.info("✅ Registered tools with MCP Bus.")
@@ -659,3 +662,29 @@ if __name__ == "__main__":
 
     logger.info("🎯 Starting Synthesizer Agent on %s:%d", host, port)
     uvicorn.run(app, host=host, port=port)
+
+
+@app.post("/summarize_article")
+async def summarize_article_endpoint(call: ToolCall) -> Any:
+    """Summarize a single article."""
+    if synthesizer_engine is None:
+        raise HTTPException(status_code=503, detail="Engine not initialized")
+
+    try:
+        if call.args:
+            article_id = call.args[0]
+        else:
+            article_id = call.kwargs.get("article_id")
+            
+        if not article_id:
+             raise HTTPException(status_code=400, detail="No article_id provided")
+
+        logger.info(f"📝 Request to summarize article {article_id}")
+        return await summarize_article_tool(synthesizer_engine, int(article_id))
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("❌ Summarization failed")
+        raise HTTPException(status_code=500, detail=str(e))
+

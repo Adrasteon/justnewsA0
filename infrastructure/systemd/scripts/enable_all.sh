@@ -28,6 +28,7 @@ SERVICES=(
     "crawl4ai"       # Crawl4AI bridge service (local HTTP bridge)
     "crawler"        # Unified Production Crawler - intelligent multi-strategy
     "crawler_control" # Crawler Control web interface (port 8016)
+    "workflow_orchestrator" # Workflow Orchestrator (port 8020)
 )
 
 # Observability services (started before agents, stopped after)

@@ -45,6 +45,16 @@ reference when implementing tests, forwarders, or new integrations.
 
 - Return: `{ "article_id": <int|string>, "status": "ok" }`
 
+- `memory.embed_article`
+
+- Payload (JSON):
+
+  - `article_id`: int
+
+- Fetches the article content for the given ID, generates embeddings, and persists them to the vector store (ChromaDB). Updates the database `embedded` flag to 1.
+
+- Return: `{ "status": "success", "article_id": <int> }`
+
 - `archive.queue_article`
 
 - Payload (JSON): `ingest_payload`produced by HITL service (`candidate`,`cleaned_text`,`label_*` fields)

@@ -81,6 +81,7 @@ async def lifespan(app: FastAPI):
                 "comprehensive_fact_check",
                 "extract_claims",
                 "assess_credibility",
+                "verify_article",
             ],
         )
         logger.info("Registered tools with MCP Bus.")
@@ -326,6 +327,27 @@ async def verify_facts_tool(call: ToolCall) -> dict[str, Any]:
 
     except Exception as e:
         logger.error(f"An error occurred in verify_facts: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/verify_article")
+async def verify_article_endpoint(call: ToolCall) -> dict[str, Any]:
+    """
+    MCP-compatible tool endpoint for verifying an article by ID.
+    Expects 'article_id' in kwargs.
+    """
+    try:
+        from .tools import verify_article_tool
+        
+        logger.info(f"Calling verify_article tool with kwargs: {call.kwargs}")
+        
+        article_id = call.kwargs.get("article_id")
+        if article_id is None:
+             raise HTTPException(status_code=400, detail="article_id is required")
+        
+        return await verify_article_tool(int(article_id))
+    except Exception as e:
+        logger.error(f"An error occurred in verify_article: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 

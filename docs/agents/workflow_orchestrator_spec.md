@@ -43,7 +43,13 @@ The agent will be built using the standard FastAPI + MCP Bus integration pattern
 *   **Action**: Call `analyze_article(article_id)`
 *   **Batch Size**: Dynamic (default 5-10 concurrent requests).
 
-### 4.2. Stage 3 -> Stage 4 (Synthesize/Publish) -- *Future*
+### 4.2. Stage 2B -> Stage 2C (Embedding Backfill)
+*   **Trigger Condition**: `articles.analyzed == 1` AND `articles.embedded == 0`
+*   **Target Agent**: `memory`
+*   **Action**: Call `embed_article(article_id)`
+*   **Batch Size**: Dynamic.
+
+### 4.3. Stage 3 -> Stage 4 (Synthesize/Publish) -- *Future*
 *   **Trigger Condition**: `articles.analyzed == 1` AND `articles.synthesized == 0`
 *   **Target Agent**: `synthesizer` / `chief_editor`
 *   **Action**: Call generation tasks.

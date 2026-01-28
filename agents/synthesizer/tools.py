@@ -107,6 +107,48 @@ async def cluster_articles_tool(
         }
 
 
+async def summarize_article_tool(engine: SynthesizerEngine, article_id: int) -> dict[str, Any]:
+    """Summarize a single article by ID and update the database."""
+    logger.info(f"📝 Summarizing article {article_id}")
+    
+    from database.utils.migrated_database_utils import create_database_service
+    
+    db_service = None
+    try:
+        db_service = create_database_service()
+        db_service.ensure_conn()
+        
+        cursor = db_service.mb_conn.cursor()
+        cursor.execute("SELECT content FROM articles WHERE id = %s", (article_id,))
+        row = cursor.fetchone()
+        
+        if not row or not row[0]:
+            cursor.close()
+            return {"status": "error", "error": f"Article {article_id} not found or empty"}
+            
+        content = row[0]
+        
+        # Summarization logic
+        summary = ""
+        if engine.bart_model and engine.bart_tokenizer:
+            inputs = engine.bart_tokenizer([content], max_length=1024, return_tensors="pt", truncation=True).to(engine.device)
+            summary_ids = engine.bart_model.generate(inputs["input_ids"], max_length=150, min_length=40, length_penalty=2.0)
+            summary = engine.bart_tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+        else:
+            summary = content[:500] + "..." if len(content) > 500 else content
+
+        cursor.execute("UPDATE articles SET summary = %s WHERE id = %s", (summary, article_id))
+        db_service.mb_conn.commit()
+        cursor.close()
+        
+        logger.info(f"✅ Article {article_id} summarized.")
+        return {"status": "success", "article_id": article_id}
+    except Exception as e:
+        logger.error(f"❌ Summarization failed: {e}")
+        return {"status": "error", "error": str(e)}
+
+
+
 async def neutralize_text_tool(engine: SynthesizerEngine, text: str) -> dict[str, Any]:
     """
     Neutralize text for bias and aggressive language.

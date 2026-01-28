@@ -24,11 +24,17 @@ Ingest API (example)
 
 - `ingest_meta` (dict: source, run_id, provenance)
 
+- MCP call `memory.embed_article` payload fields:
+
+- `article_id` (int)
+
 Processing steps
 
 1. Validate and normalise payload (ensure `site_id` is string, truncate extreme fields).
 
-1. Compute or fetch embeddings for `cleaned_text` and persist to vector DB.
+1. **Ingestion**: Compute or fetch embeddings for `cleaned_text` and persist to vector DB (optional synchronous embedding).
+
+1. **Embedding (Deferred)**: Trigger `memory.embed_article` to generating embeddings for an existing article ID (Backfill/Async support).
 
 1. Persist structured metadata and pointers to archive storage in MariaDB.
 

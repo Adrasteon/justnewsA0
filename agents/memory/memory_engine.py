@@ -84,6 +84,86 @@ class MemoryEngine:
             cur = conn.cursor()
         return cur, None
 
+    def embed_article(self, article_id: int) -> dict:
+        """Generates embedding for an existing article and saves to ChromaDB"""
+        try:
+             # Fetch article
+             cursor, conn = self._acquire_cursor(dictionary=True)
+             if not cursor:
+                 return {"error": "DB connection failed"}
+             
+             cursor.execute("SELECT id, content, metadata FROM articles WHERE id = %s", (article_id,))
+             article = cursor.fetchone()
+             if conn: 
+                 cursor.close()
+                 conn.close()
+             
+             if not article:
+                 return {"error": "Article not found"}
+            
+             if not article['content']:
+                 return {"error": "Article has no content"}
+
+             # Generate Embedding
+             if not self.embedding_model:
+                  # Try to load - uses tools.get_embedding_model
+                  from agents.memory.tools import get_embedding_model
+                  self.embedding_model = get_embedding_model()
+             
+             if not self.embedding_model:
+                  return {"error": "Embedding model not available"}
+
+             # Move model to device if needed/possible is handled by get_embedding_model logic generally
+             # But here we assume it returns a usable model
+             
+             embedding = self.embedding_model.encode(article['content']).tolist()
+             
+             # Upsert to Chroma
+             collection = getattr(self.db_service, "collection", None)
+             if not collection:
+                  return {"error": "Chroma collection not available"}
+             
+             meta = {}
+             if article['metadata']:
+                 if isinstance(article['metadata'], str):
+                     try:
+                        meta = json.loads(article['metadata'])
+                     except:
+                        pass
+                 elif isinstance(article['metadata'], dict):
+                     meta = article['metadata']
+             
+             # Ensure metadata is flat/safe for Chroma
+             safe_meta = {}
+             for k, v in meta.items():
+                 if isinstance(v, (str, int, float, bool)):
+                     safe_meta[k] = v
+                 else:
+                     safe_meta[k] = str(v)
+             
+             collection.upsert(
+                 ids=[str(article_id)],
+                 embeddings=[embedding],
+                 metadatas=[safe_meta],
+                 documents=[article['content']]
+             )
+
+             # Update embedded flag
+             cursor, conn = self._acquire_cursor()
+             # Handling potential missing column if migration failed silently (though we verified it)
+             cursor.execute("UPDATE articles SET embedded=1 WHERE id=%s", (article_id,))
+             if conn: 
+                conn.commit()
+                conn.close()
+             elif self.db_service and hasattr(self.db_service, 'mb_conn'):
+                self.db_service.mb_conn.commit()
+             
+             return {"status": "success", "article_id": article_id}
+
+        except Exception as e:
+            logger.error(f"Error embedding article {article_id}: {e}")
+            return {"error": str(e)}
+
     async def initialize(self):
         """Initialize the memory engine"""
         try:

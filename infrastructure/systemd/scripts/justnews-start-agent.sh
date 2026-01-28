@@ -84,7 +84,7 @@ validate_agent_name() {
     if [[ -z "$agent" ]]; then
         log_error "Agent name is required"
         log_info "Usage: $SCRIPT_NAME <agent_name>"
-        log_info "Available agents: mcp_bus, chief_editor, fact_checker, analyst, synthesizer, critic, memory, reasoning, dashboard, analytics, archive, hitl_service, crawl4ai, gpu_orchestrator, crawler, crawler_control"
+        log_info "Available agents: mcp_bus, chief_editor, fact_checker, analyst, synthesizer, critic, memory, reasoning, dashboard, analytics, archive, hitl_service, crawl4ai, gpu_orchestrator, crawler, crawler_control, workflow_orchestrator"
         exit 1
     fi
 
@@ -108,6 +108,7 @@ validate_agent_name() {
         "gpu_orchestrator"
         "crawler"
         "crawler_control"
+        "workflow_orchestrator"
     )
 
     local agent_valid=false
@@ -545,6 +546,7 @@ AGENTS:
     gpu_orchestrator GPU telemetry and allocation coordinator (SAFE_MODE-aware)
     crawler         Content crawling and data collection
     crawler_control Web interface for crawler management and monitoring
+    workflow_orchestrator Workflow Orchestrator agent
 
 OPTIONS:
     -h, --help      Show this help message

@@ -25,6 +25,7 @@ declare -A SERVICES=(
     ["gpu_orchestrator"]="8014:/health" # GPU Orchestrator service
     ["crawler"]="8015:/health"          # Unified Production Crawler instance
     ["crawler_control"]="8016:/"        # Crawler Control web interface
+    ["workflow_orchestrator"]="8020:/health" # Workflow Orchestrator
     # Observability Stack
     ["prometheus"]="9090:/-/healthy:justnews-prometheus"
     ["grafana"]="3000:/api/health:justnews-grafana"

@@ -9,6 +9,10 @@ from abc import ABC, abstractmethod
 from typing import List, Any
 import requests
 import asyncio
+import os
+import json
+import uuid
+from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
 from common.observability import get_logger
@@ -74,6 +78,11 @@ class IngestionToAnalysisPolicy(WorkflowPolicy):
         ids = []
         try:
             self.db_service.ensure_conn()
+            # Commit any existing transaction to ensure we see fresh data
+            try:
+                self.db_service.mb_conn.commit()
+            except:
+                pass
             cursor = self.db_service.mb_conn.cursor()
             # Select unanalyzed articles, preferring newer ones
             query = """
@@ -129,4 +138,470 @@ class IngestionToAnalysisPolicy(WorkflowPolicy):
                 logger.error(f"Task failed: {res}")
         
         logger.info(f"Triggered batch complete. Success: {success_count}/{len(items)}")
+
+
+class AnalysisToEmbeddingPolicy(WorkflowPolicy):
+    """
+    Policy: Analyzed -> Embedded
+    Condition: articles.analyzed = 1 AND articles.embedded = 0
+    Action: Call 'memory.embed_article'
+    """
+
+    def name(self) -> str:
+        return "analysis_to_embedding"
+
+    def check_condition(self, limit: int) -> List[int]:
+        ids = []
+        try:
+            self.db_service.ensure_conn()
+            # Commit any existing transaction to ensure we see fresh data
+            try:
+                self.db_service.mb_conn.commit()
+            except:
+                pass
+            cursor = self.db_service.mb_conn.cursor()
+            # Select analyzed but not embedded articles
+            query = """
+                SELECT id FROM articles 
+                WHERE analyzed = 1 AND embedded = 0
+                ORDER BY created_at DESC 
+                LIMIT %s
+            """
+            cursor.execute(query, (limit,))
+            rows = cursor.fetchall()
+            ids = [row[0] for row in rows]
+            cursor.close()
+        except Exception as e:
+            logger.error(f"Error checking DB condition for {self.name()}: {e}")
+            try:
+                self.db_service.ensure_conn()
+            except:
+                pass
+        return ids
+
+    async def execute(self, items: List[int]):
+        logger.info(f"Triggering embedding for {len(items)} articles.")
+        tasks = []
+        for article_id in items:
+            tasks.append(
+                self._call_mcp_tool(
+                    agent="memory",
+                    tool="embed_article",
+                    kwargs={"article_id": article_id}
+                )
+            )
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        success_count = 0
+        for res in results:
+            if isinstance(res, dict) and res.get("status") == "success":
+                success_count += 1
+            elif isinstance(res, Exception):
+                logger.error(f"Embedding task failed: {res}")
+        
+        logger.info(f"Embedding batch complete. Success: {success_count}/{len(items)}")
+
+
+class AnalysisToSummaryPolicy(WorkflowPolicy):
+    """
+    Policy: Analyzed -> Summarized
+    Condition: articles.analyzed = 1 AND (articles.summary IS NULL OR articles.summary = '')
+    Action: Call 'synthesizer.summarize_article'
+    """
+
+    def name(self) -> str:
+        return "analysis_to_summary"
+
+    def check_condition(self, limit: int) -> List[int]:
+        ids = []
+        try:
+            self.db_service.ensure_conn()
+            try:
+                self.db_service.mb_conn.commit()
+            except:
+                pass
+            cursor = self.db_service.mb_conn.cursor()
+            query = """
+                SELECT id FROM articles 
+                WHERE analyzed = 1 AND (summary IS NULL OR summary = '')
+                ORDER BY created_at DESC 
+                LIMIT %s
+            """
+            cursor.execute(query, (limit,))
+            rows = cursor.fetchall()
+            ids = [row[0] for row in rows]
+            cursor.close()
+        except Exception as e:
+            logger.error(f"Error checking DB condition for {self.name()}: {e}")
+            try:
+                self.db_service.ensure_conn()
+            except:
+                pass
+        return ids
+
+    async def execute(self, items: List[int]):
+        logger.info(f"Triggering summarization for {len(items)} articles.")
+        tasks = []
+        for article_id in items:
+            tasks.append(
+                self._call_mcp_tool(
+                    agent="synthesizer",
+                    tool="summarize_article",
+                    kwargs={"article_id": article_id}
+                )
+            )
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        success_count = 0
+        for res in results:
+            if isinstance(res, dict) and res.get("status") == "success":
+                success_count += 1
+            elif isinstance(res, Exception):
+                logger.error(f"Summarization task failed: {res}")
+        
+        logger.info(f"Summarization batch complete. Success: {success_count}/{len(items)}")
+
+
+class SummaryToFactCheckPolicy(WorkflowPolicy):
+    """
+    Policy: Summarized -> Fact Checked
+    Condition: articles.analyzed = 1 AND articles.summary IS NOT NULL AND articles.fact_check_status IS NULL
+    Action: Call 'fact_checker.verify_article' (requires fact_checker agent update)
+    """
+
+    def name(self) -> str:
+        return "summary_to_fact_check"
+
+    def check_condition(self, limit: int) -> List[int]:
+        ids = []
+        try:
+            self.db_service.ensure_conn()
+            try:
+                self.db_service.mb_conn.commit()
+            except:
+                pass
+            cursor = self.db_service.mb_conn.cursor()
+            query = """
+                SELECT id FROM articles 
+                WHERE analyzed = 1 
+                  AND (summary IS NOT NULL AND summary != '')
+                  AND fact_check_status IS NULL
+                ORDER BY created_at DESC 
+                LIMIT %s
+            """
+            cursor.execute(query, (limit,))
+            rows = cursor.fetchall()
+            ids = [row[0] for row in rows]
+            cursor.close()
+        except Exception as e:
+            logger.error(f"Error checking DB condition for {self.name()}: {e}")
+            try:
+                self.db_service.ensure_conn()
+            except:
+                pass
+        return ids
+
+    async def execute(self, items: List[int]):
+        logger.info(f"Triggering fact check for {len(items)} articles.")
+        tasks = []
+        for article_id in items:
+            tasks.append(
+                self._call_mcp_tool(
+                    agent="fact_checker",
+                    tool="verify_article",
+                    kwargs={"article_id": article_id}
+                )
+            )
+        
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        success_count = 0
+        for res in results:
+            if isinstance(res, dict) and res.get("status") == "success":
+                success_count += 1
+            elif isinstance(res, Exception):
+                logger.error(f"Fact check task failed: {res}")
+        
+        logger.info(f"Fact check batch complete. Success: {success_count}/{len(items)}")
+
+
+class FactCheckToClusterPolicy(WorkflowPolicy):
+    """
+    Policy: Fact Checked -> Clustered
+    Condition: articles.fact_check_status IS NOT NULL 
+               AND (articles.input_cluster_ids IS NULL OR articles.input_cluster_ids = '[]')
+               AND article.created_at >= NOW() - CLUSTER_DATERANGE
+    Action: Call 'synthesizer.cluster_articles', generate Cluster IDs, and update articles.
+    """
+
+    def name(self) -> str:
+        return "fact_check_to_cluster"
+
+    def check_condition(self, limit: int) -> List[int]:
+        ids = []
+        try:
+            days_range = int(os.environ.get("CLUSTER_DATERANGE", 7))
+            cutoff_date = datetime.now() - timedelta(days=days_range)
+            
+            self.db_service.ensure_conn()
+            try:
+                self.db_service.mb_conn.commit()
+            except:
+                pass
+            cursor = self.db_service.mb_conn.cursor()
+            
+            # We explicitly ignore the small default 'limit' (usually 5) 
+            # and fetch a larger batch for meaningful clustering.
+            query = """
+                SELECT id FROM articles 
+                WHERE fact_check_status IS NOT NULL 
+                  AND (input_cluster_ids IS NULL OR input_cluster_ids = '[]' OR input_cluster_ids = '')
+                  AND created_at >= %s
+                ORDER BY created_at DESC
+                LIMIT 50
+            """
+            cursor.execute(query, (cutoff_date,))
+            rows = cursor.fetchall()
+            ids = [row[0] for row in rows]
+            cursor.close()
+        except Exception as e:
+            logger.error(f"Error checking DB condition for {self.name()}: {e}")
+            try:
+                self.db_service.ensure_conn()
+            except:
+                pass
+        return ids
+
+    async def execute(self, items: List[int]):
+        if not items:
+            return
+            
+        logger.info(f"Clustering policy triggered for {len(items)} articles.")
+        
+        # 1. Fetch content
+        articles_data = [] # List of dict {id, content}
+        try:
+            self.db_service.ensure_conn()
+            cursor = self.db_service.mb_conn.cursor()
+            # Construct "IN" query safely
+            format_strings = ','.join(['%s'] * len(items))
+            cursor.execute(f"SELECT id, content FROM articles WHERE id IN ({format_strings})", tuple(items))
+            rows = cursor.fetchall()
+            for row in rows:
+                if row[1]: # Has content
+                    articles_data.append({"id": row[0], "content": row[1]})
+            cursor.close()
+        except Exception as e:
+            logger.error(f"Failed to fetch content for clustering: {e}")
+            return
+            
+        if not articles_data:
+            return
+
+        texts = [a["content"] for a in articles_data]
+        
+        # 2. Call Clustering Agent
+        # Dynamic cluster count: at least 2, roughly 1 cluster per 5 articles
+        n_clusters = max(2, len(items) // 5)
+        
+        try:
+            # Call 'cluster_articles' tool
+            clustering_result = await self._call_mcp_tool(
+                agent="synthesizer",
+                tool="cluster_articles",
+                kwargs={"article_texts": texts, "n_clusters": n_clusters}
+            )
+            
+            if isinstance(clustering_result, dict) and clustering_result.get("success"):
+                clusters = clustering_result.get("clusters", [])
+                # clusters is list of lists of indices
+                
+                # 3. Update DB with Cluster IDs
+                self.db_service.ensure_conn()
+                cursor = self.db_service.mb_conn.cursor()
+                
+                updates = 0
+                for cluster_indices in clusters:
+                    if not cluster_indices:
+                        continue
+                        
+                    cluster_id = f"CL-{uuid.uuid4().hex[:8]}"
+                    # Store as JSON list
+                    input_cluster_json = json.dumps([cluster_id])
+                    
+                    cluster_article_ids = []
+                    for idx in cluster_indices:
+                        # Ensure index is int and within bounds
+                        try:
+                            idx_int = int(idx)
+                            if 0 <= idx_int < len(articles_data):
+                                cluster_article_ids.append(articles_data[idx_int]["id"])
+                        except (ValueError, TypeError):
+                            continue
+                    
+                    if not cluster_article_ids:
+                        continue
+                        
+                    for aid in cluster_article_ids:
+                        cursor.execute(
+                            "UPDATE articles SET input_cluster_ids = %s WHERE id = %s",
+                            (input_cluster_json, aid)
+                        )
+                    updates += len(cluster_article_ids)
+                
+                self.db_service.mb_conn.commit()
+                cursor.close()
+                logger.info(f"Clustering complete. Assigned {updates} articles to {len(clusters)} clusters.")
+                
+            else:
+                error_msg = clustering_result.get('error') if isinstance(clustering_result, dict) else str(clustering_result)
+                logger.error(f"Clustering failed: {error_msg}")
+                
+        except Exception as e:
+             logger.error(f"Error executing clustering policy: {e}")
+
+
+class ClusterToSynthesisPolicy(WorkflowPolicy):
+    """
+    Policy: Clustered -> Synthesized
+    Condition: articles.is_synthesized = 0 
+               AND articles.input_cluster_ids IS NOT NULL 
+               AND articles.input_cluster_ids != '[]'
+    Action: Group by cluster_id, call 'synthesizer.aggregate_cluster', save to 'synthesized_articles'.
+    """
+
+    def name(self) -> str:
+        return "cluster_to_synthesis"
+
+    def check_condition(self, limit: int) -> List[str]:
+        # Returns list of Cluster IDs to process
+        cluster_ids = []
+        try:
+            self.db_service.ensure_conn()
+            try:
+                self.db_service.mb_conn.commit()
+            except:
+                pass
+            cursor = self.db_service.mb_conn.cursor()
+            
+            # Fetch candidates: un-synthesized articles with clusters
+            # We fetch a reasonable batch to find a complete cluster
+            query = """
+                SELECT input_cluster_ids FROM articles 
+                WHERE is_synthesized = 0 
+                  AND input_cluster_ids IS NOT NULL 
+                  AND input_cluster_ids != '[]'
+                  AND input_cluster_ids != ''
+                LIMIT 200
+            """
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            cursor.close()
+            
+            # Tally counts per cluster
+            counts = {}
+            for row in rows:
+                try:
+                    c_ids = json.loads(row[0])
+                    if isinstance(c_ids, list) and c_ids:
+                        cid = c_ids[0] # Assume primary cluster
+                        counts[cid] = counts.get(cid, 0) + 1
+                except:
+                    continue
+            
+            # Pick the largest clusters first, or just any valid ones
+            # We return a list of cluster IDs up to 'limit'
+            sorted_clusters = sorted(counts.items(), key=lambda x: x[1], reverse=True)
+            cluster_ids = [c[0] for c in sorted_clusters[:limit]]
+            
+        except Exception as e:
+            logger.error(f"Error checking DB condition for {self.name()}: {e}")
+            try:
+                self.db_service.ensure_conn()
+            except:
+                pass
+        return cluster_ids
+
+    async def execute(self, cluster_ids: List[str]):
+        """
+        Execute synthesis for the given cluster IDs.
+        Note: The 'items' arg here is a list of cluster_ids, not article_ids.
+        """
+        logger.info(f"Synthesis policy triggered for {len(cluster_ids)} clusters.")
+        
+        for cid in cluster_ids:
+            try:
+                # 1. Fetch articles for this cluster
+                self.db_service.ensure_conn()
+                cursor = self.db_service.mb_conn.cursor()
+                
+                # We need to find articles where JSON contains this CID.
+                # LIKE is a cheap approximation for logic: ["CL-ABC"] contains CL-ABC
+                query = """
+                    SELECT id, content FROM articles 
+                    WHERE is_synthesized = 0 
+                      AND input_cluster_ids LIKE %s
+                """
+                like_pattern = f"%{cid}%"
+                cursor.execute(query, (like_pattern,))
+                rows = cursor.fetchall()
+                
+                if not rows:
+                    cursor.close()
+                    continue
+                    
+                article_ids = [row[0] for row in rows]
+                texts = [row[1] for row in rows if row[1]]
+                cursor.close()
+                
+                if not texts:
+                    continue
+
+                logger.info(f"Synthesizing cluster {cid} with {len(texts)} articles.")
+                
+                # 2. Call Synthesizer
+                # Using aggregate_cluster_tool
+                synthesis_result = await self._call_mcp_tool(
+                    agent="synthesizer",
+                    tool="aggregate_cluster",
+                    kwargs={"article_texts": texts}
+                )
+                
+                if isinstance(synthesis_result, dict) and synthesis_result.get("success"):
+                    body_text = synthesis_result.get("summary", "")
+                    title_text = f"Synthesis Report: {cid}" # Placeholder title
+                    
+                    # 3. Save to synthesized_articles
+                    self.db_service.ensure_conn()
+                    cursor = self.db_service.mb_conn.cursor()
+                    
+                    # Columns: id, story_id, cluster_id, input_articles, title, body, created_at, is_published
+                    new_id = int(time.time() * 1000) # Simple numeric ID gen or use auto-increment if schema allows
+                    story_id = f"STORY-{uuid.uuid4().hex[:8]}"
+                    input_arts_json = json.dumps(article_ids)
+                    
+                    insert_query = """
+                        INSERT INTO synthesized_articles 
+                        (story_id, cluster_id, input_articles, title, body, created_at, is_published)
+                        VALUES (%s, %s, %s, %s, %s, NOW(), 0)
+                    """
+                    cursor.execute(insert_query, (story_id, cid, input_arts_json, title_text, body_text))
+                    
+                    # 4. Mark articles as synthesized
+                    format_strings = ','.join(['%s'] * len(article_ids))
+                    update_query = f"UPDATE articles SET is_synthesized = 1 WHERE id IN ({format_strings})"
+                    cursor.execute(update_query, tuple(article_ids))
+                    
+                    self.db_service.mb_conn.commit()
+                    cursor.close()
+                    
+                    logger.info(f"✅ Created story {story_id} from cluster {cid}.")
+                else:
+                    err = synthesis_result.get('error') if isinstance(synthesis_result, dict) else str(synthesis_result)
+                    logger.error(f"Synthesis failed for cluster {cid}: {err}")
+                    
+            except Exception as e:
+                logger.error(f"Error processing cluster {cid}: {e}")
+
+
+
 

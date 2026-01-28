@@ -157,6 +157,7 @@ async def lifespan(app: FastAPI):
                     "vector_search_articles",
                     "log_training_example",
                     "ingest_article",
+                    "embed_article",
                     "get_recent_articles",
                     "get_article_count",
                     "get_sources",
@@ -434,6 +435,34 @@ def ingest_article_endpoint(request: dict):
     except Exception as e:
         logger.error(f"Ingestion failed: {e}")
         raise HTTPException(status_code=500, detail=f"Ingestion error: {str(e)}") from e
+
+
+@app.post("/embed_article")
+def embed_article_endpoint(request: dict):
+    """Embeds an existing article by ID. Handles both direct calls and MCP Bus format."""
+    try:
+        # Handle MCP Bus format: {"args": [...], "kwargs": {...}}
+        article_id = None
+        if "args" in request and "kwargs" in request:
+            if "article_id" in request["kwargs"]:
+                article_id = request["kwargs"]["article_id"]
+            elif len(request["args"]) > 0:
+                article_id = request["args"][0]
+        else:
+            # Direct call format: {"article_id": 123}
+            article_id = request.get("article_id")
+        
+        if article_id is None:
+             raise HTTPException(status_code=400, detail="Missing article_id")
+
+        result = memory_engine.embed_article(int(article_id))
+        return result
+
+    except Exception as e:
+        logger.error(f"Error embedding article: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error embedding article: {str(e)}"
+        ) from e
 
 
 @app.get("/get_article_count")

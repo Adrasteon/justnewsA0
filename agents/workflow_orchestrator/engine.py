@@ -11,7 +11,15 @@ import time
 from typing import List
 
 from common.observability import get_logger
-from .policies import WorkflowPolicy, IngestionToAnalysisPolicy
+from .policies import (
+    WorkflowPolicy,
+    IngestionToAnalysisPolicy,
+    AnalysisToEmbeddingPolicy,
+    AnalysisToSummaryPolicy,
+    SummaryToFactCheckPolicy,
+    FactCheckToClusterPolicy,
+    ClusterToSynthesisPolicy,
+)
 from .resources import ResourceMonitor
 
 logger = get_logger(__name__)
@@ -53,6 +61,11 @@ class OrchestratorEngine:
     def _init_policies(self):
         # Register enabled policies
         self.policies.append(IngestionToAnalysisPolicy(self.mcp_bus_url))
+        self.policies.append(AnalysisToEmbeddingPolicy(self.mcp_bus_url))
+        self.policies.append(AnalysisToSummaryPolicy(self.mcp_bus_url))
+        self.policies.append(SummaryToFactCheckPolicy(self.mcp_bus_url))
+        self.policies.append(FactCheckToClusterPolicy(self.mcp_bus_url))
+        self.policies.append(ClusterToSynthesisPolicy(self.mcp_bus_url))
         logger.info(f"Initialized {len(self.policies)} policies.")
 
     async def start(self):

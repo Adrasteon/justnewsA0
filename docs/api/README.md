@@ -117,6 +117,8 @@ Data persistence and retrieval with vector search capabilities.
 
 - `POST /get_recent_articles` - Get recently processed articles
 
+- `POST /embed_article` - Embed article content and update DB flag
+
 - `GET /get_article_count` - Get total article count
 
 - `POST /get_sources` - Get available news sources

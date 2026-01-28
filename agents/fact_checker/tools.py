@@ -638,8 +638,81 @@ def format_fact_check_output(result: dict[str, Any], format_type: str = "json") 
         return f"Formatting error: {e}"
 
 
+try:
+    from database.utils.migrated_database_utils import create_database_service
+except Exception:
+    create_database_service = None
+
+
+async def verify_article_tool(article_id: int) -> dict[str, Any]:
+    """
+    Verify an article by ID, updating the database with the result.
+    
+    This is a 'service-level' tool that handles database interaction, intended
+    for use by the Workflow Orchestrator.
+    
+    Args:
+        article_id: The ID of the article to verify.
+    """
+    if create_database_service is None:
+        return {"error": "Database service not available", "status": "error"}
+    
+    try:
+        db = create_database_service()
+        db.ensure_conn()
+        
+        # Fetch article
+        # using buffered cursor to ensure we read fully
+        cursor = db.mb_conn.cursor(dictionary=True, buffered=True)
+        cursor.execute("SELECT id, content, url FROM articles WHERE id = %s", (article_id,))
+        article = cursor.fetchone()
+        cursor.close()
+        
+        if not article:
+             return {"error": f"Article {article_id} not found", "status": "error"}
+             
+        # Perform check
+        # Convert content to str to be safe
+        content = article.get("content") or ""
+        url = article.get("url")
+        
+        # Using comprehensive check
+        # Note: comprehensive_fact_check might be async or wrapped sync
+        result = comprehensive_fact_check(
+            content=content,
+            source_url=url
+        )
+        # In case it returned a coroutine (if called directly vs tool wrapper)
+        result = _await_if_needed(result)
+        
+        # Update DB
+        # We store status and trace
+        status = result.get("classification", "unknown")
+        # Ensure result is serializable
+        try:
+            trace = json.dumps(result)
+        except Exception:
+            trace = json.dumps({"error": "Result not serializable", "partial": str(result)[:1000]})
+        
+        cursor = db.mb_conn.cursor()
+        cursor.execute(
+            "UPDATE articles SET fact_check_status = %s, fact_check_trace = %s WHERE id = %s",
+            (status, trace, article_id)
+        )
+        db.mb_conn.commit()
+        cursor.close()
+        
+        return {"status": "success", "article_id": article_id, "classification": status}
+        
+    except Exception as e:
+        logger.error(f"verify_article_tool failed for {article_id}: {e}", exc_info=True)
+        return {"error": str(e), "status": "error"}
+
+
 # Export main functions
 __all__ = [
+    "verify_article_tool",
+
     "verify_facts",
     "validate_sources",
     "comprehensive_fact_check",
