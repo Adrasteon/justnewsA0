@@ -16,10 +16,10 @@ Behavior:
   * Can be disabled via the JUSTNEWS_DISABLE_TEST_DB_FALLBACK=1 environment var.
 
 Default Credentials (development only):
-  user: justnews_user
-  password: password123
+  user: justnews
+  password: justnews_password
   host: localhost
-  port: 5432
+  port: 3306
   database: justnews
 
 Usage:
@@ -48,8 +48,8 @@ _DEV_DEFAULTS = {
     "DB_HOST": "localhost",
     "DB_PORT": "3306",
     "DB_NAME": "justnews",
-    "DB_USER": "justnews_user",
-    "DB_PASSWORD": "password123",
+    "DB_USER": "justnews",
+    "DB_PASSWORD": "justnews_password",
 }
 
 # Legacy / alternate variable name mapping – values resolved from _DEV_DEFAULTS
@@ -73,7 +73,7 @@ def _build_database_url(env: dict) -> str:
         env: Environment dictionary (typically os.environ).
 
     Returns:
-        A PostgreSQL connection URL.
+        A MariaDB connection URL.
     """
     user = env.get("DB_USER", _DEV_DEFAULTS["DB_USER"])  # pragma: no cover
     password = env.get("DB_PASSWORD", _DEV_DEFAULTS["DB_PASSWORD"])  # pragma: no cover

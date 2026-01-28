@@ -448,8 +448,14 @@ class GPUOrchestratorEngine:
             for i in range(device_count):
                 handle = _NVML_HANDLE_CACHE[i]
                 name = pynvml.nvmlDeviceGetName(handle)
+                # Ensure name is decoded properly if it's bytes
+                if isinstance(name, bytes):
+                    name_str = name.decode('utf-8')
+                else:
+                    name_str = str(name)
+                
                 memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
-                self.logger.debug(f"Device {i}: {name.decode('utf-8')}")
+                self.logger.debug(f"Device {i}: {name_str}")
                 self.logger.debug(f"  Total memory: {memory_info.total / 1024**2} MB")
                 self.logger.debug(f"  Used memory: {memory_info.used / 1024**2} MB")
                 self.logger.debug(f"  Free memory: {memory_info.free / 1024**2} MB")

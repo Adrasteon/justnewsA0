@@ -18,6 +18,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
+# Load environment variables first
+from common.env_loader import load_global_env
+load_global_env()
+
 # Import database functions - REMOVED: migrated to database.utils.migrated_database_utils
 # from agents.common.database import execute_query, initialize_connection_pool
 from common.dev_db_fallback import apply_test_db_env_fallback

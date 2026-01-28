@@ -573,7 +573,7 @@ def list_tools_endpoint():
 def notify_ready_endpoint():
     """Handle notification from MCP Bus that it is ready."""
     try:
-        client = MCPBusClient()
+        client = MCPBusClient(base_url=MCP_BUS_URL)
         client.register_agent(
             agent_name="gpu_orchestrator",
             agent_address=f"http://localhost:{GPU_ORCHESTRATOR_PORT}",

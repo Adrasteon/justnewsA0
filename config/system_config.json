@@ -266,5 +266,15 @@
       "retry_attempts": 3,
       "rate_limit_per_minute": 100
     }
+  },
+  "orchestrator": {
+    "polling_interval_seconds": 10,
+    "max_concurrent_tasks": 5,
+    "resource_limits": {
+      "max_cpu_percent": 80,
+      "max_memory_percent": 85,
+      "max_gpu_utilization": 90,
+      "max_gpu_memory_percent": 90
+    }
   }
 }
