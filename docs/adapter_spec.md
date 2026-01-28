@@ -58,11 +58,9 @@ Dry-run / ModelStore compatibility
 
 Per-agent adapter patterns
 
-- The canonical Mistral wrapper lives at `agents/common/mistral_adapter.py` and provides convenience helpers (classify,
-  summarize_cluster, review, generate_story_brief, evaluate_claim, analyze, review_content). Those helpers are optional
-  for new adapters but recommended for JSON-centric agents.
+- The canonical OpenAI/vLLM wrapper lives at `agents/common/openai_adapter.py` and provides convenience helpers. Those helpers are optional for new adapters but recommended for JSON-centric agents.
 
-- Per-agent wrappers live at `agents/<agent>/mistral_adapter.py` and should only contain prompts and normalization code
+- Per-agent wrappers live at `agents/<agent>/model_adapter.py` and should only contain prompts and normalization code
   — avoid running file downloads or heavy tensor ops at import-time.
 
 Testing guidance

@@ -29,7 +29,7 @@ To ensure the stability of the development environment (which often runs heavy I
     python scripts/perf/stress_test_context_window.py --max 16000 --step 1000
     ```
 *   **Current Production Setting:**
-    *   **Model:** Mistral-7B-Instruct-v0.3
+    *   **Model:** Qwen/Qwen2.5-14B-Instruct-AWQ
     *   **Max Limit:** 8192 tokens
     *   **GPU Utilization:** 0.75 (reserved buffer for adapters/overhead)
 

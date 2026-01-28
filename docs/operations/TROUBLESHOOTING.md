@@ -579,7 +579,7 @@ conda install --file requirements.txt
 
 #### "Descriptors cannot be created directly" Error
 
-If you see an error like `TypeError: Descriptors cannot be created directly` when loading models (especially Mistral/Llama):
+If you see an error like `TypeError: Descriptors cannot be created directly` when loading models (especially with vLLM or SentencePiece tokenizers):
 
 1. **Check Protobuf Version**: We require a custom-built protobuf package for Python 3.12 compatibility.
    ```bash

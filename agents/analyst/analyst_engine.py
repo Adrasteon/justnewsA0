@@ -33,9 +33,8 @@ from common.observability import get_logger
 from common.tracing import traced
 
 try:
-    from agents.common.mistral_adapter import MistralAdapter
-
-    from .mistral_adapter import SYSTEM_PROMPT, AdapterResult
+    from .model_adapter import AnalystModelAdapter as MistralAdapter
+    from .model_adapter import SYSTEM_PROMPT, AdapterResult
 except Exception:  # pragma: no cover - optional dependency wiring
     MistralAdapter = None  # type: ignore
     AdapterResult = Any  # type: ignore
@@ -255,19 +254,14 @@ class AnalystEngine:
             return
 
         try:
-            # Use the shared MistralAdapter wrapper so we get dry-run behavior and
-            # shared loading semantics while keeping the per-agent system prompt.
-            self.mistral_adapter = MistralAdapter(
-                agent="analyst",
-                adapter_name="mistral_analyst_v1",
-                system_prompt=SYSTEM_PROMPT,
-            )
+            # Use the shared ModelAdapter (Qwen backed) wrapper
+            self.mistral_adapter = MistralAdapter()
             if getattr(self.mistral_adapter, "enabled", True):
                 logger.info(
-                    "Mistral adapter enabled for Analyst; loading lazily from ModelStore"
+                    "Qwen adapter enabled for Analyst; loading lazily"
                 )
             else:
-                logger.info("Mistral adapter explicitly disabled via env variable")
+                logger.info("Qwen adapter explicitly disabled via env variable")
         except Exception as exc:
             logger.warning(f"Failed to set up Analyst Mistral adapter: {exc}")
             self.mistral_adapter = None

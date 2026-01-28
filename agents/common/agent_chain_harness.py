@@ -13,9 +13,9 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
-from agents.fact_checker.mistral_adapter import (
+from agents.fact_checker.model_adapter import (
     ClaimAssessment,
-    FactCheckerMistralAdapter,
+    FactCheckerModelAdapter,
 )
 from agents.journalist.mistral_adapter import JournalistMistralAdapter
 from agents.synthesizer.mistral_adapter import SynthesizerMistralAdapter
@@ -48,7 +48,7 @@ class AgentChainHarness:
 
     def __init__(self) -> None:
         self.journalist_adapter = JournalistMistralAdapter()
-        self.fact_checker_adapter = FactCheckerMistralAdapter()
+        self.fact_checker_adapter = FactCheckerModelAdapter()
         self.synthesizer_adapter = SynthesizerMistralAdapter()
 
     def run_article(self, article: NormalizedArticle) -> AgentChainResult:

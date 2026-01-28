@@ -24,8 +24,7 @@ from typing import Any
 
 import networkx as nx
 
-from agents.common.mistral_adapter import MistralAdapter
-from agents.reasoning.mistral_adapter import SYSTEM_PROMPT
+from agents.reasoning.model_adapter import ReasoningModelAdapter
 from common.observability import get_logger
 
 # Configure logging
@@ -274,12 +273,8 @@ class ReasoningEngine:
     def __init__(self, config: ReasoningConfig):
         self.config = config
         self.logger = logger
-        # use shared MistralAdapter wrapper (keeps per-agent system prompt)
-        self.mistral_adapter = MistralAdapter(
-            agent="reasoning",
-            adapter_name="mistral_reasoning_v1",
-            system_prompt=SYSTEM_PROMPT,
-        )
+        # use shared ModelAdapter (Qwen backed) wrapper
+        self.mistral_adapter = ReasoningModelAdapter()
 
         # Core components
         self.nucleoid: Any | None = None

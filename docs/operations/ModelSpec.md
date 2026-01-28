@@ -5,7 +5,7 @@ This document describes how models (canonical base models and per-agent adapters
 
 Key points:
 
-- Canonical model manifests live in `config/vllm_mistral_7b.yaml`and the`AGENT_MODEL_MAP.json` maps adapters and agent-
+- Canonical model manifests live in `config/vllm_qwen.yaml`and the`AGENT_MODEL_MAP.json` maps adapters and agent-
   specific variants.
 
 - The orchestrator manages a `ModelSpec`which
@@ -63,8 +63,8 @@ Rollout:
 
 - Use `make monitor-install && make monitor-enable` to enable the GPU monitor.
 
-- Install the example `vllm-mistral-7b.service`with`cp infrastructure/systemd/vllm-mistral-7b.service.example
-  /etc/systemd/system/vllm-mistral-7b.service`and`systemctl enable --now vllm-mistral-7b` (run on host where vLLM is
+- Install the example `vllm-qwen.service`with`cp infrastructure/systemd/vllm-qwen.service.example
+  /etc/systemd/system/vllm-qwen.service`and`systemctl enable --now vllm-qwen` (run on host where vLLM is
   installed).
 
-See also `docs/operations/VLLM_MISTRAL_7B_SETUP.md` for vLLM-specific guidelines.
+See also `docs/operations/VLLM_QWEN_SETUP.md` for vLLM-specific guidelines.

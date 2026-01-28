@@ -159,7 +159,7 @@ Planned).
 - Intent: downstream processing — fact validation, summarization/synthesis, editorial suggestion, article drafting.
 
 - Status: Several agents implemented; many functions have tests and tools but full integration and operational tuning
-  remain ongoing. Fact Checker (and the adjacent Critic workflows) now share the Mistral-7B base via adapters so
+  remain ongoing. Fact Checker (and the adjacent Critic workflows) now share the Qwen 2.5 14B base via adapters so
   accuracy-critical reviews stay aligned with the broader rollout.
 
 ## Functional workflow patterns
@@ -192,7 +192,7 @@ Planned).
 1. Downstream Processing
 
 - Agents like `fact_checker`,`synthesizer`and`chief_editor` run asynchronously on ingested articles, producing derived
-  artifacts (checks, summaries, editor suggestions). Fact Checker and Critic now lean on the shared Mistral adapter
+  artifacts (checks, summaries, editor suggestions). Fact Checker and Critic now lean on the shared Qwen adapter
   stack for long-form reasoning while retaining lightweight retrieval models for evidence gathering.
 
 1. Metrics & Observability

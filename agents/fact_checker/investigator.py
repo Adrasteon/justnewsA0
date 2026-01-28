@@ -60,7 +60,7 @@ from common.audio_processing import (
     AudioTranscriber,
 )
 
-from .mistral_adapter import MODEL_ADAPTER_NAME, SYSTEM_PROMPT, MistralAdapter
+from .model_adapter import MODEL_ADAPTER_NAME, SYSTEM_PROMPT, FactCheckerModelAdapter
 
 logger = get_logger(__name__)
 
@@ -117,13 +117,8 @@ class Investigator:
         self.config = config or InvestigatorConfig()
         self.logger = logger
 
-        # Initialize Reasoning Agent (Mistral)
-        # We reuse the FactChecker's Mistral Adapter settings
-        self.mistral = MistralAdapter(
-            agent="fact_checker",
-            adapter_name=MODEL_ADAPTER_NAME,
-            system_prompt=SYSTEM_PROMPT
-        )
+        # Initialize Reasoning Agent (Qwen via ModelAdapter)
+        self.mistral = FactCheckerModelAdapter()
 
         # Initialize Audio (Whisper) - Lazy Loaded
         self._audio_transcriber: AudioTranscriber | None = None
@@ -438,11 +433,18 @@ class Investigator:
         return any(ext in url.lower() for ext in audio_exts)
 
     async def _synthesize_verdict(self, claim: str, evidence: list[EvidencePiece]) -> dict:
-        """Synthesize findings into a verdict using Mistral."""
+        """Synthesize findings into a verdict using Qwen."""
         if not evidence:
             return {"assessment": "UNVERIFIED", "reasoning": "No external evidence found."}
 
         context_str = "\n".join([f"[{e.media_type.value.upper()}] {e.source_url}: {e.content}" for e in evidence])
 
-        return self.mistral.evaluate_claim(claim, context_str)
+        assessment = self.mistral.evaluate_claim(claim, context_str)
+        if assessment:
+             return {
+                 "assessment": assessment.verdict.upper(),
+                 "reasoning": assessment.rationale
+             }
+        
+        return {"assessment": "UNCERTAIN", "reasoning": "Model evaluation failed."}
 

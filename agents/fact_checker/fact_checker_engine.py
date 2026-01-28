@@ -22,9 +22,9 @@ import numpy as np
 from common.observability import get_logger
 
 try:
-    from agents.common.mistral_adapter import MistralAdapter
-
-    from .mistral_adapter import MODEL_ADAPTER_NAME, SYSTEM_PROMPT, ClaimAssessment
+    # Direct usage of Qwen adapter bypassing global shim
+    from .model_adapter import FactCheckerQwenAdapter as MistralAdapter
+    from .model_adapter import MODEL_ADAPTER_NAME, SYSTEM_PROMPT, ClaimAssessment
 except Exception:  # pragma: no cover - optional dependency wiring
     ClaimAssessment = None  # type: ignore
     MistralAdapter = None  # type: ignore
@@ -262,29 +262,25 @@ class FactCheckerEngine:
             self.tensorrt_engine = None
 
     def _initialize_mistral_adapter(self) -> None:
-        """Prepare the high-accuracy Mistral adapter (lazy-loaded)."""
+        """Prepare the high-accuracy Qwen adapter (lazy-loaded)."""
         if MistralAdapter is None:
             self.logger.info(
-                "Mistral adapter dependencies unavailable; continuing with legacy fact-checking stack"
+                "Qwen adapter dependencies unavailable; continuing with legacy fact-checking stack"
             )
             return
         try:
-            self.mistral_adapter = MistralAdapter(
-                agent="fact_checker",
-                adapter_name=MODEL_ADAPTER_NAME,
-                system_prompt=SYSTEM_PROMPT,
-            )
+            self.mistral_adapter = MistralAdapter()
             if getattr(self.mistral_adapter, "enabled", True):
                 self.logger.info(
-                    "Fact Checker Mistral adapter enabled (loaded on first use)"
+                    "Fact Checker Qwen adapter enabled (loaded on first use)"
                 )
             else:
                 self.logger.info(
-                    "Fact Checker Mistral adapter disabled via env variable"
+                    "Fact Checker Qwen adapter disabled via env variable"
                 )
         except Exception as exc:
             self.logger.warning(
-                f"Failed to initialize Fact Checker Mistral adapter: {exc}"
+                f"Failed to initialize Fact Checker Qwen adapter: {exc}"
             )
             self.mistral_adapter = None
 
@@ -370,11 +366,12 @@ class FactCheckerEngine:
             self.logger.error(f"Deep verification failed: {e}")
             return {"error": str(e), "verdict": "ERROR"}
 
-    def verify_facts(
+    async def verify_facts(
         self, content: str, source_url: str | None = None, context: str | None = None
     ) -> dict[str, Any]:
         """
         Verify factual claims in content using AI models.
+        Async update: Supports deep investigation calls.
 
         Args:
             content: Text content to verify
@@ -410,8 +407,17 @@ class FactCheckerEngine:
             verification_scores = []
             classifications = []
 
+            # We process claims concurrently for speed
+            import asyncio
+            
+            tasks = []
             for claim in claim_texts[:10]:  # Limit to first 10 claims
-                claim_verification = self._verify_single_claim(claim, context)
+                # Use the new async verify if available
+                tasks.append(self._verify_single_claim_async(claim, context))
+            
+            results = await asyncio.gather(*tasks)
+            
+            for claim_verification in results:
                 verification_scores.append(claim_verification["score"])
                 classifications.append(claim_verification["classification"])
 
@@ -457,7 +463,101 @@ class FactCheckerEngine:
     def _verify_single_claim(
         self, claim: str, context: str | None = None
     ) -> dict[str, Any]:
-        """Verify a single claim using available models."""
+        """
+        Verify a single claim using available models.
+        
+        Strategy:
+        1. Fast Check: Use local LLM (Mistral) or DistilBERT.
+        2. Escalation: If confidence is low or classification is questionable, 
+           trigger the Investigator to perform deep web research.
+        """
+        try:
+            # 1. Fast Check
+            result = self._fast_verify_claim(claim, context)
+            
+            # Escalation conditions
+            needs_escalation = (
+                result.get("classification") in ["questionable", "unclear", "refuted"] 
+                or result.get("evidence_needed", False)
+                or result.get("confidence", 1.0) < 0.7
+            )
+            
+            # 2. Deep Research (if configured and triggered)
+            if needs_escalation and self.investigator:
+                self.logger.info(f"🕵️ Deep verification triggered for: '{claim[:40]}...'")
+                try:
+                    deep_result = self._run_investigator_sync(claim)
+                    
+                    if deep_result.get("verdict") and deep_result.get("verdict") != "ERROR":
+                        # Map verdict to classification
+                        verdict_map = {
+                            "VERIFIED": "verified",
+                            "FALSE": "refuted",
+                            "CONFLICTING": "questionable",
+                            "UNVERIFIED": "questionable"
+                        }
+                        
+                        result.update({
+                            "classification": verdict_map.get(deep_result["verdict"], "questionable"),
+                            "method": "investigator_deep",
+                            "confidence": 0.9,  # Higher confidence from research
+                            "rationale": deep_result.get("reasoning", ""),
+                            "evidence": deep_result.get("traceability", [])
+                        })
+                        
+                        # Adjust score based on verdict
+                        if result["classification"] == "verified":
+                            result["score"] = 0.95
+                        elif result["classification"] == "refuted":
+                            result["score"] = 0.05
+                        else:
+                            result["score"] = 0.5
+                            
+                except Exception as e:
+                    self.logger.warning(f"Deep verification failed, keeping fast result: {e}")
+            
+            return result
+
+        except Exception as e:
+            self.logger.error(f"Error in single claim verification: {e}")
+            return {"score": 0.5, "classification": "error", "confidence": 0.0, "error": str(e)}
+
+    def _run_investigator_sync(self, claim: str) -> dict[str, Any]:
+        """Run the async investigator in a thread with its own loop to avoid blocking main loop."""
+        import asyncio
+        import concurrent.futures
+        
+        def _run_in_new_loop():
+            # Create a new loop for this thread
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                # Run the coroutine to completion
+                return loop.run_until_complete(self.verify_claim_deep(claim))
+            finally:
+                loop.close()
+
+        # Execute in a thread pool to bridge sync -> async safely
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_run_in_new_loop)
+            return future.result()
+
+    def _fast_verify_claim(self, claim: str, context: str | None) -> dict[str, Any]:
+        """
+        Internal fast verification (LLM/BERT only).
+        Ensures audit data (reasoning/traceability) is present even if Deep Research is skipped.
+        """
+        # Prepare evidence list if context is provided
+        base_traceability = []
+        if context:
+            base_traceability.append({
+                "source": "provided_context",
+                "type": "context_text",
+                "confidence": 1.0, 
+                "snippet": context[:200]
+            })
+            
+        # 1. Try Mistral Adapter
         try:
             adapter_assessment = self._evaluate_with_mistral(claim, context)
             if adapter_assessment:
@@ -466,53 +566,67 @@ class FactCheckerEngine:
                     "refuted": "refuted",
                     "unclear": "questionable",
                 }
-                classification = classification_map.get(
-                    adapter_assessment.verdict, "questionable"
-                )
+                
+                # Use model assessment as traceable evidence
+                traceability = base_traceability + [{
+                    "source": "mistral_adapter",
+                    "type": "model_inference",
+                    "confidence": adapter_assessment.confidence
+                }]
+                
                 return {
                     "score": adapter_assessment.score,
-                    "classification": classification,
+                    "classification": classification_map.get(adapter_assessment.verdict, "questionable"),
                     "method": "mistral_adapter",
                     "confidence": adapter_assessment.confidence,
                     "rationale": adapter_assessment.rationale,
                     "evidence_needed": adapter_assessment.evidence_needed,
+                    "evidence": traceability # Audit trail
                 }
-
-            # Use DistilBERT if available
-            if self.distilbert_model:
-                try:
-                    result = self.distilbert_model(
-                        claim[:512]
-                    )  # Truncate to model limit
-                    # Convert sentiment scores to verification scores
-                    scores = {item["label"]: item["score"] for item in result}
-                    positive_score = scores.get("POSITIVE", 0.5)
-                    verification_score = (
-                        positive_score  # Higher positive = more likely true
-                    )
-                    classification = (
-                        "verified" if verification_score > 0.6 else "questionable"
-                    )
-                except Exception as e:
-                    self.logger.warning(f"DistilBERT verification failed: {e}")
-                    verification_score = 0.5
-                    classification = "model_error"
-            else:
-                # Fallback heuristic
-                verification_score = self._heuristic_verification(claim)
-                classification = (
-                    "verified" if verification_score > 0.6 else "questionable"
-                )
-
-            return {
-                "score": verification_score,
-                "classification": classification,
-                "method": "distilbert" if self.distilbert_model else "heuristic",
-            }
-
         except Exception as e:
-            self.logger.error(f"Single claim verification failed: {e}")
-            return {"score": 0.5, "classification": "error", "method": "fallback"}
+            self.logger.warning(f"Mistral check failed: {e}")
+
+        # 2. Try DistilBERT
+        if self.distilbert_model:
+            try:
+                result = self.distilbert_model(claim[:512])
+                scores = {item["label"]: item["score"] for item in result}
+                positive = scores.get("POSITIVE", 0.5)
+                
+                # Generate synthetic rationale for audit
+                rationale = (
+                    f"DistilBERT sentiment analysis indicates positive probability of {positive:.2f}. "
+                    f"Classified as {'verified' if positive > 0.6 else 'questionable'} based on threshold 0.6."
+                )
+                
+                traceability = base_traceability + [{
+                    "source": "distilbert_base_uncased",
+                    "type": "sentiment_proxy",
+                    "confidence": 0.6
+                }]
+                
+                return {
+                    "score": float(positive),
+                    "classification": "verified" if positive > 0.6 else "questionable",
+                    "method": "distilbert_sentiment_proxy",
+                    "confidence": 0.6,
+                    "rationale": rationale,
+                    "evidence_needed": True,
+                    "evidence": traceability
+                }
+            except Exception as e:
+                self.logger.warning(f"DistilBERT check failed: {e}")
+                
+        # 3. Fallback
+        return {
+            "score": 0.5,
+            "classification": "unverified",
+            "method": "none",
+            "confidence": 0.0,
+            "rationale": "Fast verification failed to produce a result from available models.",
+            "evidence": base_traceability,
+            "evidence_needed": True
+        }
 
     def _heuristic_verification(self, claim: str) -> float:
         """Simple heuristic-based verification when models are unavailable."""
@@ -663,17 +777,7 @@ class FactCheckerEngine:
         ]
 
         # Check for high credibility indicators
-        if any(indicator in domain_lower for indicator in high_credibility):
-            return 0.9
-
-        # Check for low credibility indicators
-        if any(indicator in domain_lower for indicator in low_credibility):
-            return 0.2
-
-        # Default medium credibility
-        return 0.6
-
-    def comprehensive_fact_check(
+    async def comprehensive_fact_check(
         self,
         content: str,
         source_url: str | None = None,
@@ -689,6 +793,17 @@ class FactCheckerEngine:
 
         Returns:
             Comprehensive fact-checking results
+        """
+        try:
+            # Extract claims
+            claims_analysis = self.extract_claims(content)
+
+            # Verify facts (Now Async)
+            fact_verification = await self.verify_facts(content, source_url)
+
+            # Assess credibility
+            credibility = self.assess_credibility(content, None, source_url)
+
         """
         try:
             # Extract claims

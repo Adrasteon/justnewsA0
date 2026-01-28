@@ -2,7 +2,7 @@
 
 ## Pre-Flight (5 min)
 
-- [ ] Mistral-7B vLLM running on 7060: `curl -s <http://localhost:7060/health`>
+- [ ] Qwen-2.5-14B vLLM running on 8010: `curl -s http://localhost:8010/health`
 
 - [ ] Conda environment activated: `echo $CONDA_PREFIX | grep ${CANONICAL_ENV:-justnews-py312}`
 
@@ -298,9 +298,9 @@ Port 8015 refused | `curl -s <http://localhost:8014/ready`> – GPU Orchestrator
 must be READY first | | ChromaDB not found | `docker ps | grep chromadb` – start
 it: `docker run -d --name chromadb -p 8000:8000 chromadb/chroma:latest` | | No
 articles after crawl | Check MariaDB: `mysql -u $MARIADB_USER ... -e "SHOW
-TABLES;"`– run`init_database.py` if needed | | vLLM 7060 not responding |
-`curl -v <http://localhost:7060/health`> – relaunch:
-`./scripts/launch_vllm_mistral_7b.sh` |
+TABLES;"`– run`init_database.py` if needed | | vLLM 8010 not responding |
+`curl -v http://localhost:8010/health` – relaunch:
+`./scripts/launch_vllm.sh` |
 
 ---
 

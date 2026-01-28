@@ -22,7 +22,7 @@ python scripts/dev/bootstrap_editorial_harness_db.py
 ```
 
 ```bash
-MODEL_STORE_DRY_RUN=1 FACT_CHECKER_DISABLE_MISTRAL=0 \
+MODEL_STORE_DRY_RUN=1 FACT_CHECKER_DISABLE_QWEN=0 \
     python scripts/dev/run_agent_chain_harness.py --limit 3
 
 ```
@@ -86,7 +86,7 @@ jobs:
       - name: Run harness
         env:
           MODEL_STORE_DRY_RUN: "1"
-          FACT_CHECKER_DISABLE_MISTRAL: "0"
+          FACT_CHECKER_DISABLE_QWEN: "0"
         run: python scripts/dev/run_agent_chain_harness.py --limit 5 --no-artifacts
 
 ```

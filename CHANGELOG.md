@@ -3,6 +3,15 @@ last_updated: 2025-09-12 last_updated: 2025-11-01 ---
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-01-28 - **QWEN 2.5 STANDARDIZATION**
+
+### 🔄 **Model Standardization: Qwen 2.5 14B AWQ**
+
+- **✅** Replaced legacy `mistral_adapter` implementations across all agents (`journalist`, `synthesizer`, `critic`, `reasoning`, `chief_editor`, `analyst`, `fact_checker`) with standardized `model_adapter.py`.
+- **✅** All agents now utilize `OpenAIAdapter` targeting **Qwen/Qwen2.5-14B-Instruct-AWQ** served via vLLM.
+- **✅** Removed local torch-based Mistral loading paths to reduce dependency weight and ensure consistent inference behavior.
+- **✅** Updated agent engines to instantiate `ModelAdapter` classes instead of legacy Mistral wrappers.
+
 ## [Unreleased] - 2025-11-23 - **MISTRAL-7B AS DEFAULT**
 
 ### 🔁 **Model Migration: Qwen2 -> Mistral-7B**

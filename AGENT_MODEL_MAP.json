@@ -112,7 +112,7 @@
   "vllm_agents": {
     "synthesizer": [
       {
-        "base_ref": "qwen2-32b-awq",
+        "base_ref": "qwen2-14b-awq",
         "adapter_name": "qwen2_synth_v1",
         "adapter_model_store_path": "synthesizer/adapters/qwen2_synth_v1",
         "variant_preference": "awq",
@@ -121,7 +121,7 @@
     ],
     "re_ranker": [
       {
-        "base_ref": "qwen2-32b-awq",
+        "base_ref": "qwen2-14b-awq",
         "adapter_name": "qwen2_re_ranker_v1",
         "adapter_model_store_path": "re_ranker/adapters/qwen2_re_ranker_v1",
         "variant_preference": "awq",
@@ -130,7 +130,7 @@
     ],
     "fact_checker": [
       {
-        "base_ref": "qwen2-32b-awq",
+        "base_ref": "qwen2-14b-awq",
         "adapter_name": "qwen2_fact_checker_v1",
         "adapter_model_store_path": "fact_checker/adapters/qwen2_fact_checker_v1",
         "variant_preference": "awq",
@@ -139,7 +139,7 @@
     ],
     "critic": [
       {
-        "base_ref": "qwen2-32b-awq",
+        "base_ref": "qwen2-14b-awq",
         "adapter_name": "qwen2_critic_v1",
         "adapter_model_store_path": "critic/adapters/qwen2_critic_v1",
         "variant_preference": "awq",
@@ -148,7 +148,7 @@
     ],
     "journalist": [
       {
-        "base_ref": "qwen2-32b-awq",
+        "base_ref": "qwen2-14b-awq",
         "adapter_name": "qwen2_journalist_v1",
         "adapter_model_store_path": "journalist/adapters/qwen2_journalist_v1",
         "variant_preference": "awq",
@@ -157,7 +157,7 @@
     ],
     "chief_editor": [
       {
-        "base_ref": "qwen2-32b-awq",
+        "base_ref": "qwen2-14b-awq",
         "adapter_name": "qwen2_chief_editor_v1",
         "adapter_model_store_path": "chief_editor/adapters/qwen2_chief_editor_v1",
         "variant_preference": "awq",
@@ -166,7 +166,7 @@
     ],
     "reasoning": [
       {
-        "base_ref": "qwen2-32b-awq",
+        "base_ref": "qwen2-14b-awq",
         "adapter_name": "qwen2_reasoning_v1",
         "adapter_model_store_path": "reasoning/adapters/qwen2_reasoning_v1",
         "variant_preference": "awq",
@@ -175,7 +175,7 @@
     ],
     "analyst": [
       {
-        "base_ref": "qwen2-32b-awq",
+        "base_ref": "qwen2-14b-awq",
         "adapter_name": "qwen2_analyst_v1",
         "adapter_model_store_path": "analyst/adapters/qwen2_analyst_v1",
         "variant_preference": "awq",

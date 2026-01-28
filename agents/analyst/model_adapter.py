@@ -1,12 +1,15 @@
-"""High-accuracy sentiment/bias scoring backed by the Analyst Mistral adapter."""
+"""High-accuracy sentiment/bias scoring backed by the Analyst Qwen model."""
 
 from __future__ import annotations
 
+import os
+import json
 import time
+import textwrap
 from dataclasses import dataclass
 from typing import Any
 
-from agents.common.base_mistral_json_adapter import BaseMistralJSONAdapter
+from agents.common.openai_adapter import OpenAIAdapter
 from common.observability import get_logger
 
 logger = get_logger(__name__)
@@ -36,40 +39,53 @@ class AdapterResult:
     raw: dict[str, Any]
 
 
-class AnalystMistralAdapter(BaseMistralJSONAdapter):
-    """Shared-base-backed helper that emits structured sentiment/bias scores."""
+class AnalystModelAdapter:
+    """Qwen-backed helper that emits structured sentiment/bias scores."""
 
     def __init__(self) -> None:
-        super().__init__(
-            agent_name="analyst",
-            adapter_name="mistral_analyst_v1",
+        self.enabled = os.environ.get("ANALYST_DISABLE_MISTRAL", "0").lower() not in {"1", "true"}
+        
+        self.adapter = OpenAIAdapter(
+            name="analyst_qwen",
+            model=os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ"),
+            base_url=os.environ.get("VLLM_BASE_URL", "http://127.0.0.1:8010/v1"),
+            api_key=os.environ.get("VLLM_API_KEY", "unused"),
             system_prompt=SYSTEM_PROMPT,
-            disable_env="ANALYST_DISABLE_MISTRAL",
-            defaults={
-                "max_chars": 6000,
-                "max_new_tokens": 360,
-                "temperature": 0.15,
-                "top_p": 0.9,
-            },
+            temperature=0.15,
+            max_tokens=360,
+            timeout=40.0
         )
 
     def classify(self, text: str) -> AdapterResult | None:
         if not self.enabled:
             return None
-        snippet = self._truncate_content(text or "")
+            
+        snippet = textwrap.shorten(text or "", width=6000, placeholder="...")
         if not snippet:
             return None
-        user_block = f"Text to evaluate:\n'''{snippet}'''"
-        messages = [
-            {"role": "system", "content": self.system_prompt},
-            {"role": "user", "content": user_block},
-        ]
+            
+        user_block = f"Text to evaluate:\n'''{snippet}'''\n\nReturn valid JSON."
         start = time.perf_counter()
-        doc = self._chat_json(messages)
+        
+        try:
+            self.adapter.ensure_loaded()
+            result = self.adapter.infer(user_block)
+            doc = self._parse_response(result.get("text", ""))
+        except Exception as e:
+            logger.warning(f"Analyst Qwen generation failed: {e}")
+            doc = None
+            
         elapsed = time.perf_counter() - start
         if not doc:
             return None
         return self._normalize(doc, elapsed)
+
+    def _parse_response(self, text: str) -> dict[str, Any] | None:
+        try:
+            clean = text.replace("```json", "").replace("```", "").strip()
+            return json.loads(clean)
+        except Exception:
+            return None
 
     # Internal helpers -------------------------------------------------
 
@@ -108,17 +124,18 @@ class AnalystMistralAdapter(BaseMistralJSONAdapter):
 
             sentiment = {
                 "dominant_sentiment": sentiment_label,
-                "confidence": max(0.0, min(sentiment_conf, 0.99)),
+                "confidence": sentiment_conf,
+                "subjectivity": "subjective"
+                if sentiment_conf > 0.6
+                else "objective",  # Approximated
                 "intensity": intensity,
-                "sentiment_scores": {
-                    "positive": max(0.0, min(positive_score, 1.0)),
-                    "negative": max(0.0, min(negative_score, 1.0)),
-                    "neutral": max(
-                        0.0, min(1.0 - positive_score - negative_score, 1.0)
-                    ),
-                },
-                "method": "mistral_adapter",
-                "model_name": self.adapter_name,
+                "positive": positive_score,
+                "negative": negative_score,
+                "neutral": max(
+                    0.0, 1.0 - (positive_score + negative_score)
+                ),  # Ensure sum <= 1
+                "method": "qwen_adapter",
+                "model_name": "Qwen/Qwen2.5-14B-Instruct-AWQ",
                 "analysis_timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                 "reasoning": payload.get("rationale", "Adapter judgment"),
                 "processing_time": elapsed,
@@ -139,8 +156,8 @@ class AnalystMistralAdapter(BaseMistralJSONAdapter):
                     payload.get("factual_bias", max(0.0, 1.0 - bias_score))
                 ),
                 "reasoning": payload.get("rationale", "Adapter judgment"),
-                "method": "mistral_adapter",
-                "model_used": self.adapter_name,
+                "method": "qwen_adapter",
+                "model_used": "Qwen/Qwen2.5-14B-Instruct-AWQ",
                 "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
                 "processing_time": elapsed,
             }
@@ -166,3 +183,6 @@ class AnalystMistralAdapter(BaseMistralJSONAdapter):
         if score >= 0.25:
             return "low"
         return "minimal"
+
+# Alias for compat
+AnalystMistralAdapter = AnalystModelAdapter

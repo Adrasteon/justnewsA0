@@ -15,8 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from agents.c4ai.bridge import crawl_via_local_server
-from agents.common.mistral_adapter import MistralAdapter
-from agents.journalist.mistral_adapter import SYSTEM_PROMPT
+from agents.journalist.model_adapter import JournalistModelAdapter
 from common.observability import get_logger
 
 logger = get_logger(__name__)
@@ -48,12 +47,8 @@ class JournalistEngine:
     def __init__(self, config: JournalistConfig | None = None):
         self.config = config or JournalistConfig()
         self._shutdown = False
-        # Use shared MistralAdapter wrapper for consistent dry-run and modelstore behavior
-        self._mistral_adapter = MistralAdapter(
-            agent="journalist",
-            adapter_name="mistral_journalist_v1",
-            system_prompt=SYSTEM_PROMPT,
-        )
+        # Use shared ModelAdapter (Qwen backed) for consistent behavior
+        self._model_adapter = JournalistModelAdapter()
 
     async def crawl_and_analyze(
         self, url: str, mode: str | None = None
@@ -77,16 +72,16 @@ class JournalistEngine:
 
     # Internal helpers -----------------------------------------------------
     def _generate_llm_brief(self, payload: dict[str, Any]) -> dict[str, Any] | None:
-        if not payload or not getattr(self, "_mistral_adapter", None):
+        if not payload or not getattr(self, "_model_adapter", None):
             return None
         try:
             markdown = payload.get("markdown") if isinstance(payload, dict) else None
             html = payload.get("html") if isinstance(payload, dict) else None
             title = payload.get("title") if isinstance(payload, dict) else None
             url = payload.get("url") if isinstance(payload, dict) else None
-            return self._mistral_adapter.generate_story_brief(
+            return self._model_adapter.generate_story_brief(
                 markdown, html, url=url, title=title
             )
         except Exception as exc:
-            logger.debug("Journalist Mistral adapter failed: %s", exc)
+            logger.debug("Journalist model adapter failed: %s", exc)
             return None

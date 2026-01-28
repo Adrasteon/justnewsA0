@@ -30,8 +30,7 @@ from typing import Any
 
 import torch
 
-from agents.common.mistral_adapter import MistralAdapter
-from agents.synthesizer.mistral_adapter import SYSTEM_PROMPT
+from agents.synthesizer.model_adapter import SynthesizerModelAdapter
 from common.observability import get_logger
 
 # Core ML libraries with fallbacks
@@ -214,14 +213,9 @@ class SynthesizerEngine:
 
         # Lifecycle flag
         self.is_initialized = False
-        # Use the common MistralAdapter wrapper for the synthesizer agent so
-        # the engine benefits from the shared adapter contract and dry-run
-        # semantics while keeping the per-agent system prompt.
-        self.mistral_adapter = MistralAdapter(
-            agent="synthesizer",
-            adapter_name="mistral_synth_v1",
-            system_prompt=SYSTEM_PROMPT,
-        )
+        # Use the common Model Adapter (Qwen backed) wrapper for the synthesizer agent so
+        # the engine benefits from the shared adapter contract.
+        self.mistral_adapter = SynthesizerModelAdapter()
 
         # Performance tracking
         self.performance_stats = {

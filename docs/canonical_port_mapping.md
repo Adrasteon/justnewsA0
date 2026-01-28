@@ -19,7 +19,7 @@ This document serves as the absolute reference for port allocations within the J
 | **8007** | `memory` | `MEMORY_AGENT_PORT` | **Memory Service**. Long-term context and recall. |
 | **8008** | `reasoning` | `REASONING_AGENT_PORT` | **Reasoning Agent**. Complex query processing. |
 | **8009** | `newsreader` | `NEWSREADER_PORT` | **Newsreader**. Content ingestion and parsing. |
-| **8010** | `vllm-service` | `MISTRAL_API_PORT` | **VLLM / Mistral**. Local LLM inference server. |
+| **8010** | `vllm-service` | `QWEN_API_PORT` | **VLLM / Qwen 2.5**. Centralized LLM inference server. |
 | **8011** | `analytics` | `ANALYTICS_AGENT_PORT` | **Analytics Agent**. Performance tracking and metrics. |
 | **8012** | `archive` | `ARCHIVE_AGENT_PORT` | **Archive Service**. Historical record storage. |
 | **8013** | `dashboard` | `DASHBOARD_PORT` | **Main Dashboard**. User interface for operations. |

@@ -67,17 +67,15 @@ except Exception:
 from common.observability import get_logger
 
 try:
-    from agents.common.mistral_adapter import MistralAdapter
-
-    from .mistral_adapter import (
+    from .model_adapter import CriticModelAdapter as MistralAdapter
+    from .model_adapter import (
         MODEL_ADAPTER_NAME as CRITIC_ADAPTER_NAME,
-    )
-    from .mistral_adapter import (
         SYSTEM_PROMPT,
         CriticAssessment,
     )
 except Exception:  # pragma: no cover - optional dependency wiring
     CriticAssessment = None  # type: ignore
+    MistralAdapter = None  # type: ignore
     MistralAdapter = None
     CRITIC_ADAPTER_NAME = "mistral_critic_v1"
 
@@ -346,15 +344,11 @@ class CriticEngine:
             )
             return
         try:
-            self.mistral_adapter = MistralAdapter(
-                agent="critic",
-                adapter_name=CRITIC_ADAPTER_NAME,
-                system_prompt=SYSTEM_PROMPT,
-            )
+            self.mistral_adapter = MistralAdapter()
             if getattr(self.mistral_adapter, "enabled", True):
-                self.logger.info("Critic Mistral adapter enabled (lazy-loaded)")
+                self.logger.info("Critic Qwen adapter enabled (lazy-loaded)")
             else:
-                self.logger.info("Critic Mistral adapter disabled via env variable")
+                self.logger.info("Critic Qwen adapter disabled via env variable")
         except Exception as exc:
             self.logger.warning(f"Failed to initialize Critic Mistral adapter: {exc}")
             self.mistral_adapter = None
