@@ -47,10 +47,23 @@ logger = get_logger(__name__)
 # Compatibility: expose create_database_service for tests that patch agent modules
 try:
     from database.utils.migrated_database_utils import (
-        create_database_service,  # type: ignore
+        create_database_service,
+        get_db_config,
     )
+    # Initialize DB Service without ChromaDB to prevent segfaults
+    # Fact Checker only needs MariaDB to update validation status
+    try:
+        db_config = get_db_config()
+        if 'database' in db_config and 'chromadb' in db_config['database']:
+            logger.info("Disabling ChromaDB for Fact Checker to prevent initialization issues")
+            del db_config['database']['chromadb']
+        create_database_service(db_config)
+    except Exception as e:
+        logger.warning(f"Failed to pre-initialize database service: {e}")
+
 except Exception:
     create_database_service = None
+    get_db_config = None
 
 # Configure logging
 logger = get_logger(__name__)
@@ -319,6 +332,9 @@ async def verify_facts_tool(call: ToolCall) -> dict[str, Any]:
             raise HTTPException(status_code=400, detail="Content parameter is required")
 
         result = run_verify_facts(content, source_url, context)
+        import asyncio
+        if asyncio.iscoroutine(result) or asyncio.is_future(result):
+             result = await result
 
         logger.info(
             f"Fact verification completed with score: {result.get('verification_score', 0.0)}"

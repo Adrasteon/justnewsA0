@@ -12,6 +12,7 @@ import asyncio
 import os
 import json
 import uuid
+import time
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
@@ -51,9 +52,16 @@ class WorkflowPolicy(ABC):
                 "kwargs": kwargs,
                 "args": []
             }
-            response = requests.post(f"{self.mcp_bus_url}/call", json=payload, timeout=30)
+            # Increase timeout for synthesis operations
+            response = requests.post(f"{self.mcp_bus_url}/call", json=payload, timeout=300)
             response.raise_for_status()
-            return response.json()
+            
+            result = response.json()
+            # Unwrap MCP Bus packet if it follows the status/data pattern
+            if isinstance(result, dict) and result.get("status") == "success" and "data" in result:
+                return result["data"]
+                
+            return result
         except Exception as e:
             logger.error(f"Failed to call {agent}.{tool}: {e}")
             return {"status": "error", "error": str(e)}
@@ -339,7 +347,11 @@ class FactCheckToClusterPolicy(WorkflowPolicy):
     def check_condition(self, limit: int) -> List[int]:
         ids = []
         try:
-            days_range = int(os.environ.get("CLUSTER_DATERANGE", 7))
+            days_val = os.environ.get("CLUSTER_DATERANGE", 7)
+            try:
+                days_range = int(days_val)
+            except ValueError:
+                days_range = 7
             cutoff_date = datetime.now() - timedelta(days=days_range)
             
             self.db_service.ensure_conn()
@@ -411,7 +423,15 @@ class FactCheckToClusterPolicy(WorkflowPolicy):
                 kwargs={"article_texts": texts, "n_clusters": n_clusters}
             )
             
-            if isinstance(clustering_result, dict) and clustering_result.get("success"):
+            # Check for success (support both boolean 'success' and string 'status'="success")
+            is_success = False
+            if isinstance(clustering_result, dict):
+                if clustering_result.get("success"):
+                    is_success = True
+                elif clustering_result.get("status") == "success":
+                    is_success = True
+
+            if is_success:
                 clusters = clustering_result.get("clusters", [])
                 # clusters is list of lists of indices
                 
@@ -599,8 +619,220 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                     err = synthesis_result.get('error') if isinstance(synthesis_result, dict) else str(synthesis_result)
                     logger.error(f"Synthesis failed for cluster {cid}: {err}")
                     
+                    # Log timeouts to a separate file for later processing
+                    if "timed out" in str(err).lower() or "timeout" in str(err).lower():
+                        try:
+                            failed_log_path = "heavy_clusters.log"
+                            entry = {
+                                "cluster_id": cid,
+                                "article_count": len(texts),
+                                "error": str(err),
+                                "timestamp": datetime.now().isoformat()
+                            }
+                            # Append metadata to a JSONL file
+                            with open(failed_log_path, "a") as f:
+                                f.write(json.dumps(entry) + "\n")
+                            logger.info(f"💾 Logged heavy cluster {cid} to {failed_log_path}")
+                        except Exception as log_err:
+                            logger.error(f"Failed to log heavy cluster: {log_err}")
+                    
             except Exception as e:
                 logger.error(f"Error processing cluster {cid}: {e}")
+
+class HeavyClusterRetryPolicy(WorkflowPolicy):
+    """
+    Policy: Retry Heavy Clusters
+    Condition: 
+      1. System load is light (load avg < 6.0)
+      2. No significant active backlog in JustNews queues
+      3. heavy_clusters.log has entries
+    Action: Retry synthesis for one cluster at a time.
+    """
+    def name(self) -> str:
+        return "heavy_cluster_retry"
+
+    def check_condition(self, limit: int) -> List[str]:
+        # 1. Check System Load
+        try:
+            # 1 minute load average. 16 cores. 
+            # If load > 6.0, consider it busy.
+            load = os.getloadavg()
+            if load[0] > 6.0: 
+                return []
+        except:
+            return []
+
+        # 2. Check JustNews Backlog
+        try:
+            self.db_service.ensure_conn()
+            # Check for unanalyzed articles or pending regular clusters
+            cursor = self.db_service.mb_conn.cursor()
+            query = """
+                SELECT 
+                    (SELECT COUNT(*) FROM articles WHERE analyzed = 0) +
+                    (SELECT COUNT(*) FROM articles WHERE is_synthesized = 0 AND input_cluster_ids IS NOT NULL AND input_cluster_ids != '[]' AND input_cluster_ids != '')
+                as backlog
+            """
+            cursor.execute(query)
+            row = cursor.fetchone()
+            cursor.close()
+            backlog = row[0] if row else 0
+            
+            # If there are more than 10 regular items pending, defer heavy processing
+            if backlog > 10: 
+                return []
+        except Exception as e:
+            logger.error(f"Error checking backlog for HeavyClusterRetryPolicy: {e}")
+            return []
+            
+        # 3. Check for Heavy Clusters
+        failed_log_path = "heavy_clusters.log"
+        if not os.path.exists(failed_log_path):
+            return []
+
+        cluster_id_to_retry = None
+        
+        try:
+            with open(failed_log_path, "r") as f:
+                lines = f.readlines()
+            
+            # Check the first valid entry
+            for line in lines:
+                if line.strip():
+                    try:
+                        rec = json.loads(line)
+                        cid = rec.get("cluster_id")
+                        if cid:
+                            # Verify if it is still unsynthesized
+                            self.db_service.ensure_conn()
+                            cursor = self.db_service.mb_conn.cursor()
+                            cursor.execute("SELECT id FROM synthesized_articles WHERE cluster_id = %s", (cid,))
+                            exists = cursor.fetchone()
+                            cursor.close()
+                            
+                            if not exists:
+                                cluster_id_to_retry = cid
+                                break
+                            else:
+                                # It's already done, we should clean it up later, but for now just skip returning it
+                                pass
+                    except:
+                        pass
+        except Exception as e:
+            logger.error(f"Error reading heavy_clusters.log: {e}")
+            return []
+
+        if cluster_id_to_retry:
+            return [cluster_id_to_retry]
+            
+        return []
+
+    async def execute(self, cluster_ids: List[str]):
+        """
+        Execute synthesis for the given heavy cluster IDs.
+        """
+        logger.info(f"🏋️ HeavyClusterRetryPolicy triggered for {len(cluster_ids)} clusters.")
+        
+        for cid in cluster_ids:
+            try:
+                # 1. Fetch articles for this cluster
+                self.db_service.ensure_conn()
+                cursor = self.db_service.mb_conn.cursor()
+                
+                query = """
+                    SELECT id, content FROM articles 
+                    WHERE is_synthesized = 0 
+                      AND input_cluster_ids LIKE %s
+                """
+                like_pattern = f"%{cid}%"
+                cursor.execute(query, (like_pattern,))
+                rows = cursor.fetchall()
+                
+                if not rows:
+                    cursor.close()
+                    continue
+                    
+                article_ids = [row[0] for row in rows]
+                texts = [row[1] for row in rows if row[1]]
+                cursor.close()
+                
+                if not texts:
+                    continue
+
+                logger.info(f"Retry synthesizing heavy cluster {cid} with {len(texts)} articles.")
+                
+                # 2. Call Synthesizer
+                # Using aggregate_cluster_tool
+                synthesis_result = await self._call_mcp_tool(
+                    agent="synthesizer",
+                    tool="aggregate_cluster",
+                    kwargs={"article_texts": texts}
+                )
+                
+                if isinstance(synthesis_result, dict) and synthesis_result.get("success"):
+                    body_text = synthesis_result.get("summary", "")
+                    title_text = f"Synthesis Report: {cid}" 
+                    
+                    # 3. Save to synthesized_articles
+                    self.db_service.ensure_conn()
+                    cursor = self.db_service.mb_conn.cursor()
+                    
+                    new_id = int(time.time() * 1000)
+                    story_id = f"STORY-{uuid.uuid4().hex[:8]}"
+                    input_arts_json = json.dumps(article_ids)
+                    
+                    insert_query = """
+                        INSERT INTO synthesized_articles 
+                        (story_id, cluster_id, input_articles, title, body, created_at, is_published)
+                        VALUES (%s, %s, %s, %s, %s, NOW(), 0)
+                    """
+                    cursor.execute(insert_query, (story_id, cid, input_arts_json, title_text, body_text))
+                    
+                    # 4. Mark articles as synthesized
+                    format_strings = ','.join(['%s'] * len(article_ids))
+                    update_query = f"UPDATE articles SET is_synthesized = 1 WHERE id IN ({format_strings})"
+                    cursor.execute(update_query, tuple(article_ids))
+                    
+                    self.db_service.mb_conn.commit()
+                    cursor.close()
+                    
+                    logger.info(f"✅ Successfully created story {story_id} from heavy cluster {cid}.")
+                    
+                    # 5. Remove from heavy_clusters.log
+                    self._remove_from_log(cid)
+                    
+                else:
+                    err = synthesis_result.get('error') if isinstance(synthesis_result, dict) else str(synthesis_result)
+                    logger.error(f"Retry failed for heavy cluster {cid}: {err}")
+                    # Do not remove from log, so it can be retried again later (maybe infinite loop if keeps failing? user can check log)
+                    
+            except Exception as e:
+                logger.error(f"Error processing heavy cluster {cid}: {e}")
+
+    def _remove_from_log(self, cid_to_remove: str):
+        try:
+            failed_log_path = "heavy_clusters.log"
+            if not os.path.exists(failed_log_path):
+                return
+                
+            with open(failed_log_path, "r") as f:
+                lines = f.readlines()
+            
+            new_lines = []
+            for line in lines:
+                try:
+                    rec = json.loads(line)
+                    if rec.get("cluster_id") != cid_to_remove:
+                        new_lines.append(line)
+                except:
+                    new_lines.append(line)
+            
+            with open(failed_log_path, "w") as f:
+                f.writelines(new_lines)
+                
+            logger.info(f"Removed {cid_to_remove} from {failed_log_path}")
+        except Exception as e:
+            logger.error(f"Failed to update heavy_clusters.log: {e}")
 
 
 

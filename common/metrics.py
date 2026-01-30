@@ -143,6 +143,35 @@ class JustNewsMetrics:
             agent_name,
             self.display_name,
         )
+        
+        # Initialize gauges with default values to ensure series existence
+        self._initialize_gauge_defaults()
+
+    def _initialize_gauge_defaults(self):
+        """Initialize gauges with default values (0) so they appear in Grafana immediately."""
+        try:
+            # Initialize Active Connections
+            self.active_connections.labels(
+                agent=self.agent_name, 
+                agent_display_name=self.display_name
+            ).set(0)
+
+            # Initialize Queue Size (Main)
+            self.processing_queue_size.labels(
+                agent=self.agent_name,
+                agent_display_name=self.display_name,
+                queue_type="main",
+                queue_display_name="Main Queue"
+            ).set(0)
+            
+            # Initialize Health (Healthy by default)
+            self.agent_health_status.labels(
+                agent=self.agent_name,
+                agent_display_name=self.display_name,
+                target="overall"
+            ).set(0) # 0 = Healthy
+        except Exception as e:
+            logger.warning("Failed to initialize default metrics for %s: %s", self.agent_name, e)
 
     def _init_standard_metrics(self):
         """Initialize standard HTTP and request metrics."""

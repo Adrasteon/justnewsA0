@@ -18,27 +18,34 @@ SYSTEM_PROMPT = (
 
 class SynthesizerModelAdapter:
     def __init__(self) -> None:
-        self.enabled = os.environ.get("SYNTHESIZER_DISABLE_MISTRAL", "0").lower() not in {"1", "true"}
+        self.enabled = os.environ.get("SYNTHESIZER_DISABLE_QWEN", "0").lower() not in {"1", "true"}
         
+        # Using the specific adapter ID 'qwen_synthesizer_v1' to enable training/refinement loops
+        # that target this specific adapter configuration in model_store/synthesizer/adapters/qwen_synthesizer_v1
         self.adapter = OpenAIAdapter(
-            name="synthesizer_qwen",
+            name="qwen_synthesizer_v1",
             model=os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ"),
             base_url=os.environ.get("VLLM_BASE_URL", "http://127.0.0.1:8010/v1"),
-            api_key=os.environ.get("VLLM_API_KEY", "unused"),
+            api_key=os.environ.get("VLLM_API_KEY") or "unused",
             system_prompt=SYSTEM_PROMPT,
             temperature=0.3,
             max_tokens=600,  # Slightly increased from legacy 512
-            timeout=50.0
+            timeout=300.0
         )
+        self.adapter.load()
 
     def summarize_cluster(
         self, articles: list[str], context: str | None = None
     ) -> dict[str, Any] | None:
         if not self.enabled:
             return None
-            
+        
+        # Dynamic context window fitting (Target: ~40k chars for <16k tokens)
+        target_total_chars = 40000
+        per_article_limit = max(1000, target_total_chars // max(1, len(articles)))
+        
         snippets = [
-            textwrap.shorten(a, width=5000, placeholder="...") 
+            textwrap.shorten(a, width=per_article_limit, placeholder="...") 
             for a in articles if a and a.strip()
         ]
         if not snippets:

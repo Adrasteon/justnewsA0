@@ -1,13 +1,20 @@
 {
   "performance_history": [],
   "profiles": {
+    "MultiAgentGPUManager_general": {
+      "agent_name": "MultiAgentGPUManager",
+      "model_type": "general",
+      "optimal_batch_sizes": {},
+      "memory_usage_patterns": {},
+      "last_updated": "2026-01-29T21:40:46.185235"
+    },
     "MultiAgentGPUManager_embedding": {
       "agent_name": "MultiAgentGPUManager",
       "model_type": "embedding",
       "optimal_batch_sizes": {},
       "memory_usage_patterns": {},
-      "last_updated": "2026-01-28T13:25:36.175174"
+      "last_updated": "2026-01-29T21:40:46.455535"
     }
   },
-  "saved_at": "2026-01-28T15:35:36.185861"
+  "saved_at": "2026-01-30T03:10:46.217272"
 }

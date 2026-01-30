@@ -86,7 +86,7 @@ async def process_fact_check_request(
                 call_kwargs["source_url"] = kwargs["source_url"]
             if kwargs.get("context") is not None:
                 call_kwargs["context"] = kwargs["context"]
-            result = engine.verify_facts(content, **call_kwargs)
+            result = await engine.verify_facts(content, **call_kwargs)
         elif normalized == "validate_sources":
             call_kwargs = {}
             if kwargs.get("source_url") is not None:
@@ -104,7 +104,7 @@ async def process_fact_check_request(
                 call_kwargs["context"] = kwargs["context"]
             if kwargs.get("metadata") is not None:
                 call_kwargs["metadata"] = kwargs["metadata"]
-            result = engine.comprehensive_fact_check(content, **call_kwargs)
+            result = await engine.comprehensive_fact_check(content, **call_kwargs)
         elif normalized == "extract_claims":
             result = engine.extract_claims(content)
         elif normalized == "assess_credibility":
@@ -664,7 +664,7 @@ async def verify_article_tool(article_id: int) -> dict[str, Any]:
         # Fetch article
         # using buffered cursor to ensure we read fully
         cursor = db.mb_conn.cursor(dictionary=True, buffered=True)
-        cursor.execute("SELECT id, content, url FROM articles WHERE id = %s", (article_id,))
+        cursor.execute("SELECT id, content, source_url as url FROM articles WHERE id = %s", (article_id,))
         article = cursor.fetchone()
         cursor.close()
         
@@ -683,11 +683,17 @@ async def verify_article_tool(article_id: int) -> dict[str, Any]:
             source_url=url
         )
         # In case it returned a coroutine (if called directly vs tool wrapper)
-        result = _await_if_needed(result)
+        if asyncio.iscoroutine(result) or asyncio.isfuture(result):
+            result = await result
         
         # Update DB
         # We store status and trace
-        status = result.get("classification", "unknown")
+        status = result.get("classification")
+        if not status and "fact_verification" in result:
+             status = result["fact_verification"].get("classification")
+        
+        status = status or "unknown"
+        
         # Ensure result is serializable
         try:
             trace = json.dumps(result)

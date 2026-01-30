@@ -62,21 +62,44 @@ async def cluster_articles_tool(
         result = await engine.cluster_articles(article_texts, n_clusters)
 
         processing_time = time.time() - start_time
+        
+        # Handle dict response (compatibility)
+        if isinstance(result, dict):
+             success = result.get("status") == "success"
+             clusters = result.get("clusters", [])
+             n_clusters_out = len(clusters)
+             articles_processed = len(article_texts)
+             method = "bertopic" if result.get("topic_info") else "kmeans"
+             model_used = "unknown"
+             confidence = 1.0
+             topics = result.get("topic_info", [])
+        else:
+             success = getattr(result, "success", False)
+             metadata = getattr(result, "metadata", {})
+             clusters = metadata.get("clusters", [])
+             n_clusters_out = metadata.get("n_clusters", 0)
+             articles_processed = metadata.get("articles_processed", 0)
+             method = getattr(result, "method", "unknown")
+             model_used = getattr(result, "model_used", "unknown")
+             confidence = getattr(result, "confidence", 1.0)
+             topics = metadata.get("topics", [])
 
         response = {
-            "success": result.success,
-            "clusters": result.metadata.get("clusters", []),
-            "n_clusters": result.metadata.get("n_clusters", 0),
-            "articles_processed": result.metadata.get("articles_processed", 0),
-            "method": result.method,
-            "model_used": result.model_used,
-            "confidence": result.confidence,
+            "success": success,
+            "clusters": clusters,
+            "n_clusters": n_clusters_out,
+            "articles_processed": articles_processed,
+            "method": method,
+            "model_used": model_used,
+            "confidence": confidence,
             "processing_time": processing_time,
         }
 
         # Add topics if available
-        if "topics" in result.metadata:
-            response["topics"] = result.metadata["topics"]
+        if topics:
+            response["topics"] = topics
+            
+        return response
 
         # Log feedback for training
         engine.log_feedback(
@@ -130,11 +153,15 @@ async def summarize_article_tool(engine: SynthesizerEngine, article_id: int) -> 
         
         # Summarization logic
         summary = ""
-        if engine.bart_model and engine.bart_tokenizer:
-            inputs = engine.bart_tokenizer([content], max_length=1024, return_tensors="pt", truncation=True).to(engine.device)
-            summary_ids = engine.bart_model.generate(inputs["input_ids"], max_length=150, min_length=40, length_penalty=2.0)
-            summary = engine.bart_tokenizer.decode(summary_ids[0], skip_special_tokens=True)
-        else:
+        # Use engine's summarization (Qwen or fallback)
+        try:
+            res = await engine._summarize_text(content)
+            if res and res.success:
+                summary = res.content
+            else:
+                summary = content[:500] + "..." if len(content) > 500 else content
+        except Exception as e:
+            logger.warning(f"Engine summarization failed: {e}")
             summary = content[:500] + "..." if len(content) > 500 else content
 
         cursor.execute("UPDATE articles SET summary = %s WHERE id = %s", (summary, article_id))
@@ -248,31 +275,51 @@ async def aggregate_cluster_tool(
 
         # Perform aggregation
         result = await engine.aggregate_cluster(article_texts)
+        
+        # DEBUG LOGGING
+        logger.info(f"DEBUG: aggregate_cluster result type: {type(result)}")
+        logger.info(f"DEBUG: aggregate_cluster result keys: {list(result.keys()) if hasattr(result, 'keys') else 'not a dict'}")
 
         processing_time = time.time() - start_time
 
-        response = {
-            "success": result.success,
-            "summary": result.content,
-            "method": result.method,
-            "model_used": result.model_used,
-            "confidence": result.confidence,
-            "articles_processed": len(article_texts),
-            "processing_time": processing_time,
-        }
+        # Check if it behaves like a dict (safe fallback)
+        if isinstance(result, dict) or (hasattr(result, "get") and hasattr(result, "__getitem__")):
+            # Compatibility for when engine returns a dict
+            response = {
+                "success": result.get("status") == "success",
+                "summary": result.get("summary", ""),
+                "key_points": result.get("key_points", []),
+                "articles_processed": result.get("article_count", len(article_texts)),
+                "processing_time": processing_time,
+                "error": result.get("error")
+            }
+        else:
+            response = {
+                "success": result.success,
+                "summary": result.content,
+                "method": result.method,
+                "model_used": result.model_used,
+                "confidence": result.confidence,
+                "articles_processed": len(article_texts),
+                "processing_time": processing_time,
+            }
 
-        # Add key points if available
-        if result.metadata and "key_points" in result.metadata:
-            response["key_points"] = result.metadata["key_points"]
+            # Add key points if available
+            if result.metadata and "key_points" in result.metadata:
+                response["key_points"] = result.metadata["key_points"]
 
         # Log feedback for training
+        method_val = result.get("method", "unknown") if isinstance(result, dict) else getattr(result, "method", "unknown")
+        content_val = result.get("summary", "") if isinstance(result, dict) else getattr(result, "content", "")
+        confidence_val = result.get("confidence", 0.0) if isinstance(result, dict) else getattr(result, "confidence", 0.0)
+
         engine.log_feedback(
             "aggregate_cluster",
             {
-                "method": result.method,
+                "method": method_val,
                 "articles_processed": len(article_texts),
-                "summary_length": len(result.content),
-                "confidence": result.confidence,
+                "summary_length": len(content_val),
+                "confidence": confidence_val,
                 "processing_time": processing_time,
             },
         )

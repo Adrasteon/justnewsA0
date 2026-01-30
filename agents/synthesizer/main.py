@@ -160,6 +160,7 @@ async def lifespan(app: FastAPI):
     # Initialize synthesizer engine
     try:
         synthesizer_engine = SynthesizerEngine()
+        await synthesizer_engine.initialize()
         logger.info("✅ Synthesizer engine initialized successfully")
     except Exception as e:
         logger.error(f"❌ Failed to initialize synthesizer engine: {e}")
@@ -654,16 +655,6 @@ async def synthesize_content_alias(request: SynthesisRequest) -> Any:
     return await synthesize_news_articles_gpu_endpoint(request)
 
 
-if __name__ == "__main__":
-    import uvicorn
-
-    host: str = os.environ.get("SYNTHESIZER_HOST", "0.0.0.0")
-    port: int = int(os.environ.get("SYNTHESIZER_PORT", SYNTHESIZER_AGENT_PORT))
-
-    logger.info("🎯 Starting Synthesizer Agent on %s:%d", host, port)
-    uvicorn.run(app, host=host, port=port)
-
-
 @app.post("/summarize_article")
 async def summarize_article_endpoint(call: ToolCall) -> Any:
     """Summarize a single article."""
@@ -687,4 +678,14 @@ async def summarize_article_endpoint(call: ToolCall) -> Any:
     except Exception as e:
         logger.exception("❌ Summarization failed")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    host: str = os.environ.get("SYNTHESIZER_HOST", "0.0.0.0")
+    port: int = int(os.environ.get("SYNTHESIZER_PORT", SYNTHESIZER_AGENT_PORT))
+
+    logger.info("🎯 Starting Synthesizer Agent on %s:%d", host, port)
+    uvicorn.run(app, host=host, port=port)
 

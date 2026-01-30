@@ -19,6 +19,7 @@ from .policies import (
     SummaryToFactCheckPolicy,
     FactCheckToClusterPolicy,
     ClusterToSynthesisPolicy,
+    HeavyClusterRetryPolicy,
 )
 from .resources import ResourceMonitor
 
@@ -66,6 +67,7 @@ class OrchestratorEngine:
         self.policies.append(SummaryToFactCheckPolicy(self.mcp_bus_url))
         self.policies.append(FactCheckToClusterPolicy(self.mcp_bus_url))
         self.policies.append(ClusterToSynthesisPolicy(self.mcp_bus_url))
+        self.policies.append(HeavyClusterRetryPolicy(self.mcp_bus_url))
         logger.info(f"Initialized {len(self.policies)} policies.")
 
     async def start(self):

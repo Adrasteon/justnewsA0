@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from common.observability import bootstrap_observability, get_logger
 from agents.common.mcp_bus_client import MCPBusClient
+from database.utils.migrated_database_utils import create_database_service, get_db_config
 from .engine import OrchestratorEngine
 from .tools import get_orchestrator_status, force_run_policy
 
@@ -23,6 +24,16 @@ PORT = int(os.environ.get("WORKFLOW_ORCHESTRATOR_PORT", 8020))
 HOST = os.environ.get("HOST", "0.0.0.0")
 PUBLIC_HOST = os.environ.get("PUBLIC_HOST", "localhost")
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
+
+# Initialize DB Service without ChromaDB to prevent segfaults
+try:
+    db_config = get_db_config()
+    if 'database' in db_config and 'chromadb' in db_config['database']:
+        logger.info("Disabling ChromaDB for Orchestrator to prevent initialization issues")
+        del db_config['database']['chromadb']
+    create_database_service(db_config)
+except Exception as e:
+    logger.warning(f"Failed to pre-initialize database service: {e}")
 
 # Global Engine
 engine = OrchestratorEngine()

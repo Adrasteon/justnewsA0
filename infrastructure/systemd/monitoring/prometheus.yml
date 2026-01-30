@@ -37,6 +37,11 @@ scrape_configs:
           - '127.0.0.1:8007'  # memory
           - '127.0.0.1:8008'  # reasoning
           - '127.0.0.1:8012'  # (additional agent port seen in netstat)
+          - '127.0.0.1:8020'  # archive
+          
+  - job_name: justnews-gpu-orchestrator
+    static_configs:
+      - targets: ['127.0.0.1:8014']
 
   - job_name: justnews-node-exporter
     static_configs:

@@ -16,13 +16,12 @@ AGENTS_MANIFEST=(
   "memory|agents.memory.main:app|8007"
   "reasoning|agents.reasoning.main:app|8008"
   "newsreader|agents.newsreader.main:app|8009"
-  "db_worker|agents.db_worker.worker:app|8010"
-  "dashboard|agents.dashboard.main:app|8011"
+  "dashboard|agents.dashboard.main:app|8013"
   "analytics|agents.analytics.dashboard:analytics_app|8012"
   # balancer removed - keep this entry deleted to avoid starting the agent
   "gpu_orchestrator|agents.gpu_orchestrator.main:app|8014"
-  "archive_graphql|agents.archive.archive_graphql:app|8020"
-  "archive_api|agents.archive.archive_api:app|8021"
+  "archive|agents.archive.main:app|8020"
+  "workflow_orchestrator|agents.workflow_orchestrator.main:app|8023"
   "crawler|agents.crawler.main:app|8022"
   "crawler_control|agents.crawler_control.main:app|8016"
 )

@@ -42,7 +42,7 @@ VERSION ?= $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
 DOCKER_TAG ?= latest
 
 # Python and tools
-PYTHON := python3.11
+PYTHON := python
 PIP := $(PYTHON) -m pip
 # Allow a single, overrideable canonical environment name that can be set in
 # /etc/justnews/global.env or exported by the operator. Default remains

@@ -13,7 +13,7 @@ mkdir -p "$LOG_DIR"
 CONDA_ENV="${CANONICAL_ENV:-justnews-py312}"
 
 # Default timeout for healthchecks (seconds)
-HEALTH_TIMEOUT=10
+HEALTH_TIMEOUT=60
 
 # Agent definitions: name|python_module:app|port
 # Keep this list in sync with agents/*/main.py and the dashboard mapping
@@ -28,15 +28,19 @@ AGENTS=(
   "memory|agents.memory.main:app|8007"
   "reasoning|agents.reasoning.main:app|8008"
   # "newsreader|agents.newsreader.main:app|8009"
-  "db_worker|agents.db_worker.worker:app|8010"
-  "dashboard|agents.dashboard.main:app|8011"
+  # db_worker removed
+  "dashboard|agents.dashboard.main:app|8013"
   "analytics|agents.analytics.dashboard:analytics_app|8012"
   # Balancer removed - responsibilities moved to critic/analytics/gpu_orchestrator
   # Newly added GPU orchestrator service (was missing previously)
   "gpu_orchestrator|agents.gpu_orchestrator.main:app|8014"
-  "archive_graphql|agents.archive.archive_graphql:app|8020"
-  "archive_api|agents.archive.archive_api:app|8021"
+  "archive|agents.archive.main:app|8020"
+  "workflow_orchestrator|agents.workflow_orchestrator.main:app|8023"
 )
+
+# Explicitly set ARCHIVE_AGENT_PORT to match the launch port
+export ARCHIVE_AGENT_PORT=8020
+export WORKFLOW_ORCHESTRATOR_PORT=8023
 
 PIDS=()
 
@@ -161,19 +165,19 @@ export STRICT_MODEL_STORE="${STRICT_MODEL_STORE:-1}"
 # Primary database defaults: prefer MariaDB/MYSQL configuration. Postgres
 # environment variables remain supported as a fallback for legacy systems
 # but MariaDB is the default target moving forward.
-export MARIADB_HOST="${MARIADB_HOST:-localhost}"
+export MARIADB_HOST="${MARIADB_HOST:-127.0.0.1}"
 export MARIADB_PORT="${MARIADB_PORT:-3306}"
 export MARIADB_DB="${MARIADB_DB:-justnews}"
-export MARIADB_USER="${MARIADB_USER:-justnews_user}"
-export MARIADB_PASSWORD="${MARIADB_PASSWORD:-password123}"
+export MARIADB_USER="${MARIADB_USER:-justnews}"
+export MARIADB_PASSWORD="${MARIADB_PASSWORD:-justnews_password}"
 
 # Mirror to JUSTNEWS_DB_* variables for scripts (e.g., news_outlets.py) if not explicitly set.
 # Prefer MARIADB_* variables, else fall back to the legacy POSTGRES_* values for portability.
-export JUSTNEWS_DB_HOST="${JUSTNEWS_DB_HOST:-${MARIADB_HOST:-${POSTGRES_HOST:-localhost}}}"
+export JUSTNEWS_DB_HOST="${JUSTNEWS_DB_HOST:-${MARIADB_HOST:-${POSTGRES_HOST:-127.0.0.1}}}"
 export JUSTNEWS_DB_PORT="${JUSTNEWS_DB_PORT:-${MARIADB_PORT:-${POSTGRES_PORT:-3306}}}"
 export JUSTNEWS_DB_NAME="${JUSTNEWS_DB_NAME:-${MARIADB_DB:-${POSTGRES_DB:-justnews}}}"
-export JUSTNEWS_DB_USER="${JUSTNEWS_DB_USER:-${MARIADB_USER:-${POSTGRES_USER:-justnews_user}}}"
-export JUSTNEWS_DB_PASSWORD="${JUSTNEWS_DB_PASSWORD:-${MARIADB_PASSWORD:-${POSTGRES_PASSWORD:-password123}}}"
+export JUSTNEWS_DB_USER="${JUSTNEWS_DB_USER:-${MARIADB_USER:-${POSTGRES_USER:-justnews}}}"
+export JUSTNEWS_DB_PASSWORD="${JUSTNEWS_DB_PASSWORD:-${MARIADB_PASSWORD:-${POSTGRES_PASSWORD:-justnews_password}}}"
 
 # Per-agent cache envs (only set if not already set)
 export SYNTHESIZER_MODEL_CACHE="${SYNTHESIZER_MODEL_CACHE:-"$DEFAULT_BASE_MODELS_DIR/agents/synthesizer/models"}"
@@ -196,8 +200,8 @@ for d in "$BASE_MODEL_DIR" "$SYNTHESIZER_MODEL_CACHE" "$MEMORY_MODEL_CACHE" "$CH
   fi
 done
 
-echo "Checking ports 8000..8021 for running agents..."
-for port in $(seq 8000 8021); do
+echo "Checking ports 8000..8025 for running agents..."
+for port in $(seq 8000 8025); do
   if is_port_in_use "$port"; then
     echo "Port $port is currently in use. Attempting graceful shutdown..."
     if attempt_shutdown_port "$port"; then
@@ -262,9 +266,6 @@ if [ "${AUTO_SEED_SOURCES:-0}" = "1" ]; then
         echo "[startup] WARNING: scripts/news_outlets.py not found – cannot seed sources"
       fi
     fi
-  else
-    echo "[startup] WARNING: psql not installed – cannot auto-seed sources"
-  fi
 fi
 
 start_agent() {

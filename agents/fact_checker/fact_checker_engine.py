@@ -460,6 +460,16 @@ class FactCheckerEngine:
             self.logger.error(f"Error in fact verification: {e}")
             return {"error": str(e)}
 
+    async def _verify_single_claim_async(
+        self, claim: str, context: str | None = None
+    ) -> dict[str, Any]:
+        """Async wrapper for verify_single_claim."""
+        import asyncio
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, self._verify_single_claim, claim, context
+        )
+
     def _verify_single_claim(
         self, claim: str, context: str | None = None
     ) -> dict[str, Any]:
@@ -804,16 +814,7 @@ class FactCheckerEngine:
             # Assess credibility
             credibility = self.assess_credibility(content, None, source_url)
 
-        """
-        try:
-            # Extract claims
-            claims_analysis = self.extract_claims(content)
 
-            # Verify facts
-            fact_verification = self.verify_facts(content, source_url)
-
-            # Assess credibility
-            credibility = self.assess_credibility(content, None, source_url)
 
             # Check for contradictions (if multiple sources in metadata)
             contradictions = {"contradictions_found": 0, "analysis": []}
@@ -1343,18 +1344,4 @@ class FactCheckerEngine:
                     del self.cache[key]
                     del self.cache_timestamps[key]
 
-    def __del__(self):
-        """Cleanup resources on deletion."""
-        try:
-            # Clear cache
-            self.cache.clear()
-            self.cache_timestamps.clear()
 
-            # Clear training data if needed
-            if len(self.training_data) > 1000:  # Keep some for persistence
-                self.training_data = self.training_data[-1000:]
-
-            self.logger.info("🧹 Fact Checker Engine cleanup completed")
-
-        except Exception as e:
-            self.logger.error(f"Engine cleanup failed: {e}")
