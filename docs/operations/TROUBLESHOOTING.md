@@ -901,3 +901,35 @@ mysql -u root < /tmp/backup.sql
 - Environment: `docs/operations/ENVIRONMENT_CONFIG.md`
 
 1. **Enable Debug**: Set `set -x`in shell scripts or`--verbose` in commands
+
+#### VLLM 401 Unauthorized Errors
+
+If the Synthesizer or other agents fail with `401 Unauthorized` when calling VLLM (often logged as `AuthenticationError`), it usually means the OpenAI client library expects an API key even though VLLM is running without auth logic.
+
+**Fix**:
+Set the environment variable explicitly in your `apps.env` or `global.env`:
+
+```bash
+VLLM_API_KEY=unused
+```
+
+The codebase has been updated to use this default if key is missing, but explicit setting is safer.
+
+#### Synthesizer Read Timeouts
+
+Generating full articles from large clusters (20+ source articles) can take > 50 seconds, causing standard HTTP clients to time out.
+
+**Symptoms**:
+- `ReadTimeout` in Orchestrator logs.
+- Synthesizer logs show success, but Orchestrator retries.
+
+**Fix**:
+The `synthesizer/model_adapter.py` and `orchestrator/policies.py` have been updated to use a **300-second (5 minute)** timeout. If you see this, ensure your deployment has pulled the latest code.
+
+#### Large Context Window Errors (400 Bad Request)
+
+If VLLM returns `400 Bad Request (Context Length Exceeded)`, the cluster is too large for the 32k token window of Qwen 2.5.
+
+**Fix**:
+The system now implements dynamic truncation in `agents/synthesizer/model_adapter.py`. It calculates a `per_article_limit` based on the cluster size to ensure the total prompt fits within ~40,000 characters (approx 10-12k tokens, leaving room for reasoning).
+

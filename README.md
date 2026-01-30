@@ -8,7 +8,9 @@ A production-ready multi-agent news analysis system featuring GPU-accelerated pr
 
 - **Quick Start**: [docs/operations/STARTUP_CHECKLIST.md](docs/operations/STARTUP_CHECKLIST.md)
 - **Architecture**: [docs/architecture_overview.md](docs/architecture_overview.md)
+- **Workflow Orchestrator**: [docs/orchestrator/WORKFLOW_ORCHESTRATOR.md](docs/orchestrator/WORKFLOW_ORCHESTRATOR.md)
 - **Developer Guide**: [docs/developer/README.md](docs/developer/README.md)
+- **Diagnostic Tools**: [docs/tools/DIAGNOSTIC_SCRIPTS.md](docs/tools/DIAGNOSTIC_SCRIPTS.md)
 - **API Reference**: [docs/api/README.md](docs/api/README.md)
 - **Operations**: [docs/operations/README.md](docs/operations/README.md)
 
