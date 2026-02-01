@@ -1,37 +1,76 @@
 {% extends "news/base.html" %}
 {% block title %}JustNews - Home{% endblock %}
 {% block content %}
-<section class="featured">
-    <h2>Featured News</h2>
-    <ul>
-        {% for article in featured %}
-        <li>
-            <a href="{% url 'article_detail' article.slug %}">{{ article.title }}</a>
-            <span class="score">Score: {{ article.score }}</span>
-            <span class="date">{{ article.published_at|date:"M d, Y" }}</span>
-        </li>
-        {% empty %}
-        <li>No featured articles available.</li>
-        {% endfor %}
-    </ul>
-</section>
-<section class="latest">
-    <h2>Latest News</h2>
-    <ul>
-        {% for article in latest %}
-        <div class="card">
-            <div class="card-title">{{ article.title }}</div>
-            <div class="card-summary">{{ article.summary }}</div>
-            <div>{{ article.body|truncatewords:50 }}</div>
-            <div class="card-footer">
-                <a href="{% url 'article_detail' article.slug %}" class="button">Read More</a>
+
+<!-- Featured / Hero Section -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        {% if featured %}
+            <!-- First featured item as Hero -->
+            {% with hero=featured.0 %}
+            <div class="card h-100 border-0 shadow-sm">
+                <!-- <img src="..." ... placeholder for future image -->
+                <div class="card-body">
+                    <h5 class="card-title display-5 font-weight-bold">
+                        <a href="{% url 'article_detail' hero.slug %}" class="text-dark text-decoration-none">{{ hero.title }}</a>
+                    </h5>
+                    <p class="card-text lead">{{ hero.summary|truncatewords:40 }}</p>
+                    <p class="card-text">
+                        <small class="text-muted"><i class="far fa-clock"></i> {{ hero.published_at|timesince }} ago | <span class="badge bg-danger">{{ hero.category|title }}</span></small>
+                    </p>
+                </div>
+            </div>
+            {% endwith %}
+        {% else %}
+            <div class="alert alert-info">No featured news at the moment.</div>
+        {% endif %}
+    </div>
+    
+    <!-- Top Stories Sidebar -->
+    <div class="col-lg-4">
+        <h4 class="border-bottom pb-2 mb-3">Top Stories</h4>
+        <div class="list-group list-group-flush">
+            {% for article in featured|slice:"1:" %}
+            <a href="{% url 'article_detail' article.slug %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-start px-0">
+                <div class="ms-2 me-auto">
+                    <div class="fw-bold">{{ article.title }}</div>
+                    <small class="text-muted">{{ article.published_at|timesince }} ago</small>
+                </div>
+                <span class="badge bg-secondary rounded-pill">{{ article.score }}</span>
+            </a>
+            {% empty %}
+                {% if not featured %}
+                    <p class="text-muted">Top stories loading...</p>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Latest News Grid -->
+<h3 class="border-bottom pb-2 mb-4 mt-5">Latest News</h3>
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for article in latest %}
+    <div class="col">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <span class="badge bg-danger mb-2">{{ article.category|title|default:"World" }}</span>
+                <h5 class="card-title">
+                    <a href="{% url 'article_detail' article.slug %}" class="text-dark text-decoration-none">{{ article.title }}</a>
+                </h5>
+                <p class="card-text text-secondary">{{ article.summary|truncatewords:20 }}</p>
+            </div>
+            <div class="card-footer bg-white border-0">
+                <small class="text-muted">{{ article.published_at|timesince }} ago</small>
+                <a href="{% url 'article_detail' article.slug %}" class="btn btn-sm btn-outline-primary float-end">Read</a>
             </div>
         </div>
-        {% empty %}
-        <div class="card">
-            <div class="card-title">No recent articles.</div>
-        </div>
-        {% endfor %}
-    </ul>
-</section>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-warning">No recent articles found.</div>
+    </div>
+    {% endfor %}
+</div>
+
 {% endblock %}

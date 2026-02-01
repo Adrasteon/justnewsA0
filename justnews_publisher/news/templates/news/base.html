@@ -5,37 +5,57 @@
     <meta charset="UTF-8">
     <title>{% block title %}JustNews{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    <style>
+        .bbc-red { background-color: #B80000; }
+        .bbc-dark-red { background-color: #920000; }
+        .nav-link { color: white !important; font-weight: bold; border-right: 1px solid #920000; }
+        .nav-link:hover { background-color: #920000; text-decoration: underline white; }
+        .brand-text { font-family: sans-serif; font-weight: 700; font-size: 2rem; letter-spacing: -1px; }
+        .footer { border-top: 1px solid #ddd; margin-top: 2rem; padding: 2rem 0; background-color: #f8f9fa; }
+    </style>
 </head>
 <body>
-    <header class="bbc-banner">
-        <div class="bbc-banner-content">
-            <a href="/" class="bbc-logo">JustNews</a>
-            <span class="bbc-tagline">Trusted, accurate news. Evidence-based journalism.</span>
+    <header class="bbc-red text-white py-3">
+        <div class="container d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <a href="/" class="text-white text-decoration-none me-3 brand-text">JustNews</a>
+                <span class="d-none d-md-block ms-3 border-start ps-3 border-light opacity-75">Trusted, accurate news. Evidence-based journalism.</span>
+            </div>
         </div>
     </header>
-    <nav class="bbc-navbar">
-        <ul class="bbc-nav-links">
-            <li><a href="/">Home</a></li>
-            <li><a href="/archive/">Archive</a></li>
-            <li><a href="/world/">World</a></li>
-            <li><a href="/uk/">UK</a></li>
-            <li><a href="/business/">Business</a></li>
-            <li><a href="/politics/">Politics</a></li>
-            <li><a href="/health/">Health</a></li>
-            <li><a href="/science/">Science</a></li>
-            <li><a href="/technology/">Tech</a></li>
-            <li><a href="/entertainment/">Entertainment</a></li>
-            <li><a href="/sport/">Sport</a></li>
-        </ul>
+
+    <nav class="bbc-red sticky-top border-top border-white overflow-x-auto">
+        <div class="container">
+            <ul class="nav flex-nowrap">
+                <li class="nav-item"><a class="nav-link px-3" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/world/">World</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/uk/">UK</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/business/">Business</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/politics/">Politics</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/health/">Health</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/science/">Science</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/technology/">Tech</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/entertainment/">Entertainment</a></li>
+                <li class="nav-item"><a class="nav-link px-3" href="/sport/">Sport</a></li>
+                <li class="nav-item"><a class="nav-link px-3 border-0" href="/archive/">Archive</a></li>
+            </ul>
+        </div>
     </nav>
-    <main class="container">
+
+    <main class="container my-4">
         {% block content %}{% endblock %}
     </main>
     <footer class="footer">
-        <div class="container">
-            <p>&copy; 2025 JustNews. All rights reserved.</p>
+        <div class="container text-center text-muted">
+            <p>&copy; 2026 JustNews. All rights reserved.</p>
         </div>
     </footer>
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
 </body>
 </html>

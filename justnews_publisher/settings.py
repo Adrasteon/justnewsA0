@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "news",
+    "justnews_publisher.news",
 ]
 
 MIDDLEWARE = [
@@ -97,10 +97,10 @@ DATABASES = {
     "default": {
         "ENGINE": "mysql.connector.django",
         "NAME": os.environ.get("MARIADB_DB", "justnews"),
-        "USER": os.environ.get("MARIADB_USER", "justnews_user"),
-        "PASSWORD": os.environ.get("MARIADB_PASSWORD", "password123"),
+        "USER": os.environ.get("MARIADB_USER", "justnews"),
+        "PASSWORD": os.environ.get("MARIADB_PASSWORD", "justnews_password"),
         "HOST": os.environ.get("MARIADB_HOST", "127.0.0.1"),
-        "PORT": os.environ.get("MARIADB_PORT", "3309"),
+        "PORT": os.environ.get("MARIADB_PORT", "3306"),
         "OPTIONS": {
             "autocommit": True,
             "use_pure": True,
