@@ -75,7 +75,6 @@
     "analyst": ["google/bert_uncased_L-2_H-128_A-2"],
     "memory": ["sentence-transformers/all-MiniLM-L6-v2"],
     "critic": ["unitary/unbiased-toxic-roberta", "unitary/toxic-bert"],
-    # balancer removed: assignment moved to critic/analytics/gpu_orchestrator
     "chief_editor": ["distilbert-base-uncased"]
   },
   "agent_memory_requirements": {
@@ -85,7 +84,6 @@
       "models": ["google/bert_uncased_L-2_H-128_A-2"],
       "description": "Single lightweight BERT model for analysis"
     },
-    # balancer removed: memory requirement consolidated elsewhere
     "chief_editor": {
       "total_memory_gb": 1.0,
       "mps_allocation_gb": 2.0,

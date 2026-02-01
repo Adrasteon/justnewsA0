@@ -9,7 +9,7 @@ Description=JustNews GPU Monitor (user)
 Type=simple
 ExecStartPre=/usr/bin/mkdir -p /home/adra/JustNews/run
 ExecStartPre=/usr/bin/chmod 0755 /home/adra/JustNews/run
-ExecStart=/home/adra/JustNews/scripts/gpu_monitor.sh /home/adra/JustNews/run/gpu_monitor.log 1
+ExecStart=/home/adra/JustNews/scripts/gpu_monitor.sh /home/adra/JustNews/run/gpu_monitor.log 5
 Restart=on-failure
 
 [Install]

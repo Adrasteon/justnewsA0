@@ -7,14 +7,6 @@
     "debug_mode": false,
     "conda_environment": null
   },
-  "orchestrator": {
-    "resource_limits": {
-        "max_cpu_percent": 95,
-        "max_memory_percent": 95,
-        "max_gpu_utilization": 100,
-        "max_gpu_memory_percent": 98
-    }
-  },
   "mcp_bus": {
     "host": "localhost",
     "port": 8000,

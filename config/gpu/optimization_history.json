@@ -6,15 +6,8 @@
       "model_type": "general",
       "optimal_batch_sizes": {},
       "memory_usage_patterns": {},
-      "last_updated": "2026-01-29T21:40:46.185235"
-    },
-    "MultiAgentGPUManager_embedding": {
-      "agent_name": "MultiAgentGPUManager",
-      "model_type": "embedding",
-      "optimal_batch_sizes": {},
-      "memory_usage_patterns": {},
-      "last_updated": "2026-01-29T21:40:46.455535"
+      "last_updated": "2026-01-31T18:05:28.085428"
     }
   },
-  "saved_at": "2026-01-30T03:10:46.217272"
+  "saved_at": "2026-01-31T18:15:28.090880"
 }

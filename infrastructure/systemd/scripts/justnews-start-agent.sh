@@ -99,7 +99,7 @@ validate_agent_name() {
         "critic"
         "memory"
         "reasoning"
-        # "newsreader"
+        "newsreader"
         "dashboard"
         "analytics"
         "archive"

@@ -40,8 +40,25 @@ def check_status():
 
         # Synthesized
         cursor.execute("SELECT count(*) FROM articles WHERE is_synthesized = 1")
-        synthesized = cursor.fetchone()[0]
-        print(f"Synthesized articles: {synthesized}")
+        synthesized_sources = cursor.fetchone()[0]
+        print(f"Synthesized source articles: {synthesized_sources}")
+
+        cursor.execute("SELECT count(*) FROM synthesized_articles")
+        stories = cursor.fetchone()[0]
+        print(f"Generated Stories: {stories}")
+        
+        # Critiqued
+        try:
+             cursor.execute("SELECT count(*) FROM synthesized_articles WHERE critique_status = 'completed'")
+             critiqued = cursor.fetchone()[0]
+             print(f"Critiqued Stories: {critiqued}")
+        except Exception as e:
+             print(f"Critiqued Stories Check Failed: {e}")
+
+        # Published
+        cursor.execute("SELECT count(*) FROM synthesized_articles WHERE is_published = 1")
+        published = cursor.fetchone()[0]
+        print(f"Published Stories: {published}")
 
     except Exception as e:
         print(f"Error: {e}")

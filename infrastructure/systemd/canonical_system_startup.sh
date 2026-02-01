@@ -712,6 +712,60 @@ stop_dev_telemetry_stack() {
   log_warn "Unable to tear down dev telemetry stack: manual cleanup may be required (check docker ps -a)"
 }
 
+start_gui_monitor() {
+  local repo_path="$1"
+  # Only start if we are in a sudo environment with a real user and a display
+  if [[ -n "${SUDO_USER:-}" && -n "${DISPLAY:-}" ]]; then
+     log_info "Starting GUI Monitor for user $SUDO_USER on display $DISPLAY..."
+     
+     # Resolve the python executable used by the environment
+     # We can try to use the one from global.env or just rely on 'python' in the path 
+     # if we were running as the user, but we are root here.
+     # The repo functions usually set up PYTHONPATH.
+     
+     local monitor_script="$repo_path/GUI_monitor.py"
+     if [[ ! -f "$monitor_script" ]]; then
+       log_warn "GUI_monitor.py not found at $monitor_script; skipping."
+       return 0
+     fi
+     
+     # We need to run this as the user.
+     # We use nohup and background checking to ensure it survives the script exit
+     # and doesn't block.
+     
+     local python_cmd="${PYTHON_BIN:-python3}"
+     
+     # Check if custom conda env is needed?
+     # The user was running with /home/adra/miniconda3/envs/justnews-py312/bin/python3
+     # We should try to use that if possible.
+     
+     if [[ -n "${CONDA_ENV:-}" ]]; then
+        # If we know the conda env, we can try to find its python
+        # But for simplicity, let's trust PYTHON_BIN if set, or just run whatever 'python' maps to for the user?
+        # Actually, running 'python' as user might pick up system python.
+        # PYTHON_BIN in this script comes from global.env which is correct.
+        true
+     fi
+     
+     # Run as user
+     sudo -u "$SUDO_USER" DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-/home/$SUDO_USER/.Xauthority}" \
+       nohup "$python_cmd" "$monitor_script" >/dev/null 2>&1 &
+       
+     log_success "GUI Monitor started."
+  fi
+}
+
+stop_gui_monitor() {
+  if [[ -n "${SUDO_USER:-}" ]]; then
+    # We only want to kill the monitor started by this user
+    if pgrep -u "$SUDO_USER" -f "GUI_monitor.py" > /dev/null; then
+      log_info "Stopping GUI Monitor..."
+      pkill -u "$SUDO_USER" -f "GUI_monitor.py" || true
+      log_success "GUI Monitor stopped."
+    fi
+  fi
+}
+
 main() {
   parse_args "$@"
   if [[ "$SHOW_USAGE" == true ]]; then
@@ -739,6 +793,7 @@ main() {
       # the systemd monitoring stack to avoid orphaned compose containers.
       stop_dev_telemetry_stack "$repo_root"
       stop_monitoring_stack
+      stop_gui_monitor
       log_success "Canonical system shutdown completed"
     fi
     return 0
@@ -824,6 +879,7 @@ main() {
     # enable_all.sh flow. No dedicated enable/start is required here.
     log_info "Crawl4AI bridge will be started by enable_all.sh as justnews@crawl4ai"
     run_health_summary "$repo_root"
+    start_gui_monitor "$repo_root"
   fi
 
   # ----------------------------

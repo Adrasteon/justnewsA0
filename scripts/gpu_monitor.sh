@@ -11,7 +11,7 @@ LOG=${1:-"$RUN_DIR/gpu_monitor.log"}
 # ensure logfile exists and has sane perms
 touch "$LOG"
 chmod 0644 "$LOG"
-INTERVAL=${2:-1}
+INTERVAL=${2:-5}
 
 echo "Starting GPU monitor: logging to $LOG (interval=${INTERVAL}s)"
 

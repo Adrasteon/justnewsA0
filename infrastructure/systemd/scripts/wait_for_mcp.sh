@@ -10,7 +10,7 @@ echo "Waiting for MCP Bus at $MCP_BUS_URL..."
 
 count=0
 while [[ $count -lt $MAX_WAIT ]]; do
-    if curl -s --max-time 5 "$MCP_BUS_URL/health" >/dev/null 2>&1; then
+    if curl -s --max-time 30 "$MCP_BUS_URL/health" >/dev/null 2>&1; then
         echo "MCP Bus is ready!"
         exit 0
     fi
