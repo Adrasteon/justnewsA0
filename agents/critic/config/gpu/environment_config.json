@@ -1,0 +1,41 @@
+{
+  "development": {
+    "gpu_manager": {
+      "max_memory_per_agent_gb": 4.0,
+      "health_check_interval_seconds": 15.0
+    },
+    "performance": {
+      "profiling_enabled": true,
+      "metrics_collection_interval": 5.0
+    }
+  },
+  "staging": {
+    "gpu_manager": {
+      "max_memory_per_agent_gb": 6.0,
+      "health_check_interval_seconds": 20.0
+    },
+    "monitoring": {
+      "enable_email_alerts": true,
+      "email_recipients": [
+        "admin@company.com"
+      ]
+    }
+  },
+  "production": {
+    "gpu_manager": {
+      "max_memory_per_agent_gb": 8.0,
+      "health_check_interval_seconds": 30.0
+    },
+    "performance": {
+      "batch_size_optimization": true,
+      "memory_preallocation": true
+    },
+    "monitoring": {
+      "enable_email_alerts": true,
+      "email_recipients": [
+        "ops@company.com",
+        "admin@company.com"
+      ]
+    }
+  }
+}

@@ -26,7 +26,8 @@ class SynthesizerModelAdapter:
             name="qwen_synthesizer_v1",
             model=os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ"),
             base_url=os.environ.get("VLLM_BASE_URL", "http://127.0.0.1:8010/v1"),
-            api_key=os.environ.get("VLLM_API_KEY") or "unused",
+            # Force 'unused' to match the running vLLM instance configuration
+            api_key="unused", # os.environ.get("VLLM_API_KEY") or "unused",
             system_prompt=SYSTEM_PROMPT,
             temperature=0.3,
             max_tokens=600,  # Slightly increased from legacy 512

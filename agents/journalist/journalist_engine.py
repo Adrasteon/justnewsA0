@@ -79,9 +79,29 @@ class JournalistEngine:
             html = payload.get("html") if isinstance(payload, dict) else None
             title = payload.get("title") if isinstance(payload, dict) else None
             url = payload.get("url") if isinstance(payload, dict) else None
-            return self._model_adapter.generate_story_brief(
+            
+            result = self._model_adapter.generate_story_brief(
                 markdown, html, url=url, title=title
             )
+
+            # Collect prediction for training
+            try:
+                from training_system import collect_prediction
+                collect_prediction(
+                    agent_name="journalist",
+                    task_type="generate_story_brief",
+                    input_text=f"Title: {title}\nURL: {url}\nContent: {markdown[:2000] if markdown else 'No markdown content'}",
+                    prediction=result,
+                    confidence=1.0,  # Qwen doesn't provide confidence yet
+                    source_url=url or "",
+                )
+                logger.debug("📊 Training data collected for story brief generation")
+            except ImportError:
+                pass  # Training system not available
+            except Exception as e:
+                logger.warning(f"Failed to collect training data: {e}")
+
+            return result
         except Exception as exc:
             logger.debug("Journalist model adapter failed: %s", exc)
             return None

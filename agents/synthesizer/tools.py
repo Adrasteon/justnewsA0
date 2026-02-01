@@ -99,19 +99,23 @@ async def cluster_articles_tool(
         if topics:
             response["topics"] = topics
             
-        return response
-
-        # Log feedback for training
-        engine.log_feedback(
-            "cluster_articles",
-            {
-                "method": result.method,
-                "n_clusters": response["n_clusters"],
-                "articles_processed": response["articles_processed"],
-                "confidence": result.confidence,
-                "processing_time": processing_time,
-            },
-        )
+        # Collect prediction for training
+        try:
+            from training_system import collect_prediction
+            # Create a summary of input for clustering (too big to log all)
+            input_summary = f"Clustering {len(article_texts)} articles. Sample: {article_texts[0][:200]}..." if article_texts else "Empty input"
+            collect_prediction(
+                agent_name="synthesizer",
+                task_type="cluster_articles",
+                input_text=input_summary,
+                prediction=response,
+                confidence=confidence,
+                source_url="",
+            )
+        except ImportError:
+            pass
+        except Exception as e:
+            logger.warning(f"Failed to collect training data for clustering: {e}")
 
         return response
 
@@ -130,7 +134,7 @@ async def cluster_articles_tool(
         }
 
 
-async def summarize_article_tool(engine: SynthesizerEngine, article_id: int) -> dict[str, Any]:
+async def summarize_article(engine: SynthesizerEngine, article_id: int) -> dict[str, Any]:
     """Summarize a single article by ID and update the database."""
     logger.info(f"📝 Summarizing article {article_id}")
     
@@ -163,6 +167,22 @@ async def summarize_article_tool(engine: SynthesizerEngine, article_id: int) -> 
         except Exception as e:
             logger.warning(f"Engine summarization failed: {e}")
             summary = content[:500] + "..." if len(content) > 500 else content
+
+        # Collect prediction for training
+        try:
+            from training_system import collect_prediction
+            collect_prediction(
+                agent_name="synthesizer",
+                task_type="summarize_article",
+                input_text=content[:5000],
+                prediction={"summary": summary},
+                confidence=1.0,
+                source_url=f"article_id:{article_id}",
+            )
+        except ImportError:
+            pass
+        except Exception as e:
+            logger.warning(f"Failed to collect training data for summarizer: {e}")
 
         cursor.execute("UPDATE articles SET summary = %s WHERE id = %s", (summary, article_id))
         db_service.mb_conn.commit()
@@ -220,17 +240,21 @@ async def neutralize_text_tool(engine: SynthesizerEngine, text: str) -> dict[str
         if hasattr(result, "bias_score"):
             response["bias_score"] = result.bias_score
 
-        # Log feedback for training
-        engine.log_feedback(
-            "neutralize_text",
-            {
-                "method": result.method,
-                "input_length": len(text),
-                "output_length": len(result.content),
-                "confidence": result.confidence,
-                "processing_time": processing_time,
-            },
-        )
+        # Collect prediction for training
+        try:
+            from training_system import collect_prediction
+            collect_prediction(
+                agent_name="synthesizer",
+                task_type="neutralize_text",
+                input_text=text[:5000],
+                prediction=response,
+                confidence=result.confidence,
+                source_url="",
+            )
+        except ImportError:
+            pass
+        except Exception as e:
+            logger.warning(f"Failed to collect training data for neutralization: {e}")
 
         return response
 
@@ -247,7 +271,10 @@ async def neutralize_text_tool(engine: SynthesizerEngine, text: str) -> dict[str
 
 
 async def aggregate_cluster_tool(
-    engine: SynthesizerEngine, article_texts: list[str]
+    engine: SynthesizerEngine, 
+    article_texts: list[str], 
+    aggregation_type: str = "full",
+    previous_context: str | None = None
 ) -> dict[str, Any]:
     """
     Aggregate a cluster of articles into a synthesis.
@@ -255,11 +282,13 @@ async def aggregate_cluster_tool(
     Args:
         engine: SynthesizerEngine instance
         article_texts: List of article texts to aggregate
+        aggregation_type: 'full' (default) or 'brief'
+        previous_context: Optional summary of previous coverage
 
     Returns:
         Aggregation results with synthesized content
     """
-    logger.info(f"📝 Aggregating {len(article_texts)} articles")
+    logger.info(f"📝 Aggregating {len(article_texts)} articles (type={aggregation_type}, has_context={bool(previous_context)})")
 
     # start_time is outside the try/except so we can compute elapsed on exception paths
     start_time = time.time()
@@ -274,12 +303,8 @@ async def aggregate_cluster_tool(
             }
 
         # Perform aggregation
-        result = await engine.aggregate_cluster(article_texts)
+        result = await engine.aggregate_cluster(article_texts, previous_context=previous_context)
         
-        # DEBUG LOGGING
-        logger.info(f"DEBUG: aggregate_cluster result type: {type(result)}")
-        logger.info(f"DEBUG: aggregate_cluster result keys: {list(result.keys()) if hasattr(result, 'keys') else 'not a dict'}")
-
         processing_time = time.time() - start_time
 
         # Check if it behaves like a dict (safe fallback)
@@ -308,26 +333,32 @@ async def aggregate_cluster_tool(
             if result.metadata and "key_points" in result.metadata:
                 response["key_points"] = result.metadata["key_points"]
 
-        # Log feedback for training
-        method_val = result.get("method", "unknown") if isinstance(result, dict) else getattr(result, "method", "unknown")
-        content_val = result.get("summary", "") if isinstance(result, dict) else getattr(result, "content", "")
-        confidence_val = result.get("confidence", 0.0) if isinstance(result, dict) else getattr(result, "confidence", 0.0)
+        # Collect prediction for training
+        try:
+            from training_system import collect_prediction
+            method_val = result.get("method", "unknown") if isinstance(result, dict) else getattr(result, "method", "unknown")
+            confidence_val = result.get("confidence", 0.0) if isinstance(result, dict) else getattr(result, "confidence", 1.0)
+            
+            # Create input summary
+            input_summary = f"Aggregating {len(article_texts)} articles. Type: {aggregation_type}. Samples: {article_texts[0][:200] if article_texts else 'None'}"
 
-        engine.log_feedback(
-            "aggregate_cluster",
-            {
-                "method": method_val,
-                "articles_processed": len(article_texts),
-                "summary_length": len(content_val),
-                "confidence": confidence_val,
-                "processing_time": processing_time,
-            },
-        )
+            collect_prediction(
+                agent_name="synthesizer",
+                task_type="aggregate_cluster",
+                input_text=input_summary,
+                prediction=response,
+                confidence=confidence_val,
+                source_url="",
+            )
+        except ImportError:
+            pass
+        except Exception as e:
+            logger.warning(f"Failed to collect training data for aggregation: {e}")
 
         return response
 
     except Exception as e:
-        logger.error(f"❌ Aggregation failed: {e}")
+        logger.error(f"❌ Aggregation failed: {e}", exc_info=True)
         # Fallback: simple concatenation
         combined = " ".join(article_texts[:3]) if article_texts else ""
         return {

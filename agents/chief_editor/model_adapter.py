@@ -35,13 +35,11 @@ class ChiefEditorModelAdapter:
     def review_content(
         self, content: str, metadata: dict[str, Any] | None = None
     ) -> dict[str, Any] | None:
+        """Original review method for full editorial decision support"""
         if not self.enabled:
             return None
             
         text = textwrap.shorten(content or "", width=7000, placeholder="...")
-        if not text:
-            return None
-            
         meta = metadata or {}
         assignment = meta.get("assignment") or meta.get("topic")
         lead = f"Assignment: {assignment}\n" if assignment else ""
@@ -53,6 +51,52 @@ class ChiefEditorModelAdapter:
             return self._parse_response(result.get("text", ""))
         except Exception as e:
             logger.warning(f"Chief Editor Qwen generation failed: {e}")
+            return None
+
+    def perform_task(self, task: str, content: str, context: str = "") -> dict[str, Any] | str | None:
+        """Perform specific editorial task using LLM."""
+        if not self.enabled:
+            return None
+
+        text = textwrap.shorten(content or "", width=4000, placeholder="...")
+        
+        prompts = {
+            "quality": (
+                "Assess the quality of this text. Return JSON with: "
+                "overall_quality (0.0-1.0), assessment (high|medium|low), reasoning."
+            ),
+            "categorize": (
+                "Categorize this text into one news category (e.g. Politics, Technology, distinct). "
+                "Return JSON with: category (string), confidence (0.0-1.0)."
+            ),
+            "sentiment": (
+                "Analyze the editorial sentiment/tone. Return JSON with: "
+                "sentiment (positive|negative|neutral), confidence (0.0-1.0), editorial_tone (string)."
+            ),
+            "commentary": (
+                f"Write a brief editorial commentary/summary for this {context}. "
+                "Return only the commentary text, no JSON."
+            )
+        }
+
+        user_prompt = f"{prompts.get(task, task)}\n\nText:\n'''{text}'''"
+        
+        try:
+            self.adapter.ensure_loaded()
+            # Override system prompt? OpenAIAdapter doesn't support easy per-call system prompt override 
+            # without re-init, but we can rely on the general persona or just strong user prompting.
+            # The default system prompt is broad enough ("You are the chief editor").
+            
+            result = self.adapter.infer(user_prompt)
+            output = result.get("text", "").strip()
+            
+            if task == "commentary":
+                return output
+            
+            return self._parse_response(output)
+            
+        except Exception as e:
+            logger.warning(f"Chief Editor Qwen task {task} failed: {e}")
             return None
 
     def _parse_response(self, text: str) -> dict[str, Any] | None:

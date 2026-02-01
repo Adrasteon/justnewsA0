@@ -78,6 +78,23 @@ async def process_critique_request(
             result = {"error": f"Unknown operation type: {operation_type}"}
 
         logger.info(f"✅ {operation_type.capitalize()} critique operation completed")
+
+        # Collect prediction for training
+        try:
+            from training_system import collect_prediction
+            collect_prediction(
+                agent_name="critic",
+                task_type=operation_type,
+                input_text=content[:5000] if content else "",
+                prediction=result,
+                confidence=result.get("confidence", 1.0) if isinstance(result, dict) else 1.0,
+                source_url=kwargs.get("url", ""),
+            )
+        except ImportError:
+            pass
+        except Exception as e:
+            logger.warning(f"Failed to collect training data for {operation_type}: {e}")
+
         return result
 
     except Exception as e:

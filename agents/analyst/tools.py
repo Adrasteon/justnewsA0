@@ -22,6 +22,7 @@ import time
 from typing import Any
 
 from common.observability import get_logger
+from database.utils.migrated_database_utils import create_database_service
 
 from .analyst_engine import AnalystConfig, AnalystEngine
 
@@ -100,6 +101,23 @@ async def process_analysis_request(
             }
 
         logger.info(f"✅ {analysis_type.capitalize()} analysis completed")
+
+        # Collect prediction for training
+        try:
+            from training_system import collect_prediction
+            collect_prediction(
+                agent_name="analyst",
+                task_type=analysis_type,
+                input_text=text[:5000],  # Truncate for sanity if huge
+                prediction=result,
+                confidence=1.0,
+                source_url=kwargs.get("url", ""),
+            )
+        except ImportError:
+            pass
+        except Exception as e:
+            logger.warning(f"Failed to collect training data for {analysis_type}: {e}")
+
         return result
 
     except Exception as e:
@@ -565,3 +583,93 @@ __all__ = [
     "format_analysis_output",
     "get_analyst_engine",
 ]
+
+def analyze_article(article_id: int) -> dict[str, Any]:
+    """
+    Analyze a single article by ID and update the database.
+
+    Args:
+        article_id: The ID of the article to analyze.
+    """
+    logger.info(f"Starting analysis for article {article_id}")
+    try:
+        db = create_database_service()
+        db.ensure_conn()
+        cursor = db.mb_conn.cursor() 
+        
+        # Fetch article content (index 3) and structured_metadata (index 21)
+        # Note: Indexing based on migrated_models.Article.from_row assumption
+        cursor.execute("SELECT * FROM articles WHERE id = %s", (article_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            cursor.close()
+            return {"status": "error", "error": f"Article {article_id} not found"}
+            
+        content = row[3]
+        structured_metadata_raw = row[21]
+        
+        if not content:
+             logger.warning(f"Article {article_id} has no content")
+             cursor.execute("UPDATE articles SET analyzed = 1 WHERE id = %s", (article_id,))
+             db.mb_conn.commit()
+             cursor.close()
+             return {"status": "skipped", "reason": "no content"}
+
+        # Run Analysis
+        engine = get_analyst_engine()
+        
+        # Run analyses
+        # We catch individual errors to allow partial success
+        stats = {}
+        try:
+            stats = engine.analyze_text_statistics(content)
+        except Exception as e:
+            logger.warning(f"Stats analysis failed for {article_id}: {e}")
+
+        metrics = {}
+        try:
+            metrics = engine.extract_key_metrics(content)
+        except Exception as e:
+            logger.warning(f"Metrics analysis failed for {article_id}: {e}")
+
+        sent_bias = {}
+        try:
+            sent_bias = engine.analyze_sentiment_and_bias(content)
+        except Exception as e:
+            logger.warning(f"Sentiment/Bias analysis failed for {article_id}: {e}")
+
+        entities = {}
+        try:
+            entities = engine.extract_entities(content)
+        except Exception as e:
+            logger.warning(f"Entity analysis failed for {article_id}: {e}")
+        
+        # Construct Metadata Update
+        current_struct = json.loads(structured_metadata_raw) if structured_metadata_raw else {}
+        current_struct['analysis'] = {
+            'statistics': stats,
+            'metrics': metrics,
+            'sentiment': sent_bias.get('sentiment'),
+            'bias': sent_bias.get('bias'),
+            'entities': entities
+        }
+        
+        # Update DB
+        update_query = """
+            UPDATE articles 
+            SET analyzed = 1, 
+                structured_metadata = %s,
+                updated_at = NOW()
+            WHERE id = %s
+        """
+        cursor.execute(update_query, (json.dumps(current_struct), article_id))
+        db.mb_conn.commit()
+        cursor.close()
+        
+        logger.info(f"Article {article_id} analyzed successfully")
+        return {"status": "success", "article_id": article_id}
+        
+    except Exception as e:
+        logger.error(f"Error analyzing article {article_id}: {e}")
+        return {"status": "error", "error": str(e)}

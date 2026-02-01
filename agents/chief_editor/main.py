@@ -65,12 +65,17 @@ from .tools import (
 
 # MCP Bus integration
 try:
-    from common.mcp_bus_client import MCPBusClient
+    from agents.common.mcp_bus_client import MCPBusClient
 
     MCP_AVAILABLE = True
 except ImportError:
-    MCPBusClient = None
-    MCP_AVAILABLE = False
+    # Fallback/Retry for different path structure
+    try:
+        from common.mcp_bus_client import MCPBusClient
+        MCP_AVAILABLE = True
+    except ImportError:
+        MCPBusClient = None
+        MCP_AVAILABLE = False
 
 logger = get_logger(__name__)
 
@@ -206,10 +211,10 @@ async def lifespan(app: FastAPI):
         "📋 Focus: Content quality assessment, editorial decision making, workflow coordination"
     )
     logger.info(
-        "🤝 Integration: Coordinates Scout, Analyst, Fact Checker, Synthesizer, and Critic agents"
+        "🤝 Integration: Coordinates Journalist, Analyst, Fact Checker, Synthesizer, and Critic agents"
     )
     logger.info(
-        "🎨 Specializes: 5-model AI workflow (BERT, DistilBERT, RoBERTa, T5, SentenceTransformers)"
+        "🎨 Specializes: Unified AI workflow (Qwen + SentenceTransformers)"
     )
 
     try:
@@ -238,35 +243,24 @@ async def register_with_mcp_bus():
         mcp_bus_url = MCP_BUS_URL
         client = MCPBusClient(mcp_bus_url)
 
-        agent_info = {
-            "name": "chief_editor",
-            "description": "Editorial workflow orchestration with 5-model AI decision making",
-            "version": "2.0.0",
-            "capabilities": [
-                "content_quality_assessment",
-                "content_categorization",
-                "editorial_sentiment_analysis",
-                "editorial_commentary_generation",
-                "editorial_decision_making",
-                "story_brief_generation",
-                "story_publishing_coordination",
-                "evidence_review_queuing",
-            ],
-            "endpoints": {
-                "assess_content_quality": "/assess_content_quality",
-                "categorize_content": "/categorize_content",
-                "analyze_editorial_sentiment": "/analyze_editorial_sentiment",
-                "generate_editorial_commentary": "/generate_editorial_commentary",
-                "make_editorial_decision": "/make_editorial_decision",
-                "request_story_brief": "/request_story_brief",
-                "publish_story": "/publish_story",
-                "review_evidence": "/review_evidence",
-                "health": "/health",
-                "stats": "/stats",
-            },
-        }
+        # Map capabilities/endpoints to tools list
+        tools = [
+            "assess_content_quality",
+            "categorize_content",
+            "analyze_editorial_sentiment",
+            "generate_editorial_commentary",
+            "make_editorial_decision",
+            "request_story_brief",
+            "publish_story",
+            "review_evidence"
+        ]
 
-        await client.register_agent(agent_info)
+        # register_agent is synchronous
+        client.register_agent(
+            agent_name="chief_editor",
+            agent_address=f"http://localhost:{CHIEF_EDITOR_AGENT_PORT}",
+            tools=tools
+        )
         logger.info("✅ Registered with MCP Bus")
 
     except Exception as e:
@@ -623,7 +617,7 @@ async def request_story_brief_endpoint(request: StoryBriefRequest):
 
 
 @app.post("/publish_story", response_model=EditorialResponse)
-async def publish_story_endpoint(request: PublishRequest):
+async def publish_story_endpoint(request: dict):
     """
     Coordinate story publishing across the editorial workflow.
 
@@ -633,18 +627,40 @@ async def publish_story_endpoint(request: PublishRequest):
     start_time = time.time()
 
     try:
-        logger.info(f"🚀 Processing story publishing: {request.story_id}")
+        # Handle MCP Bus format vs Direct Pydantic model
+        story_id = None
+        format_output = "json"
+        
+        if "args" in request and "kwargs" in request:
+             # MCP Bus format
+             kwargs = request.get("kwargs", {})
+             if "story_id" in kwargs:
+                 story_id = kwargs["story_id"]
+             elif request["args"]:
+                 story_id = request["args"][0]
+                 
+             format_output = kwargs.get("format_output", "json")
+        else:
+             # Direct/Pydantic dict
+             story_id = request.get("story_id")
+             format_output = request.get("format_output", "json")
+             
+        if not story_id:
+             logger.error("Missing story_id in publishing request")
+             raise HTTPException(status_code=400, detail="Missing story_id")
+
+        logger.info(f"🚀 Processing story publishing: {story_id}")
 
         # Perform analysis
-        result = publish_story(request.story_id)
+        result = publish_story(story_id)
 
         # Validate result
         if not validate_editorial_result(result):
             raise HTTPException(status_code=500, detail="Invalid publishing result")
 
         # Format output if requested
-        if request.format_output != "json":
-            formatted_result = format_editorial_output(result, request.format_output)
+        if format_output != "json":
+            formatted_result = format_editorial_output(result, format_output)
             result = {"formatted_output": formatted_result}
 
         processing_time = time.time() - start_time
@@ -654,7 +670,7 @@ async def publish_story_endpoint(request: PublishRequest):
             result=result,
             processing_time=processing_time,
             timestamp=time.time(),
-            format=request.format_output,
+            format=format_output,
         )
 
         logger.info(

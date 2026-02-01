@@ -44,7 +44,7 @@ try:
     )
 
     TRANSFORMERS_AVAILABLE = True
-except ImportError:
+except (ImportError, Exception):
     TRANSFORMERS_AVAILABLE = False
 
 try:
@@ -141,6 +141,9 @@ class SynthesizerConfig:
     temperature: float = 0.8
     top_p: float = 0.9
     batch_size: int = 4
+    
+    # Device configuration
+    device: str = "cpu"  # Forced CPU to relieve VRAM pressure for VLLM
 
     # Clustering parameters
     min_cluster_size: int = 2
@@ -382,22 +385,30 @@ class SynthesizerEngine:
 
     def _load_embedding_model(self):
         """Load SentenceTransformer embedding model."""
-        try:
-            from agents.common.embedding import get_shared_embedding_model
+        # Embedding model loading disabled to save memory/resources.
+        # Synthesizer relies on Qwen-based synthesis which does not strictly require local embeddings
+        # unless legacy K-Means clustering fallback is triggered.
+        logger.info("🚫 Embedding model loading disabled by configuration/optimization")
+        self.embedding_model = None
+        return
 
-            agent_cache = os.environ.get("SYNTHESIZER_MODEL_CACHE") or str(
-                Path("./agents/synthesizer/models").resolve()
-            )
-            self.embedding_model = get_shared_embedding_model(
-                self.config.embedding_model,
-                cache_folder=agent_cache,
-                device=self.device,
-            )
-            logger.info("✅ Embedding model loaded")
+        if False: # Disabled legacy code block
+            try:
+                from agents.common.embedding import get_shared_embedding_model
 
-        except Exception as e:
-            logger.error(f"❌ Failed to load embedding model: {e}")
-            self.embedding_model = None
+                agent_cache = os.environ.get("SYNTHESIZER_MODEL_CACHE") or str(
+                    Path("./agents/synthesizer/models").resolve()
+                )
+                self.embedding_model = get_shared_embedding_model(
+                    self.config.embedding_model,
+                    cache_folder=agent_cache,
+                    device=self.device,
+                )
+                logger.info("✅ Embedding model loaded")
+
+            except Exception as e:
+                logger.error(f"❌ Failed to load embedding model: {e}")
+                self.embedding_model = None
 
     def _load_bart_model(self):
         """Deprecated: BART summarization model."""
@@ -405,6 +416,11 @@ class SynthesizerEngine:
 
     def _load_flan_t5_model(self):
         """Load FLAN-T5 generation model."""
+        # FLAN-T5 loading disabled to save memory as it is unused in the Qwen pipeline.
+        logger.info("🚫 FLAN-T5 loading disabled by configuration/optimization")
+        return
+
+        # Legacy code disabled below
         # Allow tests to patch T5 loader/pipeline even when TRANSFORMERS_AVAILABLE False
         t5_model_loader = globals().get("T5ForConditionalGeneration")
         t5_tokenizer_loader = globals().get("T5Tokenizer")
@@ -445,6 +461,10 @@ class SynthesizerEngine:
 
     def _load_bertopic_model(self):
         """Load BERTopic clustering model."""
+        # BERTopic loading disabled to save memory/resources.
+        logger.info("🚫 BERTopic model loading disabled by configuration/optimization")
+        return 
+
         if not BERTOPIC_AVAILABLE or not self.embedding_model:
             logger.warning("⚠️ BERTopic not available, using fallback clustering")
             return
@@ -753,8 +773,12 @@ class SynthesizerEngine:
                 metadata={"error": str(e)},
             )
 
-    async def aggregate_cluster(self, article_texts: list[str]) -> SynthesisResult:
+    async def aggregate_cluster(self, article_texts: list[str], previous_context: str | None = None) -> SynthesisResult:
         """Aggregate a cluster of articles into a synthesis.
+
+        Args:
+            article_texts: List of new article contents.
+            previous_context: Optional summary of previous coverage to maintain continuity.
 
         Compatibility wrapper: returns dict {status, summary, key_points, article_count}
         """
@@ -785,7 +809,7 @@ class SynthesizerEngine:
                 and self._qwen_ready()
             ):
                 qwen_doc = await asyncio.to_thread(
-                    self._run_qwen_cluster_summary, texts
+                    self._run_qwen_cluster_summary, texts, previous_context
                 )
                 if qwen_doc:
                     summary = qwen_doc.get("summary") or " ".join(
@@ -819,15 +843,13 @@ class SynthesizerEngine:
 
             combined_text = " ".join(summaries)
 
-            pipeline_callable = getattr(
-                self, "neutralization_pipeline", None
-            ) or self.pipelines.get("flan_t5_generation")
-            if pipeline_callable and len(combined_text) > 0:
+            pipeline_candidate = getattr(self, "neutralization_pipeline", None) or self.pipelines.get("flan_t5_generation")
+            if callable(pipeline_candidate) and len(combined_text) > 0:
                 try:
                     result = (
-                        pipeline_callable(combined_text)
-                        if not asyncio.iscoroutinefunction(pipeline_callable)
-                        else await pipeline_callable(combined_text)
+                        pipeline_candidate(combined_text)
+                        if not asyncio.iscoroutinefunction(pipeline_candidate)
+                        else await pipeline_candidate(combined_text)
                     )
                     refined = (
                         result[0].get("generated_text") if result else combined_text
@@ -973,12 +995,14 @@ class SynthesizerEngine:
             metadata={"qwen": doc},
         )
 
-    def _run_qwen_cluster_summary(self, texts: list[str]) -> dict[str, Any] | None:
+    def _run_qwen_cluster_summary(self, texts: list[str], previous_context: str | None = None) -> dict[str, Any] | None:
         adapter = getattr(self, "qwen_adapter", None)
         if not adapter:
             return None
         try:
-            return adapter.summarize_cluster(texts, context="cluster")
+            # Pass explicit context if provided, otherwise default 'cluster'
+            ctx = f"Previous Coverage: {previous_context}" if previous_context else "cluster"
+            return adapter.summarize_cluster(texts, context=ctx)
         except Exception as exc:
             logger.debug("Cluster-level Qwen summary failed: %s", exc)
             return None

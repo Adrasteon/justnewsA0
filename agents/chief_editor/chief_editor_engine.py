@@ -125,7 +125,7 @@ class ChiefEditorEngine:
 
         # Agent capabilities for routing
         self.agent_capabilities = {
-            "scout": ["content_discovery", "quality_assessment"],
+            "journalist": ["content_discovery", "quality_assessment"],
             "analyst": ["sentiment_analysis", "bias_detection"],
             "fact_checker": ["fact_verification", "credibility_assessment"],
             "synthesizer": ["content_aggregation", "summarization"],
@@ -140,100 +140,28 @@ class ChiefEditorEngine:
     def _initialize_models(self):
         """Initialize AI models with proper error handling"""
         try:
-            # BERT for quality assessment
-            self._load_bert_quality_model()
-
-            # DistilBERT for categorization
-            self._load_distilbert_category_model()
-
-            # RoBERTa for sentiment analysis
-            self._load_roberta_sentiment_model()
-
-            # T5 for commentary generation
-            self._load_t5_commentary_model()
-
-            # SentenceTransformer for embeddings
+            # SentenceTransformer for embeddings is still needed locally
+            # The others (BERT, DistilBERT, RoBERTa, T5) are now handled by Qwen
             self._load_embedding_model()
 
         except Exception as e:
             logger.error(f"Error initializing models: {e}")
 
     def _load_bert_quality_model(self):
-        """Load BERT model for quality assessment"""
-        try:
-            if not TRANSFORMERS_AVAILABLE:
-                logger.warning("Transformers not available - using fallback")
-                return
-
-            self.pipelines["bert_quality"] = pipeline(
-                "text-classification",
-                model=self.config.bert_model,
-                device=-1,  # CPU
-                return_all_scores=True,
-            )
-            logger.info("✅ BERT quality model loaded")
-
-        except Exception as e:
-            logger.error(f"Error loading BERT: {e}")
-            self.pipelines["bert_quality"] = None
+        """Deprecated: BERT model replaced by Qwen."""
+        pass
 
     def _load_distilbert_category_model(self):
-        """Load DistilBERT model for categorization"""
-        try:
-            if not TRANSFORMERS_AVAILABLE:
-                logger.warning("Transformers not available - using fallback")
-                return
-
-            self.pipelines["distilbert_category"] = pipeline(
-                "text-classification",
-                model=self.config.distilbert_model,
-                device=-1,  # CPU
-                return_all_scores=True,
-            )
-            logger.info("✅ DistilBERT category model loaded")
-
-        except Exception as e:
-            logger.error(f"Error loading DistilBERT: {e}")
-            self.pipelines["distilbert_category"] = None
+        """Deprecated: DistilBERT model replaced by Qwen."""
+        pass
 
     def _load_roberta_sentiment_model(self):
-        """Load RoBERTa model for sentiment analysis"""
-        try:
-            if not TRANSFORMERS_AVAILABLE:
-                logger.warning("Transformers not available - using fallback")
-                return
-
-            self.pipelines["roberta_sentiment"] = pipeline(
-                "sentiment-analysis",
-                model=self.config.roberta_model,
-                device=-1,  # CPU
-                return_all_scores=True,
-            )
-            logger.info("✅ RoBERTa sentiment model loaded")
-
-        except Exception as e:
-            logger.error(f"Error loading RoBERTa: {e}")
-            self.pipelines["roberta_sentiment"] = None
+        """Deprecated: RoBERTa model replaced by Qwen."""
+        pass
 
     def _load_t5_commentary_model(self):
-        """Load T5 model for commentary generation"""
-        try:
-            if not TRANSFORMERS_AVAILABLE:
-                logger.warning("Transformers not available - using fallback")
-                return
-
-            self.pipelines["t5_commentary"] = pipeline(
-                "text2text-generation",
-                model=self.config.t5_model,
-                device=-1,  # CPU
-                max_length=256,
-                temperature=0.7,
-            )
-            logger.info("✅ T5 commentary model loaded")
-
-        except Exception as e:
-            logger.error(f"Error loading T5: {e}")
-            self.pipelines["t5_commentary"] = None
+        """Deprecated: T5 model replaced by Qwen."""
+        pass
 
     def _load_embedding_model(self):
         """Load SentenceTransformer model for embeddings"""
@@ -264,156 +192,79 @@ class ChiefEditorEngine:
             logger.error(f"Error logging feedback: {e}")
 
     def assess_content_quality_bert(self, text: str) -> dict[str, Any]:
-        """Assess content quality using BERT"""
-        try:
-            if self.pipelines.get("bert_quality") is None:
-                return self._fallback_quality_assessment(text)
-
-            # Truncate text
-            text = text[: self.config.max_length]
-
-            results = self.pipelines["bert_quality"](text)
-
-            # Calculate overall quality score
-            if results:
-                quality_score = sum(r["score"] for r in results) / len(results)
-            else:
-                quality_score = 0.5
-
-            assessment = {
-                "overall_quality": quality_score,
-                "assessment": "high"
-                if quality_score > 0.7
-                else "medium"
-                if quality_score > 0.4
-                else "low",
-                "model": "bert",
-            }
-
-            self.log_feedback(
-                "assess_content_quality_bert",
-                {"quality_score": quality_score, "text_length": len(text)},
-            )
-
-            return assessment
-
-        except Exception as e:
-            logger.error(f"BERT quality assessment error: {e}")
+        """Assess content quality using Qwen (replacing BERT)"""
+        if not self.mistral_adapter:
             return self._fallback_quality_assessment(text)
+            
+        result = self.mistral_adapter.perform_task("quality", text)
+        if not result or not isinstance(result, dict) or "overall_quality" not in result:
+             return self._fallback_quality_assessment(text)
+
+        result["model"] = "qwen-14b"
+        
+        self.log_feedback(
+            "assess_content_quality_qwen",
+            {"quality_score": result["overall_quality"], "text_length": len(text)},
+        )
+        return result
 
     def categorize_content_distilbert(self, text: str) -> dict[str, Any]:
-        """Categorize content using DistilBERT"""
-        try:
-            if self.pipelines.get("distilbert_category") is None:
-                return self._fallback_categorization(text)
-
-            # Truncate text
-            text = text[: self.config.max_length]
-
-            results = self.pipelines["distilbert_category"](text)
-
-            # Get top category
-            if results:
-                top_result = max(results, key=lambda x: x["score"])
-                category = top_result["label"]
-                confidence = top_result["score"]
-            else:
-                category = "general"
-                confidence = 0.5
-
-            categorization = {
-                "category": category,
-                "confidence": confidence,
-                "model": "distilbert",
-            }
-
-            self.log_feedback(
-                "categorize_content_distilbert",
-                {"category": category, "confidence": confidence},
-            )
-
-            return categorization
-
-        except Exception as e:
-            logger.error(f"DistilBERT categorization error: {e}")
+        """Categorize content using Qwen (replacing DistilBERT)"""
+        if not self.mistral_adapter:
+            return self._fallback_categorization(text)
+            
+        result = self.mistral_adapter.perform_task("categorize", text)
+        if not result or not isinstance(result, dict) or "category" not in result:
             return self._fallback_categorization(text)
 
+        result["model"] = "qwen-14b"
+        
+        self.log_feedback(
+            "categorize_content_qwen",
+            {"category": result["category"], "confidence": result["confidence"]},
+        )
+        return result
+
     def analyze_editorial_sentiment_roberta(self, text: str) -> dict[str, Any]:
-        """Analyze editorial sentiment using RoBERTa"""
-        try:
-            if self.pipelines.get("roberta_sentiment") is None:
-                return self._fallback_sentiment_analysis(text)
-
-            # Truncate text
-            text = text[: self.config.max_length]
-
-            results = self.pipelines["roberta_sentiment"](text)
-
-            # Process sentiment results
-            if results:
-                sentiment_scores = {r["label"]: r["score"] for r in results}
-                dominant_sentiment = max(
-                    sentiment_scores.keys(), key=lambda k: sentiment_scores[k]
-                )
-                confidence = sentiment_scores[dominant_sentiment]
-            else:
-                dominant_sentiment = "neutral"
-                confidence = 0.5
-
-            analysis = {
-                "sentiment": dominant_sentiment.lower(),
-                "confidence": confidence,
-                "editorial_tone": self._determine_editorial_tone(
-                    dominant_sentiment, confidence
-                ),
-                "model": "roberta",
-            }
-
-            self.log_feedback(
-                "analyze_editorial_sentiment_roberta",
-                {"sentiment": dominant_sentiment, "confidence": confidence},
-            )
-
-            return analysis
-
-        except Exception as e:
-            logger.error(f"RoBERTa sentiment analysis error: {e}")
+        """Analyze editorial sentiment using Qwen (replacing RoBERTa)"""
+        if not self.mistral_adapter:
             return self._fallback_sentiment_analysis(text)
+            
+        result = self.mistral_adapter.perform_task("sentiment", text)
+        if not result or not isinstance(result, dict) or "sentiment" not in result:
+            return self._fallback_sentiment_analysis(text)
+
+        result["model"] = "qwen-14b"
+        
+        self.log_feedback(
+            "analyze_editorial_sentiment_qwen",
+            result
+        )
+        return result
 
     def generate_editorial_commentary_t5(
         self, text: str, context: str = "news article"
     ) -> str:
-        """Generate editorial commentary using T5"""
-        try:
-            if self.pipelines.get("t5_commentary") is None:
-                return self._fallback_commentary_generation(text, context)
-
-            prompt = f"summarize editorial notes for {context}: {text[:300]}"
-
-            result = self.pipelines["t5_commentary"](prompt)
-
-            commentary = (
-                result[0]["generated_text"] if result else "Editorial review required."
-            )
-
-            # Clean up T5 artifacts
-            if commentary.startswith("summarize editorial notes"):
-                commentary = commentary.split(": ", 1)[-1].strip()
-
-            self.log_feedback(
-                "generate_editorial_commentary_t5",
-                {
-                    "input_length": len(text),
-                    "output_length": len(commentary),
-                    "context": context,
-                },
-            )
-
-            return commentary
-
-        except Exception as e:
-            logger.error(f"T5 commentary generation error: {e}")
+        """Generate editorial commentary using Qwen (replacing T5)"""
+        if not self.mistral_adapter:
             return self._fallback_commentary_generation(text, context)
+
+        commentary = self.mistral_adapter.perform_task("commentary", text, context)
+        if not commentary or not isinstance(commentary, str):
+            # Check if it returned a dict by mistake, though perform_task handles this
+            return self._fallback_commentary_generation(text, context)
+            
+        self.log_feedback(
+            "generate_editorial_commentary_qwen",
+            {
+                "input_length": len(text),
+                "output_length": len(commentary),
+                "context": context,
+            },
+        )
+        return commentary
+
+
 
     def make_editorial_decision(
         self, content: str, metadata: dict[str, Any] | None = None
@@ -547,7 +398,7 @@ class ChiefEditorEngine:
         assignments = {}
 
         if stage == WorkflowStage.INTAKE:
-            assignments["scout"] = "content_discovery"
+            assignments["journalist"] = "content_discovery"
         elif stage == WorkflowStage.FACT_CHECK:
             assignments["fact_checker"] = "verification"
         elif stage == WorkflowStage.ANALYSIS:
@@ -597,7 +448,7 @@ class ChiefEditorEngine:
             confidence=0.5,
             reasoning="Fallback decision - manual review required",
             next_actions=["manual_review"],
-            agent_assignments={"scout": "primary"},
+            agent_assignments={"journalist": "primary"},
             metadata=metadata or {},
         )
 

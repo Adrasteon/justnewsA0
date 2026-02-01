@@ -18,7 +18,7 @@ class PerformanceMetrics:
     sites_crawled: int = 0
     errors: int = 0
     mode_usage: dict[str, int] = field(
-        default_factory=lambda: {"ultra_fast": 0, "ai_enhanced": 0, "generic": 0}
+        default_factory=lambda: {"ai_enhanced": 0, "generic": 0}
     )
     start_time: float = field(default_factory=time.time)
 

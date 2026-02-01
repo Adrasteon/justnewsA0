@@ -1,0 +1,54 @@
+{
+  "model_defaults": {
+    "dtype": "float16",
+    "device_map": "auto",
+    "load_in_8bit": false,
+    "load_in_4bit": false,
+    "trust_remote_code": true,
+    "max_memory_usage_gb": 4.0
+  },
+  "model_specific": {
+    "gpt2-medium": {
+      "max_memory_usage_gb": 2.0,
+      "batch_size_recommendation": 8,
+      "use_flash_attention": false
+    },
+    "distilgpt2": {
+      "max_memory_usage_gb": 1.0,
+      "batch_size_recommendation": 16,
+      "use_flash_attention": false
+    },
+    "sentence-transformers/all-MiniLM-L6-v2": {
+      "max_memory_usage_gb": 0.5,
+      "batch_size_recommendation": 32,
+      "use_flash_attention": false
+    },
+    "facebook/bart-large-mnli": {
+      "max_memory_usage_gb": 3.0,
+      "batch_size_recommendation": 4,
+      "use_flash_attention": false
+    }
+  },
+  "agent_model_assignments": {
+    "synthesizer": [
+      "gpt2-medium",
+      "distilgpt2"
+    ],
+    "fact_checker": [
+      "gpt2-medium",
+      "facebook/bart-large-mnli"
+    ],
+    "analyst": [
+      "sentence-transformers/all-MiniLM-L6-v2"
+    ],
+    "scout": [
+      "sentence-transformers/all-MiniLM-L6-v2"
+    ],
+    "memory": [
+      "sentence-transformers/all-MiniLM-L6-v2"
+    ],
+    "newsreader": [
+      "sentence-transformers/all-MiniLM-L6-v2"
+    ]
+  }
+}

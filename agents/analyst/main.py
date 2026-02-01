@@ -27,6 +27,7 @@ except Exception:
 from common.version_utils import get_version
 
 from .tools import (
+    analyze_article,
     analyze_content_trends,
     analyze_text_statistics,
     extract_key_metrics,
@@ -133,6 +134,7 @@ async def lifespan(app: FastAPI):
             agent_name="analyst",
             agent_address=agent_address,
             tools=[
+                "analyze_article",
                 "identify_entities",
                 "analyze_text_statistics",
                 "extract_claims",

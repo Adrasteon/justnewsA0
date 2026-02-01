@@ -1,0 +1,48 @@
+{
+  "default": {
+    "description": "Standard configuration profile",
+    "gpu_manager": {
+      "max_memory_per_agent_gb": 8.0,
+      "health_check_interval_seconds": 30.0
+    }
+  },
+  "high_performance": {
+    "description": "Optimized for maximum performance",
+    "gpu_manager": {
+      "max_memory_per_agent_gb": 12.0,
+      "health_check_interval_seconds": 15.0
+    },
+    "performance": {
+      "batch_size_optimization": true,
+      "memory_preallocation": true,
+      "async_operations": true,
+      "profiling_enabled": true
+    }
+  },
+  "memory_conservative": {
+    "description": "Conservative memory usage for limited GPU resources",
+    "gpu_manager": {
+      "max_memory_per_agent_gb": 4.0,
+      "health_check_interval_seconds": 45.0
+    },
+    "performance": {
+      "batch_size_optimization": true,
+      "memory_preallocation": false,
+      "async_operations": false
+    }
+  },
+  "debug": {
+    "description": "Debug configuration with extensive logging",
+    "gpu_manager": {
+      "max_memory_per_agent_gb": 6.0,
+      "health_check_interval_seconds": 10.0
+    },
+    "performance": {
+      "profiling_enabled": true,
+      "metrics_collection_interval": 5.0
+    },
+    "monitoring": {
+      "log_level": "DEBUG"
+    }
+  }
+}

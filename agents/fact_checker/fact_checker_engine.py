@@ -42,25 +42,25 @@ class FactCheckerConfig:
                 "model_name": "distilbert-base-uncased-finetuned-sst-2-english",
                 "max_length": 512,
                 "batch_size": 16,
-                "device": "auto",  # auto, cpu, cuda
+                "device": "cpu",  # Forced CPU to relieve VRAM pressure
             },
             "roberta": {
                 "model_name": "roberta-base",
                 "max_length": 512,
                 "batch_size": 16,
-                "device": "auto",
+                "device": "cpu",  # Forced CPU to relieve VRAM pressure
             },
             "sentence_transformers": {
                 "model_name": "sentence-transformers/all-MiniLM-L6-v2",
                 "max_length": 512,
                 "batch_size": 32,
-                "device": "auto",
+                "device": "cpu",  # Forced CPU to relieve VRAM pressure
             },
             "spacy": {"model_name": "en_core_web_sm", "batch_size": 16},
         }
 
         self.gpu_config = {
-            "enable_gpu": True,
+            "enable_gpu": False,  # Disabled GPU to relieve VRAM pressure
             "gpu_memory_limit": 0.8,
             "cpu_fallback": True,
             "tensorrt_enabled": False,

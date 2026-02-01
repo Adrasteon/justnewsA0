@@ -20,14 +20,13 @@ def get_crawler_info(*args, **kwargs) -> dict[str, Any]:
         "crawler_type": "UnifiedProductionCrawler",
         "version": "3.0",
         "capabilities": [
-            "ultra_fast_crawling",
             "ai_enhanced_crawling",
             "generic_crawling",
             "multi_site_concurrent_crawling",
             "performance_monitoring",
             "database_driven_source_management",
         ],
-        "supported_strategies": ["ultra_fast", "ai_enhanced", "generic"],
+        "supported_strategies": ["ai_enhanced", "generic"],
         "performance_metrics": crawler.get_performance_report(),
         "database_connected": True,  # Assume connected if no exception
         "timestamp": datetime.now().isoformat(),

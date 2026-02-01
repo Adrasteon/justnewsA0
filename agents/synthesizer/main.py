@@ -58,7 +58,7 @@ from .tools import (
     health_check,
     neutralize_text_tool,
     synthesize_gpu_tool,
-    summarize_article_tool,
+    summarize_article,
 )
 
 logger = get_logger(__name__)
@@ -375,13 +375,21 @@ async def aggregate_cluster_endpoint(call: ToolCall) -> Any:
         article_texts = (
             call.args[0] if call.args else call.kwargs.get("article_texts", [])
         )
+        # Map 'type' from caller to 'aggregation_type' for tool
+        aggregation_type = call.kwargs.get("type", "full")
+        previous_context = call.kwargs.get("previous_context")
 
         if not article_texts:
             raise HTTPException(status_code=400, detail="No articles provided")
 
-        logger.info(f"📝 Aggregating {len(article_texts)} articles")
+        logger.info(f"📝 Aggregating {len(article_texts)} articles (type={aggregation_type})")
 
-        result = await aggregate_cluster_tool(synthesizer_engine, article_texts)
+        result = await aggregate_cluster_tool(
+            synthesizer_engine, 
+            article_texts, 
+            aggregation_type=aggregation_type,
+            previous_context=previous_context
+        )
         return result
 
     except HTTPException:
@@ -689,3 +697,26 @@ if __name__ == "__main__":
     logger.info("🎯 Starting Synthesizer Agent on %s:%d", host, port)
     uvicorn.run(app, host=host, port=port)
 
+
+@app.post("/summarize_article")
+async def summarize_article_endpoint(call: ToolCall):
+    # wrapper to handle tool call format
+    kwargs = call.kwargs or {}
+    args = call.args or []
+    
+    article_id = kwargs.get("article_id")
+    if not article_id and args:
+        article_id = args[0]
+        
+    if not article_id:
+        raise HTTPException(status_code=400, detail="Missing article_id")
+
+    from .tools import summarize_article
+    # engine should be passed to tool, but typically endpoints use global engine.
+    # tools.py summarize_article takes (engine, article_id).
+    
+    global synthesizer_engine
+    if not synthesizer_engine:
+         raise HTTPException(status_code=503, detail="Engine not ready")
+         
+    return await summarize_article(synthesizer_engine, article_id)

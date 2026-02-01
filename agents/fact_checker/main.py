@@ -812,3 +812,19 @@ if __name__ == "__main__":
 
     logger.info(f"Starting Fact Checker Agent on {host}:{port}")
     uvicorn.run(app, host=host, port=port)
+
+@app.post("/verify_article")
+async def verify_article_endpoint(call: ToolCall):
+    from .tools import verify_article
+    kwargs = call.kwargs or {}
+    args = call.args or []
+    
+    # Support both list args and kwargs
+    article_id = kwargs.get("article_id")
+    if not article_id and args:
+        article_id = args[0]
+        
+    if not article_id:
+        raise HTTPException(status_code=400, detail="Missing article_id")
+        
+    return await verify_article(article_id)

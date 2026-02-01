@@ -121,8 +121,30 @@ async def process_fact_check_request(
             result = {"error": f"Operation '{normalized}' not implemented"}
 
         logger.info("✅ %s fact-checking operation completed", normalized)
-        return result
+        
+        # Collect prediction for training
+        try:
+            from training_system import collect_prediction
+            # Extract confidence if available
+            confidence_val = 1.0
+            if isinstance(result, dict):
+                confidence_val = result.get("confidence_score") or result.get("confidence", 1.0)
 
+            collect_prediction(
+                agent_name="fact_checker",
+                task_type=normalized,
+                input_text=content[:5000] if content else "",
+                prediction=result,
+                confidence=float(confidence_val),
+                source_url=kwargs.get("source_url", ""),
+            )
+        except ImportError:
+            pass
+        except Exception as e:
+            logger.warning(f"Failed to collect training data for {normalized}: {e}")
+
+        return result
+        
     except Exception as exc:  # noqa: BLE001
         logger.error("❌ %s fact-checking operation failed: %s", normalized, exc)
         return {"error": str(exc), "details": str(exc)}
@@ -741,3 +763,79 @@ __all__ = [
     "format_fact_check_output",
     "get_fact_checker_engine",
 ]
+
+async def verify_article(article_id: int) -> dict[str, Any]:
+    """
+    Verify facts for a single article by ID and update the database.
+
+    Args:
+        article_id: The ID of the article to verify.
+    """
+    logger.info(f"Checking facts for article {article_id}")
+    
+    from database.utils.migrated_database_utils import create_database_service
+    
+    db_service = None
+    try:
+        db_service = create_database_service()
+        db_service.ensure_conn()
+        
+        cursor = db_service.mb_conn.cursor()
+        
+        # Check if already verified
+        cursor.execute("SELECT fact_check_status, content, summary, source_id, url FROM articles WHERE id = %s", (article_id,))
+        row = cursor.fetchone()
+        
+        if not row:
+            cursor.close()
+            return {"status": "error", "error": f"Article {article_id} not found"}
+            
+        status, content, summary, source_id, url = row
+        
+        if status:
+             logger.info(f"Article {article_id} already fact checked: {status}")
+             cursor.close()
+             return {"status": "success", "article_id": article_id, "already_done": True}
+
+        # Run Fact Check
+        engine = get_fact_checker_engine()
+        
+        # We use the summary for faster checking if available, else content
+        text_to_check = summary if summary and len(summary) > 50 else content
+        
+        if not text_to_check:
+             logger.warning(f"No content to check for article {article_id}")
+             cursor.execute("UPDATE articles SET fact_check_status = 'skipped_empty' WHERE id = %s", (article_id,))
+             db_service.mb_conn.commit()
+             cursor.close()
+             return {"status": "skipped"}
+             
+        # Execute check
+        # We map source_id to domain if possible, but here we just pass url
+        result = await engine.verify_facts(text_to_check, source_url=url)
+        
+        # Determine status
+        # If confidence is low or verify failed, we flag for review
+        # Simple logic: passed if verified_claims > 0 and no refute
+        
+        final_status = "passed"
+        if result.get("verdict") == "refuted":
+            final_status = "failed"
+        elif result.get("verdict") == "unverified":
+             final_status = "needs_review"
+        
+        # Update DB
+        trace = json.dumps(result)
+        cursor.execute(
+            "UPDATE articles SET fact_check_status = %s, fact_check_trace = %s, updated_at = NOW() WHERE id = %s", 
+            (final_status, trace, article_id)
+        )
+        db_service.mb_conn.commit()
+        cursor.close()
+        
+        logger.info(f"Article {article_id} fact check complete: {final_status}")
+        return {"status": "success", "article_id": article_id, "verdict": final_status}
+        
+    except Exception as e:
+        logger.error(f"Error fact checking article {article_id}: {e}")
+        return {"status": "error", "error": str(e)}

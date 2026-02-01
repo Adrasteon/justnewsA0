@@ -1,0 +1,44 @@
+{
+  "gpu_manager": {
+    "max_memory_per_agent_gb": 8.0,
+    "health_check_interval_seconds": 30.0,
+    "allocation_timeout_seconds": 60.0,
+    "memory_safety_margin_percent": 10,
+    "enable_memory_cleanup": true,
+    "enable_health_monitoring": true,
+    "enable_performance_tracking": true
+  },
+  "gpu_devices": {
+    "preferred_devices": [
+      0
+    ],
+    "excluded_devices": [],
+    "device_memory_limits": {},
+    "device_temperature_limits": {
+      "warning_celsius": 75,
+      "critical_celsius": 85,
+      "shutdown_celsius": 95
+    }
+  },
+  "performance": {
+    "batch_size_optimization": true,
+    "memory_preallocation": false,
+    "async_operations": true,
+    "profiling_enabled": false,
+    "metrics_collection_interval": 10.0
+  },
+  "monitoring": {
+    "alert_thresholds": {
+      "temperature_warning": 75,
+      "temperature_critical": 85,
+      "memory_usage_warning": 85,
+      "memory_usage_critical": 95,
+      "utilization_stuck_threshold": 95,
+      "power_draw_anomaly_watts": 300
+    },
+    "alert_cooldown_minutes": 5,
+    "enable_email_alerts": false,
+    "email_recipients": [],
+    "log_level": "INFO"
+  }
+}

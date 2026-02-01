@@ -20,6 +20,9 @@ All functions include robust error handling, validation, and fallbacks.
 import json
 import os
 import time
+import re
+from datetime import datetime
+import mysql.connector
 from typing import Any
 
 from common.observability import get_logger
@@ -317,35 +320,77 @@ def publish_story(story_id: str) -> dict[str, Any]:
         return {"error": "Empty story ID provided for publishing"}
 
     try:
-        # MCP Bus integration for publishing coordination
-        mcp_bus_url = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
-
-        payload = {
-            "agent": "librarian",
-            "tool": "update_story_timeline",
-            "args": [story_id],
-            "kwargs": {},
+        # Connect to JustNews MariaDB to publish the article
+        db_config = {
+            'user': os.environ.get("MARIADB_USER", "justnews"),
+            'password': os.environ.get("MARIADB_PASSWORD", "justnews_password"),
+            'host': os.environ.get("MARIADB_HOST", "127.0.0.1"),
+            'port': int(os.environ.get("MARIADB_PORT", 3306)),
+            'database': os.environ.get("MARIADB_DB", "justnews"),
+            'autocommit': True,
+            'use_pure': True
         }
 
-        # Try MCP bus call, fallback to local operation
-        try:
-            import requests
+        # Use context managers for automatic cleanup
+        with mysql.connector.connect(**db_config) as conn:
+            with conn.cursor(dictionary=True) as cursor:
+                # 1. Fetch from synthesized_articles
+                cursor.execute("SELECT * FROM synthesized_articles WHERE story_id = %s", (story_id,))
+                source = cursor.fetchone()
 
-            resp = requests.post(f"{mcp_bus_url}/call", json=payload, timeout=10)
-            resp.raise_for_status()
-            mcp_result = resp.json()
-            status = "published"
-        except Exception as e:
-            logger.warning(f"MCP Bus call failed: {e}")
-            mcp_result = {"fallback": True, "error": str(e)}
-            status = "published_locally"
+                if not source:
+                     return {"error": f"Story ID {story_id} not found in synthesized_articles"}
 
+                # 2. Extract and Transform
+                title = source.get('title') or "Untitled Story"
+                # Create slug
+                slug_base = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower()).strip('-')
+                slug = f"{slug_base[:40]}-{story_id[:8]}" 
+                
+                summary = source.get('summary') or ""
+                body = source.get('body') or ""
+                evidence = source.get('input_articles') or "{}"
+                
+                category = "General"
+                # Try to parse category from metadata
+                if source.get('synth_metadata'):
+                    try:
+                        meta = json.loads(source['synth_metadata'])
+                        if isinstance(meta, dict) and 'category' in meta:
+                            category = str(meta['category'])[:20]
+                    except Exception:
+                        pass
+                
+                now = datetime.now()
+                author = "Chief Editor"
+                score = 0.9  # Default score
+
+                # 3. Upsert into news_article
+                upsert_sql = """
+                    INSERT INTO news_article 
+                    (title, slug, summary, body, published_at, updated_at, author, score, evidence, is_featured, category)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                    title=VALUES(title), summary=VALUES(summary), body=VALUES(body), updated_at=VALUES(updated_at)
+                """
+                cursor.execute(upsert_sql, (
+                    title, slug, summary, body, now, now, author, score, evidence, 0, category
+                ))
+
+                # 4. Mark as Published
+                cursor.execute(
+                    "UPDATE synthesized_articles SET is_published = 1, published_at = %s WHERE story_id = %s",
+                    (now, story_id)
+                )
+
+        status = "published"
         result = {
             "status": status,
             "story_id": story_id,
-            "mcp_result": mcp_result,
-            "message": "Story publishing coordinated successfully",
+            "message": "Story published to website successfully",
             "published_at": time.time(),
+            "timestamp": time.time(),
+            "model": "rule_based"
         }
 
         # Log feedback for training

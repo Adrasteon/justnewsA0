@@ -194,7 +194,6 @@ class CrawlerEngine:
             "sites_crawled": 0,
             "errors": 0,
             "mode_usage": {
-                "ultra_fast": 0,
                 "ai_enhanced": 0,
                 "generic": 0,
                 "crawl4ai_profiled": 0,
@@ -508,6 +507,10 @@ class CrawlerEngine:
                 best_avg_performance = 0
 
                 for strategy, performances in strategy_performance.items():
+                    # Skip deprecated strategies
+                    if strategy == "ultra_fast":
+                        continue
+                        
                     avg_performance = sum(performances) / len(performances)
                     if avg_performance > best_avg_performance:
                         best_avg_performance = avg_performance
@@ -522,8 +525,9 @@ class CrawlerEngine:
 
         # 1. Check for pre-defined ultra-fast sites
         # These are high-volume, well-structured sites with dedicated parsers
-        if any(d in domain for d in ["bbc.co.uk", "cnn.com", "reuters.com"]):
-            return "ultra_fast"
+        # DISABLED: User requested to disable forced ultra_fast mode
+        # if any(d in domain for d in ["bbc.co.uk", "cnn.com", "reuters.com"]):
+        #     return "ultra_fast"
 
         # Force AI-enhanced for known complex/paywalled sites
         if any(
@@ -547,70 +551,6 @@ class CrawlerEngine:
 
         # Default to generic strategy
         return "generic"
-
-    @traced(name="crawler.mode.ultra_fast")
-    async def _crawl_ultra_fast_mode(
-        self, site_config: SiteConfig, max_articles: int = 50
-    ) -> list[dict]:
-        """
-        Ultra-fast crawling mode (8.14+ articles/sec)
-        Optimized for high-volume sites with reliable structure
-        """
-        logger.info(f"🚀 Ultra-fast crawling: {site_config.name}")
-
-        try:
-            # Try to import ultra-fast BBC crawler for BBC sites
-            if "bbc" in site_config.domain.lower():
-                try:
-                    from ..sites.bbc_crawler import UltraFastBBCCrawler
-
-                    crawler = UltraFastBBCCrawler()
-                    results = await crawler.run_ultra_fast_crawl(
-                        max_articles, skip_ingestion=True
-                    )
-                    self.performance_metrics["mode_usage"]["ultra_fast"] += 1
-                    # BBC crawler returns summary with 'articles' key and handles its own ingestion
-                    return results.get("articles", [])
-                except Exception:
-                    logger.warning(
-                        "Ultra-fast BBC crawler not available, falling back to generic"
-                    )
-                finally:
-                    # Cleanup after BBC crawler
-                    await self._cleanup_orphaned_processes()
-
-            # Fallback to optimized generic crawling
-            logger.info(f"🔄 Executing generic fallback for {site_config.name}")
-            crawling_config = get_crawling_config()
-            enhancements = crawling_config.enhancements
-            crawler = GenericSiteCrawler(
-                site_config,
-                concurrent_browsers=3,
-                batch_size=10,
-                user_agent_provider=self.user_agent_provider,
-                proxy_manager=self.proxy_manager or self.pia_socks5_manager,
-                stealth_factory=self.stealth_factory,
-                modal_handler=self.modal_handler,
-                paywall_detector=self.paywall_detector,
-                enable_stealth_headers=enhancements.enable_stealth_headers,
-            )
-            articles = await crawler.crawl_site(max_articles)
-            logger.info(
-                f"🔄 Generic fallback returned {len(articles)} articles for {site_config.name}"
-            )
-
-            self.performance_metrics["mode_usage"]["ultra_fast"] += 1
-            return articles
-
-        except Exception as e:
-            logger.error(f"Ultra-fast crawling failed for {site_config.name}: {e}")
-            import traceback
-
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            return []
-        finally:
-            # Always cleanup after ultra-fast mode
-            await self._cleanup_orphaned_processes()
 
     @traced(name="crawler.mode.ai_enhanced")
     async def _crawl_ai_enhanced_mode(
@@ -734,11 +674,9 @@ class CrawlerEngine:
         """
         strategy = await self._determine_optimal_strategy(site_config)
 
-        if strategy == "ultra_fast":
-            return await self._crawl_ultra_fast_mode(site_config, max_articles)
-        elif strategy == "ai_enhanced":
+        if strategy == "ai_enhanced":
             return await self._crawl_ai_enhanced_mode(site_config, max_articles)
-        else:  # generic
+        else:  # generic (fallback for everything else including deprecated "ultra_fast")
             return await self._crawl_generic_mode(site_config, max_articles)
 
     @traced(name="crawler.run_unified_crawl", record_args=True)

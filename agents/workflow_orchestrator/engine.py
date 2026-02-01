@@ -17,9 +17,11 @@ from .policies import (
     AnalysisToEmbeddingPolicy,
     AnalysisToSummaryPolicy,
     SummaryToFactCheckPolicy,
-    FactCheckToClusterPolicy,
+    IncrementalClusteringPolicy,
     ClusterToSynthesisPolicy,
     HeavyClusterRetryPolicy,
+    SynthesisToCritiquePolicy,
+    SynthesisToPublishingPolicy,
 )
 from .resources import ResourceMonitor
 
@@ -65,8 +67,10 @@ class OrchestratorEngine:
         self.policies.append(AnalysisToEmbeddingPolicy(self.mcp_bus_url))
         self.policies.append(AnalysisToSummaryPolicy(self.mcp_bus_url))
         self.policies.append(SummaryToFactCheckPolicy(self.mcp_bus_url))
-        self.policies.append(FactCheckToClusterPolicy(self.mcp_bus_url))
+        self.policies.append(IncrementalClusteringPolicy(self.mcp_bus_url))
         self.policies.append(ClusterToSynthesisPolicy(self.mcp_bus_url))
+        self.policies.append(SynthesisToCritiquePolicy(self.mcp_bus_url))
+        self.policies.append(SynthesisToPublishingPolicy(self.mcp_bus_url))
         self.policies.append(HeavyClusterRetryPolicy(self.mcp_bus_url))
         logger.info(f"Initialized {len(self.policies)} policies.")
 
