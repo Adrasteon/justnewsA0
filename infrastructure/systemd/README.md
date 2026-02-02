@@ -1,5 +1,12 @@
---- title: JustNews systemd deployment – operator index description: Practical entry point for native (systemd)
-operations ---
+---
+title: "JustNews Systemd Deployment - Operator Index"
+description: "Practical entry point for native systemd operations, service management, and orchestration"
+tags: ["infrastructure", "systemd", "operations", "deployment", "reference"]
+status: "current"
+version: "2.0"
+last_updated: "2026-02-02"
+audience: ["operators", "devops", "sysadmins"]
+---
 
 # JustNews native deployment (systemd) – operator index
 

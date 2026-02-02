@@ -1,3 +1,14 @@
+---
+title: "Operator Quick Start Guide"
+description: "Daily operations reference for JustNews startup, shutdown, common scenarios, troubleshooting, and health checks"
+tags: ["operations", "startup", "troubleshooting", "quick-reference"]
+status: "current"
+version: "1.0"
+last_updated: "2026-02-02"
+audience: ["operators", "devops"]
+canonical_script: "infrastructure/systemd/canonical_system_startup.sh"
+---
+
 # JustNews Canonical Startup - Operator Quick Guide
 
 **Last Updated:** February 2, 2026  

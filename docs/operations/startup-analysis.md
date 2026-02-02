@@ -1,3 +1,15 @@
+---
+title: "Canonical Startup System - Analysis & Technical Deep-Dive"
+description: "Comprehensive analysis of JustNews startup chain, 5-phase initialization system, database enforcement, vLLM readiness verification, and GPU management"
+tags: ["operations", "startup", "architecture", "database", "gpu", "technical"]
+status: "current"
+version: "1.0"
+last_updated: "2026-02-02"
+audience: ["operators", "devops", "architects"]
+canonical_script: "infrastructure/systemd/canonical_system_startup.sh"
+related_docs: ["operator-quick-start.md", "SETUP_GUIDE.md", "TROUBLESHOOTING.md"]
+---
+
 # JustNews Canonical Startup System - Comprehensive Analysis & Enhancements
 
 **Date:** February 2, 2026  

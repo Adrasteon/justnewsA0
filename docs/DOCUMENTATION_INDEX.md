@@ -1,4 +1,13 @@
---- title: JustNews Documentation Index description: Complete guide to all JustNews documentation ---
+---
+title: "JustNews Documentation Index (Supplementary)"
+description: "Comprehensive guide to all JustNews documentation - see INDEX.md for master navigation"
+tags: ["documentation", "index", "navigation", "reference"]
+status: "current"
+version: "1.0"
+last_updated: "2026-02-02"
+audience: ["operators", "developers", "devops"]
+note: "This document provides detailed documentation listings. Use INDEX.md for primary master navigation."
+---
 
 # JustNews Documentation Index
 

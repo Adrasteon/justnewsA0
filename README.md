@@ -1,18 +1,37 @@
+---
+title: "JustNews V4.0.0"
+description: "Production-ready multi-agent news analysis system with GPU-accelerated processing, continuous learning, and distributed architecture"
+tags: ["justnews", "multi-agent", "ai", "news-analysis", "gpu"]
+status: "current"
+version: "4.0.0"
+last_updated: "2026-02-02"
+---
+
 # JustNews V4.0.0
 
 A production-ready multi-agent news analysis system featuring GPU-accelerated processing, continuous learning, and distributed architecture.
 
 ## 📚 Documentation
 
-**All detailed documentation has been moved to the `docs/` directory.**
+**All documentation is organized and indexed in the `docs/` directory.**
 
-- **Quick Start**: [docs/operations/STARTUP_CHECKLIST.md](docs/operations/STARTUP_CHECKLIST.md)
-- **Architecture**: [docs/architecture_overview.md](docs/architecture_overview.md)
-- **Workflow Orchestrator**: [docs/orchestrator/WORKFLOW_ORCHESTRATOR.md](docs/orchestrator/WORKFLOW_ORCHESTRATOR.md)
-- **Developer Guide**: [docs/developer/README.md](docs/developer/README.md)
-- **Diagnostic Tools**: [docs/tools/DIAGNOSTIC_SCRIPTS.md](docs/tools/DIAGNOSTIC_SCRIPTS.md)
-- **API Reference**: [docs/api/README.md](docs/api/README.md)
-- **Operations**: [docs/operations/README.md](docs/operations/README.md)
+**👉 [START HERE: docs/INDEX.md](docs/INDEX.md)** ← Master navigation for all documentation
+
+### Quick Links by Role
+
+- **New Operators**: [Setup Guide](docs/operations/SETUP_GUIDE.md) → [Operator Quick Start](docs/operations/operator-quick-start.md)
+- **DevOps/SysAdmins**: [Infrastructure Guide](infrastructure/README.md) → [Systemd Operations](infrastructure/systemd/README.md)
+- **Developers**: [Developer Guide](docs/developer/README.md) → [API Reference](docs/api/README.md)
+- **Troubleshooting**: [Troubleshooting Guide](docs/operations/TROUBLESHOOTING.md)
+
+### Complete Documentation Index
+
+All documentation is organized under `docs/`:
+- **operations/** - Setup, configuration, troubleshooting, monitoring
+- **infrastructure/systemd/** - Service orchestration and deployment
+- **developer/** - Development guides and standards
+- **api/** - REST API documentation
+- **architecture_overview.md** - System design and patterns
 
 ## 🚀 Quick Start
 

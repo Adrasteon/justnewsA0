@@ -1,7 +1,14 @@
---- title: JustNews Documentation Catalogue System description: Auto-generated description for JustNews Documentation
-Catalogue System tags: [documentation] status: current last_updated: 2025-10-23 ---
+---
+title: "JustNews Documentation Overview"
+description: "Guide to documentation structure and navigation"
+tags: ["documentation", "overview", "navigation"]
+status: "current"
+version: "2.0"
+last_updated: "2026-02-02"
+audience: ["everyone"]
+---
 
-# JustNews Documentation Catalogue System
+# JustNews Documentation Overview
 
 ## 🎯 Overview
 

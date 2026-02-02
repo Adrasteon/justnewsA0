@@ -1,3 +1,13 @@
+---
+title: "JustNews Infrastructure & Deployment System"
+description: "Enterprise-grade systemd deployment framework for JustNews orchestration and distributed system management"
+tags: ["infrastructure", "deployment", "systemd", "orchestration", "operations"]
+status: "current"
+version: "2.0"
+last_updated: "2026-02-02"
+audience: ["devops", "operators", "architects"]
+---
+
 # JustNews Deployment System - Unified Infrastructure as Code
 
 Enterprise-grade deployment framework supporting systemd orchestration for the JustNews distributed system. Docker and
