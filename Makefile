@@ -382,9 +382,9 @@ monitor-install-rotate:
 
 vllm-install-unit:
 	$(call log_info,"Install vLLM systemd unit example to /etc/systemd/system (requires sudo)")
-	@sudo cp infrastructure/systemd/vllm-mistral-7b.service.example /etc/systemd/system/vllm-mistral-7b.service
+	@sudo cp infrastructure/systemd/vllm.service.example /etc/systemd/system/vllm.service
 	@sudo systemctl daemon-reload
-	$(call log_success,"vLLM systemd unit installed; run 'sudo systemctl enable --now vllm-mistral-7b' to start")
+	$(call log_success,"vLLM systemd unit installed; run 'sudo systemctl enable --now vllm' to start")
 
 alertmanager-install-unit:
 	$(call log_info,"Install Alertmanager systemd unit example (idempotent, requires sudo)")
@@ -395,13 +395,13 @@ alertmanager-install-unit:
 
 vllm-install-and-start: vllm-install-unit
 	$(call log_info,"Enable and start vLLM systemd unit (requires sudo)")
-	@sudo systemctl enable --now vllm-mistral-7b.service
+	@sudo systemctl enable --now vllm.service
 	$(call log_success,"vLLM systemd unit enabled and started")
 
-modelstore-fetch-mistral:
-	$(call log_info,"Fetch the canonical Mistral model into ModelStore (requires network)")
-	@$(PYTHON) models/fetch_model_to_modelstore.py --model mistralai/Mistral-7B-Instruct-v0.3
-	$(call log_success,"Mistral model staged into ModelStore (check $(MODEL_STORE_ROOT)/base_models)")
+modelstore-fetch-qwen:
+	$(call log_info,"Fetch the canonical Qwen 2.5 14B model into ModelStore (requires network)")
+	@$(PYTHON) models/fetch_model_to_modelstore.py --model Qwen/Qwen2.5-14B-Instruct-AWQ
+	$(call log_success,"Qwen model staged into ModelStore (check $(MODEL_STORE_ROOT)/base_models)")
 
 vllm-start:
 	$(call log_info,"Start vLLM service (user)")

@@ -7,7 +7,7 @@ The JustNews V2 Training System is an "On The Fly" active learning framework tha
 The system relies on a centralized collection mechanism (`training_system.collect_prediction`) integrated into every AI agent.
 
 ### Data Flow
-1. **Agent Execution**: An agent (e.g., Journalist, Analyst) performs a task using the Qwen-14B model via `MistralAdapter`.
+1. **Agent Execution**: An agent (e.g., Journalist, Analyst) performs a task using the Qwen-14B model via `MistralAdapter` (compatibility shim for vLLM/OpenAI API).
 2. **Data Collection**: The agent's tool/engine captures the `input_text`, `prediction` (output), `task_type`, and `confidence`.
 3. **Storage**: Data is stored in the `training_system` database (sqlite/postgres).
 4. **Active Learning**: The `TrainingCoordinator` identifies high-value examples (low confidence or corrected) for future fine-tuning.

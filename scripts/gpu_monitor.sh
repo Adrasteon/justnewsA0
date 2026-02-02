@@ -26,11 +26,11 @@ while true; do
   echo "--- top RSS (top 20) ---" >> "$LOG"
   ps aux --sort=-rss | head -n 20 >> "$LOG" 2>&1 || true
   echo "--- vLLM unit status ---" >> "$LOG"
-  if systemctl --user is-active --quiet vllm-mistral-7b.service; then
-    echo "vllm-mistral-7b: active" >> "$LOG"
+  if systemctl --user is-active --quiet vllm.service; then
+    echo "vllm: active" >> "$LOG"
   else
-    echo "vllm-mistral-7b: inactive" >> "$LOG"
-    systemctl --user status vllm-mistral-7b.service --no-pager --lines=3 >> "$LOG" 2>&1 || true
+    echo "vllm: inactive" >> "$LOG"
+    systemctl --user status vllm.service --no-pager --lines=3 >> "$LOG" 2>&1 || true
   fi
   echo "----" >> "$LOG"
   sleep "$INTERVAL"

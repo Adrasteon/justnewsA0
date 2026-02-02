@@ -1,5 +1,5 @@
 [Unit]
-Description=JustNews vLLM Mistral-7B Service (example)
+Description=JustNews vLLM Service (example - supports any HuggingFace model)
 After=network.target
 
 [Service]

@@ -14,7 +14,7 @@ on:
       model:
         description: 'Model to use for the inference simulation'
         required: false
-        default: 'mistralai/Mistral-7B-Instruct-v0.3'
+        default: 'Qwen/Qwen2.5-14B-Instruct-AWQ'
 
 jobs:
   soak:
