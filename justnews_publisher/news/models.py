@@ -1,4 +1,5 @@
 from django.db import models
+import uuid
 
 
 class Article(models.Model):
@@ -66,3 +67,51 @@ class PublishAudit(models.Model):
 
 
 # Create your models here.
+
+class BackendArticle(models.Model):
+    """
+    Refers to the 'articles' table created by 'database/migrations/*.sql'
+    Used by the Backend Agents (Crawler/Analyst).
+    Mapped here for Foreign Key relationships with Living Stories.
+    """
+    id = models.AutoField(primary_key=True)
+    
+    class Meta:
+        managed = False
+        db_table = 'articles'
+
+class LivingStory(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=255)
+    semantic_centroid = models.JSONField(null=True, blank=True)
+    STATUS_CHOICES = [
+        ("active", "Active"),
+        ("dormant", "Dormant"),
+        ("archived", "Archived"),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "living_stories"
+
+class StoryUpdate(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    story = models.ForeignKey(LivingStory, on_delete=models.CASCADE, related_name="updates")
+    article_ids = models.JSONField(help_text="List of BackendArticle IDs in this batch") 
+    article_count = models.IntegerField(default=0)
+    batch_centroid = models.JSONField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "story_updates"
+
+class PendingArticle(models.Model):
+    backend_article = models.OneToOneField(BackendArticle, on_delete=models.CASCADE, db_column='article_id', related_name='pending_status', primary_key=True)
+    source_domain = models.CharField(max_length=255)
+    vector_blob = models.JSONField()
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "pending_articles_pool"

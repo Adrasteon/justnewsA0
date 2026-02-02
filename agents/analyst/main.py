@@ -3,6 +3,7 @@ Main file for the Analyst Agent.
 """
 
 import os
+import asyncio
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -150,6 +151,26 @@ async def lifespan(app: FastAPI):
         )
     except Exception as e:
         logger.warning(f"Registration failed: {e}")
+
+    # Start Discovery Loop (Background)
+    # This runs the "Slow Path" logic for Living Stories clustering
+    async def discovery_loop():
+        # Import lazily to avoid circular deps
+        try:
+            from .discovery import run_discovery_cycle
+            logger.info("Starting Discovery Loop Task")
+            while True:
+                try:
+                    # Run every 5 minutes (300 seconds)
+                    # We run in thread because hdbscan/db are blocking
+                    await asyncio.to_thread(run_discovery_cycle)
+                except Exception as e:
+                    logger.error(f"Discovery loop error: {e}")
+                await asyncio.sleep(300)
+        except ImportError:
+            logger.warning("Discovery module not found, skipping loop")
+
+    asyncio.create_task(discovery_loop())
 
     # Mark ready after successful startup tasks
     global ready

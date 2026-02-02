@@ -17,8 +17,8 @@ from agents.fact_checker.model_adapter import (
     ClaimAssessment,
     FactCheckerModelAdapter,
 )
-from agents.journalist.mistral_adapter import JournalistMistralAdapter
-from agents.synthesizer.mistral_adapter import SynthesizerMistralAdapter
+from agents.journalist.model_adapter import JournalistModelAdapter
+from agents.synthesizer.model_adapter import SynthesizerModelAdapter
 from common.observability import get_logger
 
 logger = get_logger(__name__)
@@ -47,9 +47,9 @@ class AgentChainHarness:
     """In-process harness that runs the core adapters for a normalized article."""
 
     def __init__(self) -> None:
-        self.journalist_adapter = JournalistMistralAdapter()
+        self.journalist_adapter = JournalistModelAdapter()
         self.fact_checker_adapter = FactCheckerModelAdapter()
-        self.synthesizer_adapter = SynthesizerMistralAdapter()
+        self.synthesizer_adapter = SynthesizerModelAdapter()
 
     def run_article(self, article: NormalizedArticle) -> AgentChainResult:
         story_brief = self._build_story_brief(article)
