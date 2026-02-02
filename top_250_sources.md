@@ -280,6 +280,9 @@
 | Daily Observer (Ghana) | dailyobserver.com.gh | https://www.dailyobserver.com.gh | GH | en | Africa | Ghanaian newspaper. |
 | Joy Online (Ghana) | myjoyonline.com | https://www.myjoyonline.com | GH | en | Africa | Ghanaian news website. |
 | Ethiopia Insight | ethiopiainsight.com | https://ethiopiainsight.com | ET | en | Africa | Ethiopian news website. |
+| The Monitor (Uganda) | monitor.co.ug | https://www.monitor.co.ug | UG | en | Africa | Ugandan newspaper. |
+| New Frame | newframe.com | https://www.newframe.com | ZA | en | Africa | South African independent news website. |
+| The Voice Botswana | voicebw.com | https://voicebw.com | BW | en | Africa | Botswana's leading independent newspaper. |
 
 ### New Additions Summary:
 
