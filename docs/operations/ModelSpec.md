@@ -45,9 +45,11 @@ Testing & developer notes:
 - To run the orchestrator unit tests locally:
 
 ```bash
-conda run -n justnews-py312 pytest -q tests/agents/gpu_orchestrator/test_model_lifecycle.py
+conda run -n ${CANONICAL_ENV:-justnews-py312-phase1} pytest -q tests/agents/gpu_orchestrator/test_model_lifecycle.py
 
 ```
+
+  > **Note:** Use Phase 1 or Phase 3 (both include GPU dependencies) for GPU orchestrator tests.
 
 - Tips for writing tests:
 

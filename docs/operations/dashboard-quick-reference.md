@@ -91,7 +91,7 @@ Model dependent | | **GPU Utilization Over Time** | Utilization trends (time ser
 
 - Check NVIDIA drivers: `nvidia-smi`
 
-- Restart exporter: `cd /home/adra && python3 gpu_metrics_exporter.py &`
+- Restart exporter: `cd ${SERVICE_DIR:-$HOME/JustNews} && python3 gpu_metrics_exporter.py &`
 
 ### High Resource Usage
 

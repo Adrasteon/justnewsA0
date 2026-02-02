@@ -40,11 +40,11 @@ System-wide, non-secret configuration defaults for all JustNews services.
 
 ## Canonical environment name
 
-CANONICAL_ENV=justnews-py312
+CANONICAL_ENV=${CANONICAL_ENV:-justnews-py312-phase1}
 
 ## Paths to Python interpreter (must match conda environment)
 
-PYTHON_BIN=/home/adra/miniconda3/envs/justnews-py312/bin/python
+PYTHON_BIN=$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}/bin/python
 JUSTNEWS_PYTHON=$PYTHON_BIN
 CANONICAL_PYTHON_PATH=$PYTHON_BIN
 
@@ -54,12 +54,12 @@ ENFORCE_CANONICAL_PYTHON=1
 
 ## Service directory
 
-SERVICE_DIR=/home/adra/JustNews
-PYTHONPATH=/home/adra/JustNews
+SERVICE_DIR=${SERVICE_DIR:-$HOME/JustNews}
+PYTHONPATH=${SERVICE_DIR:-$HOME/JustNews}
 
 ## Conda prefix
 
-CONDA_PREFIX=/home/adra/miniconda3/envs/justnews-py312
+CONDA_PREFIX=$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}
 
 ```
 
@@ -69,11 +69,11 @@ CONDA_PREFIX=/home/adra/miniconda3/envs/justnews-py312
 
 ## Model store root (for downloaded LLMs, embeddings)
 
-MODEL_STORE_ROOT=/home/adra/JustNews/model_store
+MODEL_STORE_ROOT=${SERVICE_DIR:-$HOME/JustNews}/model_store
 
 ## Agent model cache
 
-BASE_MODEL_DIR=/home/adra/JustNews/model_store/base_models
+BASE_MODEL_DIR=${SERVICE_DIR:-$HOME/JustNews}/model_store/base_models
 
 ## Data mount (should be spacious, 100+ GB for models)
 

@@ -245,7 +245,7 @@ grep "PYTHON_BIN\|CANONICAL_ENV" /etc/justnews/global.env
 
 ## Force correct interpreter
 
-/home/adra/miniconda3/envs/justnews-py312/bin/python -c "import sys; print(sys.prefix)"
+/home/adra/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}/bin/python -c "import sys; print(sys.prefix)"
 
 ```bash
 
@@ -257,13 +257,21 @@ grep "PYTHON_BIN\|CANONICAL_ENV" /etc/justnews/global.env
 
 conda info --envs
 
-## Verify justnews-py312 exists
+## Verify JustNews conda environments exist
+
+```bash
 
 conda env list | grep justnews-py312
 
-## Activate manually
+```
 
-conda activate justnews-py312
+## Activate default phase
+
+```bash
+
+conda activate ${CANONICAL_ENV:-justnews-py312-phase1}
+
+```
 
 ## Check which python is active
 

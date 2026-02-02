@@ -85,7 +85,7 @@ Grafana datasource provisioning configured to auto-connect to:
 
 ## What We Have in the Repo
 
-The repository already contains a comprehensive **monitoring module** at `/home/adra/JustNews/monitoring/`:
+The repository already contains a comprehensive **monitoring module** at `${SERVICE_DIR:-$HOME/JustNews}/monitoring/`:
 
 ### Monitoring Module Contents
 

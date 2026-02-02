@@ -70,7 +70,7 @@ Testing guidance
 
 - Integration / dry-run tests: ensure adapters behave safely in dry-run mode and produce consistent, schema-compatible
   outputs. Use the `PYTHONPATH=. scripts/dev/run_pytest_conda.sh <tests>`helper to run tests inside the canonical conda
-  environment (`${CANONICAL_ENV:-justnews-py312}`) so CI/local runs are identical.
+  environment (`${CANONICAL_ENV:-justnews-py312-phase1}`) so CI/local runs are identical.
 
 - CI: include adapter unit tests and dry-run adapter smoke tests in PR jobs. For real-provider tests (OpenAI/HF), gate
   them behind environment variables/secrets and run them in a separate gated CI job.
@@ -160,7 +160,7 @@ Repository templates
    adapter introduces fresh patterns or requirements.
 
 1. **Run canonical tests** — Use `./scripts/dev/run_pytest_conda.sh tests/adapters/*`so the
-   canonical`${CANONICAL_ENV:-justnews-py312}` env validates your changes before opening a PR.
+   canonical`${CANONICAL_ENV:-justnews-py312-phase1}` env validates your changes before opening a PR.
 
 Following this recipe keeps adapters testable, dry-run friendly, and aligned with the shared BaseAdapter utilities.
 

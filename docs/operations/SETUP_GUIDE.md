@@ -24,7 +24,7 @@ environment configuration, secrets management (Vault), and database initializati
 
 ## Download and install Miniconda
 
-curl -O <https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh>
+curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 bash Miniconda3-latest-Linux-x86_64.sh -b -p ~/miniconda3
 source ~/miniconda3/bin/activate
 
@@ -32,11 +32,25 @@ source ~/miniconda3/bin/activate
 
 ### 1.2 Create Conda Environment
 
+**Option A: Recommended for GPU systems (Phased approach)**
+
+If you have GPU and plan to develop/run different workflow phases, use the phased environment approach:
+
+```bash
+cd /path/to/JustNews
+bash scripts/dev/setup_dev_environment.sh --create-all-phases
+```
+
+Then proceed to **Phase 1B** below for setup and selection.
+
+**Option B: Simple unified environment (CPU-only or minimal GPU support)**
+
+For simpler setups or CPU-only systems that don't need phase isolation:
+
 ```bash
 cd /path/to/JustNews
 conda env create -f environment.yml -n justnews-py312
 conda activate justnews-py312
-
 ```
 
 ### 1.3 Verify Python
@@ -46,6 +60,163 @@ which python
 python --version  # Should be 3.12.x
 
 ```bash
+
+## Phase 1B: Phased Environment Setup (Recommended for GPU Systems)
+
+### Overview
+
+JustNews uses **4 independent conda environments** aligned to workflow phases, eliminating CUDA/GPU friction and dependency conflicts:
+
+| Phase | Name | Purpose | GPU | Key Deps |
+|-------|------|---------|-----|----------|
+| 1 | `justnews-py312-phase1` | Ingestion & Vectorization | ✅ | PyTorch, sentence-transformers, crawl4ai |
+| 2 | `justnews-py312-phase2` | Clustering & Linkage | ❌ | hdbscan, umap (CPU-only) |
+| 3 | `justnews-py312-phase3` | Synthesis & Curation | ✅ | vLLM, bitsandbytes, transformers |
+| 4 | `justnews-py312-phase4` | Publication & CMS Push | ❌ | minimal (CPU-only) |
+
+**Benefits**:
+- Phases run independently, each can be activated without environment churn
+- GPU dependencies (CUDA, PyTorch, vLLM) isolated to Phases 1 & 3
+- CPU phases (2 & 4) are lightweight, faster to build and install
+- Easy phase switching for development and production workflows
+
+### 1B.1 Create All Phased Environments
+
+```bash
+cd /path/to/JustNews
+
+# Create all 4 phase environments (this replaces the single 1.2 command)
+bash scripts/dev/setup_dev_environment.sh --create-all-phases
+```
+
+This script:
+1. Reads `conda/environment.{base,phase1,phase2,phase3,phase4}.yml`
+2. Creates conda environments: `justnews-py312-phase1` through `justnews-py312-phase4`
+3. Applies vendor patches to avoid runtime deprecation warnings
+4. Typically takes 5-15 minutes depending on internet speed and host specs
+
+**Expected output**:
+```
+📋 Creating all 4 JustNews phased environments...
+📦 Creating Phase 1 environment: justnews-py312-phase1
+✅ Phase 1 environment created: justnews-py312-phase1
+...
+✅ All phase environments created successfully!
+
+🎯 Next steps:
+   1. Select an active phase:
+      bash scripts/dev/select_phase_env.sh --phase 1
+```
+
+### 1B.2 Select Active Phase
+
+```bash
+# Select Phase 1 (for ingestion/vectorization work)
+bash scripts/dev/select_phase_env.sh --phase 1
+
+# This updates global.env with:
+# - CANONICAL_ENV=justnews-py312-phase1
+# - PYTHON_BIN=/home/.../justnews-py312-phase1/bin/python
+# - CONDA_PREFIX=...
+```
+
+Output:
+```
+✅ Phase 1 (justnews-py312-phase1) selected successfully!
+
+📝 Updated in ./global.env:
+   CANONICAL_ENV=justnews-py312-phase1
+   PYTHON_BIN=...
+
+🔍 Verification:
+   source ./global.env
+   which python
+```
+
+### 1B.3 Verify Phased Environment
+
+```bash
+# List all available phases and their status
+bash scripts/dev/select_phase_env.sh --list-only
+```
+
+Output:
+```
+📋 Available JustNews phase environments:
+  ✅ Phase 1 (justnews-py312-phase1)
+     Path: /home/.../miniconda3/envs/justnews-py312-phase1
+     Python: 3.12.11
+     GPU: ✅ torch available
+  ...
+```
+
+### 1B.4 Verify GPU Availability (Phase 1 & 3)
+
+```bash
+# Activate Phase 1 and check GPU access
+bash scripts/dev/select_phase_env.sh --phase 1
+source ./global.env
+
+# Verify PyTorch can see CUDA
+bash scripts/run_with_env.sh python -c "
+import torch
+print(f'PyTorch version: {torch.__version__}')
+print(f'CUDA available: {torch.cuda.is_available()}')
+print(f'GPUs found: {torch.cuda.device_count()}')
+"
+```
+
+### 1B.5 Switching Phases
+
+```bash
+# When moving from Phase 1 (ingestion) to Phase 2 (clustering)
+bash scripts/dev/select_phase_env.sh --phase 2
+source ./global.env
+
+# Verify Phase 2 (CPU-only, no GPU deps)
+bash scripts/run_with_env.sh python -c "
+try:
+    import torch
+    print('❌ ERROR: Phase 2 should NOT have torch!')
+    exit(1)
+except ImportError:
+    print('✅ Phase 2 correctly skips GPU dependencies')
+    
+import hdbscan
+import umap
+print('✅ HDBSCAN and UMAP available')
+"
+```
+
+### 1B.6 Update Environments (Ongoing)
+
+```bash
+# Update all phase environments when environment.phaseX.yml changes
+bash scripts/dev/setup_dev_environment.sh --update-phases
+```
+
+### Phase Selection Workflow
+
+```mermaid
+graph LR
+    A["Phase 1: Crawl<br/>select --phase 1"] -->|Finish ingestion| B["Phase 2: Cluster<br/>select --phase 2"]
+    B -->|Finish clustering| C["Phase 3: Synthesize<br/>select --phase 3"]
+    C -->|Finish synthesis| D["Phase 4: Publish<br/>select --phase 4"]
+    D -->|Loop| A
+```
+
+**Tip:** Keep `global.env` sourced in your shell for each phase:
+```bash
+# In terminal 1: working with Phase 1
+bash scripts/dev/select_phase_env.sh --phase 1
+source ./global.env
+python crawler.py  # Uses phase1 Python
+
+# In terminal 2: working with Phase 2 (independent)
+bash scripts/dev/select_phase_env.sh --phase 2
+source ./global.env
+python clustering.py  # Uses phase2 Python, no GPU overhead
+```
 
 ## Phase 2: Environment Configuration
 

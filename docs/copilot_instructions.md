@@ -7,15 +7,22 @@ Purpose ------- Make the repository's expectations explicit when automated assis
 helpers, or CI agents) suggest or apply fixes and edits.
 
 Python runtime (project default) -------------------------------- The canonical project Python environment is a conda
-environment named `${CANONICAL_ENV:-justnews-py312}`.
+environment system with phase-specific variants:
+
+- `justnews-py312-phase1` (Ingestion & Embedding, GPU-heavy)
+- `justnews-py312-phase2` (Clustering & Linkage, CPU-only)
+- `justnews-py312-phase3` (Synthesis & LLM inference, GPU-heavy)
+- `justnews-py312-phase4` (Publication & CMS push, CPU-only)
+
+For local development, use `scripts/dev/select_phase_env.sh --phase N` to activate a specific phase, or set `CANONICAL_ENV` directly.
 
 When invoking scripts or running code snippets in documentation, prefer either:
 
-- `conda run -n ${CANONICAL_ENV:-justnews-py312} python <script>` or
+- `conda run -n ${CANONICAL_ENV:-justnews-py312-phase1} python <script>` or
 
-- `PYTHON_BIN=/home/adra/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin/python <script>`
+- `PYTHON_BIN=$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}/bin/python <script>`
 
-When adding examples or CI configuration, prefer using `${CANONICAL_ENV:-justnews-py312}` by default (unless a different
+When adding examples or CI configuration, prefer using `${CANONICAL_ENV:-justnews-py312-phase1}` by default (unless a different
 environment is explicitly requested). ------------------
 
 - Always consult `/etc/justnews/global.env`(or the configured`SERVICE_DIR`variant) for runtime configuration such
@@ -51,8 +58,8 @@ Behavioral guidelines for assistants -----------------------------------
 
 Package installation policy ---------------------------
 
-- When performing package installs for this project, prefer `conda install`or`mamba install`targeting the canonical
-  conda environment (`${CANONICAL_ENV:-justnews-py312}`) and`conda-forge`/official channels.
+- When performing package installs for this project, prefer `conda install` or `mamba install` targeting the canonical
+  conda environment (`${CANONICAL_ENV:-justnews-py312-phase1}`) and `conda-forge`/official channels.
 
 - Only use `pip`as a last resort when a required package or specific wheel is not available via conda; if`pip`is used,
   document the reason and pin the exact version/wheel in the PR and add an update to`environment.yml` where appropriate.

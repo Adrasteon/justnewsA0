@@ -7,7 +7,7 @@ the Stage B validation playbook." tags: ["stage-b", "ops", "evidence"] ---
 
 - **Operator**: GitHub Copilot (automation assist)
 
-- **Environment**: Stage B development host (`conda env ${CANONICAL_ENV:-justnews-py312}`)
+- **Environment**: Stage B development host (`conda env ${CANONICAL_ENV:-justnews-py312-phase1}`)
 
 - **Ticket Template**: `docs/operations/stage_b_ticket_template.md`
 
@@ -22,7 +22,7 @@ justnews-crawl-scheduler.service -n 200 --no-pager` | Scheduler state archive | 
 Scheduler metrics exported | Complete | Node exporter textfile collector now consumes
 `/var/lib/node_exporter/textfile_collector/crawl_scheduler.prom`. |`ls -l
 /var/lib/node_exporter/textfile_collector/crawl_scheduler.prom` | Stage B metrics emitting | Complete | Embedding
-counters/histogram verified via targeted pytest run. | `conda run -n ${CANONICAL_ENV:-justnews-py312} python -m pytest
+counters/histogram verified via targeted pytest run. | `conda run -n ${CANONICAL_ENV:-justnews-py312-phase1} python -m pytest
 tests/agents/crawler/test_extraction.py tests/agents/memory/test_save_article.py -q` | Migration helper script |
 Complete | `scripts/ops/apply_stage_b_migration.sh` added for repeatable migration execution and evidence capture. |
 `scripts/ops/apply_stage_b_migration.sh`| Migration logs | Complete | Helper now stores`psql` output under
@@ -62,7 +62,7 @@ Test artifacts stored | Complete | Pytest command executed 2025-10-26; results 8
 
 - **Operator**: GitHub Copilot (automation assist)
 
-- **Environment**: systemd baseline host after canonical restart (`conda env ${CANONICAL_ENV:-justnews-py312}`)
+- **Environment**: systemd baseline host after canonical restart (`conda env ${CANONICAL_ENV:-justnews-py312-phase1}`)
 
 - **Scope**: validate BBC Crawl4AI profile after JSON sanitization fixes
 
@@ -71,7 +71,7 @@ Test artifacts stored | Complete | Pytest command executed 2025-10-26; results 8
 | Item | Status | Notes | Proof Reference | | --- | --- | --- | --- | | Canonical restart | Complete | `sudo
 ./infrastructure/systemd/canonical_system_startup.sh` run; all 17 services healthy post-check. | Terminal transcript
 2025-11-02T16:25Z (ticket attachment) | Scheduler rerun | Complete | `PYTHONPATH=. conda run -n
-${CANONICAL_ENV:-justnews-py312} python scripts/ops/run_crawl_schedule.py --schedule config/crawl_schedule_bbc.yaml
+${CANONICAL_ENV:-justnews-py312-phase1} python scripts/ops/run_crawl_schedule.py --schedule config/crawl_schedule_bbc.yaml
 --profiles config/crawl_profiles --testrun --no-wait`. |`logs/analytics/crawl_scheduler_state.json` | Ingestion outcome
 | Complete | Latest state shows 60 attempted, 60 ingested, 0 duplicates/errors for bbc.co.uk. |
 `logs/analytics/crawl_scheduler_state.json` | Sample verification | Complete | Random sampler captured article

@@ -1,6 +1,6 @@
 # Conda Environment Backup & Restore
 
-This document explains how to back up and restore the `${CANONICAL_ENV:-justnews-py312}` conda environment used by the
+This document explains how to back up and restore the `${CANONICAL_ENV:-justnews-py312-phase1}` conda environment used by the
 project.
 
 ## Why back up the environment
@@ -103,8 +103,8 @@ conda run -n ${CANONICAL_ENV:-justnews-py312}-restored python scripts/check_depr
   from`google._upb`), re-install`protobuf`and recompilation-dependent wheels (either with`pip --no-binary` or via the
   conda package).
 
-- When migrating from the legacy `justnews-py312`environment, export`CANONICAL_ENV=justnews-py312`temporarily so
-  automation keeps working until you finish creating the new`${CANONICAL_ENV:-justnews-py312}` environment.
+- When migrating from the legacy `justnews-py312` environment, export `CANONICAL_ENV=justnews-py312-phase1` temporarily so
+  automation keeps working until you finish creating the new `${CANONICAL_ENV:-justnews-py312-phase1}` phased environment.
 
 ## Troubleshooting
 

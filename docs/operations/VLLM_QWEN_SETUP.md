@@ -15,9 +15,11 @@ This guide covers the integration of the Qwen 2.5 14B model served via vLLM. Thi
 ### 1. Install vLLM
 
 ```bash
-conda activate justnews-py312
+conda activate ${CANONICAL_ENV:-justnews-py312-phase3}
 pip install vllm
 ```
+
+> **Note:** Phase 3 includes vLLM dependencies. If not set, defaults to `justnews-py312-phase3` for GPU inference.
 
 ### 2. Launch vLLM Server
 

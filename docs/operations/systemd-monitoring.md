@@ -110,8 +110,10 @@ ps aux | grep gpu_metrics_exporter
 
 ## Start GPU exporter manually (if needed)
 
-cd /home/adra
+```bash
+cd ${SERVICE_DIR:-$HOME/JustNews}
 python3 gpu_metrics_exporter.py &
+```
 
 ## The exporter runs on port 9400 by default
 
@@ -190,7 +192,7 @@ user | | Prometheus target down for an agent         | Check the agent's
 justnews@<agent>`) | | node_exporter permission denied on textfile | Verify
 `/var/lib/node_exporter/textfile_collector` owner is `justnews:justnews` and
 mode `0775` | | GPU metrics not appearing                   | Check GPU exporter
-is running: `ps aux \| grep gpu_metrics_exporter`. Restart with `cd /home/adra
+is running: `ps aux \| grep gpu_metrics_exporter`. Restart with `cd ${SERVICE_DIR:-$HOME/JustNews}
 && python3 gpu_metrics_exporter.py &` | | GPU exporter shows "unknown" health
 | Wait 15-30 seconds for initial scrape, then check
 `http://localhost:9090/targets` | | GPU temperature shows [Not Supported]

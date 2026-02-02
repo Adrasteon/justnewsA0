@@ -6,7 +6,7 @@
 
 - [ ] Conda environment activated: `echo $CONDA_PREFIX | grep ${CANONICAL_ENV:-justnews-py312}`
 
-- [ ] Project directory accessible: `cd /home/adra/JustNews && pwd`
+- [ ] Project directory accessible: `cd ${SERVICE_DIR:-$HOME/JustNews} && pwd`
 
 ---
 
@@ -92,11 +92,11 @@ Notes:
 
 - `CHROMA_HOST`,`CHROMA_PORT`
 
-- `CANONICAL_ENV=justnews-py312`
+- `CANONICAL_ENV=${CANONICAL_ENV:-justnews-py312-phase1}`
 
 - `JUSTNEWS_PYTHON=/home/adra/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin/python`
 
-- `SERVICE_DIR=/home/adra/JustNews`
+- `SERVICE_DIR=${SERVICE_DIR:-$HOME/JustNews}`
 
 - [ ] Test: `source global.env && echo "✅ $MARIADB_HOST"`
 

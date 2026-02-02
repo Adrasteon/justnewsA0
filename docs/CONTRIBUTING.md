@@ -273,7 +273,7 @@ filter-repo`/remediation).
   environment:
 
   ```bash
-  # in canonical environment (defaults to justnews-py312)
+  # in canonical environment (defaults to ${CANONICAL_ENV:-justnews-py312-phase1})
   npm install -g markdownlint-cli
   markdownlint "**/*.md"
   ```

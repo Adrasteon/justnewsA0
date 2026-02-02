@@ -112,7 +112,7 @@ curl -s <http://localhost:8017/ready> && echo "MCP Bus ready"
 Run the unit tests in the canonical environment:
 
 ```bash
-conda run -n justnews-py312 pytest -q tests/agents/mcp_bus/test_health.py
+conda run -n ${CANONICAL_ENV:-justnews-py312-phase1} pytest -q tests/agents/mcp_bus/test_health.py
 
 ```
 
@@ -126,7 +126,7 @@ conda run -n justnews-py312 pytest -q tests/agents/mcp_bus/test_health.py
 Run integration tests:
 
 ```bash
-conda run -n justnews-py312 pytest -q tests/agents/mcp_bus/test_health_integration.py
+conda run -n ${CANONICAL_ENV:-justnews-py312-phase1} pytest -q tests/agents/mcp_bus/test_health_integration.py
 
 ```
 
