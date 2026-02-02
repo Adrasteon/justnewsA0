@@ -5,12 +5,12 @@ set -euo pipefail
 # Ensure /etc/justnews/global.env contains a valid PYTHON_BIN setting.
 # - If the file is missing, it will create it with a safe default.
 # - If PYTHON_BIN is absent, this script will add a canonical value derived
-#   from the requested CONDA_ENV (default: ${CANONICAL_ENV:-justnews-py312}).
+#   from the requested CONDA_ENV (default: ${CANONICAL_ENV:-justnews-py312-phase1}).
 # - Does not overwrite an existing PYTHON_BIN unless --force is passed.
 
 GLOBAL_ENV="/etc/justnews/global.env"
-DEFAULT_CONDA_ENV="${CONDA_ENV:-${CANONICAL_ENV:-justnews-py312}}"
-DEFAULT_PY_BIN="/home/adra/miniconda3/envs/${DEFAULT_CONDA_ENV}/bin/python"
+DEFAULT_CONDA_ENV="${CONDA_ENV:-${CANONICAL_ENV:-justnews-py312-phase1}}"
+DEFAULT_PY_BIN="$HOME/miniconda3/envs/${DEFAULT_CONDA_ENV}/bin/python"
 
 usage() {
   cat <<EOF
@@ -28,7 +28,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --force) FORCE=true; shift ;;
     --env-file) GLOBAL_ENV="$2"; shift 2 ;;
-    --conda-env) DEFAULT_CONDA_ENV="$2"; DEFAULT_PY_BIN="/home/adra/miniconda3/envs/${DEFAULT_CONDA_ENV}/bin/python"; shift 2 ;;
+    --conda-env) DEFAULT_CONDA_ENV="$2"; DEFAULT_PY_BIN="$HOME/miniconda3/envs/${DEFAULT_CONDA_ENV}/bin/python"; shift 2 ;;
     --help) usage; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; usage; exit 2 ;;
   esac
@@ -39,7 +39,7 @@ ensure_file_exists() {
     mkdir -p "$(dirname "$GLOBAL_ENV")"
     cat > "$GLOBAL_ENV" <<EOF
 # Auto-created global.env by ensure_global_python_bin.sh
-SERVICE_DIR=${SERVICE_DIR:-/home/adra/JustNews}
+SERVICE_DIR=${SERVICE_DIR:-$HOME/JustNews}
 PYTHON_BIN=${DEFAULT_PY_BIN}
 EOF
     chmod 644 "$GLOBAL_ENV" || true

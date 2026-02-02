@@ -6,8 +6,8 @@ After=network.target
 Type=simple
 User=justnews
 Group=justnews
-Environment=SERVICE_DIR=/home/adra/JustNews
-EnvironmentFile=/home/adra/JustNews/global.env
+Environment=SERVICE_DIR=$HOME/JustNews
+EnvironmentFile=$HOME/JustNews/global.env
 WorkingDirectory=$SERVICE_DIR
 # Use the project's Python environment or system python; replace with suitable path
 ExecStart=/usr/bin/env uvicorn agents.c4ai.server:app --host 127.0.0.1 --port 3308 --loop asyncio --http auto

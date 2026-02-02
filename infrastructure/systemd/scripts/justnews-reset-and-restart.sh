@@ -18,7 +18,7 @@ else
 fi
 if [[ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]]; then
     source "$CONDA_BASE/etc/profile.d/conda.sh"
-    conda activate ${CANONICAL_ENV:-justnews-py312}
+    conda activate ${CANONICAL_ENV:-justnews-py312-phase1}
 else
     echo "Conda initialization script not found at $CONDA_BASE/etc/profile.d/conda.sh"
     exit 1

@@ -5,7 +5,7 @@ set -euo pipefail
 # live journal and coredump capture. Intended to be executed as root (sudo).
 # Usage: sudo ./run_and_monitor.sh [--dry-run] [other args passed to script]
 
-CANONICAL="${SERVICE_DIR:-/home/adra/JustNews}/infrastructure/systemd/canonical_system_startup.sh"
+CANONICAL="${SERVICE_DIR:-$HOME/JustNews}/infrastructure/systemd/canonical_system_startup.sh"
 LOGDIR="/var/log/justnews"
 mkdir -p "$LOGDIR"
 TS=$(date +%Y%m%d_%H%M%S)

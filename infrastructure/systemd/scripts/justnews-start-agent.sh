@@ -48,7 +48,7 @@ resolve_project_root() {
     fi
 
     # Final fallback: known path on this machine
-    echo "${SERVICE_DIR:-/home/adra/JustNews}"; return 0
+    echo "${SERVICE_DIR:-$HOME/JustNews}"; return 0
 }
 
 PROJECT_ROOT="$(resolve_project_root)"
@@ -203,7 +203,7 @@ setup_environment() {
     # This is idempotent and controlled by AUTO_BOOTSTRAP_CONDA (default: 1).
     if [[ "${AUTO_BOOTSTRAP_CONDA:-1}" == "1" ]]; then
         if command -v conda >/dev/null 2>&1; then
-            local target_env="${CONDA_ENV:-${CANONICAL_ENV:-justnews-py312}}"
+            local target_env="${CONDA_ENV:-${CANONICAL_ENV:-justnews-py312-phase1}}"
             if ! conda env list 2>/dev/null | awk '{print $1}' | grep -xq "$target_env"; then
                 log_info "Conda env '$target_env' not found; running bootstrap (AUTO_BOOTSTRAP_CONDA=1)"
                 # Run the idempotent bootstrap script; do not fail the agent startup if bootstrap fails
@@ -287,11 +287,11 @@ check_python_deps_and_exit_if_missing() {
     # Selection order (best-effort):
     # 1) explicit PYTHON_BIN from agent/global env
     # 2) explicit CANONICAL_PYTHON_PATH (if set and executable)
-    # 3) default canonical env python path (/home/adra/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin/python)
+    # 3) default canonical env python path ($HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}/bin/python)
     # 4) if conda is present and env exists -> 'conda run -n <env> python'
     # 5) fallback to python3/python from PATH
     local py_cmd=""
-    local conda_env_to_try="${CONDA_ENV:-${CANONICAL_ENV:-justnews-py312}}"
+    local conda_env_to_try="${CONDA_ENV:-${CANONICAL_ENV:-justnews-py312-phase1}}"
 
     # 1) explicit override
     if [[ -n "${PYTHON_BIN:-}" && -x "${PYTHON_BIN}" ]]; then
@@ -309,7 +309,7 @@ check_python_deps_and_exit_if_missing() {
 
     # 3) try the default canonical env path
     if [[ -z "$py_cmd" ]]; then
-        local default_canonical_path="/home/adra/miniconda3/envs/${conda_env_to_try}/bin/python"
+        local default_canonical_path="$HOME/miniconda3/envs/${conda_env_to_try}/bin/python"
         if [[ -x "$default_canonical_path" ]]; then
             py_cmd="$default_canonical_path"
         fi
@@ -426,8 +426,8 @@ PYCODE
 # warn about it to make debugging easier (does not change behavior).
 check_python_interpreter_is_conda() {
     local cmd="${SELECTED_PY_CMD:-${PYTHON_BIN:-}}"
-    local canonical_env="${CANONICAL_ENV:-justnews-py312}"
-    local canonical_path="${CANONICAL_PYTHON_PATH:-/home/adra/miniconda3/envs/${canonical_env}/bin/python}"
+    local canonical_env="${CANONICAL_ENV:-justnews-py312-phase1}"
+    local canonical_path="${CANONICAL_PYTHON_PATH:-$HOME/miniconda3/envs/${canonical_env}/bin/python}"
 
     if [[ -z "$cmd" ]]; then
         return 0

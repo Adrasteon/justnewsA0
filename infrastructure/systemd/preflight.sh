@@ -21,7 +21,7 @@ GATE_ONLY=false
 GATE_INSTANCE=""
 # Allow environment override for gate timeout (defaults to 180s)
 GATE_TIMEOUT=${GATE_TIMEOUT:-180}
-CANONICAL_ENV="${CANONICAL_ENV:-justnews-py312}"
+CANONICAL_ENV="${CANONICAL_ENV:-justnews-py312-phase1}"
 
 # Logging functions
 log_info() {

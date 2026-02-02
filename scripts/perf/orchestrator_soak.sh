@@ -7,7 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
-CANONICAL_ENV=${CANONICAL_ENV:-justnews-py312}
+CANONICAL_ENV=${CANONICAL_ENV:-justnews-py312-phase3}
 
 REQUESTS=20
 SWEEP=0

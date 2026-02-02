@@ -28,7 +28,7 @@ jobs:
 
       - name: Run orchestrator soak
         env:
-          CANONICAL_ENV: justnews-py312
+          CANONICAL_ENV: justnews-py312-phase3
         run: |
           ./scripts/perf/orchestrator_soak.sh --requests ${{ github.event.inputs.requests }} $([[ "${{ github.event.inputs.sweep }}" == "1" ]] && echo --sweep --sweep-max 2) --model "${{ github.event.inputs.model }}"
 

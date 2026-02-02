@@ -22,7 +22,7 @@ cmd="$1"
 
 # Source the canonical file so we can call start_dev_telemetry_stack / stop_dev_telemetry_stack
 # (these functions are idempotent and mirror the startup flow used elsewhere).
-# shellcheck source=/home/adra/JustNews/infrastructure/systemd/canonical_system_startup.sh
+# shellcheck source=../canonical_system_startup.sh
 . "$SCRIPT"
 
 case "$cmd" in

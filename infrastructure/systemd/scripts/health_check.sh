@@ -12,7 +12,7 @@ resolve_root() {
     if [[ -n "${JUSTNEWS_ROOT:-}" ]]; then echo "$JUSTNEWS_ROOT"; return 0; fi
     if [[ -n "${SERVICE_DIR:-}" ]]; then echo "$SERVICE_DIR"; return 0; fi
   fi
-  echo "${SERVICE_DIR:-/home/adra/JustNews}"
+  echo "${SERVICE_DIR:-$HOME/JustNews}"
 }
 
 ROOT="$(resolve_root)"

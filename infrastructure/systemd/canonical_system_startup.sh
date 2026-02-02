@@ -12,7 +12,7 @@
 set -euo pipefail
 
 GLOBAL_ENV_DEFAULT="/etc/justnews/global.env"
-DATA_MOUNT_DEFAULT="/media/adra/Data"
+DATA_MOUNT_DEFAULT="/media/$(whoami)/Data"
 RESET_SCRIPT_NAME="reset_and_start.sh"
 HEALTH_SCRIPT_NAME="health_check.sh"
 MONITORING_INSTALL_RELATIVE_PATH="scripts/install_monitoring_stack.sh"
@@ -34,7 +34,7 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # Preferred conda env for Python helpers (default to canonical name when present)
-DEFAULT_CONDA_ENV="${CANONICAL_ENV:-justnews-py312}"
+DEFAULT_CONDA_ENV="${CANONICAL_ENV:-justnews-py312-phase1}"
 CONDA_ENV="${CONDA_ENV:-$DEFAULT_CONDA_ENV}"
 
 # Helper: run a python script using conda run -n ${CONDA_ENV} when available;
@@ -132,7 +132,7 @@ resolve_repo_root() {
   # the output to a variable) do not receive the warning text as part of the
   # repo root value.
   log_warn "Falling back to repository default path." >&2
-  echo "${SERVICE_DIR:-/home/adra/JustNews}"
+  echo "${SERVICE_DIR:-$HOME/JustNews}"
 }
 
 load_environment() {
@@ -736,7 +736,7 @@ start_gui_monitor() {
      local python_cmd="${PYTHON_BIN:-python3}"
      
      # Check if custom conda env is needed?
-     # The user was running with /home/adra/miniconda3/envs/justnews-py312/bin/python3
+    # The user may be running with $HOME/miniconda3/envs/${CANONICAL_ENV}/bin/python3
      # We should try to use that if possible.
      
      if [[ -n "${CONDA_ENV:-}" ]]; then

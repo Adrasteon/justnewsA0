@@ -10,7 +10,7 @@ DEFAULT_USER="${SUDO_USER:-$(whoami)}"
 DEFAULT_GROUP="syslog"
 DEFAULT_LOGDIR="/var/log/justnews-perf"
 DEFAULT_PORT=9118
-DEFAULT_PY_BIN="/home/adra/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin/python"
+DEFAULT_PY_BIN="$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}/bin/python"
 
 if [ ! -f "$UNIT_SRC" ]; then
   echo "Service unit not found at $UNIT_SRC" >&2
@@ -29,7 +29,7 @@ echo "JN_GROUP=${DEFAULT_GROUP}" | sudo tee -a "$ENV_FILE" >/dev/null
 echo "JN_WORKDIR=${REPO_ROOT}" | sudo tee -a "$ENV_FILE" >/dev/null
 echo "JN_LOGDIR=${DEFAULT_LOGDIR}" | sudo tee -a "$ENV_FILE" >/dev/null
 echo "JN_EXPORTER_PORT=${DEFAULT_PORT}" | sudo tee -a "$ENV_FILE" >/dev/null
-echo "JN_PYTHON_BIN=${DEFAULT_PY_BIN:-/home/adra/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin/python}" | sudo tee -a "$ENV_FILE" >/dev/null
+echo "JN_PYTHON_BIN=${DEFAULT_PY_BIN:-$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}/bin/python}" | sudo tee -a "$ENV_FILE" >/dev/null
 echo "# Optional tuning: JN_START_UTIL / JN_START_SECONDS / JN_STOP_UTIL / JN_STOP_SECONDS" | sudo tee -a "$ENV_FILE" >/dev/null
 
 echo "Creating log directory '$DEFAULT_LOGDIR' and adjusting ownership (requires sudo)"

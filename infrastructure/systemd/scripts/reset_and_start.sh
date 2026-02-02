@@ -8,7 +8,7 @@ resolve_root() {
     [[ -n "${JUSTNEWS_ROOT:-}" ]] && { echo "$JUSTNEWS_ROOT"; return 0; }
     [[ -n "${SERVICE_DIR:-}" ]] && { echo "$SERVICE_DIR"; return 0; }
   fi
-  echo "${SERVICE_DIR:-/home/adra/JustNews}"
+  echo "${SERVICE_DIR:-$HOME/JustNews}"
 }
 ROOT="$(resolve_root)"
 SCRIPT="$ROOT/infrastructure/systemd/reset_and_start.sh"

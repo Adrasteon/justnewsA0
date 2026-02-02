@@ -14,7 +14,7 @@ jobs:
     name: "Orchestrator: unit + integration (targeted)"
     runs-on: ubuntu-latest
     env:
-      CANONICAL_ENV: justnews-py312
+      CANONICAL_ENV: justnews-py312-phase2
       # Which CUDA toolchain short we expect for bitsandbytes wheels. CI first
       # tries to fetch a prebuilt wheel from GH artifacts before falling back to
       # pip-based installs if not available.
@@ -33,7 +33,7 @@ jobs:
         run: |
           conda install -n base -c conda-forge mamba -y || true
           conda env list
-          mamba env create -f environment.yml -n ${CANONICAL_ENV} || mamba env update -f environment.yml -n ${CANONICAL_ENV} || conda env create -f environment.yml -n ${CANONICAL_ENV} || conda env update -f environment.yml -n ${CANONICAL_ENV} || true
+          mamba env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || mamba env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || true
 
       - name: Attempt to fetch latest bitsandbytes wheel from GitHub Actions artifacts
         run: |

@@ -5,13 +5,13 @@ After=network.target
 [Service]
 Type=simple
 # Expects vllm to be available in PATH (ideally in conda env)
-ExecStart=/home/adra/JustNews/scripts/run_with_env.sh bash -lc 'conda run -n ${CANONICAL_ENV:-justnews-py312} vllm --model "$VLLM_MODEL" --dtype bf16 --max-batch-size 4 --port 7060'
+ExecStart=$HOME/JustNews/scripts/run_with_env.sh bash -lc 'conda run -n ${CANONICAL_ENV:-justnews-py312} vllm --model "$VLLM_MODEL" --dtype bf16 --max-batch-size 4 --port 7060'
 Restart=on-failure
 RestartSec=10
 MemoryMax=48G
 CPUQuota=80%
 LimitNOFILE=65536
-Environment=PATH=/home/adra/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin:/usr/bin:/bin
+Environment=PATH=$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin:/usr/bin:/bin
 
 [Install]
 WantedBy=multi-user.target

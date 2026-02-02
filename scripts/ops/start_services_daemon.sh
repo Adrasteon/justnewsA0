@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # start_services_daemon.sh
 # Starts the justnews set of FastAPI/uvicorn agent services using the
-# `justnews-py312` conda environment. Performs simple health checks and
+# `justnews-py312-phase1` conda environment. Performs simple health checks and
 # writes per-agent logs to ./logs/
 
 set -euo pipefail
@@ -10,7 +10,7 @@ LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
 
 # Conda environment name used by the project
-CONDA_ENV="${CANONICAL_ENV:-justnews-py312}"
+CANONICAL_ENV="${CANONICAL_ENV:-justnews-py312-phase1}"
 
 # Default timeout for healthchecks (seconds)
 HEALTH_TIMEOUT=60

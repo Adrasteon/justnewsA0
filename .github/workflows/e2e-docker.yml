@@ -12,7 +12,7 @@ jobs:
   e2e-docker:
     runs-on: ubuntu-latest
     env:
-      CANONICAL_ENV: justnews-py312
+      CANONICAL_ENV: justnews-py312-phase2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,7 +57,7 @@ jobs:
         run: |
           conda install -n base -c conda-forge mamba -y || true
           conda env list
-          mamba env create -f environment.yml -n ${CANONICAL_ENV} || mamba env update -f environment.yml -n ${CANONICAL_ENV} || conda env create -f environment.yml -n ${CANONICAL_ENV} || conda env update -f environment.yml -n ${CANONICAL_ENV} || true
+          mamba env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || mamba env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || true
 
       - name: Install dependencies (conda)
         run: |

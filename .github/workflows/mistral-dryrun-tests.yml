@@ -8,7 +8,7 @@ jobs:
     name: Mistral adapter dry-run tests
     runs-on: ubuntu-latest
     env:
-      CANONICAL_ENV: justnews-py312
+      CANONICAL_ENV: justnews-py312-phase3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
         run: |
           conda install -n base -c conda-forge mamba -y || true
           conda env list
-          mamba env create -f environment.yml -n ${CANONICAL_ENV} || mamba env update -f environment.yml -n ${CANONICAL_ENV} || conda env create -f environment.yml -n ${CANONICAL_ENV} || conda env update -f environment.yml -n ${CANONICAL_ENV} || true
+          mamba env create -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || mamba env update -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || conda env create -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || true
 
       - name: Run adapter + mistral dry-run tests (conda)
         run: |
@@ -44,7 +44,7 @@ jobs:
     # Only run when provider secrets or hints are present
     if: ${{ secrets.OPENAI_API_KEY != '' || secrets.HF_TEST_MODEL != '' }}
     env:
-      CANONICAL_ENV: justnews-py312
+      CANONICAL_ENV: justnews-py312-phase3
       RUN_PROVIDER_TESTS: 1
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       HF_TEST_MODEL: ${{ secrets.HF_TEST_MODEL }}
@@ -62,7 +62,7 @@ jobs:
         run: |
           conda install -n base -c conda-forge mamba -y || true
           conda env list
-          mamba env create -f environment.yml -n ${CANONICAL_ENV} || mamba env update -f environment.yml -n ${CANONICAL_ENV} || conda env create -f environment.yml -n ${CANONICAL_ENV} || conda env update -f environment.yml -n ${CANONICAL_ENV} || true
+          mamba env create -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || mamba env update -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || conda env create -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || true
 
       - name: Run provider integration tests (OpenAI/HF)
         run: |

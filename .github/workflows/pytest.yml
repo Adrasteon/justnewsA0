@@ -29,7 +29,7 @@ jobs:
   processing_check:
     runs-on: ubuntu-latest
     env:
-      CANONICAL_ENV: justnews-py312
+      CANONICAL_ENV: justnews-py312-phase2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -81,7 +81,7 @@ jobs:
           # Install mamba (fast conda solver) into base if available; continue even if install fails
           conda install -n base -c conda-forge mamba -y || true
           conda env list
-          mamba env create -f environment.yml -n ${CANONICAL_ENV} || mamba env update -f environment.yml -n ${CANONICAL_ENV} || conda env create -f environment.yml -n ${CANONICAL_ENV} || conda env update -f environment.yml -n ${CANONICAL_ENV} || true
+          mamba env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || mamba env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || true
       - name: Attempt to fetch latest bitsandbytes wheel from GitHub Actions artifacts
         run: |
           set -euo pipefail
@@ -134,7 +134,7 @@ jobs:
     needs: [processing_check, check-global-env]
     runs-on: ubuntu-latest
     env:
-      CANONICAL_ENV: justnews-py312
+      CANONICAL_ENV: justnews-py312-phase2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -148,7 +148,7 @@ jobs:
       - name: Create / update conda environment
         run: |
           conda env list
-          conda env create -f environment.yml -n ${CANONICAL_ENV} || conda env update -f environment.yml -n ${CANONICAL_ENV} || true
+          conda env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || true
 
       - name: Install dependencies (conda)
         run: |
@@ -164,7 +164,7 @@ jobs:
     needs: [processing_check, lint, check-global-env]
     runs-on: ubuntu-latest
     env:
-      CANONICAL_ENV: justnews-py312
+      CANONICAL_ENV: justnews-py312-phase2
       BNB_CUDA_VERSION: 122
     steps:
       - name: Checkout
@@ -179,7 +179,7 @@ jobs:
       - name: Create / update conda environment
         run: |
           conda env list
-          conda env create -f environment.yml -n ${CANONICAL_ENV} || conda env update -f environment.yml -n ${CANONICAL_ENV} || true
+          conda env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || true
       - name: Install dependencies (conda)
         run: |
           ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} python -m pip install --upgrade pip

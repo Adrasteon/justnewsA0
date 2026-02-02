@@ -4,12 +4,12 @@ After=network.target
 
 # Read runtime overrides from /etc/default/justnews-gpu-telemetry (optional)
 EnvironmentFile=-/etc/default/justnews-gpu-telemetry
-Environment=JN_PYTHON_BIN=${JN_PYTHON_BIN:-/home/adra/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin/python}
+Environment=JN_PYTHON_BIN=${JN_PYTHON_BIN:-$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin/python}
 
 [Service]
 Type=simple
 User=${JN_USER:-adra}
-WorkingDirectory=${JN_WORKDIR:-/home/adra/JustNews}
+WorkingDirectory=${JN_WORKDIR:-$HOME/JustNews}
 
 # Ensure logs dir exists and has the configured ownership before starting
 ExecStartPre=/bin/mkdir -p ${JN_LOGDIR:-/var/log/justnews-perf}

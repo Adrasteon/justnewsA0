@@ -3,8 +3,8 @@ set -euo pipefail
 
 SCRIPT_NAME=$(basename "$0")
 
-EXPECT_ROOT="/home/adra/JustNews"
-UNWANTED_ROOTS=("/home/adra/JustNewsAgent-Clean" "/home/adra/JustNewsAgent")
+EXPECT_ROOT="$HOME/JustNews"
+UNWANTED_ROOTS=("$HOME/JustNewsAgent-Clean" "$HOME/JustNewsAgent")
 
 echo "[INFO] Checking systemd unit files use SERVICE_DIR env or working directory referencing project root"
 
