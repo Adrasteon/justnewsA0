@@ -1,21 +1,73 @@
-## Running the full test-suite (including gated/integration tests)
+## Running Tests – Phased Environment System
 
-Some tests are intentionally gated behind environment flags or require local external services (MariaDB, Redis, Chroma,
-provider credentials). This document explains how to enable them for local runs and in CI.
+JustNews uses a **phased testing strategy** where each workflow phase runs in its own isolated conda environment. This means:
+- **Phase 1** (GPU Ingestion): `justnews-py312-phase1` – GPU-enabled, crawler, embeddings tests
+- **Phase 2** (CPU Clustering): `justnews-py312-phase2` – CPU clustering, analytics, unit tests
+- **Phase 3** (GPU Synthesis): `justnews-py312-phase3` – GPU synthesis, LLM inference tests
+- **Phase 4** (CPU Publishing): `justnews-py312-phase4` – Django, publishing, web tests
 
-High-level steps
+### Quick Start: Running Phased Tests
 
-1. Start the local infra required for integration/e2e tests
+**Run all phases sequentially:**
+```bash
+make test-phased
+```
 
-1. Export the environment flags that gate tests
+**Run a specific phase:**
+```bash
+make test-phase1    # or test-phase2, test-phase3, test-phase4
+```
 
-1. Use the helper runner to load project env vars and run pytest
+**Run via the test runner script directly:**
+```bash
+./scripts/run_phase_tests.sh 1              # Phase 1
+./scripts/run_phase_tests.sh all            # All phases
+./scripts/run_phase_tests.sh 1 --verbose    # Verbose output
+./scripts/run_phase_tests.sh 1 --strict     # Stop on first failure
+./scripts/run_phase_tests.sh all --collect-only  # Discover tests without running
+```
 
-Note: Running `./scripts/dev/pytest.sh`with no arguments will now default to`pytest -vv`when run in an interactive
-terminal (TTY) so you see per-test names and progress; in CI or non-interactive sessions it defaults to`pytest -q`. Pass
-explicit pytest args to override this behavior.
+### Advantages of Phased Testing
 
-Bring up services ----------------- The repository includes a helper compose file used by CI and local engineers.
+1. **Environment Isolation**: No dependency conflicts between phases
+2. **Clear Ownership**: Failures are tied to specific phases
+3. **Parallelizable**: Phases can run in parallel in CI/CD
+4. **Deterministic**: Fixed dependencies per phase ensure reproducible results
+5. **GPU Efficiency**: GPU tests (phases 1 & 3) don't conflict with CPU tests (phases 2 & 4)
+
+### Test Markers
+
+Tests are tagged with phase markers: `@pytest.mark.phase1`, `@pytest.mark.phase2`, etc.
+
+**Run tests for a specific phase with markers:**
+```bash
+conda run -n justnews-py312-phase1 pytest -m phase1
+```
+
+**Run tests excluding a phase:**
+```bash
+conda run -n justnews-py312-phase1 pytest -m "not phase2 and not phase3 and not phase4"
+```
+
+### Understanding Test Output
+
+```bash
+$ make test-phase1
+===========================================
+Phase 1: GPU Ingestion, Embedding, Crawler (Phase 1)
+Environment: justnews-py312-phase1
+===========================================
+collected 66 items / 1 error / 34 deselected / 1 skipped
+
+# 66 tests collected for Phase 1
+# 1 error in collection (non-critical dependency issue)
+# 34 tests deselected (marked for other phases)
+# 1 test skipped (environment condition not met)
+```
+
+---
+
+## Running the Full Test Suite (Including Gated/Integration Tests)
 
 ```bash
 

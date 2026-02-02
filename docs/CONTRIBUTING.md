@@ -307,6 +307,90 @@ The system automatically validates:
 
 ---
 
+## 🧪 Testing Guidelines
+
+### Understanding the Phased Test System
+
+JustNews uses a **phased testing architecture** with 4 isolated conda environments. Each phase runs **independently** to avoid dependency conflicts:
+
+| Phase | Environment | Tests | GPU | Marker |
+|-------|-------------|-------|-----|--------|
+| 1 | `justnews-py312-phase1` | Ingestion, crawler, embeddings | ✅ | `@pytest.mark.phase1` |
+| 2 | `justnews-py312-phase2` | Clustering, analytics, unit | ❌ | `@pytest.mark.phase2` |
+| 3 | `justnews-py312-phase3` | Synthesis, LLM inference | ✅ | `@pytest.mark.phase3` |
+| 4 | `justnews-py312-phase4` | Publishing, Django, web | ❌ | `@pytest.mark.phase4` |
+
+### Running Tests Locally
+
+**Before committing code that modifies tests or dependencies**, run the appropriate phase tests:
+
+```bash
+# Run tests for the phase you're developing in
+./scripts/run_phase_tests.sh 1              # Phase 1 (GPU ingestion)
+./scripts/run_phase_tests.sh 2              # Phase 2 (CPU clustering)
+./scripts/run_phase_tests.sh 3              # Phase 3 (GPU synthesis)
+./scripts/run_phase_tests.sh 4              # Phase 4 (CPU publishing)
+
+# Run all phases sequentially
+./scripts/run_phase_tests.sh all
+
+# Or use Make targets
+make test-phase1            # Single phase
+make test-phased            # All phases
+```
+
+**Optional flags:**
+```bash
+./scripts/run_phase_tests.sh 1 --verbose    # Verbose output
+./scripts/run_phase_tests.sh 1 --strict     # Stop on first failure (-x)
+./scripts/run_phase_tests.sh 1 --collect-only  # Discover tests without running
+```
+
+### Writing Tests
+
+When adding new tests:
+
+1. **Identify the phase**: Which workflow phase does this test belong to?
+2. **Add the marker**: Use `@pytest.mark.phase{1,2,3,4}` on your test
+3. **No cross-phase imports**: Avoid importing from modules in other phases
+4. **Test in the right environment**: Run `./scripts/run_phase_tests.sh {phase}` before committing
+
+**Example test with phase marker:**
+```python
+import pytest
+
+@pytest.mark.phase1
+def test_ingestion_crawler():
+    """Test phase 1 crawler functionality."""
+    from agents.crawler import CrawlEngine
+    # ... test code ...
+```
+
+### Pre-Commit Test Checklist
+
+Before committing changes:
+
+- [ ] **Type mapping**: Which phase does this change affect?
+- [ ] **Test markers**: Are new tests tagged with correct phase marker?
+- [ ] **Phase-specific tests pass**: 
+  ```bash
+  ./scripts/run_phase_tests.sh {phase} -x  # Stop on first failure
+  ```
+- [ ] **No new dependency conflicts**: Check `conda/environment.phase*.yml`
+- [ ] **Documentation updated**: See [TESTING.md](TESTING.md) if adding new test categories
+
+### CI Integration
+
+The CI pipeline mirrors the phased approach:
+- **Phase 1 Tests**: Run in CI with GPU resource pool
+- **Phase 2 Tests**: Run in CI, CPU-only
+- **Phase 3 Tests**: Run in CI with GPU resource pool  
+- **Phase 4 Tests**: Run in CI, CPU-only
+
+Your pull request must pass all phase tests relevant to your changes.
+
+---
+
 ## 🛠️ Tools and Automation
 
 ### Quality Monitoring
