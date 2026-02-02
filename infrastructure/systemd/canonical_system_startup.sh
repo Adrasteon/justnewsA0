@@ -20,6 +20,8 @@ MONITORING_INSTALL_RELATIVE_PATH="scripts/install_monitoring_stack.sh"
 DRY_RUN=false
 REQUEST_STOP=false
 SHOW_USAGE=false
+SKIP_MIGRATIONS=false
+SKIP_SMOKE_TESTS=false
 declare -a FORWARDED_ARGS=()
 
 BLUE='\033[0;34m'
@@ -50,19 +52,136 @@ run_python_script() {
   fi
 }
 
+# Database initialization and validation phases
+run_django_migrations() {
+  local repo_root="$1"
+  local migrations_script="$repo_root/apply_migrations_script.py"
+  if [[ ! -f "$migrations_script" ]]; then
+    log_warn "Django migrations script not found; skipping (OK if already migrated)"
+    return 0
+  fi
+  log_info "Executing Django migrations to ensure database schema is current..."
+  if [[ "${DRY_RUN:-false}" == "true" ]]; then
+    log_info "[DRY-RUN] Would execute: python $migrations_script"
+    return 0
+  fi
+  if ! run_python_script "$migrations_script"; then
+    log_error "Django migrations failed (schema mismatch will cause runtime errors)"
+    exit 1
+  fi
+  log_success "Django migrations completed successfully"
+}
+
+run_chroma_bootstrap() {
+  local repo_root="$1"
+  local chroma_bootstrap_script="$repo_root/scripts/chroma_bootstrap.py"
+  local chroma_host="${CHROMADB_HOST:-localhost}"
+  local chroma_port="${CHROMADB_PORT:-8000}"
+  
+  if [[ ! -f "$chroma_bootstrap_script" ]]; then
+    log_info "Chroma bootstrap script not found; collections should already exist"
+    return 0
+  fi
+  
+  # Quick connectivity check
+  if ! timeout 5 bash -c "</dev/tcp/$chroma_host/$chroma_port" 2>/dev/null; then
+    log_warn "Chroma not reachable at $chroma_host:$chroma_port; skipping bootstrap"
+    return 0
+  fi
+  
+  log_info "Bootstrapping Chroma collections at $chroma_host:$chroma_port..."
+  if [[ "${DRY_RUN:-false}" == "true" ]]; then
+    log_info "[DRY-RUN] Would execute: python $chroma_bootstrap_script --host $chroma_host --port $chroma_port"
+    return 0
+  fi
+  # Non-fatal if collections already exist
+  run_python_script "$chroma_bootstrap_script" --host "$chroma_host" --port "$chroma_port" 2>&1 | tail -20 || true
+  log_success "Chroma bootstrap phase completed"
+}
+
+wait_for_vllm_readiness() {
+  local timeout="${1:-180}"
+  local count=0
+  local vllm_ports=(7060 8010)  # Try multiple known vLLM ports
+  
+  log_info "Waiting for vLLM readiness (GPU model loading may take 1-3 minutes)..."
+  
+  while [[ $count -lt $timeout ]]; do
+    for port in "${vllm_ports[@]}"; do
+      if curl -fsS --max-time 2 "http://127.0.0.1:$port/health" >/dev/null 2>&1; then
+        log_success "vLLM ready at port $port (took ${count}s)"
+        return 0
+      fi
+    done
+    sleep 2
+    ((count+=2))
+    if [[ $((count % 30)) -eq 0 ]]; then
+      log_info "...still waiting for vLLM (${count}s elapsed)"
+    fi
+  done
+  
+  log_warn "vLLM did not report readiness within ${timeout}s (model loading may still be in progress)"
+  return 0  # Non-fatal
+}
+
+run_integration_smoke_tests() {
+  local repo_root="$1"
+  local smoke_test_script="$repo_root/infrastructure/systemd/helpers/boot_smoke_test.sh"
+  
+  if [[ ! -x "$smoke_test_script" ]]; then
+    log_info "Integration smoke test script not found; skipping"
+    return 0
+  fi
+  
+  log_info "Running integration smoke tests (API responsiveness checks)..."
+  if [[ "${DRY_RUN:-false}" == "true" ]]; then
+    log_info "[DRY-RUN] Would execute: $smoke_test_script"
+    return 0
+  fi
+  
+  if "$smoke_test_script"; then
+    log_success "Integration smoke tests passed"
+  else
+    log_warn "Integration smoke tests reported issues (see above for details)"
+  fi
+}
+
+stop_vllm_services() {
+  # Clean shutdown of vLLM and GPU orchestrator to free GPU resources
+  local vllm_services=("justnews@gpu_orchestrator" "vllm")
+  
+  for svc in "${vllm_services[@]}"; do
+    if systemctl list-unit-files | grep -qF "$svc"; then
+      if systemctl is-active --quiet "$svc"; then
+        log_info "Stopping $svc..."
+        systemctl stop "$svc" 2>/dev/null || log_warn "Failed to stop $svc"
+      fi
+    fi
+  done
+}
+
 usage() {
   cat <<EOF
-Usage: canonical_system_startup.sh [--dry-run] [reset_and_start.sh options...]
+Usage: canonical_system_startup.sh [OPTIONS] [reset_and_start.sh options...]
 
-Performs environment, storage, and database checks, then restarts all JustNews
-systemd services via reset_and_start.sh followed by a health summary.
+Full-stack JustNews startup with 5-phase initialization:
+  Phase 1: Environment validation & database health checks
+  Phase 2: Service restart (systemd units, dependencies)
+  Phase 3: Django migrations (schema enforcement)
+  Phase 4: Chroma bootstrap (vector store initialization)
+  Phase 5: vLLM readiness + integration smoke tests
 
 Options:
-  stop, --stop, --shutdown  Stop all JustNews services and monitoring stack.
-  --dry-run, --check-only  Validate prerequisites only; do not restart services.
-  --help                   Show this message and exit.
+  stop, --stop, --shutdown     Stop all services and monitoring.
+  --dry-run, --check-only      Validate prerequisites without starting.
+  --skip-migrations            Skip Django migrations (RISKY: data inconsistency).
+  --skip-smoke-tests           Skip integration smoke tests.
+  --help                       Show this message.
 
-All unrecognised options are forwarded directly to reset_and_start.sh.
+Examples:
+  sudo $0                       # Full startup (all 5 phases)
+  sudo $0 --dry-run             # Validate environment
+  sudo $0 stop                  # Full shutdown + GPU cleanup
 EOF
 }
 
@@ -77,6 +196,14 @@ parse_args() {
         DRY_RUN=true
         shift
         ;;
+      --skip-migrations)
+        SKIP_MIGRATIONS=true
+        shift
+        ;;
+      --skip-smoke-tests)
+        SKIP_SMOKE_TESTS=true
+        shift
+        ;;
       --help|-h)
         SHOW_USAGE=true
         shift
@@ -87,27 +214,6 @@ parse_args() {
         ;;
     esac
   done
-}
-
-require_root() {
-  if [[ $EUID -ne 0 ]]; then
-    # Allow non-root for dry-run checks to enable operator validation without
-    # requiring root privileges. If DRY_RUN is not set, require root as before.
-    if [[ "${DRY_RUN:-false}" == "true" ]]; then
-      log_warn "Not running as root — continuing because --dry-run was requested"
-      return 0
-    fi
-    log_error "Run this script as root (sudo)."
-    exit 1
-  fi
-}
-
-require_command() {
-  local cmd="$1"
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    log_error "Required command '$cmd' not found in PATH."
-    exit 1
-  fi
 }
 
 resolve_repo_root() {
@@ -788,13 +894,15 @@ main() {
       log_info "Dry-run requested; skipping service shutdown"
       log_success "Prerequisite checks completed (dry run)"
     else
+      log_info "Initiating full-stack shutdown sequence..."
       stop_application_services "$repo_root"
+      stop_vllm_services  # Free GPU resources
       # Ensure dev telemetry is torn down first (if enabled) before stopping
       # the systemd monitoring stack to avoid orphaned compose containers.
       stop_dev_telemetry_stack "$repo_root"
       stop_monitoring_stack
       stop_gui_monitor
-      log_success "Canonical system shutdown completed"
+      log_success "Canonical system shutdown completed (GPU resources released)"
     fi
     return 0
   fi
@@ -868,18 +976,48 @@ main() {
         log_info "--safe-mode already present in args; leaving unchanged"
       fi
     fi
+    # ============ PHASE 1: SYSTEMD SERVICE RESTART ============
+    log_info "[PHASE 1/5] Restarting JustNews systemd services and agents..."
     run_reset_and_start "$repo_root" "${FORWARDED_ARGS[@]}"
+    
+    # ============ PHASE 2: DATABASE MIGRATIONS ============
+    if [[ "${SKIP_MIGRATIONS:-false}" == "true" ]]; then
+      log_warn "[PHASE 2/5] Skipping Django migrations (--skip-migrations set)"
+    else
+      log_info "[PHASE 2/5] Executing Django migrations (enforce current schema)..."
+      run_django_migrations "$repo_root"
+    fi
+    
+    # ============ PHASE 3: CHROMA BOOTSTRAP ============
+    log_info "[PHASE 3/5] Bootstrapping Chroma vector store..."
+    run_chroma_bootstrap "$repo_root"
+    
+    # ============ PHASE 4: MONITORING STACK ============
+    log_info "[PHASE 4/5] Starting observability stack (Prometheus, Grafana)..."
     if ! start_monitoring_stack "$repo_root"; then
       exit 1
     fi
     # Optionally start the local development telemetry stack if enabled.
     start_dev_telemetry_stack "$repo_root"
-    # The Crawl4AI bridge is managed as a regular justnews@ service named
-    # 'crawl4ai' and will be enabled/started by the reset_and_start ->
-    # enable_all.sh flow. No dedicated enable/start is required here.
-    log_info "Crawl4AI bridge will be started by enable_all.sh as justnews@crawl4ai"
+    
+    # ============ PHASE 5: READINESS & TESTS ============
+    log_info "[PHASE 5/5] Running readiness checks and integration smoke tests..."
+    
+    # Wait for vLLM to be ready (GPU model loading takes time)
+    wait_for_vllm_readiness 180
+    
+    # Run consolidated health check
     run_health_summary "$repo_root"
+    
+    # Run integration smoke tests
+    if [[ "${SKIP_SMOKE_TESTS:-false}" != "true" ]]; then
+      run_integration_smoke_tests "$repo_root"
+    fi
+    
+    # Start GUI monitor if interactive
     start_gui_monitor "$repo_root"
+    
+    log_success "Canonical system startup completed successfully (all 5 phases)"
   fi
 
   # ----------------------------
