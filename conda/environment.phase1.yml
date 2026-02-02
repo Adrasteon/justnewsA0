@@ -50,6 +50,12 @@ dependencies:
   - httptools
   - watchfiles
 
+  # Metrics & Monitoring (installed via pip)
+  # - prometheus-client>=0.19
+
+  # Authentication & Security (installed via pip)
+  # - pyjwt>=2.8
+
   # Utils
   - python-dotenv>=1.0
   - orjson
@@ -88,6 +94,10 @@ dependencies:
   - ruff
 
   - pip:
+    # Metrics & Authentication
+    - prometheus-client>=0.19
+    - pyjwt>=2.8
+    
     # Vector Search & Embedding (GPU-friendly)
     - sentence-transformers>=5.0.0
     - chromadb>=0.4

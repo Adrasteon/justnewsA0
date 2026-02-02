@@ -36,6 +36,12 @@ dependencies:
   - httptools
   - watchfiles
 
+  # Metrics & Monitoring
+  - prometheus-client>=0.19
+
+  # Authentication & Security
+  - pyjwt>=2.8
+
   # Utils
   - python-dotenv>=1.0
   - orjson

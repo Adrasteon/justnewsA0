@@ -12,6 +12,15 @@ help:
 	@echo "  help        Show this help message"
 	@echo "  install     Install dependencies for development"
 	@echo "  test        Run test suite with coverage"
+	@echo "  test-unit   Run unit tests only"
+	@echo "  test-integration  Run integration tests"
+	@echo "  test-performance  Run performance tests"
+	@echo "  test-phase1 Run Phase 1 tests (GPU ingestion/embeddings) in phase1 env"
+	@echo "  test-phase2 Run Phase 2 tests (CPU clustering/analytics) in phase2 env"
+	@echo "  test-phase3 Run Phase 3 tests (GPU synthesis/LLM) in phase3 env"
+	@echo "  test-phase4 Run Phase 4 tests (CPU publishing/Django) in phase4 env"
+	@echo "  test-phased Run all phased tests sequentially (phase1→2→3→4)"
+	@echo "  test-phase-discovery  Discover tests per phase without running"
 	@echo "  lint        Run code quality checks"
 	@echo "  format      Format code with consistent style"
 	@echo "  clean       Clean build artifacts and cache files"
@@ -142,6 +151,35 @@ test-performance:
 	$(call log_info,"Running performance tests...")
 	$(RUN_PY) -m pytest tests/ -v -k "performance" --tb=short --durations=10
 	$(call log_success,"Performance tests completed")
+
+# Phased test targets (runs tests per workflow phase in isolated environments)
+test-phase1:
+	$(call log_info,"Running Phase 1 tests (GPU Ingestion, Embeddings, Crawler)...")
+	./scripts/run_phase_tests.sh 1 --tb=short
+	$(call log_success,"Phase 1 tests completed")
+
+test-phase2:
+	$(call log_info,"Running Phase 2 tests (CPU Clustering, Analytics, Unit Tests)...")
+	./scripts/run_phase_tests.sh 2 --tb=short
+	$(call log_success,"Phase 2 tests completed")
+
+test-phase3:
+	$(call log_info,"Running Phase 3 tests (GPU Synthesis, LLM Inference)...")
+	./scripts/run_phase_tests.sh 3 --tb=short
+	$(call log_success,"Phase 3 tests completed")
+
+test-phase4:
+	$(call log_info,"Running Phase 4 tests (CPU Publishing, Django)...")
+	./scripts/run_phase_tests.sh 4 --tb=short
+	$(call log_success,"Phase 4 tests completed")
+
+test-phased: test-phase1 test-phase2 test-phase3 test-phase4
+	$(call log_success,"All phased tests completed")
+
+test-phase-discovery:
+	$(call log_info,"Discovering tests for all phases...")
+	./scripts/run_phase_tests.sh all --collect-only
+	$(call log_success,"Test discovery completed")
 
 # Code quality targets
 
