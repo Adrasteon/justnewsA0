@@ -18,9 +18,9 @@
   "database": {
     "host": "127.0.0.1",
     "port": 3306,
-    "database": "justnews",
+    "database": "justnews_test",
     "user": "justnews",
-    "password": "justnews_password",
+    "password": "test",
     "connection_pool": {
       "min_connections": 2,
       "max_connections": 10,

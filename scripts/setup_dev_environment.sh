@@ -3,7 +3,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEV_ENV_FILE="$REPO_ROOT/dev-environment.yml"
-CANONICAL_ENV="${CANONICAL_ENV:-justnews-py312}"
+CANONICAL_ENV="${CANONICAL_ENV:-justnews-py312-phase1}"
 DEV_ENV_NAME="${DEV_ENV_NAME:-${CANONICAL_ENV}-dev}"
 EXISTING_ENV_NAME="${EXISTING_ENV_NAME:-${CANONICAL_ENV}}"
 

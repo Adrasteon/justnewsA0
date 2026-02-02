@@ -6,7 +6,7 @@ set -euo pipefail
 # with that suffix. If omitted the script will use UTC date (YYYYMMDD).
 # Set DRY_RUN=1 to skip executing conda/python commands (useful for CI/tests).
 # Default env: use canonical env when available
-CANONICAL_ENV="${CANONICAL_ENV:-justnews-py312}"
+CANONICAL_ENV="${CANONICAL_ENV:-justnews-py312-phase1}"
 ENV_NAME=${1:-${CANONICAL_ENV}}
 OUTDIR=${2:-artifacts}
 # optional 3rd argument is a date stamp (YYYYMMDD). If omitted we generate

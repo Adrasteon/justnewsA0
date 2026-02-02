@@ -84,6 +84,27 @@ if not os.environ.get("JUSTNEWS_GLOBAL_ENV"):
 # hermetic and not rely on the host's installed system files.
 os.environ["PYTEST_RUNNING"] = "1"
 
+def _detect_phase_from_path(interpreter_path: str) -> int | None:
+    """Extract phase number from conda env path (e.g., .../justnews-py312-phase2 -> 2).
+    
+    Returns: 1-4 for phase envs, 1 for unified env (justnews-py312), None if not recognized.
+    """
+    try:
+        env_name = os.path.basename(os.path.dirname(os.path.dirname(interpreter_path or "")))
+        # Phase envs: justnews-py312-phase1, justnews-py312-phase2, etc.
+        if "justnews-py312-phase" in env_name:
+            phase_str = env_name.split("-phase")[-1]
+            phase = int(phase_str)
+            if 1 <= phase <= 4:
+                return phase
+        # Unified env: treat as phase 1 equivalent
+        elif "justnews-py312" in env_name:
+            return 1
+    except (ValueError, IndexError, AttributeError):
+        pass
+    return None
+
+
 # Enforce usage of the project's conda environment for local runs
 # - In CI we allow broader environments (CI=true will skip the check)
 # - Developers can temporarily bypass with ALLOW_ANY_PYTEST_ENV=1
@@ -91,19 +112,25 @@ if (
     os.environ.get("CI", "").lower() not in ("1", "true")
     and os.environ.get("ALLOW_ANY_PYTEST_ENV", "") != "1"
 ):
-    CANONICAL_ENV = os.environ.get("CANONICAL_ENV", "justnews-py312")
-    conda_env = (
-        os.environ.get("CONDA_DEFAULT_ENV") or os.environ.get("CONDA_PREFIX") or ""
-    )
-    # If CONDA_DEFAULT_ENV is not present, also detect if sys.executable path contains the env name
-    in_exec = CANONICAL_ENV in (sys.executable or "")
-    if CANONICAL_ENV not in conda_env and not in_exec:
-        # Friendly guidance to developers on how to run tests correctly
+    # Detect phase from current interpreter path (supports both unified and phased envs)
+    detected_phase = _detect_phase_from_path(sys.executable)
+    
+    if detected_phase is None:
+        # Not running in a JustNews conda environment at all
         msg = """
-Tests should be run inside the '${CANONICAL_ENV}' conda environment for consistent results.
+Tests should be run inside a JustNews conda environment for consistent results.
 
-Use the helper script: scripts/dev/pytest.sh <args>
-Or re-run with: PYTHONPATH=$(pwd) conda run -n ${CANONICAL_ENV} pytest <args>
+Supported environments:
+  - justnews-py312 (unified)
+  - justnews-py312-phase1, -phase2, -phase3, -phase4 (phased)
+
+To setup:
+  bash scripts/dev/setup_dev_environment.sh --create-all-phases
+  bash scripts/dev/select_phase_env.sh --phase 1
+  source ./global.env
+
+Then run tests:
+  pytest tests/
 
 If you intentionally want to run in a different environment set ALLOW_ANY_PYTEST_ENV=1 to bypass this check.
 """

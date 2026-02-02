@@ -29,6 +29,11 @@ agents/hitl_service/*.db
 .vscode/
 .env
 global.env
+global.env.backup.*
+justnews-py312/
+
+# Stray pip/packaging artifacts
+=*
 secrets.env
 model_store
 

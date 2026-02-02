@@ -1,9 +1,42 @@
-Conda packaging recipes and helper scripts =======================================
+# Conda Environments & Packaging
 
-This directory contains packaging recipes and helper scripts for building conda packages that are required by this
+This directory contains conda environment specifications for the 4 workflow phases, plus helper scripts and recipes for building conda packages.
+
+---
+
+## Phased Conda Environments (Quick Start)
+
+JustNews uses **4 independent conda environments** to isolate CUDA/GPU dependencies across workflow phases.
+
+### Quick Setup
+
+```bash
+cd /path/to/JustNews
+bash scripts/dev/setup_dev_environment.sh --create-all-phases
+bash scripts/dev/select_phase_env.sh --phase 1
+source ./global.env
+```
+
+### Environment Files
+
+| File | GPU | Purpose |
+|------|-----|---------|
+| `environment.base.yml` | ❌ | Shared base (common deps) |
+| `environment.phase1.yml` | ✅ | Ingestion & Vectorization |
+| `environment.phase2.yml` | ❌ | Clustering & Linkage (CPU-only) |
+| `environment.phase3.yml` | ✅ | Synthesis & Curation |
+| `environment.phase4.yml` | ❌ | Publishing & CMS (CPU-only) |
+
+See [PHASED_ENVIRONMENT_MAPPING.md](PHASED_ENVIRONMENT_MAPPING.md) for full documentation.
+
+---
+
+## Conda Packaging Recipes
+
+Conda packaging recipes and helper scripts for building conda packages that are required by this
 project but are not available as compatible conda packages for our supported Python version(s).
 
-protobuf (python) recipe ------------------------
+### protobuf (python) recipe ------------------------
 
 Location: conda/recipes/protobuf
 

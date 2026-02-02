@@ -7,8 +7,8 @@
 
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-ENV_NAME=${ENV_NAME:-${CANONICAL_ENV:-justnews-py312}}
-ENV_YML="$ROOT_DIR/environment.yml"
+ENV_NAME=${ENV_NAME:-${CANONICAL_ENV:-justnews-py312-phase1}}
+ENV_YML="${ENV_YML:-}"
 REQS="$ROOT_DIR/requirements.txt"
 FORCE=0
 INSTALL_VLLM_ONLY=0
@@ -23,6 +23,16 @@ for arg in "$@"; do
     *) echo "Unknown arg: $arg"; exit 2 ;;
   esac
 done
+
+if [[ -z "$ENV_YML" ]]; then
+  case "$ENV_NAME" in
+    *-phase1) ENV_YML="$ROOT_DIR/conda/environment.phase1.yml" ;;
+    *-phase2) ENV_YML="$ROOT_DIR/conda/environment.phase2.yml" ;;
+    *-phase3) ENV_YML="$ROOT_DIR/conda/environment.phase3.yml" ;;
+    *-phase4) ENV_YML="$ROOT_DIR/conda/environment.phase4.yml" ;;
+    *) ENV_YML="$ROOT_DIR/environment.yml" ;;
+  esac
+fi
 
 if ! command -v conda >/dev/null 2>&1; then
   echo "Error: conda not found in PATH. Install Miniconda/Anaconda and retry." >&2
@@ -49,12 +59,12 @@ if [ "$INSTALL_VLLM_ONLY" -eq 1 ]; then
 else
   if [ -f "$ENV_YML" ]; then
     if [ "$env_exists" -eq 0 ]; then
-      echo "Creating conda environment ${ENV_NAME} from environment.yml"
+      echo "Creating conda environment ${ENV_NAME} from ${ENV_YML}"
       conda env create -n "${ENV_NAME}" -f "$ENV_YML" || (
-        echo "Failed to create from environment.yml; attempting update" ; conda env update -n "${ENV_NAME}" -f "$ENV_YML" --prune || true
+        echo "Failed to create from ${ENV_YML}; attempting update" ; conda env update -n "${ENV_NAME}" -f "$ENV_YML" --prune || true
       )
     else
-      echo "Updating existing environment ${ENV_NAME} from environment.yml"
+      echo "Updating existing environment ${ENV_NAME} from ${ENV_YML}"
       conda env update -n "${ENV_NAME}" -f "$ENV_YML" --prune || true
     fi
   else
@@ -98,7 +108,7 @@ cat <<'EOF'
 
 Bootstrap complete.
 To use the environment interactively:
-  conda activate ${CANONICAL_ENV:-justnews-py312}
+  conda activate ${CANONICAL_ENV:-justnews-py312-phase1}
 To run repository scripts with canonical env:
   ./scripts/run_with_env.sh <command>
 

@@ -14,7 +14,7 @@ import uuid
 
 import pytest
 
-from agents.synthesizer.mistral_adapter import SynthesizerMistralAdapter
+from agents.synthesizer.model_adapter import SynthesizerModelAdapter
 from database.utils.migrated_database_utils import create_database_service
 
 requires_live_chroma = pytest.mark.skipif(
@@ -99,7 +99,7 @@ def test_chromadb_entry_records_mistral_metadata(monkeypatch):
                 "Embedding model not loaded; ensure EMBEDDING_MODEL is configured."
             )
 
-        adapter = SynthesizerMistralAdapter()
+        adapter = SynthesizerModelAdapter()
 
         def _fake_chat_json(_messages):
             return {
@@ -123,7 +123,7 @@ def test_chromadb_entry_records_mistral_metadata(monkeypatch):
         metadata = {
             "source": "pytest",
             "adapter": adapter.adapter_name,
-            "method": "mistral_adapter",
+            "method": "model_adapter",
             "is_synthesized": True,
         }
 

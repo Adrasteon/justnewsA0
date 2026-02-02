@@ -9,7 +9,7 @@ EXISTING_ENV_NAME="${EXISTING_ENV_NAME:-${CANONICAL_ENV}}"
 
 usage() {
   cat <<EOF
-Usage: $0 [--create-dev] [--install-into-existing]
+Usage: $0 [--create-dev] [--install-into-existing] [--create-all-phases] [--update-phases]
 
 Options:
   --create-dev            Create a new development conda environment from
@@ -17,6 +17,11 @@ Options:
 
   --install-into-existing Install dev tooling into the existing environment
                           named "$EXISTING_ENV_NAME" (non-destructive).
+
+  --create-all-phases     Create all 4 phased JustNews environments from
+                          conda/environment.{base,phase1,phase2,phase3,phase4}.yml.
+
+  --update-phases         Update existing phased environments (safe, non-destructive).
 
   --help                  Show this help message and exit.
 
@@ -26,6 +31,12 @@ Examples:
 
   # Install tools into the existing runtime environment (careful):
   $0 --install-into-existing
+
+  # Create all 4 workflow phase environments:
+  $0 --create-all-phases
+
+  # Update existing phase environments:
+  $0 --update-phases
 EOF
 }
 
@@ -96,6 +107,116 @@ install_into_existing() {
   echo "Please run: conda activate $EXISTING_ENV_NAME and run pre-commit install in your repo to enable hooks"
 }
 
+create_phase_env() {
+  local phase=$1
+  require_conda
+  INSTALLER=$(use_mamba_if_available)
+  
+  local phase_env_file="$REPO_ROOT/conda/environment.phase${phase}.yml"
+  local phase_env_name="justnews-py312-phase${phase}"
+  
+  if [[ ! -f "$phase_env_file" ]]; then
+    echo "❌ Phase $phase environment file not found: $phase_env_file" >&2
+    return 1
+  fi
+  
+  echo "📦 Creating Phase $phase environment: $phase_env_name"
+  echo "   File: $phase_env_file"
+  
+  $INSTALLER env create -f "$phase_env_file" -n "$phase_env_name" || {
+    echo "Create failed; trying to update if it already exists"
+    $INSTALLER env update -f "$phase_env_file" -n "$phase_env_name"
+  }
+  
+  echo "✅ Phase $phase environment created: $phase_env_name"
+  
+  # Apply vendor patches
+  if command -v conda >/dev/null 2>&1; then
+    echo "   Applying vendor patch for google.rpc..."
+    conda run -n "$phase_env_name" --no-capture-output python scripts/vendor_patches/apply_google_rpc_namespace_patch.py || true
+  fi
+  
+  return 0
+}
+
+create_all_phase_envs() {
+  require_conda
+  INSTALLER=$(use_mamba_if_available)
+  echo "Using $INSTALLER"
+  echo ""
+  echo "📋 Creating all 4 JustNews phased environments..."
+  echo ""
+  
+  local failed_phases=""
+  
+  for phase in 1 2 3 4; do
+    if ! create_phase_env "$phase"; then
+      failed_phases="${failed_phases} $phase"
+    fi
+    echo ""
+  done
+  
+  if [[ -n "$failed_phases" ]]; then
+    echo "❌ Failed to create phases:${failed_phases}" >&2
+    return 1
+  fi
+  
+  echo "✅ All phase environments created successfully!"
+  echo ""
+  echo "🎯 Next steps:"
+  echo "   1. Select an active phase:"
+  echo "      bash scripts/dev/select_phase_env.sh --phase 1"
+  echo ""
+  echo "   2. View all available phases:"
+  echo "      bash scripts/dev/select_phase_env.sh --list-only"
+  echo ""
+  echo "   3. Run commands with the selected phase:"
+  echo "      bash scripts/run_with_env.sh python -c 'import torch; print(torch.cuda.is_available())'"
+  echo ""
+  
+  return 0
+}
+
+update_phase_envs() {
+  require_conda
+  INSTALLER=$(use_mamba_if_available)
+  echo "Using $INSTALLER"
+  echo ""
+  echo "🔄 Updating all JustNews phased environments..."
+  echo ""
+  
+  local failed_phases=""
+  
+  for phase in 1 2 3 4; do
+    local phase_env_file="$REPO_ROOT/conda/environment.phase${phase}.yml"
+    local phase_env_name="justnews-py312-phase${phase}"
+    
+    if [[ ! -f "$phase_env_file" ]]; then
+      echo "⚠️  Phase $phase environment file not found: $phase_env_file"
+      continue
+    fi
+    
+    echo "🔄 Updating Phase $phase: $phase_env_name"
+    
+    if $INSTALLER env update -f "$phase_env_file" -n "$phase_env_name" 2>&1 | tail -3; then
+      echo "✅ Phase $phase updated"
+    else
+      echo "❌ Phase $phase update failed"
+      failed_phases="${failed_phases} $phase"
+    fi
+    echo ""
+  done
+  
+  if [[ -n "$failed_phases" ]]; then
+    echo "⚠️  Some phases had update issues:${failed_phases}" >&2
+    echo "   You may need to recreate these environments with --create-all-phases"
+    return 1
+  fi
+  
+  echo "✅ All phase environments updated successfully!"
+  return 0
+}
+
 if [ $# -eq 0 ]; then
   usage
   exit 1
@@ -109,6 +230,14 @@ while [ $# -gt 0 ]; do
       ;;
     --install-into-existing)
       install_into_existing
+      shift
+      ;;
+    --create-all-phases)
+      create_all_phase_envs
+      shift
+      ;;
+    --update-phases)
+      update_phase_envs
       shift
       ;;
     --help)
