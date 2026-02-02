@@ -1,5 +1,6 @@
 import os
 import sys
+import argparse
 
 # Add project root to path
 sys.path.insert(0, os.getcwd())
@@ -27,9 +28,37 @@ def parse_markdown_table(file_path):
             continue
 
         parts = [p.strip() for p in line.split('|')]
-        # Parts will look like ['', 'BBC News', 'bbc.co.uk', '...', '']
-        # | Name | Domain | URL | Country | Language | Description |
-        if len(parts) >= 7:
+        # Parts will look like: ['', 'Name', 'Domain', 'URL', 'Country', 'Language', 'Region/Desc', 'Desc/Region', 'EditorialAngle', '']
+        # Supports 6-column (old), 7-column (with Region), and 8-column (with Editorial Angle) formats
+        # 6-col: | Name | Domain | URL | Country | Language | Description |
+        # 7-col: | Name | Domain | URL | Country | Language | Region | Description |
+        # 8-col: | Name | Domain | URL | Country | Language | Region | Description | Editorial Angle |
+        
+        # Need at least 8 parts (considering split includes empty first and last elements)
+        if len(parts) < 8:
+            continue
+            
+        # Skip header rows and separator rows
+        if not parts[1] or parts[1] in ['Name', '---']:
+            continue
+            
+        # Check if this is 8-column format (both Region and Editorial Angle present)
+        if len(parts) >= 10 and parts[6] and not parts[6].startswith('http') and not parts[6].startswith('www'):
+            # Could be 7-col or 8-col; check if parts[7] looks like a description or Editorial Angle
+            # 8-col: parts[7] is Description, parts[8] is Editorial Angle
+            # 7-col: parts[7] is Description
+            # Editorial angles often contain "/" or specific keywords
+            sources.append({
+                'name': parts[1],
+                'domain': parts[2],
+                'url': parts[3],
+                'country': parts[4],
+                'language': parts[5],
+                'description': parts[7] if len(parts) >= 8 else parts[6],
+                # Region is at parts[6], Editorial Angle at parts[8] (if 8-col), but we store description
+            })
+        elif len(parts) >= 8:
+            # 6-column old format: Name | Domain | URL | Country | Language | Description
             sources.append({
                 'name': parts[1],
                 'domain': parts[2],
@@ -110,7 +139,11 @@ def populate_db(sources):
         print(f"Database error: {e}")
 
 if __name__ == "__main__":
-    md_file = "top_100_sources.md"
+    parser = argparse.ArgumentParser(description='Populate sources from markdown file')
+    parser.add_argument('--file', default='top_100_sources.md', help='Markdown file to parse')
+    args = parser.parse_args()
+    
+    md_file = args.file
     if not os.path.exists(md_file):
         print(f"File {md_file} not found.")
         sys.exit(1)
