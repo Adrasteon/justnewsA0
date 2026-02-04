@@ -523,12 +523,7 @@ class CrawlerEngine:
                     )
                     return best_strategy
 
-        # 1. Check if AI-enhanced should be forced globally
-        if os.environ.get("FORCE_AI_ENHANCED_ALL", "").lower() == "true":
-            logger.info(f"🤖 AI-enhanced crawling forced globally for {domain}")
-            return "ai_enhanced"
-
-        # 2. Check for pre-defined ultra-fast sites
+        # 1. Check for pre-defined ultra-fast sites
         # These are high-volume, well-structured sites with dedicated parsers
         # DISABLED: User requested to disable forced ultra_fast mode
         # if any(d in domain for d in ["bbc.co.uk", "cnn.com", "reuters.com"]):
@@ -550,7 +545,7 @@ class CrawlerEngine:
             )
             return "ai_enhanced"
 
-        # 3. Check database for historical performance
+        # 2. Check database for historical performance
         if domain not in self.performance_history:
             self.performance_history[domain] = get_source_performance_history(domain)
 
@@ -698,23 +693,42 @@ class CrawlerEngine:
         """
         logger.info(f"🚀 Starting unified crawl for domains: {domains}")
 
-        # Convert domains to SiteConfig objects
+        # OPTIMIZATION: Batch all domain database lookups into a single query
+        # Previously: 540 domains = 540 separate database queries
+        # Now: 540 domains = 1 database query
+        # This eliminates blocking and massively improves performance for large crawls
+        
+        # Normalize and deduplicate input domains
+        normalized_domains = []
+        seen = set()
+        for d in domains:
+            domain = d[0] if isinstance(d, list) and d else d
+            domain = domain.lower().strip() if domain else ""
+            if domain and domain not in seen:
+                normalized_domains.append(domain)
+                seen.add(domain)
+        
+        # Single batch database query for ALL domains
+        logger.info(f"Fetching source info for {len(normalized_domains)} domains in 1 batch query")
+        all_sources = get_sources_by_domain(normalized_domains)  # ONE query instead of N!
+        sources_by_domain = {
+            src.get("domain", "").lower(): src 
+            for src in all_sources 
+            if src.get("domain")
+        }
+        
+        # Build SiteConfig objects from batch query results
         site_configs = []
-        for domain in domains:
-            if isinstance(domain, list):
-                domain = domain[0] if domain else ""
+        for domain in normalized_domains:
             try:
-                # Get source info from database
-                sources = get_sources_by_domain([domain])  # Pass as list
-                if sources:
-                    source = sources[0]  # Use first match
+                domain_lower = domain.lower()
+                if domain_lower in sources_by_domain:
+                    source = sources_by_domain[domain_lower]
                     config = SiteConfig(source)
                     site_configs.append(config)
                 else:
                     # Create basic config for unknown domains
-                    logger.warning(
-                        f"No database entry for {domain}, creating basic config"
-                    )
+                    logger.warning(f"No database entry for {domain}, creating basic config")
                     parsed = urlparse(domain)
                     if parsed.scheme and parsed.netloc:
                         fallback_domain = parsed.netloc

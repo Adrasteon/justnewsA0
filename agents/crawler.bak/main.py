@@ -53,6 +53,9 @@ crawl_jobs: dict[str, Any] = {}
 # Map job_id -> asyncio.Task for running background crawl jobs so they can be cancelled
 crawl_task_map: dict[str, asyncio.Task] = {}
 
+# Store large payloads separately to avoid asyncio.create_task() serialization issues
+_payload_store: dict[str, dict[str, Any]] = {}
+
 # Environment variables
 CRAWLER_AGENT_PORT = int(os.environ.get("CRAWLER_AGENT_PORT", 8015))
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
@@ -90,58 +93,86 @@ CORS_ORIGINS = os.environ.get(
 ).split(",")
 
 
-async def run_crawl_background(
-    job_id: str,
-    domains: list[str],
-    max_articles: int,
-    concurrent: int,
-    profile_overrides: dict[str, dict[str, Any]] | None,
-):
-    """Background task to execute a crawl job."""
+async def run_crawl_background(job_id: str):
+    """Background task to execute a crawl job. Retrieves payload from store to avoid serialization issues."""
+    logger.error(f"🚀 [DIAGNOSTIC] run_crawl_background STARTED for job {job_id}")
+    
+    # Retrieve payload from store
+    if job_id not in _payload_store:
+        logger.error(f"🚀 [DIAGNOSTIC] Job {job_id} payload not found in store!")
+        try:
+            set_error(job_id, "Payload not found in store")
+        except Exception:
+            crawl_jobs[job_id]["status"] = "failed"
+            crawl_jobs[job_id]["error"] = "Payload not found in store"
+        return
+    
+    payload = _payload_store.pop(job_id)  # Remove after reading
+    domains = payload["domains"]
+    max_articles = payload["max_articles"]
+    concurrent = payload["concurrent"]
+    profile_overrides = payload.get("profile_overrides")
+    
+    logger.error(f"🚀 [DIAGNOSTIC] Payload retrieved: domains={len(domains)}, max_articles={max_articles}, concurrent={concurrent}")
+    
     try:
         crawl_jobs[job_id]["status"] = "running"
-        logger.info(f"Starting background crawl task {job_id} for domains: {domains}")
-        async with CrawlerEngine() as crawler:
-            await crawler._load_ai_models()
-            result = await crawler.run_unified_crawl(
-                domains,
-                max_articles,
-                concurrent,
-                profile_overrides=profile_overrides,
-            )
+        logger.error(f"🚀 [DIAGNOSTIC] Job status updated to 'running'")
         
-        # Update Prometheus metrics from crawl results
-        try:
-            # Increment totals
-            crawler_articles_ingested.inc(result.get("articles_ingested", 0))
-            crawler_candidates_found.inc(result.get("total_ingest_candidates", 0))
-            crawler_sites_attempted.inc(len(domains))
-            crawler_sites_completed.inc(result.get("sites_crawled", 0))
-            crawler_duplicates.inc(result.get("duplicates_skipped", 0))
-            crawler_ingestion_errors.inc(result.get("ingestion_errors", 0))
-            crawler_paywall_detections.inc(result.get("total_paywalls_detected", 0))
+        # FOR LARGE CRAWLS: Split into batches to prevent event loop blocking
+        if len(domains) > 50:
+            logger.info(f"Large crawl detected ({len(domains)} domains) - splitting into batches of 25")
+            batch_size = 25
+            batches = [domains[i:i+batch_size] for i in range(0, len(domains), batch_size)]
+            all_articles = []
+            total_ingested = {"new": 0, "duplicate": 0, "errors": 0}
             
-            # Update mode usage gauges
-            strategy_breakdown = result.get("strategy_breakdown", {})
-            for mode in ["ai_enhanced", "generic", "crawl4ai_profiled"]:
-                count = strategy_breakdown.get(mode, 0)
-                crawler_mode_usage.labels(mode=mode).set(count)
+            for batch_num, batch_domains in enumerate(batches, 1):
+                logger.error(f"🚀 [DIAGNOSTIC] Processing batch {batch_num}/{len(batches)} ({len(batch_domains)} domains)")
+                try:
+                    async with CrawlerEngine() as crawler:
+                        await crawler._load_ai_models()
+                        batch_result = await crawler.run_unified_crawl(
+                            batch_domains,
+                            max_articles,
+                            concurrent,
+                            profile_overrides=profile_overrides,
+                        )
+                    all_articles.extend(batch_result.get("articles", []))
+                    summary = batch_result.get("ingestion_summary", {})
+                    total_ingested["new"] += summary.get("new_articles", 0)
+                    total_ingested["duplicate"] += summary.get("duplicates", 0)
+                    total_ingested["errors"] += summary.get("errors", 0)
+                    
+                    logger.error(f"🚀 [DIAGNOSTIC] Batch {batch_num} complete: {len(batch_result.get('articles', []))} articles")
+                    
+                    # Brief yield to let event loop process other requests
+                    await asyncio.sleep(0.1)
+                except Exception as e:
+                    logger.error(f"Batch {batch_num} failed: {e}")
+                    total_ingested["errors"] += 1
             
-            # Update per-site metrics
-            site_breakdown = result.get("site_breakdown", {})
-            for domain, article_count in site_breakdown.items():
-                crawler_articles_per_site.labels(domain=domain).set(article_count)
-            
-            # Count sites with no candidates
-            site_candidate_breakdown = result.get("site_candidate_breakdown", {})
-            no_candidate_sites = sum(1 for domain in domains if domain not in site_candidate_breakdown or site_candidate_breakdown.get(domain, 0) == 0)
-            if no_candidate_sites > 0:
-                crawler_no_candidates.inc(no_candidate_sites)
-                
-            logger.debug(f"Updated Prometheus metrics for job {job_id}")
-        except Exception as e:
-            logger.warning(f"Failed to update Prometheus metrics: {e}")
-        
+            result = {
+                "articles": all_articles,
+                "ingestion_summary": total_ingested,
+                "batch_mode": True,
+                "batches": len(batches)
+            }
+            logger.error(f"🚀 [DIAGNOSTIC] All batches complete: {len(all_articles)} total articles")
+        else:
+            # Small crawl - process normally
+            logger.info(f"Starting background crawl for {len(domains)} domains")
+            async with CrawlerEngine() as crawler:
+                logger.error(f"🚀 [DIAGNOSTIC] CrawlerEngine context entered")
+                await crawler._load_ai_models()
+                logger.error(f"🚀 [DIAGNOSTIC] AI models loaded")
+                result = await crawler.run_unified_crawl(
+                    domains,
+                    max_articles,
+                    concurrent,
+                    profile_overrides=profile_overrides,
+                )
+                logger.error(f"🚀 [DIAGNOSTIC] Crawl completed, got {len(result.get('articles', []))} articles")
         # Store result in job status
         try:
             set_result(job_id, result)
@@ -208,75 +239,6 @@ app = FastAPI(
 # Initialize metrics
 metrics = JustNewsMetrics("crawler")
 
-# Initialize crawler-specific Prometheus metrics
-from prometheus_client import Counter, Gauge
-
-crawler_articles_ingested = Counter(
-    "justnews_crawler_articles_ingested_total",
-    "Total articles successfully ingested",
-    registry=metrics.registry
-)
-
-crawler_candidates_found = Counter(
-    "justnews_crawler_candidates_found_total",
-    "Total article candidates found",
-    registry=metrics.registry
-)
-
-crawler_sites_attempted = Counter(
-    "justnews_crawler_sites_attempted_total",
-    "Total sites attempted to crawl",
-    registry=metrics.registry
-)
-
-crawler_sites_completed = Counter(
-    "justnews_crawler_sites_completed_total",
-    "Total sites successfully completed",
-    registry=metrics.registry
-)
-
-crawler_mode_usage = Gauge(
-    "justnews_crawler_mode_usage",
-    "Current crawl mode usage count",
-    ["mode"],
-    registry=metrics.registry
-)
-
-crawler_duplicates = Counter(
-    "justnews_crawler_duplicates_total",
-    "Total duplicate articles detected",
-    registry=metrics.registry
-)
-
-crawler_ingestion_errors = Counter(
-    "justnews_crawler_ingestion_errors_total",
-    "Total ingestion errors encountered",
-    registry=metrics.registry
-)
-
-crawler_paywall_detections = Counter(
-    "justnews_crawler_paywall_detections_total",
-    "Total paywall detections",
-    registry=metrics.registry
-)
-
-crawler_no_candidates = Counter(
-    "justnews_crawler_no_candidates_total",
-    "Total sites with no candidates found",
-    registry=metrics.registry
-)
-
-crawler_articles_per_site = Gauge(
-    "justnews_crawler_articles_per_site",
-    "Articles found per site",
-    ["domain"],
-    registry=metrics.registry
-)
-
-# Initialize mode usage gauges to 0
-for mode in ["ai_enhanced", "generic", "crawl4ai_profiled"]:
-    crawler_mode_usage.labels(mode=mode).set(0)
-
 # Security middleware
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 app.add_middleware(
@@ -304,10 +266,6 @@ async def unified_production_crawl_endpoint(
 ):
     """
     Enqueue a background unified production crawl job and return immediately with a job ID.
-    
-    Supports two modes:
-    1. Pass explicit domains list: {"domains": ["bbc.com", "cnn.com", ...]}
-    2. Fetch all sources from database: {"fetch_all_sources": true}
     """
     # Generate a unique job identifier
     job_id = uuid.uuid4().hex
@@ -319,37 +277,27 @@ async def unified_production_crawl_endpoint(
     crawl_jobs[job_id] = {"status": "pending"}
     # Extract parameters
     domains = call.args[0] if call.args else call.kwargs.get("domains", [])
-    fetch_all_sources = call.kwargs.get("fetch_all_sources", False)
-    
-    # If fetch_all_sources is True, query database for all sources
-    if fetch_all_sources and not domains:
-        try:
-            db = create_database_service()
-            db.ensure_conn()
-            conn = db.get_connection()
-            try:
-                cursor = conn.cursor()
-                cursor.execute("SELECT domain FROM sources ORDER BY domain")
-                domains = [row[0] for row in cursor.fetchall()]
-                logger.info(f"Fetched {len(domains)} sources from database")
-            finally:
-                db.close()
-        except Exception as e:
-            logger.error(f"Failed to fetch sources from database: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to fetch sources: {e}")
-    
     max_articles = call.kwargs.get("max_articles_per_site", 25)
     concurrent = call.kwargs.get("concurrent_sites", 3)
     logger.info(f"Enqueueing background crawl job {job_id} for {len(domains)} domains")
     profile_overrides = call.kwargs.get("profile_overrides")
 
+    # Store large payload separately to avoid asyncio.create_task() serialization issues
+    _payload_store[job_id] = {
+        "domains": domains,
+        "max_articles": max_articles,
+        "concurrent": concurrent,
+        "profile_overrides": profile_overrides
+    }
+    logger.error(f"🚀 [DIAGNOSTIC] Payload stored for job {job_id} ({len(domains)} domains)")
+
     # Enqueue background task by creating an asyncio.Task so it can be cancelled later
-    task = asyncio.create_task(
-        run_crawl_background(
-            job_id, domains, max_articles, concurrent, profile_overrides
-        )
-    )
+    # Only pass job_id to avoid serialization of large domain list
+    logger.error(f"🚀 [DIAGNOSTIC] About to create asyncio.Task for job {job_id}")
+    task = asyncio.create_task(run_crawl_background(job_id))
+    logger.error(f"🚀 [DIAGNOSTIC] asyncio.Task created: {task}")
     crawl_task_map[job_id] = task
+    logger.error(f"🚀 [DIAGNOSTIC] Task added to crawl_task_map")
 
     # When the background task completes, remove it from the task map
     def _on_task_done(t: asyncio.Task, jid: str = job_id):

@@ -35,6 +35,21 @@ log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
+require_root() {
+  if [[ $EUID -ne 0 ]]; then
+    log_error "Run as root (sudo)"
+    exit 1
+  fi
+}
+
+require_command() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    log_error "Missing required command: $cmd"
+    exit 1
+  fi
+}
+
 # Preferred conda env for Python helpers (default to canonical name when present)
 DEFAULT_CONDA_ENV="${CANONICAL_ENV:-justnews-py312-phase1}"
 CONDA_ENV="${CONDA_ENV:-$DEFAULT_CONDA_ENV}"
@@ -43,12 +58,13 @@ CONDA_ENV="${CONDA_ENV:-$DEFAULT_CONDA_ENV}"
 # otherwise fallback to PYTHON_BIN if configured, or system python.
 run_python_script() {
   local script_path="$1"; shift || true
-  if command -v conda >/dev/null 2>&1; then
-    PYTHONPATH=. conda run -n "$CONDA_ENV" python "$script_path" "$@"
-  elif [[ -n "${PYTHON_BIN:-}" && -x "${PYTHON_BIN}" ]]; then
-    PYTHONPATH=. "$PYTHON_BIN" "$script_path" "$@"
+  local pythonpath="${PYTHONPATH:-${SERVICE_DIR:-.}}"
+  if [[ -n "${PYTHON_BIN:-}" && -x "${PYTHON_BIN}" ]]; then
+    PYTHONPATH="$pythonpath" "$PYTHON_BIN" "$script_path" "$@"
+  elif command -v conda >/dev/null 2>&1; then
+    PYTHONPATH="$pythonpath" conda run -n "$CONDA_ENV" python "$script_path" "$@"
   else
-    PYTHONPATH=. python "$script_path" "$@"
+    PYTHONPATH="$pythonpath" python "$script_path" "$@"
   fi
 }
 
@@ -95,7 +111,7 @@ run_chroma_bootstrap() {
     return 0
   fi
   # Non-fatal if collections already exist
-  run_python_script "$chroma_bootstrap_script" --host "$chroma_host" --port "$chroma_port" 2>&1 | tail -20 || true
+  PYTHONPATH="$repo_root" run_python_script "$chroma_bootstrap_script" --host "$chroma_host" --port "$chroma_port" 2>&1 | tail -20 || true
   log_success "Chroma bootstrap phase completed"
 }
 
@@ -230,6 +246,11 @@ resolve_repo_root() {
     return 0
   fi
   candidate="$(cd "$script_dir/.." && pwd)"
+  if [[ -d "$candidate/agents" ]]; then
+    echo "$candidate"
+    return 0
+  fi
+  candidate="$(cd "$script_dir/../.." && pwd)"
   if [[ -d "$candidate/agents" ]]; then
     echo "$candidate"
     return 0
@@ -644,6 +665,121 @@ stop_monitoring_stack() {
   fi
 }
 
+start_otel_native() {
+  # Start OpenTelemetry collectors natively on standard ports (4317, 4318, 4319, 4320)
+  # Uses binary otelcol-contrib from /usr/local/bin
+  
+  log_info "Starting native OpenTelemetry collectors on ports 4317-4320..."
+  
+  # Check if otelcol-contrib binary exists
+  if [[ ! -x /usr/local/bin/otelcol-contrib ]]; then
+    log_warn "OTel collector binary not found at /usr/local/bin/otelcol-contrib; skipping native OTel startup"
+    return 0
+  fi
+  
+  # Check if configs exist
+  local otel_config_dir="/etc/justnews/monitoring/otel"
+  if [[ ! -d "$otel_config_dir" ]]; then
+    log_warn "OTel config directory not found at $otel_config_dir; skipping native OTel startup"
+    return 0
+  fi
+  
+  # Check for port conflicts on standard OTel ports
+  local otel_ports=(4317 4318 4319 4320)
+  local port_conflict=0
+  for port in "${otel_ports[@]}"; do
+    if ss -ltn 2>/dev/null | awk '{print $4}' | grep -E ":$port$" >/dev/null; then
+      log_warn "OTel port $port already in use; skipping native OTel startup"
+      port_conflict=1
+      break
+    fi
+  done
+  
+  if [[ $port_conflict -eq 1 ]]; then
+    return 0
+  fi
+  
+  # Kill any existing otelcol-contrib processes
+  if pgrep -f otelcol-contrib >/dev/null; then
+    log_info "Killing existing OTel processes..."
+    pkill -f otelcol-contrib || true
+    sleep 2
+  fi
+  
+  # Start OTel Node Collector (receives on 4317/4318, forwards to 4319)
+  log_info "Starting OTel Node Collector on ports 4317 (gRPC), 4318 (HTTP)..."
+  OTEL_SERVICE_NAME=justnews-node \
+    DEPLOYMENT_ENVIRONMENT=dev \
+    OTEL_UPSTREAM_ENDPOINT=127.0.0.1:4319 \
+    OTEL_UPSTREAM_INSECURE=true \
+    OTEL_UPSTREAM_AUTH= \
+    OTEL_LOG_LEVEL=info \
+    OTEL_MEMORY_LIMIT_MIB=3072 \
+    HOSTNAME=$(hostname) \
+    nohup /usr/local/bin/otelcol-contrib --config="$otel_config_dir/node-collector-config.yaml" > /tmp/otel-node.log 2>&1 &
+  
+  sleep 2
+  
+  # Verify Node Collector started
+  if ! pgrep -f "otelcol-contrib.*node-collector" >/dev/null; then
+    log_warn "OTel Node Collector failed to start; checking logs..."
+    tail -10 /tmp/otel-node.log 2>/dev/null || true
+    return 1
+  fi
+  
+  log_success "OTel Node Collector started (PID: $(pgrep -f 'otelcol-contrib.*node-collector'))"
+  
+  # Start OTel Central Collector (receives from node on 4319, listens on 4320)
+  log_info "Starting OTel Central Collector on ports 4319 (gRPC), 4320 (HTTP)..."
+  OTEL_SERVICE_NAME=justnews-central-collector \
+    DEPLOYMENT_ENVIRONMENT=dev \
+    OTEL_CENTRAL_GRPC_ENDPOINT=0.0.0.0:4319 \
+    OTEL_CENTRAL_HTTP_ENDPOINT=0.0.0.0:4320 \
+    TEMPO_ENDPOINT=http://127.0.0.1:4318 \
+    TEMPO_INSECURE=true \
+    JAEGER_ENDPOINT=http://127.0.0.1:4318 \
+    JAEGER_INSECURE=true \
+    LOKI_ENDPOINT=http://127.0.0.1:3100/loki/api/v1/push \
+    LOKI_INSECURE=true \
+    OTEL_LOG_LEVEL=info \
+    OTEL_MEMORY_LIMIT_MIB=2048 \
+    nohup /usr/local/bin/otelcol-contrib --config="$otel_config_dir/central-collector-config.yaml" > /tmp/otel-central.log 2>&1 &
+  
+  sleep 2
+  
+  # Verify Central Collector started
+  if ! pgrep -f "otelcol-contrib.*central" >/dev/null; then
+    log_warn "OTel Central Collector failed to start; checking logs..."
+    tail -10 /tmp/otel-central.log 2>/dev/null || true
+    return 1
+  fi
+  
+  log_success "OTel Central Collector started (PID: $(pgrep -f 'otelcol-contrib.*central'))"
+  
+  # Verify all ports are listening
+  sleep 2
+  local all_ports_ready=true
+  if ! command -v ss >/dev/null 2>&1; then
+    log_info "Ports listening verification skipped (ss not available)"
+  else
+    for port in 4317 4318 4319 4320; do
+      if ss -ltn 2>/dev/null | awk '{print $4}' | grep -E ":$port$" >/dev/null; then
+        log_success "✓ OTel listening on port $port"
+      else
+        log_warn "⚠ OTel not yet listening on port $port; continuing..."
+        all_ports_ready=false
+      fi
+    done
+  fi
+  
+  if [[ $all_ports_ready == false ]]; then
+    log_warn "Note: Some OTel ports may still be binding; both collectors should stabilize shortly"
+  fi
+  
+  log_success "Native OTel collectors started successfully"
+  return 0
+}
+
 start_dev_telemetry_stack() {
   local repo_root="$1"
   # When ENABLE_DEV_TELEMETRY is not set to "true" we skip starting the
@@ -997,6 +1133,8 @@ main() {
     if ! start_monitoring_stack "$repo_root"; then
       exit 1
     fi
+    # Start native OpenTelemetry collectors on standard ports (4317, 4318, 4319, 4320)
+    start_otel_native
     # Optionally start the local development telemetry stack if enabled.
     start_dev_telemetry_stack "$repo_root"
     

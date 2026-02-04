@@ -1,0 +1,217 @@
+{
+  "id": null,
+  "uid": "request-performance-premium",
+  "title": "Request Performance & Throughput",
+  "description": "Comprehensive request metrics including latency, throughput, distribution, and per-agent performance",
+  "tags": ["request", "performance", "latency", "enterprise"],
+  "timezone": "UTC",
+  "refresh": "10s",
+  "time": {"from": "now-24h", "to": "now"},
+  "templating": {
+    "list": [
+      {
+        "name": "agent",
+        "type": "query",
+        "query": "label_values(justnews_requests_total, agent)",
+        "multi": true,
+        "includeAll": true,
+        "refresh": 1,
+        "label": "Agent"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request Metrics Summary",
+      "type": "row",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "collapsed": false
+    },
+    {
+      "id": 2,
+      "title": "Req/sec (5m avg)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 1},
+      "targets": [
+        {"expr": "sum(rate(justnews_requests_total[5m]))", "legendFormat": "req/s"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "decimals": 2,
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "gray", "value": 0},
+            {"color": "green", "value": 1}
+          ]}
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Latency p50 (5m)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 1},
+      "targets": [
+        {"expr": "histogram_quantile(0.50, sum(rate(justnews_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": 0},
+            {"color": "yellow", "value": 0.5},
+            {"color": "red", "value": 1}
+          ]}
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Latency p95 (5m)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 1},
+      "targets": [
+        {"expr": "histogram_quantile(0.95, sum(rate(justnews_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": 0},
+            {"color": "yellow", "value": 1},
+            {"color": "red", "value": 2}
+          ]}
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Latency p99 (5m)",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 1},
+      "targets": [
+        {"expr": "histogram_quantile(0.99, sum(rate(justnews_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 3,
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": 0},
+            {"color": "yellow", "value": 2},
+            {"color": "red", "value": 5}
+          ]}
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Throughput Analysis",
+      "type": "row",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5},
+      "collapsed": false
+    },
+    {
+      "id": 7,
+      "title": "Request Rate (1m rolling)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "targets": [
+        {"expr": "sum(rate(justnews_requests_total[1m]))", "legendFormat": "global"},
+        {"expr": "sum(rate(justnews_requests_total[1m])) by (agent)", "legendFormat": "{{agent}}"}
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "ops"}
+      },
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 8,
+      "title": "Requests by Agent Type",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+      "targets": [
+        {"expr": "sum(rate(justnews_requests_total[1m])) by (agent)", "legendFormat": "{{agent}}"}
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "ops"}
+      },
+      "options": {
+        "legend": {"displayMode": "table", "placement": "right"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 9,
+      "title": "Latency Analysis",
+      "type": "row",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 14},
+      "collapsed": false
+    },
+    {
+      "id": 10,
+      "title": "Latency Distribution - p50/p95/p99",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 15},
+      "targets": [
+        {"expr": "histogram_quantile(0.50, sum(rate(justnews_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50"},
+        {"expr": "histogram_quantile(0.95, sum(rate(justnews_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95"},
+        {"expr": "histogram_quantile(0.99, sum(rate(justnews_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {"lineWidth": 2}
+        }
+      },
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 11,
+      "title": "Average Latency by Agent",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 23},
+      "targets": [
+        {"expr": "sum(rate(justnews_request_duration_seconds_sum[5m])) / sum(rate(justnews_request_duration_seconds_count[5m])) by (agent)", "legendFormat": "{{agent}}"}
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "s"}
+      },
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 12,
+      "title": "Request Count (6h total)",
+      "type": "stat",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 23},
+      "targets": [
+        {"expr": "sum(increase(justnews_requests_total[6h]))", "legendFormat": "requests"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "gray", "value": 0},
+            {"color": "green", "value": 1}
+          ]}
+        }
+      }
+    }
+  ],
+  "version": 3,
+  "schemaVersion": 36,
+  "style": "dark"
+}

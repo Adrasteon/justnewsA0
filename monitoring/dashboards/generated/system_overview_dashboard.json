@@ -270,11 +270,11 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 28
       },
       "targets": [
         {
-          "expr": "sum by(instance) (rate(node_network_receive_bytes_total[5m]) + rate(node_network_transmit_bytes_total[5m]))",
+          "expr": "sum(rate(node_network_receive_bytes_total[5m]) + rate(node_network_transmit_bytes_total[5m])) by (instance)",
           "legendFormat": "{{instance}}"
         }
       ],
@@ -306,12 +306,6 @@
         "x": 0,
         "y": 20
       },
-      "targets": [
-        {
-          "expr": "topk(10, (1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|devtmpfs\", mountpoint=\"/\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|devtmpfs\", mountpoint=\"/\"}) * 100)",
-          "legendFormat": "{{instance}}"
-        }
-      ],
       "fieldConfig": {
         "defaults": {
           "unit": "percent"
@@ -322,138 +316,7 @@
         "orientation": "horizontal"
       }
     },
-    {
-      "id": 10,
-      "title": "GPU Utilization",
-      "type": "timeseries",
-      "description": "GPU utilisation per accelerator",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 20
-      },
-      "targets": [
-        {
-          "expr": "nvidia_gpu_utilization_ratio * 100",
-          "legendFormat": "{{gpu_uuid}}"
-        }
-      ],
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent"
-        },
-        "overrides": []
-      }
-    },
-    {
-      "id": 11,
-      "title": "GPU Memory Usage (GB)",
-      "type": "timeseries",
-      "description": "GPU memory usage per accelerator",
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 28
-      },
-      "targets": [
-        {
-          "expr": "nvidia_gpu_memory_used_bytes / 1024 / 1024 / 1024",
-          "legendFormat": "{{gpu_uuid}}"
-        }
-      ],
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "gbytes"
-        },
-        "overrides": []
-      }
-    },
-    {
-      "id": 12,
-      "title": "GPU Temperature p95 (15m)",
-      "type": "stat",
-      "description": "95th percentile GPU temperature across the fleet",
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 28
-      },
-      "targets": [
-        {
-          "expr": "quantile_over_time(0.95, nvidia_gpu_temperature_celsius[15m])",
-          "legendFormat": "GPU Temperature p95 (15m)"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "celsius",
-          "decimals": 1
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        }
-      }
-    },
-    {
-      "id": 13,
-      "title": "GPU Power Draw (avg)",
-      "type": "stat",
-      "description": "Average GPU power draw over the last scrape interval",
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 32
-      },
-      "targets": [
-        {
-          "expr": "avg(nvidia_gpu_power_draw_watts)",
-          "legendFormat": "GPU Power Draw (avg)"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "watt",
-          "decimals": 1
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        }
-      }
-    },
+
     {
       "id": 200,
       "title": "MCP Bus Overall Health",
@@ -463,7 +326,7 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 36
+        "y": 28
       },
       "targets": [
         {
@@ -491,7 +354,7 @@
         "h": 4,
         "w": 6,
         "x": 6,
-        "y": 36
+        "y": 28
       },
       "targets": [
         {
@@ -516,7 +379,7 @@
         "h": 8,
         "w": 18,
         "x": 12,
-        "y": 36
+        "y": 28
       },
       "targets": [
         {

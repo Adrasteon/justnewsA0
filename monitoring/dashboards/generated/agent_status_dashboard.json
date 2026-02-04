@@ -1,0 +1,225 @@
+{
+  "id": null,
+  "uid": "agent-status-premium",
+  "title": "Agent Health & Status",
+  "description": "Per-agent health status, connectivity, and operational metrics with historical trends",
+  "tags": ["agents", "health", "status", "enterprise"],
+  "timezone": "UTC",
+  "refresh": "10s",
+  "time": {"from": "now-24h", "to": "now"},
+  "panels": [
+    {
+      "id": 1,
+      "title": "Agent Health Overview",
+      "type": "row",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "collapsed": false
+    },
+    {
+      "id": 2,
+      "title": "Overall Fleet Health",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 1},
+      "targets": [
+        {"expr": "max(justnews_agent_health_status{target=\"overall\"})", "legendFormat": "health"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {"type": "value", "options": {
+              "0": {"text": "Healthy", "color": "green"},
+              "1": {"text": "Degraded", "color": "orange"},
+              "2": {"text": "Unhealthy", "color": "red"},
+              "3": {"text": "Unreachable", "color": "red"},
+              "4": {"text": "Unknown", "color": "gray"}
+            }}
+          ],
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": 0},
+            {"color": "orange", "value": 1},
+            {"color": "red", "value": 2}
+          ]}
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Healthy Agents",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 1},
+      "targets": [
+        {"expr": "sum(justnews_agent_health_status{target=\"per_agent\"} == 0)", "legendFormat": "healthy"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "gray", "value": 0},
+            {"color": "green", "value": 1}
+          ]}
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Degraded Agents",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 1},
+      "targets": [
+        {"expr": "sum((justnews_agent_health_status{target=\"per_agent\"} > 0) and (justnews_agent_health_status{target=\"per_agent\"} < 2))", "legendFormat": "degraded"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": 0},
+            {"color": "orange", "value": 1}
+          ]}
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Unhealthy Agents",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 1},
+      "targets": [
+        {"expr": "sum(justnews_agent_health_status{target=\"per_agent\"} >= 2)", "legendFormat": "unhealthy"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": 0},
+            {"color": "red", "value": 1}
+          ]}
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Per-Agent Status",
+      "type": "row",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 5},
+      "collapsed": false
+    },
+    {
+      "id": 7,
+      "title": "Agent Health Status Table",
+      "type": "table",
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 6},
+      "targets": [
+        {"expr": "justnews_agent_health_status{target=\"per_agent\"}", "format": "table"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "mappings": [
+            {"type": "value", "options": {
+              "0": {"text": "Healthy", "color": "green"},
+              "1": {"text": "Degraded", "color": "orange"},
+              "2": {"text": "Unhealthy", "color": "red"},
+              "3": {"text": "Unreachable", "color": "red"},
+              "4": {"text": "Unknown", "color": "gray"}
+            }}
+          ]
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "Value"}, "properties": [
+            {"id": "custom.width", "value": 100}
+          ]}
+        ]
+      },
+      "options": {"showHeader": true}
+    },
+    {
+      "id": 8,
+      "title": "Health Trends",
+      "type": "row",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 16},
+      "collapsed": false
+    },
+    {
+      "id": 9,
+      "title": "Fleet Health Status Over Time",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 17},
+      "targets": [
+        {"expr": "max(justnews_agent_health_status{target=\"overall\"})", "legendFormat": "overall"}
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {"lineWidth": 2}
+        }
+      },
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 10,
+      "title": "Degraded/Unhealthy Agent Count",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 17},
+      "targets": [
+        {"expr": "sum((justnews_agent_health_status{target=\"per_agent\"} > 0) and (justnews_agent_health_status{target=\"per_agent\"} < 2))", "legendFormat": "degraded"},
+        {"expr": "sum(justnews_agent_health_status{target=\"per_agent\"} >= 2)", "legendFormat": "unhealthy"}
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "short"}
+      },
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 11,
+      "title": "Connectivity Metrics",
+      "type": "row",
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 25},
+      "collapsed": false
+    },
+    {
+      "id": 12,
+      "title": "Active Connections",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 26},
+      "targets": [
+        {"expr": "sum(justnews_active_connections)", "legendFormat": "connections"}
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "short"}
+      },
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    },
+    {
+      "id": 13,
+      "title": "Queue Depth",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 26},
+      "targets": [
+        {"expr": "sum(justnews_processing_queue_size)", "legendFormat": "queue items"}
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "short"}
+      },
+      "options": {
+        "legend": {"displayMode": "list", "placement": "bottom"},
+        "tooltip": {"mode": "multi"}
+      }
+    }
+  ],
+  "version": 3,
+  "schemaVersion": 36,
+  "style": "dark"
+}
