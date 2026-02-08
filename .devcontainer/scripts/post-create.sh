@@ -33,7 +33,7 @@ INIT_FAILURES=0
 
 # Get configuration from global.env
 if [ -f /app/global.env ]; then
-    export $(grep -v '^#' /app/global.env | grep -v '^\s*$' | xargs)
+    source /app/global.env
     log_success "Loaded configuration from global.env"
 else
     log_warning "global.env not found; using defaults"
@@ -53,32 +53,40 @@ MARIADB_PORT="${MARIADB_PORT:-3306}"
 MARIADB_USER="${MARIADB_USER:-justnews}"
 MARIADB_PASSWORD="${MARIADB_PASSWORD:-dev_justnews_password}"
 
-MAX_RETRIES=30
-RETRY_COUNT=0
+# Export for Django to use
+export MARIADB_HOST MARIADB_PORT MARIADB_USER MARIADB_PASSWORD
 
-while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if nc -z "$MARIADB_HOST" "$MARIADB_PORT" 2>/dev/null; then
-        log_success "MariaDB is accessible at $MARIADB_HOST:$MARIADB_PORT"
-        break
-    fi
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-        log_info "  Attempt $RETRY_COUNT/$MAX_RETRIES: waiting for MariaDB..."
+# Use Python socket for reliable connectivity check (nc may not be available)
+MAX_WAIT=60
+WAIT_COUNT=0
+
+while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+    python3 << EOF 2>/dev/null && break
+import socket
+try:
+    sock = socket.create_connection(("$MARIADB_HOST", $MARIADB_PORT), timeout=2)
+    sock.close()
+    exit(0)
+except:
+    exit(1)
+EOF
+    WAIT_COUNT=$((WAIT_COUNT + 1))
+    if [ $WAIT_COUNT -lt $MAX_WAIT ]; then
         sleep 1
     fi
 done
 
-if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    log_error "MariaDB failed to start after $MAX_RETRIES attempts"
+if [ $WAIT_COUNT -eq $MAX_WAIT ]; then
+    log_error "MariaDB failed to start after $MAX_WAIT seconds"
     INIT_FAILURES=$((INIT_FAILURES + 1))
 else
-    log_success "MariaDB is ready"
+    log_success "MariaDB is ready (after $WAIT_COUNT seconds)"
 fi
 
 # Step 2: Run Django migrations
 log_info ""
 log_info "Step 2: Running Django migrations..."
-if python manage.py migrate --noinput 2>&1 | tee /tmp/migrate.log; then
+if python manage.py migrate --fake-initial --noinput 2>&1 | tee /tmp/migrate.log; then
     log_success "Django migrations completed"
 else
     log_error "Django migrations failed (check /tmp/migrate.log)"
@@ -89,22 +97,40 @@ fi
 log_info ""
 log_info "Step 3: Verifying service connectivity..."
 
-# Check ChromaDB
+# Check ChromaDB using Python socket (v0.4.18 pinned for stability)
 CHROMADB_HOST="${CHROMADB_HOST:-chromadb}"
 CHROMADB_PORT="${CHROMADB_PORT:-3307}"
-if nc -z "$CHROMADB_HOST" "$CHROMADB_PORT" 2>/dev/null; then
-    log_success "ChromaDB accessible at $CHROMADB_HOST:$CHROMADB_PORT"
+if python3 << EOF 2>/dev/null
+import socket
+try:
+    sock = socket.create_connection(("$CHROMADB_HOST", $CHROMADB_PORT), timeout=2)
+    sock.close()
+    exit(0)
+except:
+    exit(1)
+EOF
+then
+    log_success "ChromaDB accessible at $CHROMADB_HOST:$CHROMADB_PORT (v0.4.18)"
 else
     log_warning "ChromaDB not yet accessible at $CHROMADB_HOST:$CHROMADB_PORT (may still be starting)"
 fi
 
-# Check vLLM
+# Check vLLM using Python socket
 VLLM_HOST="${VLLM_HOST:-vllm}"
 VLLM_PORT="${VLLM_PORT:-8001}"
-if nc -z "$VLLM_HOST" "$VLLM_PORT" 2>/dev/null; then
-    log_success "vLLM accessible at $VLLM_HOST:$VLLM_PORT"
+if python3 << EOF 2>/dev/null
+import socket
+try:
+    sock = socket.create_connection(("$VLLM_HOST", $VLLM_PORT), timeout=2)
+    sock.close()
+    exit(0)
+except:
+    exit(1)
+EOF
+then
+    log_success "vLLM accessible at $VLLM_HOST:$VLLM_PORT (model loading in progress)"
 else
-    log_warning "vLLM not yet accessible at $VLLM_HOST:$VLLM_PORT (model loading in progress)"
+    log_warning "vLLM not yet accessible at $VLLM_HOST:$VLLM_PORT (initialization can take 1-2 minutes)"
 fi
 
 # Step 4: Collect static files for Django
