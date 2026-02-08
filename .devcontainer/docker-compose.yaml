@@ -11,6 +11,16 @@ services:
     depends_on:
       - vllm
     command: sleep infinity
+    labels:
+      service: "app"
+      component: "web-application"
+      tier: "critical"
+      owner: "infrastructure"
+      gpu_required: "false"
+      memory_required: "2GB"
+      healthcheck: "curl http://localhost:8000/health"
+      restart_policy: "always"
+      dependencies: "mariadb,chromadb,vllm"
 
   mariadb:
     image: mariadb:latest
@@ -23,6 +33,19 @@ services:
       - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
+    labels:
+      service: "mariadb"
+      component: "database"
+      tier: "critical"
+      owner: "dba"
+      gpu_required: "false"
+      memory_required: "1GB"
+      disk_required: "10GB"
+      healthcheck: "mysql -u root -p$MYSQL_ROOT_PASSWORD -e 'SELECT 1'"
+      restart_policy: "always"
+      backup_required: "true"
+      backup_interval: "daily"
+      max_connections: "100"
 
   chromadb:
     image: chromadb/chroma:0.4.18
@@ -35,6 +58,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    labels:
+      service: "chromadb"
+      component: "vector-database"
+      tier: "critical"
+      owner: "ml-ops"
+      gpu_required: "false"
+      memory_required: "4GB"
+      healthcheck: "curl -f http://localhost:8000/api/v1/heartbeat"
+      healthcheck_interval: "10s"
+      restart_policy: "always"
+      api_version: "0.4.18"
+      monitor_collections: "true"
+      alert_on_disconnected: "true"
 
   vllm:
     image: vllm/vllm-openai:latest
@@ -46,6 +82,24 @@ services:
     command: --model Qwen/Qwen2.5-14B-Instruct-AWQ
     ports:
       - "8001:8000"
+    labels:
+      service: "vllm"
+      component: "llm-inference"
+      tier: "critical"
+      owner: "ml-ops"
+      gpu_required: "true"
+      gpu_memory_required: "24GB"
+      host_memory_required: "8GB"
+      model: "Qwen/Qwen2.5-14B-Instruct-AWQ"
+      model_size: "14B"
+      model_quantization: "AWQ"
+      model_download_size: "14GB"
+      model_load_time_seconds: "300"
+      healthcheck: "curl -f http://localhost:8000/v1/models"
+      restart_policy: "always"
+      startup_timeout_seconds: "600"
+      alert_on_slow_inference: "true"
+      max_concurrent_requests: "5"
 
 volumes:
   justnews_deps:
