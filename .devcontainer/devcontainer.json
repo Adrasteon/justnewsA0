@@ -1,0 +1,17 @@
+{
+    "name": "Trixie CUDA Dev",
+    "dockerComposeFile": "docker-compose.yaml",
+    "service": "app",
+    "workspaceFolder": "/app",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "mtxr.sqltools",
+                "ms-azuretools.vscode-docker"
+            ]
+        }
+    },
+    "forwardPorts": [3306, 3307, 8001, 8100],
+    "postCreateCommand": "/usr/local/bin/create_deps_venv.sh"
+}

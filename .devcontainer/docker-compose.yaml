@@ -1,0 +1,49 @@
+version: "3.8"
+services:
+  app:
+    build: .
+    volumes:
+      - ..:/app:cached
+      - justnews_deps:/deps
+      - justnews_data:/data
+    gpus: all
+    user: root
+    depends_on:
+      - vllm
+    command: sleep infinity
+
+  mariadb:
+    image: mariadb:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-dev_root_password}
+      MYSQL_USER: ${MARIADB_USER:-justnews}
+      MYSQL_PASSWORD: ${MARIADB_PASSWORD:-dev_justnews_password}
+      MYSQL_DATABASE: ${MARIADB_DB:-justnews}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "3307:8000"
+
+  vllm:
+    image: vllm/vllm-openai:latest
+    gpus: all
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    command: --model Qwen/Qwen2.5-14B-Instruct-AWQ
+    ports:
+      - "8001:8000"
+
+volumes:
+  justnews_deps:
+    driver: local
+  justnews_data:
+    driver: local
+  mariadb_data:
+    driver: local

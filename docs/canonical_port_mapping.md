@@ -1,7 +1,7 @@
 # Canonical Port Mapping — JustNews Infrastructure
 
 **STATUS: SINGLE SOURCE OF TRUTH**
-*Last Updated: 2026-01-27*
+*Last Updated: 2026-02-08*
 
 This document serves as the absolute reference for port allocations within the JustNews ecosystem. All service configurations, container definitions, and environment variables must adhere to this registry to prevent collision and ensure service discovery.
 
@@ -19,7 +19,7 @@ This document serves as the absolute reference for port allocations within the J
 | **8007** | `memory` | `MEMORY_AGENT_PORT` | **Memory Service**. Long-term context and recall. |
 | **8008** | `reasoning` | `REASONING_AGENT_PORT` | **Reasoning Agent**. Complex query processing. |
 | **8009** | `newsreader` | `NEWSREADER_PORT` | **Newsreader**. Content ingestion and parsing. |
-| **8010** | `vllm-service` | `QWEN_API_PORT` | **VLLM / Qwen 2.5**. Centralized LLM inference server. |
+| **8010** | `vllm-service` | `VLLM_SERVICE_PORT` | **VLLM / Qwen 2.5** API. *Note: Dev container uses 8001 for vLLM; production uses 8010.* |
 | **8011** | `analytics` | `ANALYTICS_AGENT_PORT` | **Analytics Agent**. Performance tracking and metrics. |
 | **8012** | `archive` | `ARCHIVE_AGENT_PORT` | **Archive Service**. Historical record storage. |
 | **8013** | `dashboard` | `DASHBOARD_PORT` | **Main Dashboard**. User interface for operations. |
@@ -29,18 +29,32 @@ This document serves as the absolute reference for port allocations within the J
 | **8017** | `journalist` | `JOURNALIST_PORT` | **Journalist Agent**. Final article composition. |
 | **8018** | `auth-service` | `AUTH_SERVICE_PORT` | **Auth Service**. Authentication and Identity. |
 | **8019** | `hitl-service` | `HITL_SERVICE_PORT` | **Human-in-the-Loop**. Manual intervention interface. |
+| **8020** | `workflow-orchestrator` | `WORKFLOW_ORCHESTRATOR_PORT` | **Workflow Orchestrator**. Job scheduling and pipeline management. |
+| **8100** | `publisher-website` | `PUBLISHER_PORT` | **Django Publisher**. Public-facing news website (development server). |
 
 ## 2. Infrastructure & Data (Standard Ports)
 
 | Port | Service Identifier | Configuration Key | Description |
 | :--- | :--- | :--- | :--- |
 | **3000** | `grafana` | `GRAFANA_URL` | **Grafana**. Observability visualization. |
+| **3100** | `loki` | `LOKI_PORT` | **Loki**. Log aggregation (telemetry stack). |
 | **3306** | `mariadb` | `DB_PORT` | **MariaDB/MySQL**. Relational database. |
 | **3307** | `chromadb` | `CHROMA_PORT` | **ChromaDB**. Vector database (Alternate port to avoid 8000). |
+| **4317** | `otel-collector` | `OTEL_GRPC_PORT` | **OpenTelemetry Collector**. Metrics/traces ingest (gRPC). |
 | **6379** | `redis` | `REDIS_PORT` | **Redis**. Caching and Pub/Sub. |
-| **9090** | `prometheus` | `PROMETHEUS_PORT` | **Prometheus**. Metrics aggregation (Planned). |
+| **9090** | `prometheus` | `PROMETHEUS_PORT` | **Prometheus**. Metrics aggregation. |
+| **9093** | `alertmanager` | `ALERTMANAGER_PORT` | **AlertManager**. Alert routing and management. |
+| **9100** | `node-exporter` | `NODE_EXPORTER_PORT` | **Node Exporter**. Host metrics (internal). |
+| **9411** | `tempo` | `TEMPO_PORT` | **Tempo (Jaeger)**. Distributed tracing visualization. |
 
-## 3. Legacy & Deprecated
+## 3. Development Environment
+
+| Port | Service Identifier | Configuration Key | Description |
+| :--- | :--- | :--- | :--- |
+| **8100** | `publisher-website-dev` | `PUBLISHER_PORT` | **Django Publisher Dev**. Local development server for the public-facing website. |
+| **8200** | `vault` | `VAULT_ADDR` | **HashiCorp Vault**. Secrets management (default local address). |
+
+## 4. Legacy & Deprecated
 
 | Port | Service Identifier | Status | Notes |
 | :--- | :--- | :--- | :--- |

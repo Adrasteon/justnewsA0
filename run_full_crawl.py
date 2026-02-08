@@ -5,7 +5,9 @@ import requests
 
 sys.path.append(os.getcwd())
 os.environ["JUSTNEWS_DISABLE_TEST_DB_FALLBACK"] = "1"
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+# Only disable CUDA devices when explicitly requested (DEV_CPU_ONLY=1)
+if os.environ.get("DEV_CPU_ONLY", "") == "1" or os.environ.get("FORCE_CPU", "") == "1":
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 from database.utils.migrated_database_utils import create_database_service
 
