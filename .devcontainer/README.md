@@ -95,8 +95,8 @@ print('✓ Database connected successfully')
 # 4. Verify vLLM is accessible (may take 1-2 minutes to load model)
 curl -s http://vllm:8001/v1/models | python -m json.tool | head -10 && echo "✓ vLLM accessible"
 
-# 5. Verify ChromaDB is accessible
-curl -s http://chromadb:3307/api/version && echo "✓ ChromaDB accessible"
+# 5. Verify ChromaDB is accessible (pinned to v0.4.18 for stability)
+curl -s http://chromadb:3307/api/v1/heartbeat && echo "✓ ChromaDB accessible"
 
 # 6. Check Django migrations
 /deps/.venv/bin/python manage.py showmigrations --list 2>/dev/null | head -10 && echo "✓ Django migrations available"
@@ -130,6 +130,13 @@ echo $HF_TOKEN
 # Check vLLM logs (model may take 1-2 min to load)
 docker compose logs vllm -n 100
 ```
+
+**ChromaDB not responding:**
+- ChromaDB is pinned to **v0.4.18** for API stability
+- Verify health endpoint: `curl -s http://chromadb:3307/api/v1/heartbeat`
+- Check logs: `docker compose logs chromadb -n 100`
+- If you see 404 errors, the container may be running `latest` image with breaking API changes
+- Update docker-compose.yaml to use image: `chromadb/chroma:0.4.18`
 
 **Line ending issues (CRLF vs LF):**
 - The init script now handles this automatically
@@ -170,12 +177,12 @@ python manage.py runserver 0.0.0.0:8100
 
 ### Port Information
 
-| Component | Port | Notes |
-|-----------|------|-------|
-| **Django Publisher** | **8100** | Development server (localhost only) |
-| MariaDB | 3306 | Database backend |
-| ChromaDB | 3307 | Vector embeddings |
-| vLLM | 8001 | LLM inference service |
+| Component | Port | Status | Notes |
+|-----------|------|--------|-------|
+| **Django Publisher** | **8100** | ✓ Development | Development server (localhost only) |
+| MariaDB | 3306 | ✓ Production | Database backend (20+ GB support) |
+| ChromaDB | 3307 | ✓ Stable | Vector embeddings (**v0.4.18**) |
+| vLLM | 8001 | ✓ Production-Ready | LLM inference (Qwen 2.5 14B) |
 
 ### Database Initialization
 

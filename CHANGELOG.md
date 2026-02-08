@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased] - 2026-02-08 - **DEV CONTAINER RELIABILITY & SETUP IMPROVEMENTS**
 
-### 🐳 **Dev Container Setup Enhancements - STABLE**
+### 🐳 **Dev Container Setup Enhancements - PRODUCTION READY**
 
 - **✅** Fixed CRLF line ending issues in `global.env` that broke Django settings imports
 - **✅** Upgraded dependency management to use **UV package manager** (`uv venv`, `uv pip install`)
@@ -16,12 +16,18 @@ All notable changes to this project will be documented in this file.
 - **✅** Extended MariaDB wait timeout from 30 to 60 seconds for slower container startups
 - **✅** Separated dependency installation (`create_deps_venv.sh`) from post-create initialization (`post-create.sh`)
 - **✅** Enhanced initialization reporting with detailed success/warning messages and recovery hints
-- **✅** Updated dev container documentation with comprehensive troubleshooting and setup procedures
+- **✅** Pinned **ChromaDB to v0.4.18** for API stability (latest image has breaking changes)
+- **✅** Added ChromaDB health check endpoint: `/api/v1/heartbeat`
+- **✅** Verified vLLM fully operational: Qwen 2.5 14B model loaded and inference ready
+- **✅** Updated dev container documentation with comprehensive troubleshooting and service status
 - **✅** Updated `docs/dev-setup.md` with UV-based installation and post-create initialization details
 
-**Result:** Dev container now initializes reliably with 100+ packages (FastAPI, Django, PyTorch, Transformers, etc.) on first start.
+**Result:** Dev container initializes reliably with all services operational:
+- ✅ MariaDB: Connected, database initialized, migrations applied
+- ✅ vLLM: Model fully loaded, API responding on port 8001
+- ✅ ChromaDB: Stable v0.4.18 with health checks enabled
 
-Status: **DEV CONTAINER SETUP COMPLETE & DOCUMENTED**
+Status: **DEV CONTAINER PRODUCTION READY ✅**
 
 ## [Unreleased] - 2026-01-28 - **QWEN 2.5 STANDARDIZATION**
 
