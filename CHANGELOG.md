@@ -3,6 +3,26 @@ last_updated: 2025-09-12 last_updated: 2025-11-01 ---
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-02-08 - **DEV CONTAINER RELIABILITY & SETUP IMPROVEMENTS**
+
+### 🐳 **Dev Container Setup Enhancements - STABLE**
+
+- **✅** Fixed CRLF line ending issues in `global.env` that broke Django settings imports
+- **✅** Upgraded dependency management to use **UV package manager** (`uv venv`, `uv pip install`)
+- **✅** Switched from deprecated `requirements.txt` to **`requirements-bootstrap.txt`** for reliable pip installs
+- **✅** Replaced unreliable shell `nc` commands with Python socket-based connectivity checks (MariaDB, ChromaDB, vLLM)
+- **✅** Improved environment variable loading: changed from grep/export to `source /app/global.env`
+- **✅** Added `--fake-initial` flag to Django migrations for pre-existing database schemas
+- **✅** Extended MariaDB wait timeout from 30 to 60 seconds for slower container startups
+- **✅** Separated dependency installation (`create_deps_venv.sh`) from post-create initialization (`post-create.sh`)
+- **✅** Enhanced initialization reporting with detailed success/warning messages and recovery hints
+- **✅** Updated dev container documentation with comprehensive troubleshooting and setup procedures
+- **✅** Updated `docs/dev-setup.md` with UV-based installation and post-create initialization details
+
+**Result:** Dev container now initializes reliably with 100+ packages (FastAPI, Django, PyTorch, Transformers, etc.) on first start.
+
+Status: **DEV CONTAINER SETUP COMPLETE & DOCUMENTED**
+
 ## [Unreleased] - 2026-01-28 - **QWEN 2.5 STANDARDIZATION**
 
 ### 🔄 **Model Standardization: Qwen 2.5 14B AWQ**
