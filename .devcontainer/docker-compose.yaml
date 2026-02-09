@@ -1,6 +1,7 @@
 version: "3.8"
 services:
   app:
+    container_name: app
     build: .
     volumes:
       - ..:/app:cached
@@ -23,6 +24,7 @@ services:
       dependencies: "mariadb,chromadb,vllm"
 
   mariadb:
+    container_name: mariadb
     image: mariadb:latest
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-dev_root_password}
@@ -48,6 +50,7 @@ services:
       max_connections: "100"
 
   chromadb:
+    container_name: chromadb
     image: chromadb/chroma:0.4.18
     environment:
       - IS_PERSISTENT=TRUE
@@ -77,6 +80,7 @@ services:
       backup_required: "true"
 
   vllm:
+    container_name: vllm
     image: vllm/vllm-openai:latest
     gpus: all
     environment:
