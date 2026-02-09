@@ -101,14 +101,20 @@ Scans for containers matching these patterns:
 - Generic names: `app`, `mariadb`, `chromadb`, `vllm`
 
 Scans for volumes matching these patterns:
-- `{ProjectDir}_justnews_deps`, `{ProjectDir}_justnews_data`, `{ProjectDir}_mariadb_data`
-- `justnews_deps`, `justnews_data`, `mariadb_data`
+- `{ProjectDir}_justnews_deps`, `{ProjectDir}_justnews_data`, `{ProjectDir}_mariadb_data`, `{ProjectDir}_chromadb_data`
+- `justnews_deps`, `justnews_data`, `mariadb_data`, `chromadb_data`
 
 #### **Phase 2: Archival (Non-Destructive)**
 Before deletion, backs up:
 - **MariaDB MySQL directory** (/var/lib/mysql)
   - Copied via `docker cp` to preserve data
   - Stored at: `~/.justnews_backups/mariadb_YYYYMMDD_HHMMSS/`
+- **ChromaDB embeddings volume** (/chroma/data)
+  - Vector embeddings from collected articles
+  - Stored at: `~/.justnews_backups/chromadb_YYYYMMDD_HHMMSS/`
+  - Two backup methods:
+    1. Volume data backup via temporary container
+    2. Container directory backup via docker cp
 - **Database metadata** for recovery reference
 
 #### **Phase 3: Cleanup**
@@ -158,6 +164,13 @@ archive_mariadb_data()
   → Create backup directory
   → docker cp container:/var/lib/mysql → backup
   → Stop containers gracefully
+  → Log backup path
+
+archive_chromadb_data()
+  → Find ChromaDB volumes and containers
+  → Create backup directory
+  → For volumes: docker run temporary container to copy /chroma/data
+  → For containers: docker cp container:/chroma/data → backup
   → Log backup path
 
 # 4. Stop containers
@@ -218,6 +231,14 @@ JustNews DevContainer Pre-Build Cleanup
 [✓]   ✓ Backed up MySQL data directory
 [✓] MariaDB data archived to: /home/user/.justnews_backups/mariadb_20260209_145032
 
+[INFO] Step 1b: Archiving ChromaDB embeddings...
+[INFO] Archiving ChromaDB data from existing containers...
+[INFO] Found ChromaDB volume(s): chromadb_data
+[INFO]   Archiving volume: chromadb_data
+[✓]   ✓ Backed up ChromaDB volume: chromadb_data
+[INFO]   Archiving from container: justnews_chromadb_1
+[✓]   ✓ Backed up ChromaDB data directory from container
+
 [INFO] Step 2: Removing containers...
 [INFO]   Stopping: justnews_mariadb_1
 [INFO]   Stopping: justnews_chromadb_1
@@ -235,14 +256,17 @@ JustNews DevContainer Pre-Build Cleanup
 [INFO]   Removing: justnews_deps
 [INFO]   Removing: justnews_data
 [INFO]   Removing: mariadb_data
+[INFO]   Removing: chromadb_data
 [✓] All volumes removed
 
 ========================================
 ✓ Pre-build cleanup complete!
 ========================================
 
-[INFO] Data archived to: /home/user/.justnews_backups/mariadb_20260209_145032
-[INFO] To restore archived data, contact your DevOps team
+[INFO] Data archived to:
+[INFO]   MariaDB: /home/user/.justnews_backups/mariadb_20260209_145032
+[INFO]   ChromaDB: /home/user/.justnews_backups/chromadb_20260209_145032
+[INFO] To restore archived data, consult CHROMADB_PERSISTENCE_GUIDE.md
 [INFO] Ready for new devcontainer build!
 [INFO] New containers will use correct names without -1 suffixes
 ```
@@ -265,16 +289,25 @@ bash /path/to/app/.devcontainer/scripts/pre-build-cleanup.sh
 # List all archives
 ls -la ~/.justnews_backups/
 
-# List specific archive
+# List MariaDB archive
 ls -la ~/.justnews_backups/mariadb_20260209_145032/
+
+# List ChromaDB archive
+ls -la ~/.justnews_backups/chromadb_20260209_145032/
 ```
 
 ### **Restore MariaDB Data** (Advanced)
 ```bash
 # Contact DevOps for guided restore process
-# Data is preserved in ~/.justnews_backups/
-
+# Data is preserved in ~/.justnews_backups/mariadb_*/
 # Do NOT manually move data - wait for restore procedure
+```
+
+### **Restore ChromaDB Embeddings** (Advanced)
+```bash
+# See CHROMADB_PERSISTENCE_GUIDE.md for detailed restoration steps
+# Embeddings are backed up in ~/.justnews_backups/chromadb_*/
+# Automatic restoration happens until volume is recreated
 ```
 
 ### **Force Clean Without Archival**

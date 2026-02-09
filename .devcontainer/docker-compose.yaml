@@ -50,7 +50,9 @@ services:
   chromadb:
     image: chromadb/chroma:0.4.18
     environment:
-      - IS_PERSISTENT=FALSE
+      - IS_PERSISTENT=TRUE
+    volumes:
+      - chromadb_data:/chroma/data
     ports:
       - "3307:8000"
     healthcheck:
@@ -71,6 +73,8 @@ services:
       api_version: "0.4.18"
       monitor_collections: "true"
       alert_on_disconnected: "true"
+      persistence: "true"
+      backup_required: "true"
 
   vllm:
     image: vllm/vllm-openai:latest
@@ -107,4 +111,6 @@ volumes:
   justnews_data:
     driver: local
   mariadb_data:
+    driver: local
+  chromadb_data:
     driver: local

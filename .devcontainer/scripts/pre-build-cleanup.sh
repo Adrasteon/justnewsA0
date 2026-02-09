@@ -62,9 +62,11 @@ VOLUME_PATTERNS=(
     "${PROJECT_DIR}_justnews_deps"
     "${PROJECT_DIR}_justnews_data"
     "${PROJECT_DIR}_mariadb_data"
+    "${PROJECT_DIR}_chromadb_data"
     "justnews_deps"
     "justnews_data"
     "mariadb_data"
+    "chromadb_data"
 )
 
 # ============================================================================
@@ -178,6 +180,73 @@ archive_mariadb_data() {
     else
         log_warning "No MariaDB data was archived (database may be new)"
         rmdir "$BACKUP_PATH" 2>/dev/null || true
+    fi
+}
+
+# Archive ChromaDB data
+archive_chromadb_data() {
+    log_info "Archiving ChromaDB data from existing containers..."
+    
+    # Find chromadb_data volume
+    local chromadb_volume=$(docker volume ls --format "{{.Name}}" 2>/dev/null | grep -i chromadb || true)
+    
+    if [ -z "$chromadb_volume" ]; then
+        log_info "No ChromaDB volumes found to archive"
+        return 0
+    fi
+    
+    mkdir -p "$BACKUP_PATH"
+    
+    log_info "Found ChromaDB volume(s): $chromadb_volume"
+    
+    for volume in $chromadb_volume; do
+        log_info "  Archiving volume: $volume"
+        
+        # Create a temporary container to mount and copy the volume
+        local temp_container="temp_backup_chroma_$$"
+        
+        if docker run --rm -v "$volume:/chroma_data" -v "$BACKUP_PATH:$BACKUP_PATH" \
+            alpine sh -c "cp -r /chroma_data \"$BACKUP_PATH/chromadb_${volume}\" 2>/dev/null && true" 2>/dev/null; then
+            log_success "  ✓ Backed up ChromaDB volume: $volume"
+        else
+            log_warning "  Could not backup ChromaDB volume (may be empty or inaccessible)"
+        fi
+    done
+    
+    # Also attempt to archive from running containers
+    local container_ids=$(docker ps -a \
+        --filter "name=chromadb" \
+        --format "{{.ID}}" 2>/dev/null || true)
+    
+    if [ -n "$container_ids" ]; then
+        log_info "Archiving ChromaDB data from running containers..."
+        
+        for container_id in $container_ids; do
+            local container_name=$(docker ps -a \
+                --filter "id=$container_id" \
+                --format "{{.Names}}" 2>/dev/null || true)
+            
+            if [ -z "$container_name" ]; then
+                continue
+            fi
+            
+            log_info "  Archiving from container: $container_name"
+            
+            # Stop container if running
+            if docker ps --filter "id=$container_id" --quiet 2>/dev/null | grep -q .; then
+                log_info "    Stopping container for backup..."
+                docker stop "$container_id" --time=5 2>/dev/null || true
+            fi
+            
+            # Copy chroma data directory from container
+            if [ -d "$BACKUP_PATH" ]; then
+                if docker cp "$container_id:/chroma/data" "$BACKUP_PATH/chromadb_container_${container_name}" 2>/dev/null; then
+                    log_success "    ✓ Backed up ChromaDB data directory from container"
+                else
+                    log_warning "    Could not copy ChromaDB data directory (may not exist yet)"
+                fi
+            fi
+        done
     fi
 }
 
@@ -320,6 +389,13 @@ main() {
     if [ ${#containers[@]} -gt 0 ]; then
         log_info "Step 1: Archiving data from existing containers..."
         archive_mariadb_data
+        echo ""
+    fi
+    
+    # Step 4b: Archive ChromaDB data (non-destructive)
+    if [ ${#volumes[@]} -gt 0 ]; then
+        log_info "Step 1b: Archiving ChromaDB embeddings..."
+        archive_chromadb_data
         echo ""
     fi
     
