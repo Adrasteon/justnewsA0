@@ -254,8 +254,8 @@ The script has 5-10 second timeouts on all network operations. If it hangs:
 # Kill and check with verbose output
 timeout 30 python canonical_status_check.py -v
 
-# Or check specific service
-curl -v http://chromadb:8000/api/v1/heartbeat
+# Or check specific service (ChromaDB v2 API)
+curl -v http://chromadb:8000/api/v2/heartbeat
 ```
 
 ### "Connection refused" on Docker services

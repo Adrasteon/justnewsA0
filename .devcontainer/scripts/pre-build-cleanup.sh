@@ -312,7 +312,7 @@ verify_images() {
     local required_images=(
         "nvidia/cuda:12.4.1-devel-ubuntu22.04"
         "mariadb:latest"
-        "chromadb/chroma:0.4.18"
+        "chromadb/chroma:latest"
         "vllm/vllm-openai:latest"
     )
     

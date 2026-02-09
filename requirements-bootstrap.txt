@@ -63,7 +63,7 @@ duckduckgo-search>=5.0
 faster-whisper>=1.0
 qwen-vl-utils
 datasets
-chromadb>=0.4
+chromadb
 crawl4ai==0.8.0
 litellm
 patchright

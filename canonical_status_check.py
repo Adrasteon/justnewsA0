@@ -262,7 +262,7 @@ class CanonicalStatusChecker:
             
         start = time.time()
         try:
-            url = f"http://{self.chromadb_host}:{self.chromadb_port}/api/v1/heartbeat"
+            url = f"http://{self.chromadb_host}:{self.chromadb_port}/api/v2/heartbeat"
             response = requests.get(url, timeout=5)
             duration = time.time() - start
             

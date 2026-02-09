@@ -6,7 +6,7 @@ This guide explains how JustNews DevContainer manages ChromaDB embeddings to ens
 
 ## Configuration Changes
 
-### Before (Ephemeral)
+### Before (Ephemeral, v0.4.18)
 ```yaml
 chromadb:
   image: chromadb/chroma:0.4.18
@@ -17,10 +17,10 @@ chromadb:
 
 **Problem:** Every time containers are removed/rebuilt, all embeddings (vector representations of crawled content) are lost. This means re-ingesting data and re-generating embeddings for every dev cycle.
 
-### After (Persistent)
+### After (Persistent, Latest with v2 API)
 ```yaml
 chromadb:
-  image: chromadb/chroma:0.4.18
+  image: chromadb/chroma:latest
   environment:
     - IS_PERSISTENT=TRUE  # ✅ Embeddings persisted to disk
   volumes:
@@ -95,12 +95,9 @@ docker cp ~/.justnews_backups/chromadb_chromadb_data/chroma_data \
 ### Verify Embeddings
 
 ```bash
-# Check if embeddings are persisted
-docker exec chromadb ls -lah /chroma/data/
-
-# Query using ChromaDB HTTP API
-curl http://localhost:3307/api/v1/heartbeat
-curl http://localhost:3307/api/v1/collections
+# Query using ChromaDB HTTP API (v2)
+curl http://localhost:3307/api/v2/heartbeat
+curl http://localhost:3307/api/v2/collections
 ```
 
 ## Environment Variables

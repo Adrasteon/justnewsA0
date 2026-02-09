@@ -98,7 +98,7 @@ def test_chromadb_connectivity():
         # Health endpoint
         try:
             response = urllib.request.urlopen(
-                "http://chromadb:3307/api/v1/heartbeat",
+                "http://chromadb:3307/api/v2/heartbeat",
                 timeout=3
             )
             if response.status == 200:

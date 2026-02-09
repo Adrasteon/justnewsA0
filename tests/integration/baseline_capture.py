@@ -87,7 +87,7 @@ class BaselineCapture:
             self.results["notes"].append(f"Could not get MariaDB version: {e}")
         
         # Get service versions (will be populated if services are running)
-        self.results["environment"]["chromadb_version"] = "0.4.18"  # Pinned version
+        self.results["environment"]["chromadb_version"] = "latest"  # Latest version with v2 API
         self.results["environment"]["vllm_version"] = "0.14.1"  # From docker-compose
         self.results["environment"]["model"] = "Qwen/Qwen2.5-14B-Instruct-AWQ"
     
