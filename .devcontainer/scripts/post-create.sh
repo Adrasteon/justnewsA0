@@ -3,7 +3,20 @@ set -euo pipefail
 
 # JustNews Dev Container Post-Create Initialization Script
 # Runs after dependency venv is created to set up the development environment
+# 
+# NOTE: Pre-build cleanup (pre-build-cleanup.sh) has already executed on the HOST
+#       to remove containers/volumes from previous builds and prevent naming conflicts.
+#       This script now runs inside the freshly-built container with clean services.
+#
 # This includes database migration, service verification, and health checks
+# Execution Order:
+#   1. Wait for MariaDB (3-phase polling: port → connection → auth)
+#   1.5. Settling time for database stability
+#   2. Run Django migrations (Publisher app)
+#   2.1. Run SQL migrations (14 pipeline tables)
+#   3. Wait for ChromaDB polling
+#   4. Wait for vLLM polling
+#   5. Collect static files and verify
 
 # Colors for output
 RED='\033[0;31m'
@@ -45,6 +58,10 @@ cd /app
 log_info "=========================================="
 log_info "JustNews Dev Container Initialization"
 log_info "=========================================="
+log_info ""
+log_success "Pre-build cleanup completed on host (containers/volumes cleaned)"
+log_info "Building fresh infrastructure with correct service names..."
+log_info ""
 
 # Step 1: Wait for MariaDB to be fully ready and operational
 log_info "Step 1: Waiting for MariaDB to be fully ready..."

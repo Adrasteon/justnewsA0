@@ -13,5 +13,11 @@
         }
     },
     "forwardPorts": [3306, 3307, 8001, 8100],
-    "postCreateCommand": "/usr/local/bin/create_deps_venv.sh"
+    "initializeCommand": "bash .devcontainer/scripts/pre-build-cleanup.sh || bash /app/.devcontainer/scripts/pre-build-cleanup.sh || true",
+    "postCreateCommand": "/usr/local/bin/create_deps_venv.sh",
+    "remoteUser": "root",
+    "remoteEnv": {
+        "DOCKER_BUILDKIT": "1",
+        "COMPOSE_DOCKER_CLI_BUILD": "1"
+    }
 }
