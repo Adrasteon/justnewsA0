@@ -14,7 +14,7 @@ import os
 import re
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
@@ -113,7 +113,7 @@ def _store_raw_html(
 
     try:
         target_dir.mkdir(parents=True, exist_ok=True)
-        timestamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
         digest = hashlib.sha256(url.encode("utf-8", errors="ignore")).hexdigest()[:16]
         filename = f"{timestamp}_{digest}_{uuid.uuid4().hex[:12]}.html"
         file_path = target_dir / filename

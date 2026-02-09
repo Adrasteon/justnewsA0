@@ -16,7 +16,7 @@ import json
 import sys
 import time
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from typing import Any
 
@@ -144,7 +144,7 @@ def _ensure_parent(path: Path) -> None:
 
 
 def _now() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 def _sleep_until(target: datetime) -> None:

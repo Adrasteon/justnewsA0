@@ -11,7 +11,7 @@ Features:
 """
 
 from abc import ABC, abstractmethod
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from typing import Any, Dict, List, Optional, Type, TypeVar, Union
 
 from pydantic import BaseModel as PydanticBaseModel, Field, ConfigDict, field_serializer
@@ -38,8 +38,8 @@ class BaseModel(PydanticBaseModel, ABC):
     id: Optional[int] = Field(default=None, description="Primary key")
 
     # Timestamps
-    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
-    updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
+    created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Database connection pool (set at class level)
     _connection_pool: Optional[DatabaseConnectionPool] = None
@@ -269,11 +269,11 @@ CREATE TABLE IF NOT EXISTS {cls.__tablename__} (
 
         # Prepare data
         data = self.model_dump(exclude_unset=True, exclude={'id'})
-        data['updated_at'] = datetime.now(UTC)
+        data['updated_at'] = datetime.now(timezone.utc)
 
         if self.id is None:
             # INSERT
-            data['created_at'] = datetime.now(UTC)
+            data['created_at'] = datetime.now(timezone.utc)
             fields = list(data.keys())
             values = list(data.values())
             placeholders = ['%s'] * len(fields)

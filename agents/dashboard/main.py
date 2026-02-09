@@ -9,7 +9,7 @@ import json
 import os
 import time
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from typing import Any
 
@@ -323,7 +323,7 @@ def set_publishing_config(payload: dict, request: Request):
             audit_dir.mkdir(parents=True, exist_ok=True)
             audit_file = audit_dir / "publishing_config_changes.jsonl"
             audit_entry = {
-                "ts": datetime.now(UTC).isoformat(),
+                "ts": datetime.now(timezone.utc).isoformat(),
                 "payload": payload,
             }
             # If admin action was performed with a JWT, record admin identity

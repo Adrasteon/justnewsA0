@@ -20,7 +20,7 @@ import statistics
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from typing import Any
 
 from .trace_collector import TraceData, TraceSpan
@@ -40,7 +40,7 @@ class ServiceDependency:
     avg_duration_ms: float = 0.0
     error_count: int = 0
     error_rate: float = 0.0
-    last_seen: datetime = field(default_factory=lambda: datetime.now(UTC))
+    last_seen: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -54,7 +54,7 @@ class PerformanceBottleneck:
     description: str
     evidence: dict[str, Any]
     recommendations: list[str]
-    detected_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    detected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -70,7 +70,7 @@ class TraceAnalysis:
     bottlenecks: list[PerformanceBottleneck]
     service_dependencies: list[ServiceDependency]
     recommendations: list[str]
-    analyzed_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    analyzed_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class TraceProcessor:
@@ -412,12 +412,12 @@ class TraceProcessor:
                 existing.call_count = total_calls
                 existing.error_count += dep.error_count
                 existing.error_rate = existing.error_count / total_calls
-                existing.last_seen = datetime.now(UTC)
+                existing.last_seen = datetime.now(timezone.utc)
 
     def _update_baselines(self, trace_data: TraceData):
         """Update performance baselines from recent traces"""
         # Get traces from analysis window
-        cutoff_time = datetime.now(UTC) - timedelta(minutes=self.analysis_window_minutes)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=self.analysis_window_minutes)
         recent_traces = [
             trace
             for trace in self.processed_traces
@@ -446,7 +446,7 @@ class TraceProcessor:
                     "p95": p95,
                     "p99": p99,
                     "count": len(durations),
-                    "updated_at": datetime.now(UTC),
+                    "updated_at": datetime.now(timezone.utc),
                 }
 
     def _generate_recommendations(

@@ -15,7 +15,7 @@ Key Features:
 
 import os
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from enum import Enum
 from typing import Any
 
@@ -186,7 +186,7 @@ class ChiefEditorEngine:
                 "CHIEF_EDITOR_FEEDBACK_LOG", "./feedback_chief_editor.log"
             )
             with open(feedback_log, "a", encoding="utf-8") as f:
-                timestamp = datetime.now(UTC).isoformat()
+                timestamp = datetime.now(timezone.utc).isoformat()
                 f.write(f"{timestamp}\t{event}\t{details}\n")
         except Exception as e:
             logger.error(f"Error logging feedback: {e}")

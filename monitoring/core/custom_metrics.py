@@ -10,7 +10,7 @@ import os
 import sys
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from enum import Enum
 from typing import Any
 
@@ -378,10 +378,10 @@ class CustomMetrics:
         if key not in self._throughput_counters:
             self._throughput_counters[key] = []
 
-        self._throughput_counters[key].append((datetime.now(UTC), throughput))
+        self._throughput_counters[key].append((datetime.now(timezone.utc), throughput))
 
         # Keep only recent history (last 24 hours)
-        cutoff = datetime.now(UTC) - timedelta(hours=24)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
         self._throughput_counters[key] = [
             (ts, val) for ts, val in self._throughput_counters[key] if ts > cutoff
         ]
@@ -437,7 +437,7 @@ class CustomMetrics:
         self._content_metrics_history.append(metrics)
 
         # Keep only recent history (last 7 days)
-        cutoff = datetime.now(UTC) - timedelta(days=7)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=7)
         self._content_metrics_history = [
             m for m in self._content_metrics_history if m.timestamp > cutoff
         ]
@@ -463,7 +463,7 @@ class CustomMetrics:
 
     def get_processing_stats(self, hours: int = 24) -> dict[str, Any]:
         """Get processing statistics for the last N hours"""
-        cutoff = datetime.now(UTC) - timedelta(hours=hours)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
 
         recent_metrics = [
             m for m in self._content_metrics_history if m.timestamp > cutoff
@@ -510,7 +510,7 @@ class CustomMetrics:
         self, content_type: str = None, stage: str = None, hours: int = 24
     ) -> dict[str, Any]:
         """Get throughput trends for the last N hours"""
-        cutoff = datetime.now(UTC) - timedelta(hours=hours)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
         trends = {}
 
         for key, data_points in self._throughput_counters.items():

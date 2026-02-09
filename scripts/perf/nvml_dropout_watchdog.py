@@ -89,7 +89,7 @@ class NvmlDropoutWatchdog:
 
     @staticmethod
     def _now_iso() -> str:
-        return _dt.datetime.now(_dt.UTC).isoformat(timespec="milliseconds") + "Z"
+        return _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="milliseconds") + "Z"
 
     def _write_log(self, payload: dict[str, Any]) -> None:
         if self._fh is None:

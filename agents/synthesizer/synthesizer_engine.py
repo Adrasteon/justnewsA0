@@ -24,7 +24,7 @@ import asyncio
 import os
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from typing import Any
 
@@ -1369,7 +1369,7 @@ class SynthesizerEngine:
         """Log feedback for training and monitoring."""
         try:
             with open(self.config.feedback_log, "a", encoding="utf-8") as f:
-                timestamp = datetime.now(UTC).isoformat()
+                timestamp = datetime.now(timezone.utc).isoformat()
                 f.write(f"{timestamp}\t{event}\t{details}\n")
         except Exception as e:
             logger.warning(f"Feedback logging failed: {e}")

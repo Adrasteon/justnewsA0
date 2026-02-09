@@ -85,26 +85,26 @@ services:
   #     context: ../../
   #     dockerfile: infrastructure/docker/agent-dockerfiles/Dockerfile.scout
   #   container_name: justnews-scout
-    environment:
-      DEPLOY_ENV: development
-      LOG_LEVEL: INFO
-      MYSQL_HOST: mariadb
-      MYSQL_DB: justnews
-      MYSQL_USER: justnews
-      MYSQL_PASSWORD: change_me
-      CHROMA_HOST: chromadb
-      CHROMA_PORT: 3307
-      REDIS_HOST: redis
-      MCP_BUS_HOST: mcp-bus
-      MCP_BUS_PORT: 8000
-    ports:
-      - "8002:8002"
-    networks:
-      - justnews-network
-    restart: unless-stopped
-    depends_on:
-      mcp-bus:
-        condition: service_started
+  #   environment:
+  #     DEPLOY_ENV: development
+  #     LOG_LEVEL: INFO
+  #     MYSQL_HOST: mariadb
+  #     MYSQL_DB: justnews
+  #     MYSQL_USER: justnews
+  #     MYSQL_PASSWORD: change_me
+  #     CHROMA_HOST: chromadb
+  #     CHROMA_PORT: 3307
+  #     REDIS_HOST: redis
+  #     MCP_BUS_HOST: mcp-bus
+  #     MCP_BUS_PORT: 8000
+  #   ports:
+  #     - "8002:8002"
+  #   networks:
+  #     - justnews-network
+  #   restart: unless-stopped
+  #   depends_on:
+  #     mcp-bus:
+  #       condition: service_started
 
   analyst:
     build:

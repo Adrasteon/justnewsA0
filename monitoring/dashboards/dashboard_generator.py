@@ -31,7 +31,7 @@ class DashboardConfig(BaseModel):
     tags: list[str] = Field(default_factory=list, description="Dashboard tags")
     refresh: str = Field("30s", description="Dashboard refresh interval")
     time_range: str = Field("1h", description="Default time range")
-    timezone: str = Field("UTC", description="Dashboard timezone")
+    timezone: str = Field("timezone.utc", description="Dashboard timezone")
 
     @field_validator("refresh")
     @classmethod

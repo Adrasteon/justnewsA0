@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 
 from agents.common.agent_chain_harness import AgentChainHarness, AgentChainResult
@@ -25,7 +25,7 @@ class HarnessResultPersistence:
     def save(self, article_row: dict, result: AgentChainResult) -> None:
         self.db_service.ensure_conn()
         cursor = self.db_service.mb_conn.cursor()
-        timestamp = datetime.now(UTC).isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         fact_check_payload = {
             "timestamp": timestamp,
             "claims": result.fact_checks,

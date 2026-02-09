@@ -14,7 +14,7 @@ import json
 import os
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
@@ -418,7 +418,7 @@ class GenericSiteCrawler:
         hash_algorithm = os.environ.get("ARTICLE_URL_HASH_ALGO", "sha256")
         hash_candidate = normalized_url or canonical_url or url
         url_hash = hash_article_url(hash_candidate, algorithm=hash_algorithm)
-        timestamp = datetime.now(UTC).isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
 
         extraction_metadata: dict[str, Any] = {
             "strategy": self.site_config.crawling_strategy,

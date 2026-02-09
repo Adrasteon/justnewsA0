@@ -17,7 +17,7 @@ import os
 import subprocess
 import time
 import uuid
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from threading import Lock
 
 OUT_PATH = os.path.abspath(
@@ -88,7 +88,7 @@ def _write_event(record: dict):
 def start_event(**meta) -> str:
     """Start an event and return an event_id. meta may include agent, operation, batch_size, etc."""
     event_id = uuid.uuid4().hex
-    now = datetime.now(UTC).isoformat()
+    now = datetime.now(timezone.utc).isoformat()
     with _lock:
         _events[event_id] = {"meta": meta, "start_time": now}
     return event_id
@@ -110,7 +110,7 @@ def end_event(event_id: str, **outcome):
         record["meta"] = ev.get("meta", {})
         record["start_time"] = ev.get("start_time")
 
-    record["end_time"] = datetime.now(UTC).isoformat()
+    record["end_time"] = datetime.now(timezone.utc).isoformat()
     # merge outcome data
     record.update(outcome)
 
@@ -133,14 +133,14 @@ def end_event(event_id: str, **outcome):
             st = record.get("start_time")
             # parse ISO strings to epoch
             st_epoch = time.mktime(time.strptime(st.split(".")[0], "%Y-%m-%dT%H:%M:%S"))
-            et = datetime.now(UTC).isoformat()
+            et = datetime.now(timezone.utc).isoformat()
             et_epoch = time.mktime(time.strptime(et.split(".")[0], "%Y-%m-%dT%H:%M:%S"))
             record["processing_time_s"] = max(0.0, et_epoch - st_epoch)
     except Exception:
         # ignore parsing errors
         pass
 
-    record["written_at"] = datetime.now(UTC).isoformat()
+    record["written_at"] = datetime.now(timezone.utc).isoformat()
     _write_event(record)
     return record
 
@@ -150,7 +150,7 @@ def emit_instant(**event):
     record = {
         "instant": True,
         "meta": event,
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     try:
         mem = _read_torch_memory()

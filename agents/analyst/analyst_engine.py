@@ -26,7 +26,7 @@ import statistics
 import time
 import warnings
 from collections import Counter, defaultdict
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from typing import TYPE_CHECKING, Any
 
 from common.observability import get_logger
@@ -319,7 +319,7 @@ class AnalystEngine:
     def _log_feedback(self, event: str, details: dict[str, Any]) -> None:
         """Log analysis feedback for monitoring and improvement."""
         try:
-            timestamp = datetime.now(UTC).isoformat()
+            timestamp = datetime.now(timezone.utc).isoformat()
             log_entry = {
                 "timestamp": timestamp,
                 "event": event,

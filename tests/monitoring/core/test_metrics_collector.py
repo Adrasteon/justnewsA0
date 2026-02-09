@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -114,7 +114,7 @@ async def test_anomaly_detection(collector):
     # Setup history with low variance
     history = []
     for _ in range(25):
-        history.append((datetime.now(UTC), 10.0))
+        history.append((datetime.now(timezone.utc), 10.0))
 
     collector._metric_history["test_metric"] = history
     collector._anomaly_thresholds["test_metric"] = 3.0 # 3 sigma
@@ -132,10 +132,10 @@ async def test_anomaly_detection(collector):
     history_noisy = []
     for i in range(25):
         val = 10.0 + (0.1 if i % 2 == 0 else -0.1)
-        history_noisy.append((datetime.now(UTC), val))
+        history_noisy.append((datetime.now(timezone.utc), val))
 
     # Add a massive spike at the end
-    history_noisy.append((datetime.now(UTC), 50.0))
+    history_noisy.append((datetime.now(timezone.utc), 50.0))
 
     collector._metric_history["test_metric"] = history_noisy
 
@@ -214,15 +214,15 @@ async def test_cleanup_loop(collector):
     # Add old valid alert
     old_resolved_alert = Alert(
         rule_name="old", severity=AlertSeverity.INFO, message="old",
-        value=1, threshold=1, timestamp=datetime(2020, 1, 1, tzinfo=UTC),
-        resolved=True, resolved_at=datetime(2020, 1, 1, tzinfo=UTC)
+        value=1, threshold=1, timestamp=datetime(2020, 1, 1, tzinfo=timezone.utc),
+        resolved=True, resolved_at=datetime(2020, 1, 1, tzinfo=timezone.utc)
     )
     collector._active_alerts["old_info"] = old_resolved_alert
 
     # Add new active alert
     new_alert = Alert(
         rule_name="new", severity=AlertSeverity.INFO, message="new",
-        value=1, threshold=1, timestamp=datetime.now(UTC)
+        value=1, threshold=1, timestamp=datetime.now(timezone.utc)
     )
     collector._active_alerts["new_info"] = new_alert
 

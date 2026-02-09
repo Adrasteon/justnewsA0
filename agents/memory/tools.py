@@ -18,7 +18,7 @@ Architecture:
 
 import json
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -58,7 +58,7 @@ def log_feedback(event: str, details: dict):
     """Logs feedback to a file."""
     try:
         with open(FEEDBACK_LOG, "a", encoding="utf-8") as f:
-            f.write(f"{datetime.now(UTC).isoformat()}\t{event}\t{details}\n")
+            f.write(f"{datetime.now(timezone.utc).isoformat()}\t{event}\t{details}\n")
     except Exception as e:
         logger.error(f"Error logging feedback: {e}")
 
@@ -364,7 +364,7 @@ def save_article(
         publication_dt = _parse_publication_date(metadata.get("publication_date"))
         collection_dt = _parse_publication_date(metadata.get("collection_timestamp"))
         if collection_dt is None:
-            collection_dt = datetime.now(UTC)
+            collection_dt = datetime.now(timezone.utc)
 
         review_reasons_json = json.dumps(metadata.get("review_reasons") or [])
 

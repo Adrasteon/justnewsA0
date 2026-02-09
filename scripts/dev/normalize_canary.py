@@ -9,7 +9,7 @@ JSON record to `output/canary_normalized/`.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 
 from common.url_normalization import normalize_article_url
@@ -30,8 +30,8 @@ def normalize_file(path: Path) -> Path:
     out = {
         "url": url,
         "normalized_url": normalized,
-        # Use timezone-aware UTC datetimes to avoid deprecation warnings
-        "normalized_at": datetime.now(UTC).isoformat(),
+        # Use timezone-aware timezone.utc datetimes to avoid deprecation warnings
+        "normalized_at": datetime.now(timezone.utc).isoformat(),
         "status_code": data.get("status_code"),
     }
     OUT_DIR.mkdir(parents=True, exist_ok=True)

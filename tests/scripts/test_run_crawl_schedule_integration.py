@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from argparse import Namespace
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from typing import Any
 
@@ -109,7 +109,7 @@ def run_scheduler(
         NoFollow=None,
     )
 
-    reference_time = datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
+    reference_time = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
 
     # Patch argument parsing and clock helpers so the scheduler runs deterministically.
     def _patched_parse_args() -> Namespace:

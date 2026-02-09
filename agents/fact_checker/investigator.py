@@ -19,7 +19,7 @@ import json
 import os
 import time
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from enum import Enum
 from typing import Any
 
@@ -167,7 +167,7 @@ class Investigator:
             reasoning=verdict.get("reasoning", "Insufficient evidence generated."),
             evidence=evidence,
             search_queries=plan.get("queries", []),
-            generated_at=datetime.now(UTC).isoformat()
+            generated_at=datetime.now(timezone.utc).isoformat()
         )
 
     async def _formulate_plan(self, claim: str) -> dict[str, Any]:
@@ -240,7 +240,7 @@ class Investigator:
                     content=result.markdown[:10000], # Limit content size
                     source_url=url,
                     media_type=MediaType.TEXT,
-                    timestamp=datetime.now(UTC).isoformat(),
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                     confidence=0.9,
                     metadata={"title": result.metadata.get("title", ""), "crawled_at": time.time()}
                 ))
@@ -305,7 +305,7 @@ class Investigator:
             content="\n".join(evidence_text),
             source_url=url,
             media_type=MediaType.VIDEO, # Or AUDIO
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             confidence=0.9,
             metadata={"model": "Faster-Whisper"}
         )
@@ -398,7 +398,7 @@ class Investigator:
                 content=f"VISUAL ANALYSIS (Qwen2-VL): {output_text}",
                 source_url=url,
                 media_type=MediaType.IMAGE,
-                timestamp=datetime.now(UTC).isoformat(),
+                timestamp=datetime.now(timezone.utc).isoformat(),
                 confidence=0.85,
                 metadata={
                     "screenshot_path": screenshot_path,

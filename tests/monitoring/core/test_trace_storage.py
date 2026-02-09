@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,7 +14,7 @@ from monitoring.core.trace_storage import (
 
 # Helpers
 def create_sample_span(trace_id="t1", span_id="s1", name="op1", start_offset=0, duration=100):
-    start = datetime.now(UTC) + timedelta(milliseconds=start_offset)
+    start = datetime.now(timezone.utc) + timedelta(milliseconds=start_offset)
     end = start + timedelta(milliseconds=duration)
     return TraceSpan(
         span_id=span_id,
@@ -97,7 +97,7 @@ async def test_store_and_get_trace(file_storage):
 async def test_query_traces_simple(file_storage):
     """Test querying logic using the in-memory index."""
     t1 = create_sample_trace("t1")
-    t1.start_time = datetime.now(UTC) - timedelta(hours=1) # Older
+    t1.start_time = datetime.now(timezone.utc) - timedelta(hours=1) # Older
     await file_storage.store_trace(t1)
 
     t2 = create_sample_trace("t2") # Newer
@@ -118,7 +118,7 @@ async def test_query_traces_simple(file_storage):
 @pytest.mark.asyncio
 async def test_query_traces_time_range(file_storage):
     """Test start/end time filtering."""
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
 
     t_old = create_sample_trace("old")
     t_old.start_time = now - timedelta(hours=2)
@@ -142,10 +142,10 @@ async def test_query_traces_time_range(file_storage):
 async def test_query_traces_sorting(file_storage):
     """Test sorting of results."""
     t1 = create_sample_trace("t1")
-    t1.start_time = datetime(2025, 1, 1, 10, 0, 0, tzinfo=UTC)
+    t1.start_time = datetime(2025, 1, 1, 10, 0, 0, tzinfo=timezone.utc)
 
     t2 = create_sample_trace("t2")
-    t2.start_time = datetime(2025, 1, 1, 11, 0, 0, tzinfo=UTC)
+    t2.start_time = datetime(2025, 1, 1, 11, 0, 0, tzinfo=timezone.utc)
 
     await file_storage.store_trace(t1)
     await file_storage.store_trace(t2)

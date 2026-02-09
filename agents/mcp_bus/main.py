@@ -118,6 +118,91 @@ class StatsResponse(BaseModel):
     timestamp: float = Field(..., description="Statistics timestamp")
 
 
+# Agent discovery configuration - Ref: /app/docs/canonical_port_mapping.md
+KNOWN_AGENTS = {
+    # Core Agents (8001-8020)
+    "chief-editor": {"port": 8001, "env_var": "CHIEF_EDITOR_AGENT_PORT"},
+    "scout": {"port": 8002, "env_var": "SCOUT_AGENT_PORT"},
+    "fact-checker": {"port": 8003, "env_var": "FACT_CHECKER_AGENT_PORT"},
+    "analyst": {"port": 8004, "env_var": "ANALYST_AGENT_PORT"},
+    "synthesizer": {"port": 8005, "env_var": "SYNTHESIZER_AGENT_PORT"},
+    "critic": {"port": 8006, "env_var": "CRITIC_AGENT_PORT"},
+    "memory": {"port": 8007, "env_var": "MEMORY_AGENT_PORT"},
+    "reasoning": {"port": 8008, "env_var": "REASONING_AGENT_PORT"},
+    "newsreader": {"port": 8009, "env_var": "NEWSREADER_PORT"},  # Crawler
+    "vllm-service": {"port": 8010, "env_var": "VLLM_SERVICE_PORT"},
+    "analytics": {"port": 8011, "env_var": "ANALYTICS_AGENT_PORT"},
+    "archive": {"port": 8012, "env_var": "ARCHIVE_AGENT_PORT"},
+    "dashboard": {"port": 8013, "env_var": "DASHBOARD_PORT"},
+    "gpu-orchestrator": {"port": 8014, "env_var": "GPU_ORCHESTRATOR_PORT"},
+    "crawler-worker": {"port": 8015, "env_var": "CRAWLER_AGENT_PORT"},
+    "crawler-control": {"port": 8016, "env_var": "CRAWLER_CONTROL_AGENT_PORT"},
+    "journalist": {"port": 8017, "env_var": "JOURNALIST_PORT"},
+    "auth-service": {"port": 8018, "env_var": "AUTH_SERVICE_PORT"},
+    "hitl-service": {"port": 8019, "env_var": "HITL_SERVICE_PORT"},
+    "workflow-orchestrator": {"port": 8020, "env_var": "WORKFLOW_ORCHESTRATOR_PORT"},
+}
+
+
+def get_agent_port(agent_name: str) -> int:
+    """Get the port for a known agent, checking environment variables first."""
+    if agent_name not in KNOWN_AGENTS:
+        return None
+    
+    config = KNOWN_AGENTS[agent_name]
+    env_var = config.get("env_var")
+    
+    if env_var:
+        try:
+            return int(os.environ.get(env_var, config.get("port")))
+        except (ValueError, TypeError):
+            pass
+    
+    return config.get("port")
+
+
+async def discover_and_register_agents():
+    """
+    Discover running agents by polling known ports and register them with the bus.
+    This allows agents to be discovered even if they restart after MCP Bus.
+    """
+    import asyncio
+    import httpx
+    
+    logger.info("🔍 Starting agent discovery...")
+    discovered = 0
+    
+    for agent_name, config in KNOWN_AGENTS.items():
+        port = get_agent_port(agent_name)
+        if not port:
+            continue
+        
+        agent_url = f"http://localhost:{port}"
+        
+        try:
+            # Try to verify agent is running with a health check
+            async with httpx.AsyncClient(timeout=2) as client:
+                try:
+                    response = await client.get(f"{agent_url}/health")
+                    if response.status_code in (200, 404):  # 404 means endpoint missing but server is up
+                        # Try to register the agent
+                        result = register_agent_tool(agent_name, agent_url)
+                        if result.get("status") in ("ok", "success"):
+                            logger.info(f"✅ Discovered and registered {agent_name} at {agent_url}")
+                            discovered += 1
+                except httpx.ConnectError:
+                    pass  # Agent not running on this port
+                except asyncio.TimeoutError:
+                    pass  # Agent not responding
+        except Exception as e:
+            logger.debug(f"Agent discovery check for {agent_name} on port {port}: {e}")
+    
+    if discovered > 0:
+        logger.info(f"✅ Agent discovery complete: {discovered} agent(s) registered")
+    else:
+        logger.debug("ℹ️ No agents discovered via polling (they may register themselves)")
+
+
 # Lifespan management
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -128,6 +213,9 @@ async def lifespan(app: FastAPI):
     logger.info("🚀 Starting MCP Bus Agent...")
 
     try:
+        # Discover and register any running agents
+        await discover_and_register_agents()
+        
         # Notify GPU Orchestrator that MCP Bus is ready
         success = notify_gpu_orchestrator()
         if success:

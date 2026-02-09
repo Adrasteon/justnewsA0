@@ -11,7 +11,7 @@ import json
 import os
 import time
 from collections.abc import Mapping, Sequence
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from typing import Any
 from urllib.parse import urlparse
 
@@ -236,7 +236,7 @@ class CrawlerEngine:
         self.hitl_base_url = (
             os.environ.get("HITL_SERVICE_URL")
             or os.environ.get("HITL_SERVICE_ADDRESS")
-            or "http://localhost:8040"
+            or "http://localhost:8019"
         ).rstrip("/")
         self.hitl_enabled = (
             os.environ.get("ENABLE_HITL_PIPELINE", "true").lower() != "false"
@@ -1179,7 +1179,7 @@ class CrawlerEngine:
             "extracted_text": extracted_text,
             "raw_html_ref": article.get("raw_html_ref"),
             "features": features or None,
-            "crawler_ts": article.get("timestamp") or datetime.now(UTC).isoformat(),
+            "crawler_ts": article.get("timestamp") or datetime.now(timezone.utc).isoformat(),
             "crawler_job_id": article.get("crawler_job_id"),
         }
         return candidate
@@ -1305,25 +1305,18 @@ class CrawlerEngine:
                 # Build SQL statements for source upsert and article insertion
                 # This mirrors the logic from the site-specific crawlers
                 # Use ON DUPLICATE KEY UPDATE to handle existing sources gracefully
+                # Note: last_crawl_at is the timestamp field on sources table, not last_verified
                 source_sql = """
-                INSERT INTO sources (name, domain, url, last_verified, metadata)
-                VALUES (%s, %s, %s, NOW(), %s)
+                INSERT INTO sources (name, domain, url, last_crawl_at)
+                VALUES (%s, %s, %s, NOW())
                 ON DUPLICATE KEY UPDATE
-                    last_verified = NOW(),
-                    metadata = VALUES(metadata)
-                RETURNING id
+                    last_crawl_at = NOW()
                 """
 
                 source_params = (
                     article.get("source_name", article.get("domain", "unknown")),
                     article.get("domain", "unknown"),
                     f"https://{article.get('domain', 'unknown')}",
-                    json.dumps(
-                        {
-                            "crawling_strategy": "unified_crawler",
-                            "last_crawled": article.get("timestamp"),
-                        }
-                    ),
                 )
 
                 # Article insertion SQL (will be handled by memory agent)
