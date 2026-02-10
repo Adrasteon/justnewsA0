@@ -676,16 +676,17 @@ async def summarize_article_endpoint(call: ToolCall) -> Any:
         raise HTTPException(status_code=503, detail="Engine not initialized")
 
     try:
+        # Extract article_id from args or kwargs
         if call.args:
             article_id = call.args[0]
         else:
             article_id = call.kwargs.get("article_id")
             
         if not article_id:
-             raise HTTPException(status_code=400, detail="No article_id provided")
+            raise HTTPException(status_code=400, detail="No article_id provided")
 
         logger.info(f"📝 Request to summarize article {article_id}")
-        return await summarize_article_tool(synthesizer_engine, int(article_id))
+        return await summarize_article(synthesizer_engine, int(article_id))
 
     except HTTPException:
         raise
@@ -702,27 +703,3 @@ if __name__ == "__main__":
 
     logger.info("🎯 Starting Synthesizer Agent on %s:%d", host, port)
     uvicorn.run(app, host=host, port=port)
-
-
-@app.post("/summarize_article")
-async def summarize_article_endpoint(call: ToolCall):
-    # wrapper to handle tool call format
-    kwargs = call.kwargs or {}
-    args = call.args or []
-    
-    article_id = kwargs.get("article_id")
-    if not article_id and args:
-        article_id = args[0]
-        
-    if not article_id:
-        raise HTTPException(status_code=400, detail="Missing article_id")
-
-    from .tools import summarize_article
-    # engine should be passed to tool, but typically endpoints use global engine.
-    # tools.py summarize_article takes (engine, article_id).
-    
-    global synthesizer_engine
-    if not synthesizer_engine:
-         raise HTTPException(status_code=503, detail="Engine not ready")
-         
-    return await summarize_article(synthesizer_engine, article_id)
