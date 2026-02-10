@@ -148,10 +148,24 @@ class MemoryEngine:
                  documents=[article['content']]
              )
 
-             # Update embedded flag
+             # Update embedded flag and record embedding metadata
              cursor, conn = self._acquire_cursor()
+             
              # Handling potential missing column if migration failed silently (though we verified it)
              cursor.execute("UPDATE articles SET embedded=1 WHERE id=%s", (article_id,))
+             
+             # Record embedding in embeddings_document table
+             try:
+                 import json as json_module
+                 meta_json = json_module.dumps(safe_meta) if safe_meta else '{}'
+                 cursor.execute(
+                     "INSERT INTO embeddings_document (embeddings_collection_id, document_id, content, content_hash, embedding_status, metadata) VALUES (1, %s, %s, %s, 'active', %s)",
+                     (str(article_id), article['title'][:255] if article.get('title') else '', 
+                     article.get('url_hash', ''), meta_json)
+                 )
+             except Exception as emb_error:
+                 logger.debug(f"Note: Could not record embedding metadata: {emb_error}")
+             
              if conn: 
                 conn.commit()
                 conn.close()

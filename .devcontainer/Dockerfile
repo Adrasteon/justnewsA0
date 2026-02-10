@@ -2,10 +2,11 @@ FROM nvidia/cuda:12.4.1-devel-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install basic dev tools and Python
+# Install basic dev tools, Python, and Redis
 RUN apt-get update && apt-get install -y \
     curl git python3 python3-pip python3-venv python3-distutils \
     build-essential libmariadb-dev gpg ca-certificates \
+    redis-server \
     && rm -rf /var/lib/apt/lists/*
 
 # Install `uv` tool (from PyPI) used to sync/build the dependency venv

@@ -83,7 +83,7 @@ From within dev container:
 | Service | Endpoint | Command |
 |---------|----------|---------|
 | MariaDB | `mariadb:3306` | `python manage.py dbshell` |
-| ChromaDB | `http://chromadb:3307/api/v1/heartbeat` | `curl -f http://chromadb:3307/api/v1/heartbeat` |
+| ChromaDB | `http://chromadb:3307/api/v2/heartbeat` | `curl -f http://chromadb:3307/api/v2/heartbeat` |
 | vLLM | `http://vllm:8001/v1/models` | `curl http://vllm:8001/v1/models \| python -m json.tool` |
 
 ---

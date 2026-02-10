@@ -46,7 +46,7 @@ logger = get_logger(__name__)
 
 # Environment variables
 CRAWLER_CONTROL_AGENT_PORT = int(os.environ.get("CRAWLER_CONTROL_AGENT_PORT", 8016))
-CRAWLER_AGENT_URL = os.environ.get("CRAWLER_AGENT_URL", "http://localhost:8015")
+CRAWLER_AGENT_URL = os.environ.get("CRAWLER_AGENT_URL", "http://localhost:8022")
 ANALYST_AGENT_URL = os.environ.get("ANALYST_AGENT_URL", "http://localhost:8004")
 MEMORY_AGENT_URL = os.environ.get("MEMORY_AGENT_URL", "http://localhost:8007")
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")

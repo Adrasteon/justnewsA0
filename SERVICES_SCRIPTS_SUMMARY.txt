@@ -260,7 +260,7 @@ DATABASE ISSUES:
   # Check MariaDB
   mysql -u root -p -e "SELECT version();"
   # Check ChromaDB
-  curl http://localhost:3307/api/v1/heartbeat
+  curl http://localhost:3307/api/v2/heartbeat
   # Check Redis
   redis-cli ping
 

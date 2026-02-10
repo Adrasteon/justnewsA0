@@ -177,6 +177,12 @@ async def lifespan(app: FastAPI):
             logger.info(
                 "🔍 Transparency gate satisfied; proceeding with synthesizer startup"
             )
+        elif not TRANSPARENCY_AUDIT_REQUIRED:
+            # If transparency audit is not required, mark gate as passed for readiness
+            transparency_gate_passed = True
+            logger.info(
+                "✅ Transparency audit requirement disabled; proceeding with reduced transparency mode"
+            )
         else:
             logger.warning(
                 "⚠️ Transparency gate not satisfied but audit requirement disabled; synthesizer will remain not-ready"

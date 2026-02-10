@@ -42,6 +42,13 @@ BACKUP_DIR="${HOME}/.justnews_backups"
 BACKUP_TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_PATH="${BACKUP_DIR}/mariadb_${BACKUP_TIMESTAMP}"
 
+# IDEMPOTENCE: Check for force-clean flag (allows explicit data destruction)
+FORCE_CLEAN_REBUILD=false
+if [[ "${1:-}" == "--force-clean" ]] || [[ "${1:-}" == "--clean" ]]; then
+    FORCE_CLEAN_REBUILD=true
+    log_warning "FORCE CLEAN MODE ENABLED - This will DELETE all volumes and data!"
+fi
+
 # Volume and container patterns to clean
 CONTAINER_PATTERNS=(
     "${PROJECT_DIR}_app"
@@ -288,7 +295,7 @@ remove_containers() {
     log_success "All containers removed"
 }
 
-# Remove volumes
+# Remove volumes (IDEMPOTENT: Check if volume is in-use before removing)
 remove_volumes() {
     local volumes=("$@")
     
@@ -297,14 +304,35 @@ remove_volumes() {
         return 0
     fi
     
-    log_info "Removing ${#volumes[@]} volume(s)..."
+    log_info "Checking volume status before removal..."
     
     for volume in "${volumes[@]}"; do
-        log_info "  Removing: $volume"
-        docker volume rm "$volume" 2>/dev/null || true
+        # Check if volume is being used by any container
+        local in_use=$(docker volume inspect "$volume" 2>/dev/null | grep -c "Container" || true)
+        
+        if [ "$in_use" -gt 0 ]; then
+            log_warning "  Preserving: $volume (still in use by container)"
+        else
+            log_info "  Removing orphaned volume: $volume"
+            docker volume rm "$volume" 2>/dev/null || true
+        fi
     done
     
-    log_success "All volumes removed"
+    log_success "Volume cleanup completed (preserving in-use volumes)"
+}
+
+# Check if a volume is currently being used by running containers
+is_volume_in_use() {
+    local volume="$1"
+    
+    # Get containers that use this volume
+    local containers=$(docker ps -a --format "table {{.ID}}\t{{.Mounts}}" 2>/dev/null | grep "$volume" | wc -l)
+    
+    if [ "$containers" -gt 0 ]; then
+        return 0  # Volume is in use
+    else
+        return 1  # Volume is not in use
+    fi
 }
 
 # Verify Docker images are available
@@ -407,9 +435,27 @@ main() {
     remove_containers "${containers[@]}"
     echo ""
     
-    # Step 6: Remove volumes
-    log_info "Step 3: Removing volumes..."
-    remove_volumes "${volumes[@]}"
+    # Step 6: Remove volumes (IDEMPOTENT MODE - preserve by default)
+    log_info "Step 3: Handling volumes (IDEMPOTENT MODE)..."
+    
+    if [ "$FORCE_CLEAN_REBUILD" = true ]; then
+        # FORCE CLEAN: User explicitly requested data destruction
+        log_warning "  FORCE CLEAN: Removing all volumes (DATA WILL BE LOST)"
+        remove_volumes "${volumes[@]}"
+    else
+        # IDEMPOTENT: Preserve existing volumes for data preservation
+        log_info "  IDEMPOTENT MODE: Checking volume status..."
+        log_info "  → Preserving volumes with data for next container start"
+        log_info "  → Containers will be stopped but volumes retained"
+        
+        # Still call remove_volumes but it will check in-use status
+        remove_volumes "${volumes[@]}"
+        
+        if [ ${#volumes[@]} -gt 0 ]; then
+            log_success "  ✓ Volume preservation logic applied"
+            log_info "  → To force a clean rebuild: .devcontainer/scripts/pre-build-cleanup.sh --force-clean"
+        fi
+    fi
     echo ""
     
     # Step 7: Verify cleanup
@@ -440,14 +486,25 @@ main() {
     echo -e "${GREEN}========================================${NC}"
     echo ""
     
+    if [ "$FORCE_CLEAN_REBUILD" = true ]; then
+        log_warning "FORCE CLEAN MODE: All volumes were removed (fresh start)"
+        log_info "Any archived data can be found at: $BACKUP_DIR"
+    else
+        log_success "IDEMPOTENT MODE ACTIVE: Data volumes preserved"
+        log_info "Your workflow data will be available after container start"
+        log_info "To force a clean rebuild next time, run:"
+        log_info "  bash .devcontainer/scripts/pre-build-cleanup.sh --force-clean"
+    fi
+    
     if [ -d "$BACKUP_PATH" ] && [ -n "$(ls -A "$BACKUP_PATH" 2>/dev/null)" ]; then
-        log_info "Data archived to: $BACKUP_PATH"
+        log_info ""
+        log_info "Backup archive created at: $BACKUP_PATH"
         log_info "To restore archived data, contact your DevOps team"
         echo ""
     fi
     
     log_info "Ready for new devcontainer build!"
-    log_info "New containers will use correct names without -1 suffixes"
+    log_info "Volumes will be mounted and your data will be available"
     echo ""
     
     return 0

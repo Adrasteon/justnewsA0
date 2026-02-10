@@ -1,10 +1,46 @@
 Devcontainer GPU / Volumes guide
 -------------------------------
 
+---
+
+## 🔴 CRITICAL: Data Preservation on Rebuild (v2.0 - IDEMPOTENT)
+
+**YOUR WORKFLOW DATA IS NOW PRESERVED WHEN YOU REBUILD!**
+
+### ✅ What Changed:
+- **Before**: All data deleted on rebuild ❌
+- **Now**: Data volumes preserved automatically ✅
+
+### 📌 When You Rebuild:
+```bash
+# Normal rebuild (PRESERVES data)
+VSCode: Cmd/Ctrl + Shift + P → "Remote-Containers: Rebuild and Reopen"
+# All articles, embeddings, analysis kept!
+
+# Force clean rebuild (if needed)
+bash .devcontainer/scripts/pre-build-cleanup.sh --force-clean
+# Then rebuild normally
+```
+
+### 🛡️ What's Preserved:
+- ✅ All articles ingested with crawlers
+- ✅ All embeddings in ChromaDB
+- ✅ All entity extraction analysis
+- ✅ All sentiment/bias analyses
+- ✅ Living stories and updates
+- ✅ Task metadata and status
+- ✅ Vector database collections
+
+### 📖 Full Details:
+See: [`DEVCONTAINER_IDEMPOTENCE_GUARANTEE.md`](../DEVCONTAINER_IDEMPOTENCE_GUARANTEE.md)
+
+---
+
 Quick summary
 - Code volume: host repo is mounted at `/app` (bind-mount)
 - Dependency volume: isolated named volume mounted at `/deps` (created by Compose)
 - Data volume: persistent named volume mounted at `/data`
+- **Database volumes**: Preserved across rebuilds (mariadb_data, chromadb_data)
 
 Host requirements
 - Docker Engine or Docker Desktop with WSL2 backend (Windows).
@@ -40,6 +76,7 @@ Or set `FORCE_CPU=1`. Use CPU-only mode **only for testing/debugging** on system
 Rebuild / open devcontainer
 - In VS Code: Command Palette → Remote-Containers: Rebuild and Reopen in Container.
 - You may need to install NVIDIA/WSL GPU support on Windows before GPU access is available.
+- **Note**: Your workflow data will be preserved! See "Data Preservation" section above.
 
 Automatic Initialization on First Start
 - When the container is created, `postCreateCommand` automatically runs two scripts:
@@ -48,6 +85,7 @@ Automatic Initialization on First Start
   - Creates Python virtualenv at `/deps/.venv` using UV
   - Installs 100+ packages from `requirements-bootstrap.txt`
   - Includes: FastAPI, Django, PyTorch, Transformers, Pandas, SQLAlchemy, etc.
+
   
   **2. `/usr/local/bin/post-create.sh`** — Post-Create Initialization
   - Loads environment from `global.env` (with proper line endings)

@@ -8,6 +8,10 @@ set -euo pipefail
 echo "Creating dependency venv at /deps/.venv"
 mkdir -p /deps
 
+# Set UV to use copy mode for cross-filesystem compatibility
+# Avoids hardlinking warnings when cache and target dirs are on different filesystems
+export UV_LINK_MODE=copy
+
 # Fix any CRLF line endings in global.env that break Django imports
 if [ -f /app/global.env ]; then
   sed -i 's/\r$//' /app/global.env

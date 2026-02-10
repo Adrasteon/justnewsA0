@@ -114,7 +114,7 @@ CHROMA_PORT_VAL=${CHROMADB_PORT:-${CHROMA_PORT:-3307}}
 if curl -fsS "http://${CHROMA_HOST}:${CHROMA_PORT_VAL}/api/v2/auth/identity" >/dev/null 2>&1; then
     echo -e "${GREEN}✅ ChromaDB accessible${NC}"
 else
-    if curl -fsS "http://${CHROMA_HOST}:${CHROMA_PORT_VAL}/api/v1/health" >/dev/null 2>&1 || curl -fsS "http://${CHROMA_HOST}:${CHROMA_PORT_VAL}/" >/dev/null 2>&1; then
+    if curl -fsS "http://${CHROMA_HOST}:${CHROMA_PORT_VAL}/api/v2/heartbeat" >/dev/null 2>&1 || curl -fsS "http://${CHROMA_HOST}:${CHROMA_PORT_VAL}/" >/dev/null 2>&1; then
         echo -e "${GREEN}✅ ChromaDB accessible (alternate endpoint)${NC}"
     else
         echo -e "${RED}❌ Cannot access ChromaDB${NC}"
@@ -191,7 +191,7 @@ echo "ChromaDB Status:"
 # Prefer the modern identity endpoint, fall back to v1/health or root
 if curl -fsS "http://${CHROMA_HOST}:${CHROMA_PORT_VAL}/api/v2/auth/identity" >/dev/null 2>&1; then
     echo "  ChromaDB: ✅ Running (identity endpoint)"
-elif curl -fsS "http://${CHROMA_HOST}:${CHROMA_PORT_VAL}/api/v1/health" >/dev/null 2>&1 || curl -fsS "http://${CHROMA_HOST}:${CHROMA_PORT_VAL}/" >/dev/null 2>&1; then
+elif curl -fsS "http://${CHROMA_HOST}:${CHROMA_PORT_VAL}/api/v2/heartbeat" >/dev/null 2>&1 || curl -fsS "http://${CHROMA_HOST}:${CHROMA_PORT_VAL}/" >/dev/null 2>&1; then
     echo "  ChromaDB: ✅ Running (alternate endpoint)"
 else
     echo "  ChromaDB: ❌ Not responding"
