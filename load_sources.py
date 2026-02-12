@@ -26,8 +26,8 @@ if env_file.exists():
 import mysql.connector
 
 def parse_sources_markdown(file_path):
-    """Parse top_100_sources.md and extract source data"""
-    print("Parsing sources markdown...")
+    """Parse global_news_sources.md and extract source data"""
+    print(f"Parsing sources from {file_path}...")
     
     sources = []
     try:
@@ -38,9 +38,14 @@ def parse_sources_markdown(file_path):
         in_table = False
         
         for line in lines:
-            # Skip header separator line
-            if line.startswith('|---'):
+            line = line.strip()
+            # Detect table start: | Name | Domain | URL | ...
+            if '| Name | Domain |' in line:
                 in_table = True
+                continue
+            
+            # Skip horizontal separator: | :--- | :--- | ...
+            if in_table and '| :---' in line:
                 continue
             
             # Parse table rows
@@ -48,7 +53,7 @@ def parse_sources_markdown(file_path):
                 # Split by pipe and clean
                 parts = [p.strip() for p in line.split('|')[1:-1]]  # Remove first/last empty
                 
-                if len(parts) >= 5:
+                if len(parts) >= 6:
                     try:
                         source = {
                             'name': parts[0],
@@ -56,7 +61,8 @@ def parse_sources_markdown(file_path):
                             'url': parts[2],
                             'country': parts[3],
                             'language': parts[4],
-                            'description': parts[5] if len(parts) > 5 else '',
+                            'type': parts[5],
+                            'description': parts[6] if len(parts) > 6 else '',
                         }
                         
                         # Validate URL
@@ -93,13 +99,10 @@ def create_sources_table(cursor):
             country VARCHAR(10),
             language VARCHAR(10),
             description TEXT,
-            is_active BOOLEAN DEFAULT TRUE,
-            crawl_interval INT DEFAULT 24,
             last_crawl_at TIMESTAMP NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            INDEX idx_domain (domain),
-            INDEX idx_active (is_active)
+            INDEX idx_domain (domain)
         )
     """)
     print("✓ Sources table created\n")
@@ -136,8 +139,8 @@ def load_sources_to_database(sources, host, port, user, password, database):
                 # Try to insert
                 cursor.execute("""
                     INSERT INTO sources 
-                    (name, domain, url, country, language, description, is_active, crawl_interval)
-                    VALUES (%s, %s, %s, %s, %s, %s, TRUE, 24)
+                    (name, domain, url, country, language, description)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                 """, (
                     source['name'],
                     source['domain'],
@@ -200,11 +203,6 @@ def verify_sources(host, port, user, password, database):
         total = cursor.fetchone()[0]
         print(f"✓ Total sources in database: {total}")
         
-        # Active sources
-        cursor.execute("SELECT COUNT(*) FROM sources WHERE is_active = TRUE")
-        active = cursor.fetchone()[0]
-        print(f"✓ Active sources: {active}")
-        
         # Countries represented
         cursor.execute("SELECT COUNT(DISTINCT country) FROM sources")
         countries = cursor.fetchone()[0]
@@ -264,7 +262,7 @@ def main():
     print(f"  User: {user}\n")
     
     # Parse sources
-    sources = parse_sources_markdown('/app/top_100_sources.md')
+    sources = parse_sources_markdown('/app/global_news_sources.md')
     
     if not sources:
         print("✗ No sources found to load")

@@ -77,8 +77,9 @@ key components:
 
 ### Hardware & Inference Strategy
 - **Primary Intelligence**: Qwen 2.5 14B Instruct (AWQ/Int4) served via vLLM.
-- **Multi-modal Support**: Whisper (Audio) and Qwen-VL (Vision) loaded on-demand via a **Model Swapping** strategy to maximize VRAM availability for reasoning context.
-- **Hardware Requirement**: Single NVIDIA GPU with 24GB VRAM (e.g., RTX 3090/4090) is required for the full pipeline.
+- **Scalability**: Multi-worker uvicorn deployment with **lazy model loading** for core agents.
+- **Resource Management**: Agents run in "Safe Mode" by default to conserve RAM; high-density batch processing supports up to 30 concurrent tasks.
+- **Hardware Requirement**: Single NVIDIA GPU with 24GB VRAM (e.g., RTX 3090/4090) is optimized for this configuration.
 
 ## 🤝 Contributing
 

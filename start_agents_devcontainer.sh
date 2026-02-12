@@ -5,14 +5,6 @@
 set -e
 cd /app
 
-# Activate virtualenv and load environment
-source /deps/.venv/bin/activate
-source global.env
-
-# Create logs directory
-mkdir -p /tmp/justnews_agents_logs
-LOG_DIR="/tmp/justnews_agents_logs"
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -25,29 +17,52 @@ log_success() { echo -e "${GREEN}[✓]${NC} $1"; }
 log_warning() { echo -e "${YELLOW}[⚠]${NC} $1"; }
 log_error() { echo -e "${RED}[✗]${NC} $1"; }
 
+# Activate virtualenv and load environment
+source /deps/.venv/bin/activate
+
+# Load environment variables and export them
+if [ -f "global.env" ]; then
+    log_info "Loading environment variables from global.env..."
+    # Export variables from global.env, skipping comments and empty lines
+    set -a
+    source global.env
+    set +a
+else
+    log_warning "global.env not found!"
+fi
+
 log_info "=========================================="
 log_info "JustNews Agent Startup (DevContainer)"
 log_info "=========================================="
 log_info ""
 
-# Array of agents: name|module:app|port|env_vars (optional)
+# Array of agents: name|module:app|port|env_vars (optional)|workers (optional)
+# Balanced workers to prevent RAM exhaustion (each worker ~1.2GB)
+if [ "$USE_EXTERNAL_FACT_CHECKER" == "true" ]; then
+    log_info "Using External Fact Checker Shim..."
+    # Point to the background process started on port 8011 for immediate usage
+    FACT_CHECKER_CMD="fact_checker|agents.fact_checker.shim:app|8003|FACT_CHECKER_EXTERNAL_URL=http://localhost:8011|1"
+else
+    FACT_CHECKER_CMD="fact_checker|agents.fact_checker.main:app|8003||2"
+fi
+
 AGENTS=(
-  "mcp_bus|agents.mcp_bus.main:app|8000|"
-  "chief_editor|agents.chief_editor.main:app|8001|"
-  "fact_checker|agents.fact_checker.main:app|8003|"
-  "analyst|agents.analyst.main:app|8004|"
-  "synthesizer|agents.synthesizer.main:app|8005|EVIDENCE_AUDIT_BASE_URL=http://localhost:8000"
-  "critic|agents.critic.main:app|8006|"
-  "memory|agents.memory.main:app|8007|"
-  "reasoning|agents.reasoning.main:app|8008|"
-  "newsreader|agents.newsreader.main:app|8009|"
-  "dashboard|agents.dashboard.main:app|8013|"
-  "analytics|agents.analytics.dashboard:analytics_app|8012|"
-  "gpu_orchestrator|agents.gpu_orchestrator.main:app|8014|"
-  "archive|agents.archive.main:app|8020|ARCHIVE_AGENT_PORT=8020"
-  "workflow_orchestrator|agents.workflow_orchestrator.main:app|8023|WORKFLOW_ORCHESTRATOR_PORT=8023"
-  "crawler|agents.crawler.main:app|8022|"
-  "crawler_control|agents.crawler_control.main:app|8016|"
+  "mcp_bus|agents.mcp_bus.main:app|8000||1"
+  "chief_editor|agents.chief_editor.main:app|8001||1"
+  "$FACT_CHECKER_CMD"
+  "analyst|agents.analyst.main:app|8004||1"
+  "synthesizer|agents.synthesizer.main:app|8005|EVIDENCE_AUDIT_BASE_URL=http://localhost:8000|2"
+  "critic|agents.critic.main:app|8006||1"
+  "memory|agents.memory.main:app|8007||1"
+  "reasoning|agents.reasoning.main:app|8008||1"
+  "newsreader|agents.newsreader.main:app|8009||1"
+  "dashboard|agents.dashboard.main:app|8013||1"
+  "analytics|agents.analytics.dashboard:analytics_app|8012||1"
+  "gpu_orchestrator|agents.gpu_orchestrator.main:app|8014||1"
+  "archive|agents.archive.main:app|8020|ARCHIVE_AGENT_PORT=8020|1"
+  "workflow_orchestrator|agents.workflow_orchestrator.main:app|8023|WORKFLOW_ORCHESTRATOR_PORT=8023|1"
+  "crawler|agents.crawler.main:app|8022||1"
+  "crawler_control|agents.crawler_control.main:app|8016||1"
 )
 
 PIDS=()
@@ -56,7 +71,7 @@ FAILED_AGENTS=()
 
 log_info "Checking for existing processes on target ports..."
 for entry in "${AGENTS[@]}"; do
-  IFS='|' read -r name module port env_vars <<< "$entry"
+  IFS='|' read -r name module port env_vars workers <<< "$entry"
   if ss -ltn "sport = :$port" 2>/dev/null | grep -q LISTEN; then
     log_warning "Port $port already in use (may be previous agent instance)"
   fi
@@ -67,9 +82,12 @@ log_info "Starting ${#AGENTS[@]} agents..."
 log_info ""
 
 for entry in "${AGENTS[@]}"; do
-  IFS='|' read -r name module port env_vars <<< "$entry"
+  IFS='|' read -r name module port env_vars workers <<< "$entry"
   
-  log_info "Starting: $name (port $port)"
+  # Default workers to 1 if not specified
+  workers=${workers:-1}
+  
+  log_info "Starting: $name (port $port, workers $workers)"
   
   # Build environment export
   agent_env=""
@@ -81,7 +99,7 @@ for entry in "${AGENTS[@]}"; do
   out_log="$LOG_DIR/${name}.log"
   err_log="$LOG_DIR/${name}.err"
   
-  if eval "$agent_env uvicorn $module --host 0.0.0.0 --port $port --log-level info" > "$out_log" 2> "$err_log" &
+  if eval "$agent_env uvicorn $module --host 0.0.0.0 --port $port --workers $workers --log-level info" > "$out_log" 2> "$err_log" &
   then
     pid=$!
     PIDS+=("$pid")

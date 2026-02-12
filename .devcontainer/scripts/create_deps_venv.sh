@@ -20,7 +20,13 @@ fi
 
 if command -v uv >/dev/null 2>&1; then
   echo "UV package manager found: $(uv --version)"
-  echo "Creating venv with UV..."
+  echo "Creating/verifying venv with UV..."
+  
+  # Clean up any stale lock files that might cause hangs
+  if [ -f /deps/.venv/.lock ]; then
+    echo "Removing stale lock file in /deps/.venv"
+    rm -f /deps/.venv/.lock
+  fi
   
   uv venv /deps/.venv
   

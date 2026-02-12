@@ -27,25 +27,37 @@
 - ✅ **vLLM** (Port 8001) - LLM inference engine
 
 ### Agent Services (uvicorn - Just Started)
-**14/16 agents operational:**
+**15/16 agents operational (Scaled & Optimized):**
 - ✅ mcp_bus (Port 8000) - Central message bus
 - ✅ chief_editor (Port 8001) - Editorial decisions
 - ✅ workflow_orchestrator (Port 8023) - Pipeline routing
 - ✅ crawler (Port 8022) - Article discovery
 - ✅ newsreader (Port 8009) - Feed processing
-- ✅ fact_checker (Port 8003) - Content verification
+- ✅ fact_checker (Port 8003) - **SCALED (2 WORKERS)**
 - ✅ analyst (Port 8004) - Clustering & analysis
 - ✅ memory (Port 8007) - Embeddings storage
 - ✅ reasoning (Port 8008) - Logic processing
 - ✅ critic (Port 8006) - Quality review
+- ✅ synthesizer (Port 8005) - **SCALED (2 WORKERS) - NOW OPERATIONAL**
 - ✅ crawler_control (Port 8016) - Crawler management
 - ✅ gpu_orchestrator (Port 8014) - GPU resource management
 - ✅ analytics (Port 8012) - Metrics & analytics
 - ✅ archive (Port 8020) - Data archival
 
-**2/16 agents non-critical (skipped):**
-- ⚠️ synthesizer (Port 8005) - Requires transparency audit gateway
+**1/16 agents non-critical (skipped):**
 - ⚠️ dashboard (Port 8013) - Requires archive_storage/transparency setup
+
+---
+
+## ⚡ Performance Optimization & Scaling
+
+The system is now optimized for the **RTX 3090 (24GB VRAM)**:
+
+- **Multi-Worker Scaling**: Key agents (Fact Checker, Synthesizer) run with multiple workers to fill GPU compute gaps.
+- **Lazy Model Loading**: Agents run in "Safe Mode" by default, bypassing heavy local transformers to conserve RAM. 
+- **High Concurrency**: The orchestrator is tuned for **30 simultaneous tasks**, maximizing throughput.
+
+To adjust scaling or memory limits, see `system_config.json` and `start_agents_devcontainer.sh`.
 
 ---
 

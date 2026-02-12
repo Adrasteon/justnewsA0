@@ -70,10 +70,12 @@ VOLUME_PATTERNS=(
     "${PROJECT_DIR}_justnews_data"
     "${PROJECT_DIR}_mariadb_data"
     "${PROJECT_DIR}_chromadb_data"
+    "${PROJECT_DIR}_huggingface_cache"
     "justnews_deps"
     "justnews_data"
     "mariadb_data"
     "chromadb_data"
+    "huggingface_cache"
 )
 
 # ============================================================================
@@ -138,13 +140,17 @@ find_volumes() {
 # Archive MariaDB data
 archive_mariadb_data() {
     local backup_volumes=()
+    local all_containers=($(find_containers))
     
-    # Find mariadb_data volumes
-    local container_ids=$(docker ps -a \
-        --filter "name=mariadb" \
-        --format "{{.ID}}" 2>/dev/null || true)
+    # Filter for mariadb containers from the already found containers
+    local container_ids=()
+    for container in "${all_containers[@]}"; do
+        if [[ "$container" =~ "mariadb" ]]; then
+            container_ids+=("$container")
+        fi
+    done
     
-    if [ -z "$container_ids" ]; then
+    if [ ${#container_ids[@]} -eq 0 ]; then
         log_info "No existing MariaDB containers found to archive"
         return 0
     fi
@@ -153,32 +159,24 @@ archive_mariadb_data() {
     
     log_info "Archiving MariaDB data from existing containers..."
     
-    for container_id in $container_ids; do
-        local container_name=$(docker ps -a \
-            --filter "id=$container_id" \
-            --format "{{.Names}}" 2>/dev/null || true)
-        
-        if [ -z "$container_name" ]; then
-            continue
-        fi
+    for container_id in "${container_ids[@]}"; do
+        local container_name="$container_id"
         
         log_info "  Archiving from container: $container_name"
         
         # Try to dump database if container is running or can be started
-        if docker ps --filter "id=$container_id" --quiet 2>/dev/null | grep -q .; then
+        if docker ps --filter "name=^/${container_name}$" --format "{{.Status}}" 2>/dev/null | grep -q "Up"; then
             # Container is running
             log_info "    Container is running, requesting graceful shutdown..."
-            docker stop "$container_id" --time=10 2>/dev/null || true
+            docker stop "$container_name" --time=10 2>/dev/null || true
         fi
         
         # Attempt to use docker cp to backup mysql data directory
-        if docker ps -a --filter "id=$container_id" --quiet 2>/dev/null | grep -q .; then
-            log_info "    Attempting to copy /var/lib/mysql from container..."
-            if docker cp "$container_id:/var/lib/mysql" "$BACKUP_PATH/mysql_data_${container_name}" 2>/dev/null; then
-                log_success "    ✓ Backed up MySQL data directory"
-            else
-                log_warning "    Could not copy MySQL data directory (may not exist yet)"
-            fi
+        log_info "    Attempting to copy /var/lib/mysql from container..."
+        if docker cp "${container_name}:/var/lib/mysql" "$BACKUP_PATH/mysql_data_${container_name}" 2>/dev/null; then
+            log_success "    ✓ Backed up MySQL data directory"
+        else
+            log_warning "    Could not copy MySQL data directory (may not exist yet)"
         fi
     done
     
@@ -221,33 +219,31 @@ archive_chromadb_data() {
     done
     
     # Also attempt to archive from running containers
-    local container_ids=$(docker ps -a \
-        --filter "name=chromadb" \
-        --format "{{.ID}}" 2>/dev/null || true)
+    local all_containers=($(find_containers))
+    local container_ids=()
+    for container in "${all_containers[@]}"; do
+        if [[ "$container" =~ "chromadb" ]]; then
+            container_ids+=("$container")
+        fi
+    done
     
-    if [ -n "$container_ids" ]; then
-        log_info "Archiving ChromaDB data from running containers..."
+    if [ ${#container_ids[@]} -gt 0 ]; then
+        log_info "Archiving ChromaDB data from containers..."
         
-        for container_id in $container_ids; do
-            local container_name=$(docker ps -a \
-                --filter "id=$container_id" \
-                --format "{{.Names}}" 2>/dev/null || true)
-            
-            if [ -z "$container_name" ]; then
-                continue
-            fi
+        for container_id in "${container_ids[@]}"; do
+            local container_name="$container_id"
             
             log_info "  Archiving from container: $container_name"
             
             # Stop container if running
-            if docker ps --filter "id=$container_id" --quiet 2>/dev/null | grep -q .; then
+            if docker ps --filter "name=^/${container_name}$" --format "{{.Status}}" 2>/dev/null | grep -q "Up"; then
                 log_info "    Stopping container for backup..."
-                docker stop "$container_id" --time=5 2>/dev/null || true
+                docker stop "$container_name" --time=5 2>/dev/null || true
             fi
             
             # Copy chroma data directory from container
             if [ -d "$BACKUP_PATH" ]; then
-                if docker cp "$container_id:/chroma/data" "$BACKUP_PATH/chromadb_container_${container_name}" 2>/dev/null; then
+                if docker cp "${container_name}:/chroma/data" "$BACKUP_PATH/chromadb_container_${container_name}" 2>/dev/null; then
                     log_success "    ✓ Backed up ChromaDB data directory from container"
                 else
                     log_warning "    Could not copy ChromaDB data directory (may not exist yet)"
@@ -307,18 +303,19 @@ remove_volumes() {
     log_info "Checking volume status before removal..."
     
     for volume in "${volumes[@]}"; do
-        # Check if volume is being used by any container
-        local in_use=$(docker volume inspect "$volume" 2>/dev/null | grep -c "Container" || true)
+        # Check if volume is being used by any container (even stopped ones)
+        # Using a more reliable check: docker ps -a --filter volume=...
+        local in_use=$(docker ps -a --filter "volume=$volume" --format "{{.ID}}" 2>/dev/null | wc -l)
         
         if [ "$in_use" -gt 0 ]; then
-            log_warning "  Preserving: $volume (still in use by container)"
+            log_warning "  Preserving: $volume (recorded as in-use by $in_use container(s))"
         else
             log_info "  Removing orphaned volume: $volume"
             docker volume rm "$volume" 2>/dev/null || true
         fi
     done
     
-    log_success "Volume cleanup completed (preserving in-use volumes)"
+    log_success "Volume cleanup completed"
 }
 
 # Check if a volume is currently being used by running containers
@@ -444,15 +441,11 @@ main() {
         remove_volumes "${volumes[@]}"
     else
         # IDEMPOTENT: Preserve existing volumes for data preservation
-        log_info "  IDEMPOTENT MODE: Checking volume status..."
-        log_info "  → Preserving volumes with data for next container start"
+        log_info "  IDEMPOTENT MODE: Skipping volume removal to preserve data"
         log_info "  → Containers will be stopped but volumes retained"
         
-        # Still call remove_volumes but it will check in-use status
-        remove_volumes "${volumes[@]}"
-        
         if [ ${#volumes[@]} -gt 0 ]; then
-            log_success "  ✓ Volume preservation logic applied"
+            log_success "  ✓ Data volumes preserved"
             log_info "  → To force a clean rebuild: .devcontainer/scripts/pre-build-cleanup.sh --force-clean"
         fi
     fi
@@ -463,15 +456,20 @@ main() {
     local remaining_containers=($(find_containers))
     local remaining_volumes=($(find_volumes))
     
-    if [ ${#remaining_containers[@]} -eq 0 ] && [ ${#remaining_volumes[@]} -eq 0 ]; then
-        log_success "✓ All containers and volumes cleaned"
-    else
-        log_warning "Some containers/volumes remain (may be expected)"
-        if [ ${#remaining_containers[@]} -gt 0 ]; then
-            log_warning "  Remaining containers: ${remaining_containers[*]}"
+    if [ "$FORCE_CLEAN_REBUILD" = true ]; then
+        if [ ${#remaining_containers[@]} -eq 0 ] && [ ${#remaining_volumes[@]} -eq 0 ]; then
+            log_success "✓ All containers and volumes cleaned"
+        else
+            log_warning "Some containers/volumes remain (FORCE CLEAN failed to remove some items)"
         fi
-        if [ ${#remaining_volumes[@]} -gt 0 ]; then
-            log_warning "  Remaining volumes: ${remaining_volumes[*]}"
+    else
+        if [ ${#remaining_containers[@]} -eq 0 ]; then
+            log_success "✓ All containers stopped and removed"
+            if [ ${#remaining_volumes[@]} -gt 0 ]; then
+                log_success "✓ Existing volumes preserved as requested (${#remaining_volumes[@]} volumes)"
+            fi
+        else
+            log_warning "Some containers remain (may be expected)"
         fi
     fi
     echo ""

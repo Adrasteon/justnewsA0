@@ -163,35 +163,48 @@ class CriticEngine:
         self._initialize_models()
 
     def _initialize_models(self):
-        """Initialize all AI models with error handling and fallbacks."""
+        """Initialize all AI models with error handling and fallbacks.
+        
+        STATUS: All local model loading disabled. Critic inference routes through Qwen adapter.
+        Run with environment variables to restore legacy models:
+        - CRITIC_ENABLE_BERT=1
+        - CRITIC_ENABLE_ROBERTA=1
+        - CRITIC_ENABLE_DEBERTA=1
+        - CRITIC_ENABLE_DISTILBERT=1
+        - CRITIC_ENABLE_EMBEDDINGS=1
+        """
         try:
-            self.logger.info("🔧 Initializing critic engine models...")
+            self.logger.info("🔧 Initializing critic engine (Qwen adapter only)...")
 
-            # Initialize BERT for quality assessment
-            self._load_bert_model()
-
-            # Initialize RoBERTa for bias detection
-            self._load_roberta_model()
-
-            # Initialize DeBERTa for factual consistency
-            self._load_deberta_model()
-
-            # Initialize DistilBERT for readability
-            self._load_distilbert_model()
-
-            # Initialize SentenceTransformer for plagiarism detection
-            self._load_sentence_transformer()
+            # All local model loading disabled - routes through Qwen adapter
+            # Uncomment individual lines below to re-enable legacy models
+            # self._load_bert_model()
+            # self._load_roberta_model()
+            # self._load_deberta_model()
+            # self._load_distilbert_model()
+            # self._load_sentence_transformer()
 
             self._initialize_mistral_adapter()
 
-            self.logger.info("✅ All critic models initialized successfully")
+            self.logger.info("✅ Critic initialized (Qwen adapter only)")
 
         except Exception as e:
-            self.logger.error(f"❌ Failed to initialize critic models: {e}")
+            self.logger.error(f"❌ Failed to initialize critic: {e}")
             raise
 
     def _load_bert_model(self):
-        """Load BERT model for quality assessment."""
+        """Load BERT model for quality assessment (DEPRECATED).
+        
+        STATUS: BERT model loading disabled to save GPU memory.
+        Re-enable by setting CRITIC_ENABLE_BERT=1
+        """
+        if os.environ.get("CRITIC_ENABLE_BERT") != "1":
+            self.logger.info("🚫 BERT model loading disabled (set CRITIC_ENABLE_BERT=1 to enable)")
+            self.models["bert"] = None
+            self.tokenizers["bert"] = None
+            return
+
+        # LEGACY CODE: Load BERT if explicitly enabled
         try:
             start_time = time.time()
 
@@ -222,7 +235,17 @@ class CriticEngine:
             self.tokenizers["bert"] = None
 
     def _load_roberta_model(self):
-        """Load RoBERTa model for bias detection."""
+        """Load RoBERTa model for bias detection (DEPRECATED).
+        
+        STATUS: RoBERTa model loading disabled to save GPU memory.
+        Re-enable by setting CRITIC_ENABLE_ROBERTA=1
+        """
+        if os.environ.get("CRITIC_ENABLE_ROBERTA") != "1":
+            self.logger.info("🚫 RoBERTa model loading disabled (set CRITIC_ENABLE_ROBERTA=1 to enable)")
+            self.pipelines["roberta"] = None
+            return
+
+        # LEGACY CODE: Load RoBERTa if explicitly enabled
         try:
             start_time = time.time()
 
@@ -247,7 +270,18 @@ class CriticEngine:
             self.pipelines["roberta"] = None
 
     def _load_deberta_model(self):
-        """Load DeBERTa model for factual consistency."""
+        """Load DeBERTa model for factual consistency (DEPRECATED).
+        
+        STATUS: DeBERTa model loading disabled to save GPU memory.
+        Re-enable by setting CRITIC_ENABLE_DEBERTA=1
+        """
+        if os.environ.get("CRITIC_ENABLE_DEBERTA") != "1":
+            self.logger.info("🚫 DeBERTa model loading disabled (set CRITIC_ENABLE_DEBERTA=1 to enable)")
+            self.models["deberta"] = None
+            self.tokenizers["deberta"] = None
+            return
+
+        # LEGACY CODE: Load DeBERTa if explicitly enabled
         try:
             start_time = time.time()
 
@@ -278,7 +312,18 @@ class CriticEngine:
             self.tokenizers["deberta"] = None
 
     def _load_distilbert_model(self):
-        """Load DistilBERT model for readability assessment."""
+        """Load DistilBERT model for readability assessment (DEPRECATED).
+        
+        STATUS: DistilBERT model loading disabled to save GPU memory.
+        Re-enable by setting CRITIC_ENABLE_DISTILBERT=1
+        """
+        if os.environ.get("CRITIC_ENABLE_DISTILBERT") != "1":
+            self.logger.info("🚫 DistilBERT model loading disabled (set CRITIC_ENABLE_DISTILBERT=1 to enable)")
+            self.models["distilbert"] = None
+            self.tokenizers["distilbert"] = None
+            return
+
+        # LEGACY CODE: Load DistilBERT if explicitly enabled
         try:
             start_time = time.time()
 
@@ -308,7 +353,17 @@ class CriticEngine:
             self.tokenizers["distilbert"] = None
 
     def _load_sentence_transformer(self):
-        """Load SentenceTransformer for plagiarism detection."""
+        """Load SentenceTransformer for plagiarism detection (DEPRECATED).
+        
+        STATUS: SentenceTransformer loading disabled to save GPU memory.
+        Re-enable by setting CRITIC_ENABLE_EMBEDDINGS=1
+        """
+        if os.environ.get("CRITIC_ENABLE_EMBEDDINGS") != "1":
+            self.logger.info("🚫 SentenceTransformer loading disabled (set CRITIC_ENABLE_EMBEDDINGS=1 to enable)")
+            self.models["sentence_transformer"] = None
+            return
+
+        # LEGACY CODE: Load SentenceTransformer if explicitly enabled
         try:
             start_time = time.time()
 

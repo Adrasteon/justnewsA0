@@ -37,11 +37,13 @@ except ImportError:
     MCPBusClient = None
     MCP_AVAILABLE = False
 
+import os
+
 logger = logging.getLogger(__name__)
 
 engine: JournalistEngine | None = None
-MCP_BUS_URL = "http://localhost:8000" # Default
-JOURNALIST_PORT = 8017
+MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
+JOURNALIST_PORT = int(os.environ.get("JOURNALIST_PORT", 8017))
 
 
 @asynccontextmanager

@@ -387,8 +387,8 @@ if [ $INIT_FAILURES -eq 0 ]; then
     log_info "Next verification steps:"
     log_info "  1. Database: python -c \"from database.utils import create_database_service; db = create_database_service(); print('✓ DB Connected')\""
     log_info "  2. ChromaDB: python -c \"from database.utils import create_database_service; db = create_database_service(); print(f'✓ Collection: {db.collection}')\""
-    log_info "  3. vLLM API: curl http://vllm:8001/v1/models"
-    log_info "  4. Pipeline tables: mysql -h mariadb -justnews -p'dev_justnews_password' -e 'SHOW TABLES;' 2>/dev/null | grep -E 'articles|sources|crawler_jobs|synthesized'"
+    log_info "  3. vLLM API: curl http://vllm:${VLLM_PORT:-8010}/v1/models"
+    log_info "  4. Pipeline tables: mysql -h mariadb -u ${MARIADB_USER:-justnews} -p'${MARIADB_PASSWORD:-dev_justnews_password}' -e 'SHOW TABLES;' 2>/dev/null | grep -E 'articles|sources|crawler_jobs|synthesized'"
     log_info "  5. Run tests: pytest tests/ -m 'not gpu' --tb=short"
     log_info ""
 else

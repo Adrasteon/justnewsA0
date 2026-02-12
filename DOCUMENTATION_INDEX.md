@@ -26,6 +26,13 @@
 
 ### 1. User-Facing Documentation
 
+#### [`PHASE_6_GPU_OPTIMIZATION_AND_SCALING.md`](PHASE_6_GPU_OPTIMIZATION_AND_SCALING.md) ⭐ NEW
+**Purpose**: Summary of GPU memory optimization and throughput scaling  
+**Contains**:
+- Lazy loading implementation details
+- Multi-worker scaling strategy
+- Recent critical bug fixes (SQL, Connectivity)
+
 #### [`DEVCONTAINER_DATA_PRESERVATION_NOTICE.md`](DEVCONTAINER_DATA_PRESERVATION_NOTICE.md) ⭐ START HERE
 **Purpose**: Quick notification to users  
 **Read Time**: 30 seconds  

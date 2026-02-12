@@ -323,8 +323,8 @@ def publish_story(story_id: str) -> dict[str, Any]:
         # Connect to JustNews MariaDB to publish the article
         db_config = {
             'user': os.environ.get("MARIADB_USER", "justnews"),
-            'password': os.environ.get("MARIADB_PASSWORD", "justnews_password"),
-            'host': os.environ.get("MARIADB_HOST", "127.0.0.1"),
+            'password': os.environ.get("MARIADB_PASSWORD", "dev_justnews_password"),
+            'host': os.environ.get("MARIADB_HOST", "mariadb"),
             'port': int(os.environ.get("MARIADB_PORT", 3306)),
             'database': os.environ.get("MARIADB_DB", "justnews"),
             'autocommit': True,

@@ -133,37 +133,31 @@ class FactCheckerEngine:
         self._initialize_models()
 
     def _initialize_models(self):
-        """Initialize all AI models with proper error handling."""
+        """Initialize all AI models with proper error handling.
+        
+        STATUS: Model loading DISABLED to save GPU memory.
+        All inference routes through Qwen adapter only.
+        """
         try:
-            self.logger.info("🔧 Initializing Fact Checker Engine models...")
+            self.logger.info("🔧 Initializing Fact Checker (Qwen adapter only)...")
 
             # Initialize Investigator
             try:
                 from .investigator import Investigator
                 self.investigator = Investigator()
-                self.logger.info("✅ Investigator module initialized for deep research")
+                self.logger.info("✅ Investigator module initialized")
             except ImportError:
                 self.logger.warning("⚠️ Investigator module not found")
             except Exception as e:
                 self.logger.warning(f"⚠️ Investigator initialization failed: {e}")
 
-            # Initialize spaCy (lightweight, always available)
-            try:
-                import spacy
+            # spaCy disabled - not critical for Qwen pipeline
+            self.spacy_nlp = None
+            self.logger.info("🚫 spaCy model loading disabled")
 
-                self.spacy_nlp = spacy.load(
-                    self.config.model_configs["spacy"]["model_name"]
-                )
-                self.logger.info("✅ spaCy NER model loaded successfully")
-            except Exception as e:
-                self.logger.warning(f"⚠️ spaCy model loading failed: {e}")
-                # Fallback to basic tokenization
-                self.spacy_nlp = None
-
-            # Initialize transformers models
+            # Transformers models DISABLED - use environment vars to re-enable
             try:
                 import torch
-                from transformers import pipeline
 
                 # Check GPU availability
                 self.gpu_available = (
@@ -171,30 +165,40 @@ class FactCheckerEngine:
                 )
                 device = 0 if self.gpu_available else -1
 
-                # DistilBERT for fact verification
-                try:
-                    self.distilbert_model = pipeline(
-                        "sentiment-analysis",
-                        model=self.config.model_configs["distilbert"]["model_name"],
-                        device=device,
-                        return_all_scores=True,
-                    )
-                    self.logger.info("✅ DistilBERT model loaded successfully")
-                except Exception as e:
-                    self.logger.warning(f"⚠️ DistilBERT model loading failed: {e}")
+                # DistilBERT DISABLED
+                if os.environ.get("FACT_CHECKER_ENABLE_DISTILBERT") == "1":
+                    from transformers import pipeline
+                    try:
+                        self.distilbert_model = pipeline(
+                            "sentiment-analysis",
+                            model=self.config.model_configs["distilbert"]["model_name"],
+                            device=device,
+                            return_all_scores=True,
+                        )
+                        self.logger.info("✅ DistilBERT model loaded (env override)")
+                    except Exception as e:
+                        self.logger.warning(f"⚠️ DistilBERT model loading failed: {e}")
+                        self.distilbert_model = None
+                else:
+                    self.logger.info("🚫 DistilBERT model loading disabled")
                     self.distilbert_model = None
 
-                # RoBERTa for source credibility
-                try:
-                    self.roberta_model = pipeline(
-                        "text-classification",
-                        model=self.config.model_configs["roberta"]["model_name"],
-                        device=device,
-                        return_all_scores=True,
-                    )
-                    self.logger.info("✅ RoBERTa model loaded successfully")
-                except Exception as e:
-                    self.logger.warning(f"⚠️ RoBERTa model loading failed: {e}")
+                # RoBERTa DISABLED
+                if os.environ.get("FACT_CHECKER_ENABLE_ROBERTA") == "1":
+                    from transformers import pipeline
+                    try:
+                        self.roberta_model = pipeline(
+                            "text-classification",
+                            model=self.config.model_configs["roberta"]["model_name"],
+                            device=device,
+                            return_all_scores=True,
+                        )
+                        self.logger.info("✅ RoBERTa model loaded (env override)")
+                    except Exception as e:
+                        self.logger.warning(f"⚠️ RoBERTa model loading failed: {e}")
+                        self.roberta_model = None
+                else:
+                    self.logger.info("🚫 RoBERTa model loading disabled")
                     self.roberta_model = None
 
             except ImportError as e:
@@ -202,30 +206,34 @@ class FactCheckerEngine:
                 self.distilbert_model = None
                 self.roberta_model = None
 
-            # Initialize SentenceTransformers
-            try:
-                from sentence_transformers import SentenceTransformer
-
-                device = "cuda" if self.gpu_available else "cpu"
+            # Initialize SentenceTransformers DISABLED
+            if os.environ.get("FACT_CHECKER_ENABLE_EMBEDDINGS") == "1":
                 try:
-                    self.sentence_transformer = SentenceTransformer(
-                        self.config.model_configs["sentence_transformers"][
-                            "model_name"
-                        ],
-                        device=device,
+                    from sentence_transformers import SentenceTransformer
+
+                    device = "cuda" if self.gpu_available else "cpu"
+                    try:
+                        self.sentence_transformer = SentenceTransformer(
+                            self.config.model_configs["sentence_transformers"][
+                                "model_name"
+                            ],
+                            device=device,
+                        )
+                    except TypeError:
+                        # Some test-time mocks of SentenceTransformer don't accept the
+                        # `device` kwarg; fall back to a simple call that works with
+                        # mocks that expect only the model name.
+                        self.sentence_transformer = SentenceTransformer(
+                            self.config.model_configs["sentence_transformers"]["model_name"]
+                        )
+                    self.logger.info("✅ SentenceTransformer model loaded (env override)")
+                except ImportError as e:
+                    self.logger.warning(
+                        f"⚠️ SentenceTransformers library not available: {e}"
                     )
-                except TypeError:
-                    # Some test-time mocks of SentenceTransformer don't accept the
-                    # `device` kwarg; fall back to a simple call that works with
-                    # mocks that expect only the model name.
-                    self.sentence_transformer = SentenceTransformer(
-                        self.config.model_configs["sentence_transformers"]["model_name"]
-                    )
-                self.logger.info("✅ SentenceTransformer model loaded successfully")
-            except ImportError as e:
-                self.logger.warning(
-                    f"⚠️ SentenceTransformers library not available: {e}"
-                )
+                    self.sentence_transformer = None
+            else:
+                self.logger.info("🚫 SentenceTransformer loading disabled")
                 self.sentence_transformer = None
 
             # Initialize TensorRT if enabled
@@ -234,6 +242,8 @@ class FactCheckerEngine:
                     self._initialize_tensorrt()
                 except Exception as e:
                     self.logger.warning(f"⚠️ TensorRT initialization failed: {e}")
+            else:
+                self.logger.info("🚫 TensorRT disabled or GPU unavailable")
 
             self._initialize_mistral_adapter()
 

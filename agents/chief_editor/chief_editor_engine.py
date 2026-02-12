@@ -77,35 +77,51 @@ class EditorialDecision:
 
 @dataclass
 class ChiefEditorConfig:
-    """Configuration for Chief Editor Engine"""
+    """Configuration for Chief Editor Engine
+    
+    NOTE: Model configs below are DEPRECATED and no longer loaded.
+    All AI tasks now route through Qwen LLM adapter.
+    
+    DEPRECATED MODELS (kept for reference only):
+    - BERT: replaced by Qwen quality assessment
+    - DistilBERT: replaced by Qwen categorization
+    - RoBERTa: replaced by Qwen sentiment analysis  
+    - T5: replaced by Qwen commentary generation
+    - SentenceTransformer: no longer loaded (see _load_embedding_model)
+    """
 
-    # Model configurations
-    bert_model: str = "bert-base-uncased"
-    distilbert_model: str = "distilbert-base-uncased"
-    roberta_model: str = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-    t5_model: str = "t5-small"
-    embedding_model: str = "all-MiniLM-L6-v2"
+    # DEPRECATED: These model configs are no longer used
+    # bert_model: str = "bert-base-uncased"  # DEPRECATED - use Qwen
+    # distilbert_model: str = "distilbert-base-uncased"  # DEPRECATED - use Qwen
+    # roberta_model: str = "cardiffnlp/twitter-roberta-base-sentiment-latest"  # DEPRECATED - use Qwen
+    # t5_model: str = "t5-small"  # DEPRECATED - use Qwen
+    # embedding_model: str = "all-MiniLM-L6-v2"  # DEPRECATED - see _load_embedding_model for status
 
     # Decision parameters
     quality_threshold: float = 0.7
     priority_threshold: float = 0.8
     confidence_threshold: float = 0.6
 
-    # Performance parameters
+    # Performance parameters  
     max_length: int = 512
-    device: str = "cpu"  # Default to CPU for stability
+    device: str = "cpu"  # Default to CPU (inference on Qwen)
 
 
 class ChiefEditorEngine:
     """
-    Simplified 5-Model Editorial Workflow Engine
-
-    Capabilities:
-    - Content quality assessment with BERT
-    - Fast article categorization with DistilBERT
-    - Editorial sentiment analysis with RoBERTa
-    - Commentary generation with T5
-    - Workflow embeddings with SentenceTransformer
+    Chief Editor Editorial Workflow Engine
+    
+    CURRENT Architecture (Qwen-based):
+    - Content quality assessment via Qwen LLM
+    - Article categorization via Qwen LLM
+    - Editorial sentiment analysis via Qwen LLM
+    - Commentary generation via Qwen LLM
+    - No local model loading (all inference remote)
+    
+    LEGACY Architecture (DEPRECATED):
+    - BERT, DistilBERT, RoBERTa, T5 models removed
+    - SentenceTransformer loading disabled
+    - See git history for old code if needed
     """
 
     def __init__(self, config: ChiefEditorConfig | None = None):
@@ -138,45 +154,83 @@ class ChiefEditorEngine:
         logger.info(f"✅ Chief Editor Engine initialized on {self.device}")
 
     def _initialize_models(self):
-        """Initialize AI models with proper error handling"""
+        """Initialize AI models - now minimal (Qwen only).
+        
+        All model loading disabled. Chief Editor uses Qwen LLM for all inference.
+        Legacy model loading methods kept for reference (see comments).
+        """
         try:
-            # SentenceTransformer for embeddings is still needed locally
-            # The others (BERT, DistilBERT, RoBERTa, T5) are now handled by Qwen
-            self._load_embedding_model()
+            # All local model loading disabled - no embeddings, BERT, T5, etc.
+            # Inference routes through Qwen adapter only
+            # See _load_embedding_model for status
+            pass
 
         except Exception as e:
             logger.error(f"Error initializing models: {e}")
 
+    # DEPRECATED MODEL LOADERS - Kept for reference, not called
+    # All replaced by Qwen LLM adapter
+    
     def _load_bert_quality_model(self):
-        """Deprecated: BERT model replaced by Qwen."""
+        """DEPRECATED: BERT model replaced by Qwen.
+        
+        If re-enabling, update _initialize_models() to call this.
+        See git history for original implementation.
+        """
+        logger.info("🚫 BERT model loading disabled - using Qwen instead")
         pass
 
     def _load_distilbert_category_model(self):
-        """Deprecated: DistilBERT model replaced by Qwen."""
+        """DEPRECATED: DistilBERT model replaced by Qwen.
+        
+        If re-enabling, update _initialize_models() to call this.
+        """
+        logger.info("🚫 DistilBERT model loading disabled - using Qwen instead")
         pass
 
     def _load_roberta_sentiment_model(self):
-        """Deprecated: RoBERTa model replaced by Qwen."""
+        """DEPRECATED: RoBERTa model replaced by Qwen.
+        
+        If re-enabling, update _initialize_models() to call this.
+        """
+        logger.info("🚫 RoBERTa model loading disabled - using Qwen instead")
         pass
 
     def _load_t5_commentary_model(self):
-        """Deprecated: T5 model replaced by Qwen."""
+        """DEPRECATED: T5 model replaced by Qwen.
+        
+        If re-enabling, update _initialize_models() to call this.
+        """
+        logger.info("🚫 T5 model loading disabled - using Qwen instead")
         pass
 
     def _load_embedding_model(self):
-        """Load SentenceTransformer model for embeddings"""
-        try:
-            if not SENTENCE_TRANSFORMERS_AVAILABLE:
-                logger.warning("SentenceTransformers not available - using fallback")
-                return
+        """Load SentenceTransformer model for embeddings (DISABLED).
+        
+        STATUS: DEPRECATED - Embedding model loading disabled to save GPU memory.
+        
+        Chief Editor inference now fully routes through Qwen LLM adapter.
+        No local model loading occurs.
+        
+        Re-enable if needed by setting CHIEF_EDITOR_ENABLE_EMBEDDINGS=1.
+        """
+        if os.environ.get("CHIEF_EDITOR_ENABLE_EMBEDDINGS") == "1":
+            # LEGACY CODE: Re-enable if needed
+            try:
+                if not SENTENCE_TRANSFORMERS_AVAILABLE:
+                    logger.warning("SentenceTransformers not available - using fallback")
+                    return
 
-            self.pipelines["embeddings"] = SentenceTransformer(
-                self.config.embedding_model
-            )
-            logger.info("✅ Embedding model loaded")
+                self.pipelines["embeddings"] = SentenceTransformer(
+                    "all-MiniLM-L6-v2"  # was self.config.embedding_model
+                )
+                logger.info("✅ Embedding model loaded (via environment override)")
 
-        except Exception as e:
-            logger.error(f"Error loading embeddings: {e}")
+            except Exception as e:
+                logger.error(f"Error loading embeddings: {e}")
+                self.pipelines["embeddings"] = None
+        else:
+            logger.info("🚫 Embedding model loading disabled (set CHIEF_EDITOR_ENABLE_EMBEDDINGS=1 to enable)")
             self.pipelines["embeddings"] = None
 
     def log_feedback(self, event: str, details: dict[str, Any]):

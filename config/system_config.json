@@ -16,16 +16,16 @@
     "retry_delay_seconds": 1.0
   },
   "database": {
-    "host": "127.0.0.1",
+    "host": "mariadb",
     "port": 3306,
-    "database": "justnews_test",
+    "database": "justnews",
     "user": "justnews",
-    "password": "test",
+    "password": "dev_justnews_password",
     "connection_pool": {
-      "min_connections": 2,
-      "max_connections": 10,
-      "connection_timeout_seconds": 3.0,
-      "command_timeout_seconds": 30.0
+      "min_connections": 5,
+      "max_connections": 50,
+      "connection_timeout_seconds": 5.0,
+      "command_timeout_seconds": 60.0
     },
     "ssl_mode": "prefer"
   },

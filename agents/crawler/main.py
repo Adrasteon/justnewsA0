@@ -146,6 +146,8 @@ async def lifespan(app: FastAPI):
                 "unified_production_crawl",
                 "get_crawler_info",
                 "get_performance_metrics",
+                "get_jobs",
+                "get_job_status",
             ],
         )
         logger.info("Registered tools with MCP Bus.")
@@ -371,6 +373,40 @@ def get_crawler_info_endpoint(call: ToolCall):
     except Exception as e:
         logger.error(f"An error occurred in get_crawler_info: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/get_jobs")
+def get_jobs_tool(call: ToolCall, token_ok: None = Depends(require_api_token)):
+    """Tool wrapper for list_jobs"""
+    return list_jobs()
+
+
+@app.post("/get_job_status")
+def get_job_status_tool(call: ToolCall, token_ok: None = Depends(require_api_token)):
+    """Tool wrapper for job_status. returns 200 even if not found to avoid bus circuit breaker."""
+    job_id = call.args[0] if call.args else call.kwargs.get("job_id")
+    include_results = call.kwargs.get("include_results", False)
+    if not job_id:
+        return {"status": "error", "message": "Missing job_id"}
+    try:
+        status = job_status(job_id)
+        if not include_results and "result" in status:
+            # Create a shallow copy and remove big results
+            status = dict(status)
+            if isinstance(status["result"], dict) and "articles" in status["result"]:
+                # Keep article count but remove full list
+                status["result"] = dict(status["result"])
+                status["result"]["article_count"] = len(status["result"]["articles"])
+                status["result"]["articles"] = [] # Clear the list
+            else:
+                status["result"] = "omitted (use include_results=true to fetch)"
+        return status
+    except HTTPException as e:
+        if e.status_code == 404:
+            return {"status": "unknown", "job_id": job_id}
+        raise e
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @app.post("/get_performance_metrics")

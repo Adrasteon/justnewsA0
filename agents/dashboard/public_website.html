@@ -5,16 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JustNews - AI-Powered News Analysis</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        .hero-section { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0; }
-        .news-card { transition: transform 0.2s; border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .news-card:hover { transform: translateY(-5px); }
-        .credibility-badge { position: absolute; top: 10px; right: 10px; padding: 5px 10px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
-        .credibility-high { background: #28a745; color: white; }
-        .credibility-medium { background: #ffc107; color: black; }
-        .credibility-low { background: #dc3545; color: white; }
+        :root { --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            background-color: #f4f7f6; 
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        #mainContent { min-height: 80vh; }
+        
+        .hero-section { background: var(--primary-gradient); color: white; padding: 40px 0; }
+        
+        .news-card { 
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1); 
+            border: none; 
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+            margin-bottom: 24px;
+            background: white;
+        }
+        .news-card:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 12px 20px rgba(0,0,0,0.1); 
+        }
+        
+        .credibility-badge { 
+            position: absolute; 
+            top: 15px; 
+            right: 15px; 
+            padding: 6px 12px; 
+            border-radius: 30px; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            z-index: 10;
+        }
+        .credibility-high { background: #10b981; color: white; }
+        .credibility-medium { background: #f59e0b; color: white; }
+        .credibility-low { background: #ef4444; color: white; }
+        
+        .card-body { padding: 1.5rem; }
+        .card-title { font-weight: 700; font-size: 1.2rem; line-height: 1.4; margin-bottom: 0.75rem; color: #111827; }
+        .card-text { color: #4b5563; font-size: 0.95rem; line-height: 1.6; }
+        
+        .navbar { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-outline-primary { border-radius: 8px; font-weight: 600; }
+        
+        .section-header { margin-bottom: 2rem; position: relative; }
+        .section-header h2 { font-weight: 800; color: #1f2937; }
+        
+        #systemStatusContainer .card { border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: none; }
+        
+        .article-view { display: none; padding: 40px 0; background: white; }
+        .article-header { border-bottom: 1px solid #eee; margin-bottom: 30px; padding-bottom: 20px; }
+        .article-content { 
+            text-align: left; 
+            color: #1f2937; 
+            line-height: 1.8;
+            font-size: 1.125rem;
+            max-width: 740px;
+            margin: 0 auto;
+        }
+        .back-link { cursor: pointer; color: #667eea; text-decoration: none; font-weight: 600; display: inline-block; margin-bottom: 1rem; }
+        
+        .table-container { max-height: 250px; overflow-y: auto; }
+        
+        #newsContainer { min-height: 300px; }
     </style>
 </head>
 <body>
@@ -46,98 +106,151 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container text-center">
-            <h1 class="display-4 mb-4">AI-Powered News Analysis</h1>
-            <p class="lead mb-4">Discover news with transparent AI analysis, credibility scoring, and fact-checking</p>
-            <div class="row text-center">
-                <div class="col-md-4">
-                    <i class="fas fa-brain fa-3x mb-3"></i>
-                    <h5>AI Analysis</h5>
-                    <p>Sentiment, bias, and topic analysis</p>
+    <!-- Main Content -->
+    <main id="mainContent">
+        <div id="dashboardSection">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <div class="container text-center">
+                    <h1 class="display-4 mb-4">AI-Powered News Analysis</h1>
+                    <p class="lead mb-4">Discover news with transparent AI analysis, credibility scoring, and fact-checking</p>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <i class="fas fa-brain fa-3x mb-3"></i>
+                            <h5>AI Analysis</h5>
+                            <p>Sentiment, bias, and topic analysis</p>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-shield-alt fa-3x mb-3"></i>
+                            <h5>Fact Checking</h5>
+                            <p>Source credibility and verification</p>
+                        </div>
+                        <div class="col-md-4">
+                            <i class="fas fa-chart-line fa-3x mb-3"></i>
+                            <h5>Transparency</h5>
+                            <p>Open data and research APIs</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <i class="fas fa-shield-alt fa-3x mb-3"></i>
-                    <h5>Fact Checking</h5>
-                    <p>Source credibility and verification</p>
-                </div>
-                <div class="col-md-4">
-                    <i class="fas fa-chart-line fa-3x mb-3"></i>
-                    <h5>Transparency</h5>
-                    <p>Open data and research APIs</p>
-                </div>
-            </div>
-        </div>
-    </section>
+            </section>
 
-    <!-- News Feed -->
-    <section class="py-5" id="news">
-        <div class="container">
-            <h2 class="text-center mb-4">System Status & Dashboards</h2>
-            <div class="row mb-4" id="systemStatusContainer">
-                <div class="col-md-6">
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">System Health</h5>
-                            <div id="systemHealth" class="small text-muted">Loading...</div>
+            <!-- News Feed -->
+            <section class="py-4" id="news">
+                <div class="container" style="max-width: 1100px;">
+                    <div class="section-header text-center mb-5">
+                        <h1 class="display-5 fw-bold mb-2">Latest Insights</h1>
+                        <p class="text-muted">Verified AI-driven news monitoring and transparency reporting</p>
+                    </div>
+                    
+                    <div class="row g-4" id="newsContainer">
+                        <div class="col-12 text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-3 text-muted">Analyzing the latest news cycles...</p>
                         </div>
                     </div>
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Crawler Jobs</h5>
-                            <div id="crawlerJobs">Loading...</div>
+
+                    <div class="text-center mt-5">
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#diagnosticsCollapse">
+                            <i class="fas fa-microchip me-1"></i> Toggle System Diagnostics
+                        </button>
+                    </div>
+
+                    <div class="collapse mt-4" id="diagnosticsCollapse">
+                        <div class="card card-body bg-light border-0 shadow-sm rounded-3">
+                            <h4 class="mb-4 text-center">System Diagnostics</h4>
+                            <div class="row g-4" id="systemStatusContainer">
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-uppercase text-muted fw-bold small">System Health</h6>
+                                            <div id="systemHealth" class="small">Loading...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-uppercase text-muted fw-bold small">Crawler Jobs</h6>
+                                            <div id="crawlerJobs" class="table-container small">Loading...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-uppercase text-muted fw-bold small">Crawl Scheduler</h6>
+                                            <div id="crawlScheduler" class="small">Loading...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-0 shadow-sm">
+                                        <div class="card-body">
+                                            <h6 class="card-title text-uppercase text-muted fw-bold small">GPU Resources</h6>
+                                            <div id="gpuSummary" class="small mb-2">Loading...</div>
+                                            <canvas id="gpuChart" style="max-height: 120px;"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Publishing Settings Card (Full Width) -->
+                            <div class="card mt-4 border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title text-uppercase text-muted fw-bold small mb-3">Publishing Controls</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-2 form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="requireDraftFactCheckSwitch">
+                                                <label class="form-check-label small" for="requireDraftFactCheckSwitch">Require draft fact-check pass</label>
+                                            </div>
+                                            <div class="mb-2 form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" id="chiefEditorReviewSwitch">
+                                                <label class="form-check-label small" for="chiefEditorReviewSwitch">Require chief editor review</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="synthesizedArticleStorageSelect" class="form-label small">Article Storage Strategy</label>
+                                                <select id="synthesizedArticleStorageSelect" class="form-select form-select-sm">
+                                                    <option value="extend">Extend articles table</option>
+                                                    <option value="new_table">Separate syntheses table</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="publishingFeedback" class="mb-2"></div>
+                                    <button id="savePublishingBtn" class="btn btn-sm btn-primary">Sync Configuration</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Crawl Scheduler</h5>
-                            <div id="crawlScheduler">Loading...</div>
-                        </div>
-                    </div>
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">GPU Summary</h5>
-                            <div id="gpuSummary">Loading...</div>
-                            <canvas id="gpuChart" aria-label="GPU utilization chart" role="img" style="max-width:100%;height:140px"></canvas>
-                        </div>
-                    </div>
-                    <!-- Publishing Settings Card -->
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Publishing Settings</h5>
-                            <div class="mb-2 form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="requireDraftFactCheckSwitch">
-                                <label class="form-check-label" for="requireDraftFactCheckSwitch">Require draft fact-check pass for publish</label>
-                            </div>
-                            <div class="mb-2 form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="chiefEditorReviewSwitch">
-                                <label class="form-check-label" for="chiefEditorReviewSwitch">Require chief editor review</label>
-                            </div>
-                            <div class="mb-3">
-                                <label for="synthesizedArticleStorageSelect" class="form-label">Synthesized article storage</label>
-                                <select id="synthesizedArticleStorageSelect" class="form-select">
-                                    <option value="extend">Extend articles table (default)</option>
-                                    <option value="new_table">Use synthesized_articles table</option>
-                                </select>
-                            </div>
-                            <div id="publishingFeedback" class="mb-2"></div>
-                            <button id="savePublishingBtn" class="btn btn-sm btn-primary">Save Publishing Settings</button>
-                        </div>
-                    </div>
+            </section>
+        </div>
+
+        <div id="articleSection" class="article-view">
+            <div class="container">
+                <a onclick="location.href='/'" class="back-link"><i class="fas fa-arrow-left"></i> Back to Feed</a>
+                <div id="articleLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
                 </div>
-            </div>
-            <h2 class="text-center mb-4">Latest News</h2>
-            <div class="row" id="newsContainer">
-                <div class="col-12 text-center">
-                    <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
-                    <p>Loading news articles...</p>
+                <div id="articleContent" style="display:none;">
+                    <div class="article-header">
+                        <h1 id="articleTitle" class="display-5 fw-bold"></h1>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <div class="text-muted">
+                                <span id="articleSource" class="fw-bold"></span> | 
+                                <span id="articleDate"></span>
+                            </div>
+                            <div id="articleBadge" class="badge p-2"></div>
+                        </div>
+                    </div>
+                    <div id="articleBody" class="article-content"></div>
                 </div>
             </div>
         </div>
-    </section>
+    </main>
 
     <!-- Footer -->
     <footer class="bg-dark text-light py-4">
@@ -150,8 +263,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
         async function fetchJSON(path) {
             const res = await fetch(path);
@@ -196,20 +307,12 @@
                 return `<tr data-job-id="${id}"><td>${id}</td><td>${job.source || job.agent || ''}</td><td>${status}</td><td>${job.progress || ''}</td><td>${job.started_at || ''}</td><td><button class="btn btn-sm btn-outline-primary details-btn" data-job-id="${id}">Details</button></td></tr>`;
             }).join('');
             el.innerHTML = `
-                <div class="table-responsive">
-                    <table id="crawlerJobsTable" class="table table-sm table-striped">
+                <div class="table-responsive table-container">
+                    <table class="table table-sm table-striped">
                         <thead><tr><th>ID</th><th>Agent</th><th>Status</th><th>Progress</th><th>Started</th><th>Actions</th></tr></thead>
                         <tbody>${rows}</tbody>
                     </table>
                 </div>`;
-            try {
-                // Initialize DataTable cleanly
-                if (window.jQuery && $.fn && !$.fn.DataTable.isDataTable('#crawlerJobsTable')) {
-                    $('#crawlerJobsTable').DataTable({"pageLength": 5, "lengthChange": false});
-                }
-            } catch (e) {
-                console.error('Failed to initialize DataTable', e);
-            }
         }
 
         function renderScheduler(scheduler) {
@@ -298,7 +401,71 @@
                 container.innerHTML = '<div class="col-12 text-center"><p class="text-muted">No articles available.</p></div>';
                 return;
             }
-            container.innerHTML = articles.map(article => `...`).join('');
+            container.innerHTML = articles.map(article => {
+                const score = article.fact_check_score || 0;
+                let badgeClass = 'credibility-low';
+                if (score > 80) badgeClass = 'credibility-high';
+                else if (score > 50) badgeClass = 'credibility-medium';
+                
+                // Handle sentiment score mapping
+                const sentScore = article.sentiment_score || 0;
+                let sentimentLabel = 'Neutral';
+                let sentimentClass = 'bg-light text-dark';
+                if (sentScore > 0.2) { sentimentLabel = 'Positive'; sentimentClass = 'bg-success text-white'; }
+                else if (sentScore < -0.2) { sentimentLabel = 'Negative'; sentimentClass = 'bg-danger text-white'; }
+
+                return `
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card news-card h-100 border-0 shadow-sm">
+                        <span class="credibility-badge ${badgeClass}">
+                            ${score}% Trust
+                        </span>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title h6 fw-bold mb-2">${article.title || 'Untitled'}</h5>
+                            <p class="card-text text-muted small mb-3">
+                                <i class="far fa-newspaper me-1"></i> ${article.source || 'Verified Source'}
+                            </p>
+                            <p class="card-text small text-secondary flex-grow-1">
+                                ${article.summary ? article.summary.substring(0, 140) + '...' : 'No summary available.'}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                <span class="badge ${sentimentClass} rounded-pill px-2" style="font-size: 0.7rem;">
+                                    ${sentimentLabel}
+                                </span>
+                                <a href="/article/${article.id}" class="btn btn-link btn-sm p-0 text-primary fw-bold text-decoration-none">
+                                    Read Analysis <i class="fas fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function showArticle(id) {
+            document.getElementById('dashboardSection').classList.add('d-none');
+            document.getElementById('articleSection').style.display = 'block';
+            document.getElementById('articleLoading').classList.remove('d-none');
+            document.getElementById('articleContent').classList.add('d-none');
+
+            try {
+                const article = await fetchJSON(`/api/public/articles/${id}`);
+                document.getElementById('articleTitle').textContent = article.title;
+                document.getElementById('articleSource').textContent = article.source;
+                document.getElementById('articleDate').textContent = new Date(article.published_date).toLocaleDateString();
+                document.getElementById('articleBody').innerHTML = article.content.split('\n').map(p => `<p>${p}</p>`).join('');
+                
+                const score = article.fact_check_score || 0;
+                const badge = document.getElementById('articleBadge');
+                badge.textContent = `${score}% Trust Score`;
+                badge.className = 'badge p-2 ' + (score > 80 ? 'credibility-high' : (score > 50 ? 'credibility-medium' : 'credibility-low'));
+                
+                document.getElementById('articleLoading').classList.add('d-none');
+                document.getElementById('articleContent').classList.remove('d-none');
+            } catch (err) {
+                console.error('Error loading article:', err);
+                document.getElementById('articleLoading').innerHTML = `<div class="alert alert-danger">Error loading article: ${err.message}</div>`;
+            }
         }
 
         function searchNews() {
@@ -307,9 +474,16 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadNews();
-            loadDashboardData();
-            setInterval(loadDashboardData, 10000); // refresh every 10s
+            const articleId = document.body.getAttribute('data-article-id');
+            const searchQuery = document.body.getAttribute('data-search-query');
+
+            if (articleId) {
+                showArticle(articleId);
+            } else {
+                loadNews();
+                loadDashboardData();
+                setInterval(loadDashboardData, 10000); 
+            }
 
             // Build Pages dropdown from backend
             (async () => {

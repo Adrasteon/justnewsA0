@@ -57,20 +57,19 @@ def check_pipeline_metrics():
         cursor.execute("SELECT COUNT(*) FROM articles WHERE embedded=1")
         metrics['articles_embedded'] = cursor.fetchone()[0]
         
-        cursor.execute("SELECT COUNT(*) FROM articles WHERE cluster_id IS NOT NULL")
-        metrics['articles_clustered'] = cursor.fetchone()[0]
+        # In this schema, clustering info is in story_updates and living_stories
+        metrics['articles_clustered'] = 0 # Placeholder if not directly in articles table
         
         # Stage 3: Embeddings
         cursor.execute("SELECT COUNT(*) FROM embeddings_document")
         metrics['embeddings_recorded'] = cursor.fetchone()[0]
         
-        # Stage 4: Clusters
-        cursor.execute("SELECT COUNT(DISTINCT cluster_id) FROM articles WHERE cluster_id IS NOT NULL")
+        # Stage 4: Clusters (represented by living_stories/story_updates)
+        cursor.execute("SELECT COUNT(*) FROM living_stories")
         metrics['clusters_created'] = cursor.fetchone()[0]
         
         # Stage 5: Living stories
-        cursor.execute("SELECT COUNT(*) FROM living_stories")
-        metrics['living_stories'] = cursor.fetchone()[0]
+        metrics['living_stories'] = metrics['clusters_created']
         
         # Stage 6: Synthesized articles
         cursor.execute("SELECT COUNT(*) FROM synthesized_articles")
@@ -170,7 +169,7 @@ def main():
     """Main monitoring loop"""
     print("🚀 Pipeline Dataflow Monitor Started")
     print(f"Starting at: {datetime.now()}")
-    print("Monitoring in 30-second intervals...\n")
+    print("Monitoring in 10-second intervals...\n")
     
     iteration = 0
     prev_metrics = None
@@ -198,7 +197,7 @@ def main():
                 prev_metrics = metrics
             
             # Wait before next check
-            time.sleep(30)
+            time.sleep(10)
             
     except KeyboardInterrupt:
         print(f"\n\n⏹️ Monitoring stopped at {datetime.now()}")

@@ -882,13 +882,23 @@ async def get_crawl_status():
     try:
         # Use MCP bus to get crawler status
         payload = {"agent": "crawler", "tool": "get_jobs", "args": [], "kwargs": {}}
-        response = requests.post(f"{MCP_BUS_URL}/call", json=payload, timeout=5)
-        response.raise_for_status()
-        jobs = response.json()
+        try:
+            response = requests.post(f"{MCP_BUS_URL}/call", json=payload, timeout=3)
+            response.raise_for_status()
+            bus_response = response.json()
+        except Exception as e:
+            logger.warning(f"Failed to fetch job list from crawler: {e}")
+            return {}
 
-        # Get details for each job
+        jobs = bus_response.get("data", {}) if bus_response.get("status") == "success" else {}
+        if not jobs:
+            return {}
+
+        # Get details for only the most recent 5 jobs for the main dashboard to keep it fast
         job_details = {}
-        for job_id, _status in jobs.items():
+        top_jobs = list(jobs.keys())[-5:]
+        
+        for job_id in top_jobs:
             try:
                 detail_payload = {
                     "agent": "crawler",
@@ -897,19 +907,23 @@ async def get_crawl_status():
                     "kwargs": {},
                 }
                 detail_response = requests.post(
-                    f"{MCP_BUS_URL}/call", json=detail_payload, timeout=5
+                    f"{MCP_BUS_URL}/call", json=detail_payload, timeout=2
                 )
-                detail_response.raise_for_status()
-                job_details[job_id] = detail_response.json()
+                if detail_response.status_code == 200:
+                    detail_bus_response = detail_response.json()
+                    if detail_bus_response.get("status") == "success":
+                        job_details[job_id] = detail_bus_response.get("data", {"status": "unknown"})
+                    else:
+                        job_details[job_id] = {"status": "unknown"}
+                else:
+                    job_details[job_id] = {"status": "timeout/error"}
             except Exception:
-                job_details[job_id] = {"status": "unknown"}
+                job_details[job_id] = {"status": "unavailable"}
 
         return job_details
-    except requests.RequestException as e:
-        logger.error(f"Failed to get crawl status: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to get crawl status: {str(e)}"
-        ) from e
+    except Exception as e:
+        logger.error(f"Unexpected error in get_crawl_status: {str(e)}")
+        return {} # Return empty rather than crashing
 
 
 @app.get("/api/crawl/scheduler")
@@ -1051,7 +1065,7 @@ def public_articles(n: int = 10):
             "total_results": len(articles),
             "articles": [
                 {
-                    "id": a.id,
+                    "id": a.article_id,
                     "title": a.title,
                     "summary": (a.content[:300] + "...")
                     if len(a.content) > 300
@@ -1070,6 +1084,40 @@ def public_articles(n: int = 10):
         raise HTTPException(
             status_code=500, detail="Recent articles temporarily unavailable"
         ) from exc
+
+
+@app.get("/api/public/articles/{article_id}")
+def get_public_article(article_id: str):
+    """Fetch a single article by ID with full content and metadata."""
+    try:
+        service = get_search_service()
+        # Handle both integer and string IDs if possible
+        try:
+            aid = int(article_id)
+        except ValueError:
+            aid = article_id
+
+        # Use the underlying find_article_by_id or similar if available, 
+        # but _get_article_by_id is what we found in the search service.
+        article = service._get_article_by_id(aid)
+        if not article:
+            raise HTTPException(status_code=404, detail="Article not found")
+
+        return {
+            "id": article.get("id"),
+            "title": article.get("title"),
+            "content": article.get("content"),
+            "source": article.get("source_name") or article.get("source"),
+            "published_date": str(article.get("published_date")),
+            "sentiment_score": article.get("sentiment_score", 0),
+            "fact_check_score": article.get("fact_check_score"),
+            "url": article.get("url"),
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to fetch article %s: %s", article_id, exc)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 def get_fallback_dashboard_html():

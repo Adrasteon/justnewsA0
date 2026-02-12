@@ -311,7 +311,15 @@ class Investigator:
         )
 
     async def _analyze_visuals(self, url: str, claim: str) -> EvidencePiece | None:
-        """Use Qwen2-VL to analyze images (replacing legacy NewsReader/Llava)."""
+        \"\"\"Use Qwen2-VL to analyze images (replacing legacy NewsReader/Llava).
+        
+        STATUS: Qwen2-VL model loading DISABLED to save GPU memory (~15GB).
+        Re-enable by setting FACT_CHECKER_ENABLE_VISION=1
+        \"\"\"
+        if os.environ.get(\"FACT_CHECKER_ENABLE_VISION\") != \"1\":
+            self.logger.info(\"🚫 Visual analysis disabled (set FACT_CHECKER_ENABLE_VISION=1 to enable)\")
+            return None
+            
         if not VISION_AVAILABLE:
             return None
 

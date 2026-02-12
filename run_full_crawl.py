@@ -40,7 +40,7 @@ def run_crawl():
 
         print("Sending crawl request...")
         resp = requests.post(
-            "http://localhost:8009/unified_production_crawl",
+            "http://localhost:8022/unified_production_crawl",
             json=payload,
             timeout=10
         )

@@ -3,6 +3,18 @@ last_updated: 2025-09-12 last_updated: 2025-11-01 ---
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-02-10 - **GPU OPTIMIZATION & WORKFLOW SCALING**
+
+### 🚀 **Performance & Scalability Overhaul**
+
+- **✅** Implemented **Lazy Loading** for core agents (`critic`, `synthesizer`, `fact_checker`) to bypass loading heavy local models (BERTopic, T5, Qwen2-VL) by default, saving ~15GB+ of system RAM across workers.
+- **✅** Scaled workflow throughput by implementing **Multi-Worker Uvicorn Deployment** in `start_agents_devcontainer.sh`.
+- **✅** Configured **Fact Checker** and **Synthesizer** to run with **2 workers each**, doubling their concurrent processing capacity.
+- **✅** Optimized `system_config.json`: increased `max_concurrent_tasks` (5 → 30) and `max_memory_percent` (90% → 96%) to support high-density batch processing.
+- **✅** Fixed critical SQL column mismatch: Added `critique_text` to `synthesized_articles` table (Migration 017).
+- **✅** Resolved agent connectivity issues: Fixed `Chief Editor` host configuration (switched from `localhost` to `mariadb` network name) and refined environment variable injection in the startup script.
+- **✅** Verified full pipeline flow: articles now successfully transition from Analysis → Synthesis → Critique → Publication at scale.
+
 ## [Unreleased] - 2026-02-08 - **DEV CONTAINER RELIABILITY & SETUP IMPROVEMENTS**
 
 ### 🐳 **Dev Container Setup Enhancements - PRODUCTION READY**
