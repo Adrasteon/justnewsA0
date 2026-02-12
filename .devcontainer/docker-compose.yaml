@@ -30,12 +30,20 @@ services:
     environment:
       - FACT_CHECKER_API_KEY=dev_key_123
       - VLLM_BASE_URL=http://vllm:8010/v1
+      - VLLM_FACT_CHECKER_MODEL=Qwen/Qwen2.5-14B-Instruct-AWQ
       - LOG_LEVEL=INFO
+      - FACT_CHECKER_AGENT_PORT=8003
+      - PYTHONPATH=/app:/app/fact_checker_lib
     volumes:
       - ../mcp_fact_checker_server:/app
+      - ../database:/app/database
+      - ../common:/app/common
+      - ../global.env:/app/global.env
+      - ../config:/app/config
       - justnews_deps:/deps
     ports:
-      - "8003:8000"
+      - "8003:8003"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8003
     restart: unless-stopped
     depends_on:
       - vllm
@@ -101,9 +109,9 @@ services:
       - HF_TOKEN=${HF_TOKEN}
     volumes:
       - huggingface_cache:/root/.cache/huggingface
-    command: --model Qwen/Qwen2.5-14B-Instruct-AWQ
+    command: --model Qwen/Qwen2.5-14B-Instruct-AWQ --port 8010
     ports:
-      - "8010:8000"
+      - "8010:8010"
     labels:
       service: "vllm"
       component: "llm-inference"

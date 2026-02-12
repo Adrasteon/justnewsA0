@@ -11,7 +11,8 @@
 │  │ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │   │
 │  │                                                               │   │
 │  │ Base Image: nvidia/cuda:12.4.1-devel-ubuntu22.04             │   │
-│  │ Python: 3.12                                                 │   │
+│  │ Python: 3.10.12                                              │   │
+│  │ Node.js: 20.20.0 (with Playwright MCP)                       │   │
 │  │ CUDA: 12.4.1                                                 │   │
 │  │                                                               │   │
 │  │ ┌────────────────────────────────────────────────────────┐  │   │
@@ -45,7 +46,7 @@
 │  │                                                             │  │
 │  │ 3306 (Host) ──bind──> 3306 (MariaDB service)              │  │
 │  │ 3307 (Host) ──bind──> 8000 (ChromaDB service)             │  │
-│  │ 8001 (Host) ──bind──> 8000 (vLLM service)                 │  │
+│  │ 8010 (Host) ──bind──> 8010 (vLLM service)                 │  │
 │  │ 8100 (Host) ──bind──> 8100 (Django Publisher)             │  │
 │  │                                                             │  │
 │  └──────────────────────────────────────────────────────────────┘  │
@@ -61,7 +62,7 @@
     │  Database  │   │   Vector   │   │ Inference   │   │ Services   │
     │            │   │   Store    │   │             │   │            │
     ├────────────┤   ├────────────┤   ├─────────────┤   ├────────────┤
-    │ Port: 3306 │   │ Port: 3307 │   │ Port: 8001  │   │Port: Varies│
+    │ Port: 3306 │   │ Port: 3307 │   │ Port: 8010  │   │Port: Varies│
     │            │   │            │   │             │   │            │
     │ Image:     │   │ Image:     │   │ Image:      │   │Image:      │
     │ mariadb    │   │ chromadb   │   │ vllm/       │   │ redis,     │

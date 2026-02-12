@@ -377,6 +377,11 @@ if [ $INIT_FAILURES -eq 0 ]; then
     log_info "  • MariaDB: Ready (migrated or existing data preserved)"
     log_info "  • ChromaDB: Ready (collections created on first access or preserved)"
     log_info "  • vLLM: Accessible (model loading may continue in background)"
+    
+    # Tool availability check
+    log_info "  • Node.js: $(node -v 2>/dev/null || echo 'Not found')"
+    log_info "  • Playwright MCP: $(playwright-mcp --version 2>/dev/null || echo 'Not found')"
+    log_info "  • DDGS (search): $(python3 -c "from ddgs import DDGS; print('Ready')" 2>/dev/null || echo 'Not found')"
     log_info ""
     log_info "✓ IDEMPOTENCE ACTIVE:"
     log_info "  • Workflow data is preserved across rebuilds"
@@ -388,8 +393,10 @@ if [ $INIT_FAILURES -eq 0 ]; then
     log_info "  1. Database: python -c \"from database.utils import create_database_service; db = create_database_service(); print('✓ DB Connected')\""
     log_info "  2. ChromaDB: python -c \"from database.utils import create_database_service; db = create_database_service(); print(f'✓ Collection: {db.collection}')\""
     log_info "  3. vLLM API: curl http://vllm:${VLLM_PORT:-8010}/v1/models"
-    log_info "  4. Pipeline tables: mysql -h mariadb -u ${MARIADB_USER:-justnews} -p'${MARIADB_PASSWORD:-dev_justnews_password}' -e 'SHOW TABLES;' 2>/dev/null | grep -E 'articles|sources|crawler_jobs|synthesized'"
-    log_info "  5. Run tests: pytest tests/ -m 'not gpu' --tb=short"
+    log_info "  4. Search Tool: python3 -c \"from ddgs import DDGS; print('✓ DDGS Ready')\""
+    log_info "  5. Browser MCP: playwright-mcp --help"
+    log_info "  6. Pipeline tables: mysql -h mariadb -u ${MARIADB_USER:-justnews} -p'${MARIADB_PASSWORD:-dev_justnews_password}' -e 'SHOW TABLES;' 2>/dev/null | grep -E 'articles|sources|crawler_jobs|synthesized'"
+    log_info "  7. Run tests: pytest tests/ -m 'not gpu' --tb=short"
     log_info ""
 else
     log_warning "Dev Container Initialization Completed with $INIT_FAILURES warning(s)"

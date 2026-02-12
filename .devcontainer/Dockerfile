@@ -7,6 +7,15 @@ RUN apt-get update && apt-get install -y \
     curl git python3 python3-pip python3-venv python3-distutils \
     build-essential libmariadb-dev gpg ca-certificates \
     redis-server \
+    libgbm-dev libasound2 libnss3 libxss1 libatk1.0-0 libatk-bridge2.0-0 \
+    libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 \
+    libpangocairo-1.0-0 libpango-1.0-0 libcairo2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g @playwright/mcp \
     && rm -rf /var/lib/apt/lists/*
 
 # Install `uv` tool (from PyPI) used to sync/build the dependency venv

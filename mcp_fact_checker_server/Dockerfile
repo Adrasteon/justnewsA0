@@ -27,7 +27,7 @@ RUN python -c "from transformers import AutoModel, AutoTokenizer; \
     AutoTokenizer.from_pretrained('roberta-base'); \
     print('Downloading Sentence Transformer...'); \
     from sentence_transformers import SentenceTransformer; \
-    SentenceTransformer('all-MiniLM-L6-v2'); \
+    SentenceTransformer('BAAI/bge-large-en-v1.5'); \
     print('Models downloaded successfully.')"
 
 COPY ./app /app/app

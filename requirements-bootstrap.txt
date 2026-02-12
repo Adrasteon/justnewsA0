@@ -61,6 +61,7 @@ umap-learn>=0.5.5
 bertopic>=0.16.0
 playwright
 duckduckgo-search>=5.0
+ddgs>=9.10.0
 faster-whisper>=1.0
 qwen-vl-utils
 datasets

@@ -27,7 +27,17 @@
       "connection_timeout_seconds": 5.0,
       "command_timeout_seconds": 60.0
     },
-    "ssl_mode": "prefer"
+    "ssl_mode": "prefer",
+    "embedding": {
+      "model": "BAAI/bge-large-en-v1.5",
+      "dimensions": 1024,
+      "device": "cpu"
+    },
+    "chromadb": {
+      "host": "chromadb",
+      "port": 8000,
+      "collection": "articles"
+    }
   },
   "crawling": {
     "enabled": true,

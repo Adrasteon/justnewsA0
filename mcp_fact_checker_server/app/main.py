@@ -4,6 +4,11 @@ from typing import Optional
 import os
 import uuid
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load global environment variables
+load_dotenv("/app/global.env")
+
 from .models import FactCheckRequest, FactCheckResult, JobRecord, JobStatus
 from .service import service
 
@@ -55,6 +60,11 @@ async def get_job_status(job_id: str, api_key: str = Depends(verify_api_key)):
     if job_id not in jobs:
         raise HTTPException(status_code=404, detail="Job not found")
     return jobs[job_id]
+
+@app.get("/metrics/domains")
+async def get_domain_metrics(api_key: str = Depends(verify_api_key)):
+    """Retrieve historical reliability metrics for crawled domains."""
+    return await service.get_domain_metrics_summary()
 
 async def process_job(job_id: str, request: FactCheckRequest):
     jobs[job_id].status = JobStatus.PROCESSING

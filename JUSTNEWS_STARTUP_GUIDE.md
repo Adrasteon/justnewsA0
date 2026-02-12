@@ -24,7 +24,7 @@
 ### Infrastructure Services (Docker Compose - Already Running)
 - ✅ **MariaDB** (Port 3306) - Persistent database (data preserved on rebuild)
 - ✅ **ChromaDB** (Port 3307) - Persistent vector store (embeddings preserved)
-- ✅ **vLLM** (Port 8001) - LLM inference engine
+- ✅ **vLLM** (Port 8010) - LLM inference engine
 
 ### Agent Services (uvicorn - Just Started)
 **15/16 agents operational (Scaled & Optimized):**
@@ -96,10 +96,10 @@ curl -s http://localhost:3307/api/v2/collections
 ### vLLM Inference
 ```bash
 # List available models
-curl -s http://localhost:8001/v1/models | python -m json.tool
+curl -s http://localhost:8010/v1/models | python -m json.tool
 
 # Test inference
-curl -X POST http://localhost:8001/v1/completions \
+curl -X POST http://localhost:8010/v1/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
@@ -107,6 +107,14 @@ curl -X POST http://localhost:8001/v1/completions \
     "max_tokens": 10
   }'
 ```
+
+### 🛠 Tools & Utilities (DevContainer Native)
+The DevContainer environment includes these pre-installed tools for advanced development:
+
+- **Node.js v20**: For JavaScript-based agents and testing (available as `node`).
+- **Playwright MCP**: High-performance browser automation (available as `playwright-mcp`).
+- **DuckDuckGo Search (ddgs)**: Optimized web search for RAG operations (available in Python venv).
+- **UV**: Ultra-fast Python package manager (available as `uv`).
 
 ---
 
