@@ -1,5 +1,6 @@
 import sys
 import types
+import asyncio
 
 from agents.sites.generic_site_crawler import SiteConfig
 
@@ -88,3 +89,79 @@ def test_select_link_candidates_respects_follow_external(monkeypatch):
     sel2 = _select_link_candidates(candidates, ctx2, visited=set(), remaining_budget=10)
     assert any("example.com/path1" in u for u in sel2)
     assert any("evil.com/malicious" in u for u in sel2)
+
+
+def test_crawl_depth_limits_follow_up_pages(monkeypatch):
+    from agents.crawler import crawl4ai_adapter as adapter
+
+    calls = []
+
+    fake_module = types.SimpleNamespace()
+
+    class AsyncWebCrawler:
+        def __init__(self, config=None):
+            self.config = config
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def arun(self, url, config=None):
+            calls.append(url)
+
+            class Res:
+                pass
+
+            res = Res()
+            res.url = url
+            res.html = "<html><head><title>t</title></head><body>content</body></html>"
+            res.markdown = None
+            if url.endswith("/seed"):
+                res.links = {"internal": [{"href": "https://example.com/a", "total_score": 1.0}]}
+            elif url.endswith("/a"):
+                res.links = {"internal": [{"href": "https://example.com/b", "total_score": 1.0}]}
+            else:
+                res.links = {"internal": []}
+            res.status_code = 200
+            res.success = True
+            return res
+
+    fake_module.AsyncWebCrawler = AsyncWebCrawler
+    fake_module.CacheMode = types.SimpleNamespace(BYPASS=object())
+
+    class CrawlerRunConfig:
+        def __init__(self, **kwargs):
+            pass
+
+    fake_module.CrawlerRunConfig = CrawlerRunConfig
+
+    monkeypatch.setattr(adapter, "crawl4ai", fake_module)
+
+    site_config = SiteConfig(
+        {"domain": "example.com", "start_url": "https://example.com/seed"}
+    )
+
+    profile_depth_0 = {
+        "start_urls": ["https://example.com/seed"],
+        "follow_internal_links": True,
+        "extra": {"crawl_depth": 0},
+    }
+    asyncio.run(
+        adapter.crawl_site_with_crawl4ai(site_config, profile_depth_0, max_articles=10)
+    )
+    assert calls == ["https://example.com/seed"]
+
+    calls.clear()
+    profile_depth_1 = {
+        "start_urls": ["https://example.com/seed"],
+        "follow_internal_links": True,
+        "extra": {"crawl_depth": 1},
+    }
+    asyncio.run(
+        adapter.crawl_site_with_crawl4ai(site_config, profile_depth_1, max_articles=10)
+    )
+    assert "https://example.com/seed" in calls
+    assert "https://example.com/a" in calls
+    assert "https://example.com/b" not in calls

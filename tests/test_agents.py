@@ -156,26 +156,30 @@ class TestFactCheckerAgent(AsyncAgentTest):
         """Test fact verification functionality"""
         article = sample_articles[0]
         response = await self.call_agent_tool(
-            "fact_checker", "verify_facts", content=article["content"]
+            "fact_checker", "fact_check", fact=article["content"]
         )
 
         self.assert_agent_response_valid(response)
         data = response["data"]
         assert "verdict" in data
         assert "confidence" in data
-        assert data["verdict"] in ["verified", "false", "questionable"]
+        assert data["verdict"] in ["True", "Likely True", "Uncertain", "Likely False", "False"]
 
     @pytest.mark.asyncio
     async def test_source_credibility(self, sample_articles):
         """Test source credibility assessment"""
         response = await self.call_agent_tool(
-            "fact_checker", "assess_credibility", source="reputable-news.com"
+            "fact_checker",
+            "verify_claim",
+            claim="reputable-news.com is a credible source",
+            context="source credibility assessment",
         )
 
         self.assert_agent_response_valid(response)
         data = response["data"]
-        assert "credibility_score" in data
-        assert 0.0 <= data["credibility_score"] <= 1.0
+        assert "verdict" in data
+        assert "confidence" in data
+        assert 0.0 <= float(data["confidence"]) <= 1.0
 
 
 class TestSynthesizerAgent(AsyncAgentTest):
@@ -276,7 +280,7 @@ class TestAgentIntegration(AsyncAgentTest):
 
         # Step 2: Fact checking
         fact_response = await self.call_agent_tool(
-            "fact_checker", "verify_facts", content=article["content"]
+            "fact_checker", "fact_check", fact=article["content"]
         )
         self.assert_agent_response_valid(fact_response)
 
@@ -374,7 +378,7 @@ def create_agent_test_data(agent_type: str) -> dict[str, Any]:
         },
         "fact_checker": {
             "content": "Factual statement to verify.",
-            "expected_tools": ["verify_facts", "assess_credibility"],
+            "expected_tools": ["fact_check", "verify_claim"],
         },
         "synthesizer": {
             "articles": ["Article 1 content", "Article 2 content"],

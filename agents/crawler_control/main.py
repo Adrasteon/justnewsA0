@@ -164,6 +164,165 @@ class CrawlRequest(BaseModel):
     enable_ai: bool = True
     timeout: int = 300
     user_agent: str = "JustNews/1.0"
+    crawl4ai: dict | None = None
+    profile_overrides: dict[str, dict] | None = None
+
+
+_CRAWL4AI_BROWSER_KEYS = [
+    "browser_type",
+    "headless",
+    "viewport_width",
+    "viewport_height",
+    "user_agent",
+    "user_agent_mode",
+    "proxy",
+    "cookies",
+    "headers",
+    "text_mode",
+    "verbose",
+    "extra_args",
+    "ignore_https_errors",
+]
+
+_CRAWL4AI_RUN_CONFIG_KEYS = [
+    "word_count_threshold",
+    "exclude_external_links",
+    "remove_overlay_elements",
+    "process_iframes",
+    "target_elements",
+    "excluded_tags",
+    "only_text",
+    "score_links",
+    "wait_for",
+    "wait_for_timeout",
+    "js_code",
+    "screenshot",
+    "pdf",
+    "capture_mhtml",
+    "exclude_all_images",
+    "exclude_external_images",
+    "image_score_threshold",
+    "table_score_threshold",
+    "cache_mode",
+    "markdown_generator",
+]
+
+_CRAWL4AI_LINK_PREVIEW_KEYS = [
+    "include_internal",
+    "include_external",
+    "include_patterns",
+    "exclude_patterns",
+    "max_links",
+    "concurrency",
+    "timeout",
+    "query",
+    "score_threshold",
+    "verbose",
+]
+
+
+def _parse_domains(domains_input: str) -> list[str]:
+    if domains_input.lower() == "all":
+        domains = get_sources_with_limit()
+        if not domains:
+            raise HTTPException(status_code=500, detail="No sources available in database")
+        return domains
+
+    if domains_input.startswith("sources "):
+        match = re.match(r"sources\s+(\d+)", domains_input, re.IGNORECASE)
+        if not match:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid format for 'sources' command. Use 'sources <number>'",
+            )
+        limit = int(match.group(1))
+        domains = get_sources_with_limit(limit)
+        if not domains:
+            raise HTTPException(
+                status_code=500,
+                detail=f"No sources available in database (requested {limit})",
+            )
+        return domains
+
+    domains = [d.strip() for d in domains_input.split(",") if d.strip()]
+    if not domains:
+        raise HTTPException(status_code=400, detail="No valid domains provided")
+    return domains
+
+
+def _build_crawl4ai_base_profile(crawl4ai_options: dict) -> dict:
+    base_profile: dict = {"engine": "crawl4ai", "mode": "landing"}
+    if not crawl4ai_options:
+        return base_profile
+
+    for key in ("engine", "mode", "max_pages", "start_urls", "wait_for", "js_code"):
+        value = crawl4ai_options.get(key)
+        if value not in (None, "", [], {}):
+            base_profile[key] = value
+
+    follow_internal = crawl4ai_options.get("follow_internal_links")
+    if follow_internal is not None:
+        base_profile["follow_internal_links"] = bool(follow_internal)
+
+    follow_external = crawl4ai_options.get("follow_external")
+    if follow_external is not None:
+        base_profile["follow_external"] = bool(follow_external)
+
+    browser_config = crawl4ai_options.get("browser_config")
+    if isinstance(browser_config, dict) and browser_config:
+        base_profile["browser_config"] = browser_config
+
+    run_config = crawl4ai_options.get("run_config")
+    if isinstance(run_config, dict) and run_config:
+        base_profile["run_config"] = run_config
+
+    link_preview = crawl4ai_options.get("link_preview")
+    if isinstance(link_preview, dict) and link_preview:
+        base_profile["link_preview"] = link_preview
+
+    adaptive = crawl4ai_options.get("adaptive")
+    if isinstance(adaptive, dict) and adaptive:
+        base_profile["adaptive"] = adaptive
+
+    extra = crawl4ai_options.get("extra") if isinstance(crawl4ai_options.get("extra"), dict) else {}
+    crawl_depth = crawl4ai_options.get("crawl_depth")
+    if crawl_depth is not None:
+        try:
+            extra = dict(extra)
+            extra["crawl_depth"] = max(0, int(crawl_depth))
+        except (TypeError, ValueError):
+            pass
+    if extra:
+        base_profile["extra"] = extra
+
+    return base_profile
+
+
+def _compose_profile_overrides(
+    domains: list[str],
+    crawl4ai_options: dict | None,
+    profile_overrides: dict[str, dict] | None,
+) -> dict[str, dict] | None:
+    merged: dict[str, dict] = {}
+    if isinstance(profile_overrides, dict):
+        merged.update(profile_overrides)
+
+    if not crawl4ai_options:
+        return merged or None
+
+    base_profile = _build_crawl4ai_base_profile(crawl4ai_options)
+    for domain in domains:
+        if not domain:
+            continue
+        normalized = domain.lower().strip()
+        if not normalized:
+            continue
+        existing = merged.get(normalized, {})
+        if not isinstance(existing, dict):
+            existing = {}
+        merged[normalized] = {**base_profile, **existing}
+
+    return merged or None
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -194,39 +353,25 @@ async def favicon():
 async def start_crawl_endpoint(call: ToolCall):
     """Start a new crawl job via MCP tool call"""
     try:
-        # Parse domains input
-        domains_input = str(call.args[0]) if call.args else ""
+        domains_input = (
+            str(call.args[0])
+            if call.args
+            else str((call.kwargs or {}).get("domains", ""))
+        )
+        domains = _parse_domains(domains_input)
 
-        if domains_input.lower() == "all":
-            # Get all active sources
-            domains = get_sources_with_limit()
-            if not domains:
-                raise HTTPException(
-                    status_code=500, detail="No sources available in database"
-                )
-        elif domains_input.startswith("sources "):
-            # Parse "sources <INT>" format
-            match = re.match(r"sources\s+(\d+)", domains_input, re.IGNORECASE)
-            if match:
-                limit = int(match.group(1))
-                domains = get_sources_with_limit(limit)
-                if not domains:
-                    raise HTTPException(
-                        status_code=500,
-                        detail=f"No sources available in database (requested {limit})",
-                    )
-            else:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid format for 'sources' command. Use 'sources <number>'",
-                )
-        else:
-            # Treat as comma-separated domain list
-            domains = [d.strip() for d in domains_input.split(",") if d.strip()]
-            if not domains:
-                raise HTTPException(status_code=400, detail="No valid domains provided")
+        incoming_kwargs = dict(call.kwargs or {})
+        crawl4ai_options = incoming_kwargs.pop("crawl4ai", None)
+        explicit_profile_overrides = incoming_kwargs.pop("profile_overrides", None)
+        profile_overrides = _compose_profile_overrides(
+            domains=domains,
+            crawl4ai_options=crawl4ai_options,
+            profile_overrides=explicit_profile_overrides,
+        )
+        if profile_overrides:
+            incoming_kwargs["profile_overrides"] = profile_overrides
 
-        payload = {"args": [domains], "kwargs": call.kwargs}
+        payload = {"args": [domains], "kwargs": incoming_kwargs}
         response = requests.post(
             f"{CRAWLER_AGENT_URL}/unified_production_crawl", json=payload
         )
@@ -395,37 +540,13 @@ async def get_system_health_endpoint(call: ToolCall):
 async def api_start_crawl(request: CrawlRequest):
     """Start a new crawl job via web API"""
     try:
-        # Parse domains input
-        domains_input = request.domains.strip()
+        domains = _parse_domains(request.domains.strip())
 
-        if domains_input.lower() == "all":
-            # Get all active sources
-            domains = get_sources_with_limit()
-            if not domains:
-                raise HTTPException(
-                    status_code=500, detail="No sources available in database"
-                )
-        elif domains_input.startswith("sources "):
-            # Parse "sources <INT>" format
-            match = re.match(r"sources\s+(\d+)", domains_input, re.IGNORECASE)
-            if match:
-                limit = int(match.group(1))
-                domains = get_sources_with_limit(limit)
-                if not domains:
-                    raise HTTPException(
-                        status_code=500,
-                        detail=f"No sources available in database (requested {limit})",
-                    )
-            else:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Invalid format for 'sources' command. Use 'sources <number>'",
-                )
-        else:
-            # Treat as comma-separated domain list
-            domains = [d.strip() for d in domains_input.split(",") if d.strip()]
-            if not domains:
-                raise HTTPException(status_code=400, detail="No valid domains provided")
+        profile_overrides = _compose_profile_overrides(
+            domains=domains,
+            crawl4ai_options=request.crawl4ai,
+            profile_overrides=request.profile_overrides,
+        )
 
         payload = {
             "args": [domains],
@@ -437,6 +558,7 @@ async def api_start_crawl(request: CrawlRequest):
                 "enable_ai": request.enable_ai,
                 "timeout": request.timeout,
                 "user_agent": request.user_agent,
+                "profile_overrides": profile_overrides,
             },
         }
         response = requests.post(
@@ -451,6 +573,58 @@ async def api_start_crawl(request: CrawlRequest):
         raise HTTPException(
             status_code=500, detail=f"Unexpected error: {str(e)}"
         ) from e
+
+
+@app.get("/api/crawl/options")
+async def api_get_crawl_options():
+    """Expose advanced Crawl4AI options supported by crawler_control payload translation."""
+    return {
+        "crawl4ai": {
+            "top_level": [
+                "engine",
+                "mode",
+                "start_urls",
+                "max_pages",
+                "crawl_depth",
+                "follow_internal_links",
+                "follow_external",
+                "wait_for",
+                "js_code",
+                "browser_config",
+                "run_config",
+                "link_preview",
+                "adaptive",
+                "extra",
+            ],
+            "browser_config_keys": _CRAWL4AI_BROWSER_KEYS,
+            "run_config_keys": _CRAWL4AI_RUN_CONFIG_KEYS,
+            "link_preview_keys": _CRAWL4AI_LINK_PREVIEW_KEYS,
+            "notes": {
+                "crawl_depth": "Maximum link-hop depth from each seed URL (0 = seed page only)",
+                "profile_overrides": "Per-domain override map merged on top of generated crawl4ai base options",
+            },
+            "example": {
+                "domains": "sources 25",
+                "max_articles_per_site": 8,
+                "crawl4ai": {
+                    "crawl_depth": 2,
+                    "max_pages": 30,
+                    "follow_internal_links": True,
+                    "follow_external": False,
+                    "run_config": {
+                        "cache_mode": "bypass",
+                        "word_count_threshold": 120,
+                        "score_links": True,
+                    },
+                    "link_preview": {
+                        "include_patterns": ["/news", "/world"],
+                        "exclude_patterns": ["/live", "/video"],
+                        "max_links": 25,
+                    },
+                },
+            },
+        }
+    }
 
 
 @app.post("/api/crawl/stop")

@@ -10,6 +10,14 @@ class EvidenceType(str, Enum):
     AUDIO = "audio"
     TABLE = "table"
 
+
+class Verdict(str, Enum):
+    TRUE = "True"
+    LIKELY_TRUE = "Likely True"
+    UNCERTAIN = "Uncertain"
+    LIKELY_FALSE = "Likely False"
+    FALSE = "False"
+
 class Evidence(BaseModel):
     content: str
     source_url: Optional[str] = None
@@ -26,7 +34,7 @@ class FactCheckRequest(BaseModel):
 class FactCheckResult(BaseModel):
     fact: str
     is_accurate: bool
-    verdict: str = Field(..., description="The final determination: 'True', 'Likely True', 'Uncertain', 'Likely False', or 'False'")
+    verdict: Verdict = Field(..., description="The final determination: 'True', 'Likely True', 'Uncertain', 'Likely False', or 'False'")
     confidence: float
     evidence: List[Evidence]
     explanation: str

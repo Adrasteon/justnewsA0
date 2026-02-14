@@ -51,6 +51,20 @@ For the **fastest and most reliable startup**, use the canonical script:
 
 For Dev Container setup (fastest): See section above.
 
+### Running Tests
+
+Use the active Python environment directly:
+
+```bash
+# Generic
+python -m pytest -q
+
+# Devcontainer canonical UV env
+/app/.venv/bin/python -m pytest -q
+```
+
+Conda environments are still supported as a legacy fallback, but UV/venv is the primary development path.
+
 For **local manual setup**, see [docs/dev-setup.md](docs/dev-setup.md) for detailed options:
 
 ```bash

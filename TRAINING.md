@@ -23,7 +23,7 @@ All core agents are fully instrumented:
 | **Analyst** | `entities`, `statistics`, `sentiment`, `bias` | `agents/analyst/tools.py` |
 | **Critic** | `synthesis_critique`, `neutrality`, `argument`, `fallacies` | `agents/critic/tools.py` |
 | **Synthesizer** | `cluster_articles`, `aggregate_cluster`, `neutralize_text`, `summarize_article` | `agents/synthesizer/tools.py` |
-| **Fact Checker** | `verify_facts`, `validate_sources`, `comprehensive_fact_check` | `agents/fact_checker/tools.py` |
+| **Fact Checker** | `verify_article`, `verify_claim`, `fact_check` | `agents/fact_checker/shim.py` |
 | **Memory** | `embedding_optimization`, `retrieval_ranking` | `agents/memory/tools.py` |
 
 ## Data Format

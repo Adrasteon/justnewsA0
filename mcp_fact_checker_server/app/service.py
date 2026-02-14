@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional
 from bs4 import BeautifulSoup
 from duckduckgo_search import DDGS
-from .models import FactCheckRequest, FactCheckResult, Evidence, EvidenceType
+from .models import FactCheckRequest, FactCheckResult, Evidence, EvidenceType, Verdict
 
 # Database integration
 # See /app/MIGRATION_BGE_LARGE_1024.md for model and persistence details.
@@ -37,6 +37,33 @@ FACT_CHECK_DOMAINS = {
     "reuters.com/fact-check", "apnews.com/hub/ap-fact-check",
     "checkyourfact.com", "leadstories.com"
 }
+
+CANONICAL_VERDICTS = {
+    "true": Verdict.TRUE.value,
+    "likely true": Verdict.LIKELY_TRUE.value,
+    "uncertain": Verdict.UNCERTAIN.value,
+    "likely false": Verdict.LIKELY_FALSE.value,
+    "false": Verdict.FALSE.value,
+}
+
+VERDICT_ALIASES = {
+    "proven": Verdict.TRUE.value,
+    "plausible": Verdict.LIKELY_TRUE.value,
+    "unverified": Verdict.UNCERTAIN.value,
+    "improbable": Verdict.LIKELY_FALSE.value,
+    "disproven": Verdict.FALSE.value,
+}
+
+
+def normalize_verdict(raw_verdict: Any) -> str:
+    if raw_verdict is None:
+        return Verdict.UNCERTAIN.value
+    normalized = str(raw_verdict).strip().lower()
+    if normalized in CANONICAL_VERDICTS:
+        return CANONICAL_VERDICTS[normalized]
+    if normalized in VERDICT_ALIASES:
+        return VERDICT_ALIASES[normalized]
+    return Verdict.UNCERTAIN.value
 
 class FactCheckerService:
     def __init__(self):
@@ -489,7 +516,7 @@ class FactCheckerService:
                     f"TASK:\n"
                     f"1. Evaluate evidence based on source labels: [FACT_CHECK] > [TRUSTED_NEWS] > [GENERAL].\n"
                     f"2. Consider [DB_METRICS]: Prioritize domains with high 'Proven' counts and be skeptical of those with high 'Misinfo' counts.\n"
-                    f"3. Use Chain-of-Thought Reasoning:\n"
+                    f"3. Use concise step-by-step reasoning:\n"
                     f"   - Reasoning: Break down the claim and compare against each evidence piece.\n"
                     f"   - Source Assessment: Evaluate which sources are authoritative vs biased.\n"
                     f"   - Logic Check: Identify logical fallacies or disinformation tactics (e.g., emotional manipulation, context stripping).\n"
@@ -544,10 +571,10 @@ class FactCheckerService:
                             result_data = json.loads(content)
                         
                         # Calibrate confidence and verdict
-                        verdict = result_data.get("verdict", "Uncertain")
+                        verdict = normalize_verdict(result_data.get("verdict", Verdict.UNCERTAIN.value))
                         # True/Likely True are treated as 'accurate' in boolean terms
                         is_accurate = verdict in ["True", "Likely True"]
-                        confidence = result_data.get("confidence", 0.0)
+                        confidence = float(result_data.get("confidence", 0.0) or 0.0)
                         
                         # Logic patch: If model says it's False/Likely False because no evidence was found,
                         # it often sets low confidence. We elevate this if search returned many results.
@@ -577,7 +604,7 @@ class FactCheckerService:
         logger.info("Using fallback heuristic for evaluation")
         avg_confidence = 0.0
         is_accurate = False
-        verdict = "unverified"
+        verdict = Verdict.UNCERTAIN.value
         explanation = "Service currently unavailable for deep analysis."
         
         if evidence:
@@ -594,7 +621,7 @@ class FactCheckerService:
             if match_score > 2:
                 avg_confidence = 0.6
                 is_accurate = True
-                verdict = "proven"
+                verdict = Verdict.LIKELY_TRUE.value
                 explanation = f"Heuristic: High keyword overlap found across {match_score} independent sources."
 
         return FactCheckResult(

@@ -811,6 +811,68 @@ class CrawlerEngine:
 
                 profile_override = _lookup_profile(site_config)
 
+                dedupe_replacement_factor = max(
+                    1, int(os.environ.get("UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR", "3"))
+                )
+                max_candidate_request = max(
+                    1, int(os.environ.get("UNIFIED_CRAWLER_MAX_REQUEST_CAP", "150"))
+                )
+
+                def _candidate_request_cap() -> int:
+                    base = (
+                        remaining_budget
+                        if remaining_budget is not None and remaining_budget > 0
+                        else max_articles_per_site
+                    )
+                    base = base or max_articles_per_site or 25
+                    base = max(1, int(base))
+                    return max(1, min(max_candidate_request, base * dedupe_replacement_factor))
+
+                async def _ingest_with_replacements(filtered_batch: list[dict[str, Any]]) -> int:
+                    """Ingest candidates in chunks, pulling replacements from the same batch when dedupe occurs."""
+                    nonlocal site_candidates
+                    nonlocal site_ingested
+                    nonlocal site_duplicates
+                    nonlocal site_errors
+                    nonlocal remaining_budget
+                    nonlocal site_articles_local
+                    nonlocal site_details
+
+                    total_new_articles = 0
+                    cursor = 0
+                    while cursor < len(filtered_batch):
+                        if remaining_budget is not None and remaining_budget <= 0:
+                            break
+
+                        chunk_size = (
+                            max(1, remaining_budget)
+                            if remaining_budget is not None
+                            else max(1, len(filtered_batch) - cursor)
+                        )
+                        chunk = filtered_batch[cursor : cursor + chunk_size]
+                        cursor += chunk_size
+                        if not chunk:
+                            break
+
+                        await self._submit_hitl_candidates(chunk, site_config)
+                        site_candidates += len(chunk)
+
+                        ingestion_result = await self._ingest_articles(chunk)
+                        site_articles_local.extend(chunk)
+                        site_details.extend(ingestion_result.get("details", []))
+                        site_ingested += ingestion_result["new_articles"]
+                        site_duplicates += ingestion_result["duplicates"]
+                        site_errors += ingestion_result["errors"]
+                        total_new_articles += ingestion_result["new_articles"]
+
+                        if remaining_budget is not None:
+                            remaining_budget = max(
+                                remaining_budget - ingestion_result["new_articles"],
+                                0,
+                            )
+
+                    return total_new_articles
+
                 def _filter_paywall_skips(
                     batch: list[dict[str, Any]],
                 ) -> tuple[list[dict[str, Any]], int]:
@@ -846,75 +908,66 @@ class CrawlerEngine:
                         profile_override
                         and profile_override.get("engine", "crawl4ai") != "generic"
                     ):
-                        budget_hint = (
-                            remaining_budget
-                            if remaining_budget is not None
-                            else max_articles_per_site
-                        )
-                        raw_batch = await self._crawl_with_profile(
-                            site_config,
-                            profile_override,
-                            budget_hint,
-                        )
-                        self.performance_metrics["mode_usage"]["crawl4ai_profiled"] += 1
+                        while True:
+                            if remaining_budget is not None and remaining_budget <= 0:
+                                exhaustion_reason = "limit_reached"
+                                break
+                            if batches_run >= MAX_SITE_BATCHES:
+                                exhaustion_reason = "max_batches_reached"
+                                break
 
-                        filtered_batch: list[dict[str, Any]] = []
-                        for article in raw_batch or []:
-                            key = (
-                                article.get("url_hash")
-                                or article.get("normalized_url")
-                                or article.get("url")
+                            request_cap = _candidate_request_cap()
+                            raw_batch = await self._crawl_with_profile(
+                                site_config,
+                                profile_override,
+                                request_cap,
                             )
-                            if key and key in seen_keys:
-                                continue
-                            if key:
-                                seen_keys.add(key)
-                            filtered_batch.append(article)
+                            batches_run += 1
+                            self.performance_metrics["mode_usage"]["crawl4ai_profiled"] += 1
 
-                        if filtered_batch:
+                            filtered_batch: list[dict[str, Any]] = []
+                            for article in raw_batch or []:
+                                key = (
+                                    article.get("url_hash")
+                                    or article.get("normalized_url")
+                                    or article.get("url")
+                                )
+                                if key and key in seen_keys:
+                                    continue
+                                if key:
+                                    seen_keys.add(key)
+                                filtered_batch.append(article)
+
+                            if not filtered_batch:
+                                exhaustion_reason = "no_new_candidates"
+                                break
+
                             filtered_batch, paywall_skipped = _filter_paywall_skips(
                                 filtered_batch
                             )
 
                             if not filtered_batch:
                                 if paywall_skipped:
-                                    exhaustion_reason = (
-                                        exhaustion_reason or "paywalls_only"
-                                    )
-                                else:
-                                    await self._submit_hitl_candidates(
-                                        filtered_batch, site_config
-                                    )
-                                    exhaustion_reason = (
-                                        exhaustion_reason or "no_new_candidates"
-                                    )
-                            else:
-                                take = (
-                                    remaining_budget
-                                    if remaining_budget is not None
-                                    else None
-                                )
-                                if take is not None:
-                                    filtered_batch = filtered_batch[:take]
+                                    if (
+                                        remaining_budget is not None
+                                        and remaining_budget <= 0
+                                    ):
+                                        exhaustion_reason = "limit_reached"
+                                        break
+                                    continue
+                                exhaustion_reason = "no_new_candidates"
+                                break
 
-                                site_candidates += len(filtered_batch)
-                                ingestion_result = await self._ingest_articles(
-                                    filtered_batch
-                                )
-                                site_articles_local.extend(filtered_batch)
-                                site_details.extend(ingestion_result.get("details", []))
-                                site_ingested += ingestion_result["new_articles"]
-                                site_duplicates += ingestion_result["duplicates"]
-                                site_errors += ingestion_result["errors"]
+                            batch_new = await _ingest_with_replacements(filtered_batch)
 
-                                if remaining_budget is not None:
-                                    remaining_budget = max(
-                                        remaining_budget
-                                        - ingestion_result["new_articles"],
-                                        0,
-                                    )
+                            if remaining_budget is not None and remaining_budget <= 0:
+                                exhaustion_reason = "limit_reached"
+                                break
 
-                        exhaustion_reason = exhaustion_reason or "profile_completed"
+                            if batch_new == 0:
+                                # Dedupe/paywall dominated batch; try another batch until max site batches.
+                                exhaustion_reason = "ingestion_stalled"
+                                continue
                     else:
                         while True:
                             if remaining_budget is not None and remaining_budget <= 0:
@@ -924,13 +977,7 @@ class CrawlerEngine:
                                 exhaustion_reason = "max_batches_reached"
                                 break
 
-                            request_cap = (
-                                remaining_budget
-                                if remaining_budget is not None and remaining_budget > 0
-                                else max_articles_per_site
-                            )
-                            request_cap = request_cap or max_articles_per_site or 25
-                            request_cap = max(1, request_cap)
+                            request_cap = _candidate_request_cap()
 
                             raw_batch = await self.crawl_site(site_config, request_cap)
                             batches_run += 1
@@ -968,31 +1015,13 @@ class CrawlerEngine:
                                 break
 
                             if remaining_budget is not None:
-                                filtered_batch = filtered_batch[:remaining_budget]
+                                filtered_batch = filtered_batch[:request_cap]
 
-                            await self._submit_hitl_candidates(
-                                filtered_batch, site_config
-                            )
-                            site_candidates += len(filtered_batch)
+                            batch_new = await _ingest_with_replacements(filtered_batch)
 
-                            ingestion_result = await self._ingest_articles(
-                                filtered_batch
-                            )
-                            site_articles_local.extend(filtered_batch)
-                            site_details.extend(ingestion_result.get("details", []))
-                            site_ingested += ingestion_result["new_articles"]
-                            site_duplicates += ingestion_result["duplicates"]
-                            site_errors += ingestion_result["errors"]
-
-                            if remaining_budget is not None:
-                                remaining_budget = max(
-                                    remaining_budget - ingestion_result["new_articles"],
-                                    0,
-                                )
-
-                            if ingestion_result["new_articles"] == 0:
+                            if batch_new == 0:
                                 exhaustion_reason = "ingestion_stalled"
-                                break
+                                continue
 
                         if (
                             exhaustion_reason is None

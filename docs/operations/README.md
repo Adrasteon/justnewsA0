@@ -12,6 +12,8 @@
 
 - [MCP Bus Health & Diagnostics](./MCP_BUS_HEALTH.md) — Details on `/health`and`/ready`, testing, and developer guidance
 
+- [Crawler Maturity Checklist](./CRAWLER_MATURITY_CHECKLIST.md) — Phased roadmap and acceptance criteria to move toward enterprise-grade crawling
+
 **Infrastructure**:
 
 - [Vault Setup & Administration](./VAULT_SETUP.md) — Secrets management, AppRole, key rotation

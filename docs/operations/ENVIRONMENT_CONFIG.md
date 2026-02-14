@@ -144,6 +144,8 @@ MCP_BUS_MISSING_AGENT_POLL_INTERVAL_SEC=30
 ## Unified Crawler
 
 UNIFIED_CRAWLER_ENABLE_HTTP_FETCH=true
+UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR=3
+UNIFIED_CRAWLER_MAX_REQUEST_CAP=150
 
 ## Analytics Dashboard
 
@@ -159,6 +161,20 @@ FACT_CHECKER_EXTERNAL_URL=http://localhost:8003
 EVIDENCE_AUDIT_BASE_URL=http://localhost:8013/transparency
 
 ```
+
+Crawler dedupe replacement tuning notes:
+
+- `UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR`
+	- Multiplies candidate fetch size per batch to compensate when ingest dedupe skips candidates.
+	- Higher values improve chance of hitting requested **new-article** targets but increase crawl cost.
+- `UNIFIED_CRAWLER_MAX_REQUEST_CAP`
+	- Hard cap for per-batch candidate request size.
+	- Protects against runaway fetches on high-duplication domains.
+
+Recommended starting point (development):
+
+- `UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR=3`
+- `UNIFIED_CRAWLER_MAX_REQUEST_CAP=150`
 
 #### Telemetry & Monitoring
 

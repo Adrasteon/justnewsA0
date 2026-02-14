@@ -1,7 +1,7 @@
 ## Dev setup — reproducible environment for live-run testing
 
 This file outlines the minimal reproducible steps required to run a local dev stack for the JustNews live-run testing
-flow. Use this on a development machine with Docker and the recommended conda environment.
+flow. Use this on a development machine with Docker and the recommended UV/venv environment.
 
 ### Quick Setup (Dev Container Recommended)
 
@@ -29,8 +29,9 @@ The dev container **automatically:**
 
 - Docker / docker-compose or equivalent
 - git
-- conda or mamba (recommended: Python 3.12 environment)
-- UV package manager (optional but recommended): `pip install uv`
+- Python 3.10+ (3.12 recommended)
+- UV package manager (recommended): `pip install uv`
+- conda or mamba (optional legacy path)
 
 #### Create the Python environment
 
@@ -102,11 +103,15 @@ Running tests — smoke/unit
 
 ## Run a focused smoke test suite (fast)
 
-pytest tests/smoke -q
+python -m pytest tests/smoke -q
 
 ## Run full test matrix (longer)
 
-pytest -q
+python -m pytest -q
+
+## In devcontainer, use canonical UV env explicitly
+
+/app/.venv/bin/python -m pytest -q
 
 ```
 

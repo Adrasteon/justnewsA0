@@ -135,6 +135,93 @@
                                             <input type="text" class="form-control" id="userAgent" value="JustNewsAgent/1.0">
                                         </div>
                                     </div>
+
+                                    <div class="card mt-3" style="background-color: #1e1e1e; border: 1px solid #4a5568;">
+                                        <div class="card-header d-flex justify-content-between align-items-center" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#advancedCrawlConfig">
+                                            <span>Advanced Crawl4AI Controls</span>
+                                            <i class="bi bi-sliders"></i>
+                                        </div>
+                                        <div id="advancedCrawlConfig" class="collapse">
+                                            <div class="card-body">
+                                                <div class="row">
+                                                    <div class="col-md-4">
+                                                        <label for="crawlDepth" class="form-label">Crawl Depth</label>
+                                                        <input type="number" class="form-control" id="crawlDepth" value="1" min="0" max="10">
+                                                        <div class="form-text" style="color: #a0aec0;">0 = seed page only</div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label for="maxPages" class="form-label">Max Pages</label>
+                                                        <input type="number" class="form-control" id="maxPages" value="25" min="1" max="500">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label for="cacheMode" class="form-label">Cache Mode</label>
+                                                        <select class="form-select" id="cacheMode">
+                                                            <option value="bypass" selected>Bypass</option>
+                                                            <option value="enabled">Enabled</option>
+                                                            <option value="read_only">Read Only</option>
+                                                            <option value="write_only">Write Only</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3">
+                                                    <div class="col-md-4">
+                                                        <div class="form-check mt-2">
+                                                            <input class="form-check-input" type="checkbox" id="followInternalLinks" checked>
+                                                            <label class="form-check-label" for="followInternalLinks">Follow Internal Links</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-check mt-2">
+                                                            <input class="form-check-input" type="checkbox" id="followExternalLinks">
+                                                            <label class="form-check-label" for="followExternalLinks">Follow External Links</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <div class="form-check mt-2">
+                                                            <input class="form-check-input" type="checkbox" id="scoreLinks" checked>
+                                                            <label class="form-check-label" for="scoreLinks">Score Links</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3">
+                                                    <div class="col-md-6">
+                                                        <label for="wordCountThreshold" class="form-label">Word Count Threshold</label>
+                                                        <input type="number" class="form-control" id="wordCountThreshold" value="120" min="0" max="5000">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="waitFor" class="form-label">Wait For (Optional)</label>
+                                                        <input type="text" class="form-control" id="waitFor" placeholder="e.g. css:.article-body">
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3">
+                                                    <div class="col-md-6">
+                                                        <label for="includePatterns" class="form-label">Include Patterns</label>
+                                                        <input type="text" class="form-control" id="includePatterns" placeholder="/news,/world,/politics">
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="excludePatterns" class="form-label">Exclude Patterns</label>
+                                                        <input type="text" class="form-control" id="excludePatterns" placeholder="/live,/video,/sport">
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3">
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                                            <label for="profileOverridesJson" class="form-label mb-0">Per-Domain Overrides (JSON)</label>
+                                                            <button type="button" id="generateOverridesTemplate" class="btn btn-sm btn-outline-info">Generate Template</button>
+                                                        </div>
+                                                        <textarea class="form-control" id="profileOverridesJson" rows="6" placeholder='{"bbc.com":{"extra":{"crawl_depth":2}},"cnn.com":{"link_preview":{"include_patterns":["/world"]}}}'></textarea>
+                                                        <div class="form-text" style="color: #a0aec0;">
+                                                            Optional domain-specific overrides. These are merged on top of the global Crawl4AI settings for matching domains.
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <button type="button" id="crawlButton" class="btn btn-primary mt-3">Start Crawl</button>
                                 </form>
                             </div>
@@ -383,7 +470,11 @@
                             • Max Sites: <span style="color: #90cdf4;">${settings.max_sites}</span> | 
                             Articles/Site: <span style="color: #90cdf4;">${settings.max_articles_per_site}</span><br/>
                             • Concurrency: <span style="color: #90cdf4;">${settings.concurrent_sites}</span> | 
-                            Strategy: <span style="color: #90cdf4;">${settings.strategy}</span>
+                            Strategy: <span style="color: #90cdf4;">${settings.strategy}</span><br/>
+                            • Depth: <span style="color: #90cdf4;">${settings.crawl4ai?.crawl_depth ?? 1}</span> |
+                            Max Pages: <span style="color: #90cdf4;">${settings.crawl4ai?.max_pages ?? 25}</span> |
+                            Cache: <span style="color: #90cdf4;">${settings.crawl4ai?.run_config?.cache_mode || 'bypass'}</span><br/>
+                            • Domain Overrides: <span style="color: #90cdf4;">${Object.keys(settings.profile_overrides || {}).length}</span>
                         </div>`;
                     } catch (e) {
                         // Silently fail if settings can't be parsed
@@ -442,6 +533,22 @@
                         document.getElementById('enableAI').checked = settings.enable_ai !== false;
                         document.getElementById('timeout').value = settings.timeout || 600;
                         document.getElementById('userAgent').value = settings.user_agent || 'JustNews/1.0';
+                        if (settings.crawl4ai) {
+                            const cfg = settings.crawl4ai;
+                            document.getElementById('crawlDepth').value = cfg.crawl_depth ?? 1;
+                            document.getElementById('maxPages').value = cfg.max_pages ?? 25;
+                            document.getElementById('followInternalLinks').checked = cfg.follow_internal_links !== false;
+                            document.getElementById('followExternalLinks').checked = cfg.follow_external === true;
+                            document.getElementById('scoreLinks').checked = cfg.run_config?.score_links !== false;
+                            document.getElementById('wordCountThreshold').value = cfg.run_config?.word_count_threshold ?? 120;
+                            document.getElementById('waitFor').value = cfg.run_config?.wait_for || '';
+                            document.getElementById('cacheMode').value = cfg.run_config?.cache_mode || 'bypass';
+                            document.getElementById('includePatterns').value = (cfg.link_preview?.include_patterns || []).join(',');
+                            document.getElementById('excludePatterns').value = (cfg.link_preview?.exclude_patterns || []).join(',');
+                        }
+                        if (settings.profile_overrides) {
+                            document.getElementById('profileOverridesJson').value = JSON.stringify(settings.profile_overrides, null, 2);
+                        }
                     } catch (e) {
                         console.log('Failed to restore last settings:', e);
                     }
@@ -564,6 +671,88 @@
             .catch(err => console.error('Health check error:', err));
         }
 
+        function parseCsvInput(value) {
+            return String(value || '')
+                .split(',')
+                .map(item => item.trim())
+                .filter(Boolean);
+        }
+
+        function normalizeDomain(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+            const withoutProtocol = raw.replace(/^https?:\/\//i, '');
+            const host = withoutProtocol.split('/')[0].trim().toLowerCase();
+            return host;
+        }
+
+        function extractDomainsFromInput(input) {
+            const raw = String(input || '').trim();
+            if (!raw) return [];
+
+            if (raw.toLowerCase() === 'all' || /^sources\s+\d+$/i.test(raw)) {
+                return [];
+            }
+
+            const parsed = raw
+                .split(',')
+                .map(item => normalizeDomain(item))
+                .filter(Boolean);
+
+            return [...new Set(parsed)];
+        }
+
+        function buildCrawl4AIConfig() {
+            const crawlDepth = parseInt(document.getElementById('crawlDepth').value, 10);
+            const maxPages = parseInt(document.getElementById('maxPages').value, 10);
+            const followInternalLinks = document.getElementById('followInternalLinks').checked;
+            const followExternalLinks = document.getElementById('followExternalLinks').checked;
+            const scoreLinks = document.getElementById('scoreLinks').checked;
+            const wordCountThreshold = parseInt(document.getElementById('wordCountThreshold').value, 10);
+            const waitFor = document.getElementById('waitFor').value.trim();
+            const cacheMode = document.getElementById('cacheMode').value;
+            const includePatterns = parseCsvInput(document.getElementById('includePatterns').value);
+            const excludePatterns = parseCsvInput(document.getElementById('excludePatterns').value);
+
+            const config = {
+                crawl_depth: Number.isNaN(crawlDepth) ? 1 : Math.max(0, crawlDepth),
+                max_pages: Number.isNaN(maxPages) ? 25 : Math.max(1, maxPages),
+                follow_internal_links: followInternalLinks,
+                follow_external: followExternalLinks,
+                run_config: {
+                    cache_mode: cacheMode,
+                    score_links: scoreLinks,
+                    word_count_threshold: Number.isNaN(wordCountThreshold) ? 120 : Math.max(0, wordCountThreshold)
+                },
+                link_preview: {
+                    include_patterns: includePatterns,
+                    exclude_patterns: excludePatterns
+                }
+            };
+
+            if (waitFor) {
+                config.run_config.wait_for = waitFor;
+            }
+
+            return config;
+        }
+
+        function parseProfileOverridesConfig() {
+            const raw = document.getElementById('profileOverridesJson').value.trim();
+            if (!raw) {
+                return null;
+            }
+            try {
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                    throw new Error('Overrides must be a JSON object keyed by domain');
+                }
+                return parsed;
+            } catch (error) {
+                throw new Error(`Invalid per-domain override JSON: ${error.message}`);
+            }
+        }
+
         // Start metrics refresh when metrics tab is shown
         document.getElementById('metrics-tab')?.addEventListener('shown.bs.tab', function() {
             updateMetrics();
@@ -593,16 +782,24 @@
                 }
 
                 const domains = document.getElementById('domains').value;
-                const payload = {
-                    domains: domains,
-                    max_sites: parseInt(document.getElementById('maxSites').value, 10),
-                    max_articles_per_site: parseInt(document.getElementById('maxArticlesPerSite').value, 10),
-                    concurrent_sites: parseInt(document.getElementById('concurrentSites').value, 10),
-                    strategy: document.getElementById('strategy').value,
-                    enable_ai: document.getElementById('enableAI').checked,
-                    timeout: parseInt(document.getElementById('timeout').value, 10),
-                    user_agent: document.getElementById('userAgent').value
-                };
+                let payload;
+                try {
+                    payload = {
+                        domains: domains,
+                        max_sites: parseInt(document.getElementById('maxSites').value, 10),
+                        max_articles_per_site: parseInt(document.getElementById('maxArticlesPerSite').value, 10),
+                        concurrent_sites: parseInt(document.getElementById('concurrentSites').value, 10),
+                        strategy: document.getElementById('strategy').value,
+                        enable_ai: document.getElementById('enableAI').checked,
+                        timeout: parseInt(document.getElementById('timeout').value, 10),
+                        user_agent: document.getElementById('userAgent').value,
+                        crawl4ai: buildCrawl4AIConfig(),
+                        profile_overrides: parseProfileOverridesConfig()
+                    };
+                } catch (error) {
+                    document.getElementById('crawlStatus').innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                    return;
+                }
 
                 // Save settings to localStorage for later reference
                 localStorage.setItem('lastCrawlSettings', JSON.stringify(payload));
@@ -642,6 +839,28 @@
             document.getElementById('refreshStatus').addEventListener('click', checkCrawlStatus);
             document.getElementById('clearStatus').addEventListener('click', function() { fetch('/api/crawl/clear_jobs', { method: 'POST' }).then(r => r.json()).then(() => checkCrawlStatus()); });
             document.getElementById('resetCrawler').addEventListener('click', function() { fetch('/api/crawl/reset', { method: 'POST' }).then(r => r.json()).then(() => checkCrawlStatus()); });
+
+            document.getElementById('generateOverridesTemplate').addEventListener('click', function() {
+                const domainsInput = document.getElementById('domains').value;
+                const domains = extractDomainsFromInput(domainsInput);
+
+                if (!domains.length) {
+                    document.getElementById('crawlStatus').innerHTML = '<div class="alert alert-warning">Template generation requires explicit domains (e.g. bbc.com, cnn.com). For \"all\" or \"sources N\", enter domains manually in the JSON field.</div>';
+                    return;
+                }
+
+                const depth = Math.max(0, parseInt(document.getElementById('crawlDepth').value || '1', 10));
+                const template = {};
+                domains.forEach(domain => {
+                    template[domain] = {
+                        extra: {
+                            crawl_depth: Number.isNaN(depth) ? 1 : depth
+                        }
+                    };
+                });
+
+                document.getElementById('profileOverridesJson').value = JSON.stringify(template, null, 2);
+            });
 
             checkCrawlStatus();
         });

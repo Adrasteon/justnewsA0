@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib.util
+import asyncio
 import json
 import os
 import re
@@ -618,25 +619,22 @@ class AnalystEngine:
         """
         Run comprehensive fact-check on a single article.
 
-        Calls fact-checker's comprehensive_fact_check() method with CPU fallback.
+        Calls the modern analyst audit module against the fact-check service.
         Returns SourceFactCheck object with results.
         """
         try:
             from .schemas import ClaimVerdict, SourceFactCheck
 
-            # Import fact-checker tools
-            try:
-                from agents.fact_checker.tools import comprehensive_fact_check
-            except ImportError:
-                logger.warning("Fact-checker tools not available, skipping fact-check")
-                return None
+            from .audit import audit_text
 
-            # Call fact-checker comprehensive_fact_check
-            result = comprehensive_fact_check(
-                content=text,
-                source_url=article_id or "unknown",
-                metadata={"article_id": article_id},
-            )
+            try:
+                result = asyncio.run(audit_text(text, max_claims=5))
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                try:
+                    result = loop.run_until_complete(audit_text(text, max_claims=5))
+                finally:
+                    loop.close()
 
             if not result or "error" in result:
                 logger.error(
@@ -644,11 +642,38 @@ class AnalystEngine:
                 )
                 return None
 
-            # Extract fact-check results
-            overall_score = result.get("overall_score", 0.0)
-            fact_verification = result.get("fact_verification", {})
-            credibility_assessment = result.get("credibility_assessment", {})
-            claims_analysis = result.get("claims_analysis", {})
+            overall_score = float(result.get("score", 0.0) or 0.0)
+            details = result.get("details", {}) if isinstance(result.get("details"), dict) else {}
+            verdicts = result.get("verdicts", []) if isinstance(result.get("verdicts"), list) else []
+
+            claim_items = []
+            for verdict_entry in verdicts[:10]:
+                if not isinstance(verdict_entry, dict):
+                    continue
+                fact_check = verdict_entry.get("fact_check", {})
+                if not isinstance(fact_check, dict):
+                    fact_check = {}
+                claim_items.append(
+                    {
+                        "text": verdict_entry.get("claim", ""),
+                        "verdict": fact_check.get("verdict", "Uncertain"),
+                        "confidence": float(fact_check.get("confidence", verdict_entry.get("confidence", 0.0)) or 0.0),
+                        "evidence": fact_check.get("evidence"),
+                    }
+                )
+
+            fact_verification = {
+                "verification_score": overall_score,
+                "claims_analyzed": int(details.get("checked_count", len(claim_items)) or 0),
+                "verdict_breakdown": details.get("verdict_breakdown", {}),
+            }
+            credibility_assessment = {
+                "credibility_score": overall_score,
+            }
+            claims_analysis = {
+                "claims": claim_items,
+                "claim_count": int(details.get("checked_count", len(claim_items)) or len(claim_items)),
+            }
 
             # Determine fact_check_status based on overall_score
             if overall_score >= 0.8:

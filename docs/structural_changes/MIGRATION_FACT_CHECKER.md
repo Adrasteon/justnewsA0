@@ -21,8 +21,9 @@ Due to persistent zombie processes and heavy resource consumption in the origina
 
 ### 2. File Structure
 - **Active Implementation:** `agents/fact_checker/shim.py`
-  - A lightweight FastAPI proxy that can forward requests to an external service or return mock responses.
-  - Currently configured to mock responses to unblock development.
+  - A lightweight FastAPI proxy that executes real verification paths.
+  - `verify_article` now performs DB load → backend verification → DB persistence (`fact_check_status`, `factual_accuracy_score`, `fact_check_details`).
+  - Active MCP tool surface is intentionally minimal: `verify_article`, `verify_claim`, `fact_check`.
 - **Archived Implementation:** `fact_checker_deprecation_archive/`
   - The original heavy implementation (`main.py`, `fact_checker_engine.py`, etc.) has been moved here.
   - This preserves the logic for future reference or reinstatement without polluting the active namespace.

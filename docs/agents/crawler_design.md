@@ -47,6 +47,15 @@ Configuration and profiles
 
 - `config/crawl_profiles/base.yaml` provides defaults; per-site files override fields.
 
+Yield protection under dedupe
+
+- The crawler now treats `max_articles_per_site` as a target for **new ingested articles** (where possible), not merely fetched candidates.
+- When duplicates are detected during ingestion, it consumes replacement candidates from the same fetched batch and can continue with additional batches until budget/limits are reached.
+- This behavior is controlled by:
+  - `UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR` (default `3`)
+  - `UNIFIED_CRAWLER_MAX_REQUEST_CAP` (default `150`)
+- Practical effect: if early candidates dedupe, crawler keeps searching for unseen articles rather than stopping immediately.
+
 APIs and payload shapes (excerpt)
 
 - HITL candidate payload (keys used):

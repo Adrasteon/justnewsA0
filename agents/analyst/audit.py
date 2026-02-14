@@ -18,21 +18,44 @@ logger = get_logger(__name__)
 FACT_CHECKER_URL = os.getenv("FACT_CHECKER_URL", "http://localhost:8018")
 API_KEY = os.getenv("FACT_CHECKER_API_KEY", "")
 
-# Verdict scoring weights (5-Point Scale)
+# Verdict scoring weights (strict canonical 5-point scale)
 VERDICT_SCORES = {
-    # New Standard
     "true": 1.0,
     "likely true": 0.75,
     "uncertain": 0.5,
     "likely false": 0.25,
     "false": 0.0,
-    # Legacy / Compatibility
-    "proven": 1.0,
-    "plausible": 0.75,
-    "unverified": 0.5,
-    "improbable": 0.25,
-    "disproven": 0.0
 }
+
+VERDICT_ALIASES = {
+    "proven": "Uncertain",
+    "plausible": "Uncertain",
+    "unverified": "Uncertain",
+    "improbable": "Uncertain",
+    "disproven": "Uncertain",
+}
+
+
+def normalize_verdict(raw_verdict: Any) -> str:
+    if not raw_verdict:
+        return "Uncertain"
+    normalized = str(raw_verdict).strip().lower()
+    if normalized in VERDICT_SCORES:
+        if normalized == "true":
+            return "True"
+        if normalized == "likely true":
+            return "Likely True"
+        if normalized == "uncertain":
+            return "Uncertain"
+        if normalized == "likely false":
+            return "Likely False"
+        if normalized == "false":
+            return "False"
+    if normalized in VERDICT_ALIASES:
+        logger.warning("Received non-canonical verdict '%s'; coercing to Uncertain", raw_verdict)
+        return VERDICT_ALIASES[normalized]
+    logger.warning("Received unknown verdict '%s'; coercing to Uncertain", raw_verdict)
+    return "Uncertain"
 
 async def verify_claim(client: httpx.AsyncClient, claim: str, headers: dict) -> Dict[str, Any]:
     """Verify a single claim against the Fact Checker API."""
@@ -46,7 +69,9 @@ async def verify_claim(client: httpx.AsyncClient, claim: str, headers: dict) -> 
         resp = await client.post(url, json=payload, headers=headers, timeout=60.0)
         
         if resp.status_code == 200:
-            return resp.json()
+            result = resp.json()
+            result["verdict"] = normalize_verdict(result.get("verdict"))
+            return result
         else:
             logger.warning(f"Fact check failed for '{claim[:30]}...': Status {resp.status_code}")
             return {"error": f"HTTP {resp.status_code}", "verdict": "Uncertain"}
@@ -120,7 +145,7 @@ async def audit_text(text: str, max_claims: int = 5) -> Dict[str, Any]:
     detailed_results = []
     
     for i, res in enumerate(results):
-        v_raw = res.get("verdict", "Uncertain")
+        v_raw = normalize_verdict(res.get("verdict", "Uncertain"))
         v_str = v_raw.lower()
         score = VERDICT_SCORES.get(v_str, 0.5)
         
