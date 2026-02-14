@@ -293,6 +293,13 @@ remove_containers() {
 
 # Remove volumes (IDEMPOTENT: Check if volume is in-use before removing)
 remove_volumes() {
+    # DEFENSE IN DEPTH: Double-check the force flag
+    # This prevents accidental deletion even if this function is called incorrectly
+    if [ "$FORCE_CLEAN_REBUILD" != true ]; then
+        log_info "  Safe Mode: Skipping volume removal logic inside remove_volumes"
+        return 0
+    fi
+
     local volumes=("$@")
     
     if [ ${#volumes[@]} -eq 0 ]; then
@@ -367,6 +374,12 @@ main() {
     log_info "Project directory: $PROJECT_DIR"
     log_info "DevContainer path: $DEVCONTAINER_DIR"
     log_info "Backup location: $BACKUP_DIR"
+    
+    if [ "$FORCE_CLEAN_REBUILD" = true ]; then
+        log_warning "MODE: FORCE_CLEAN_REBUILD is ENABLED. Volumes WILL be removed."
+    else
+        log_success "MODE: IDEMPOTENT. Volumes will be PRESERVED."
+    fi
     echo ""
     
     # Step 1: Check Docker

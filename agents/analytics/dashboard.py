@@ -45,6 +45,29 @@ async def analytics_dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
+@analytics_app.get("/health")
+async def health_check():
+    """Health endpoint for analytics dashboard service."""
+    try:
+        health = analytics_engine.get_system_health()
+        return JSONResponse(
+            content={
+                "service": "analytics-dashboard",
+                "status": "healthy",
+                "health": health,
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            content={
+                "service": "analytics-dashboard",
+                "status": "degraded",
+                "error": str(e),
+            },
+            status_code=503,
+        )
+
+
 @analytics_app.get("/api/health")
 async def get_system_health():
     """Get system health metrics"""

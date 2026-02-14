@@ -26,7 +26,7 @@ class FactCheckRequest(BaseModel):
 class FactCheckResult(BaseModel):
     fact: str
     is_accurate: bool
-    verdict: str = Field(..., description="The final determination: 'proven', 'plausible', 'unverified', 'improbable', or 'disproven'")
+    verdict: str = Field(..., description="The final determination: 'True', 'Likely True', 'Uncertain', 'Likely False', or 'False'")
     confidence: float
     evidence: List[Evidence]
     explanation: str

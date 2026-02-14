@@ -9,7 +9,7 @@ AGENTS_MANIFEST=(
   "mcp_bus|agents.mcp_bus.main:app|8000"
   "chief_editor|agents.chief_editor.main:app|8001"
   # Deprecated: "scout|agents.scout.main:app|8002"
-  "fact_checker|agents.fact_checker.main:app|8003"
+  "fact_checker|agents.fact_checker.shim:app|8018"
   "analyst|agents.analyst.main:app|8004"
   "synthesizer|agents.synthesizer.main:app|8005"
   "critic|agents.critic.main:app|8006"

@@ -37,7 +37,17 @@ For the quickest, most reliable development environment setup:
 - Chrome/Chromium (for Crawl4AI)
 - GPU with CUDA (recommended for local inference)
 
-### Quick Start Commands (Manual Setup)
+### Quick Start Commands
+
+For the **fastest and most reliable startup**, use the canonical script:
+
+```bash
+# Start the full system (Databases + Agents)
+./start_all_services.sh
+
+# Stop the full system
+./stop_all_services.sh
+```
 
 For Dev Container setup (fastest): See section above.
 

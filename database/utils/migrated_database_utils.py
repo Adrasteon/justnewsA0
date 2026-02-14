@@ -754,10 +754,12 @@ def check_database_connections(service: MigratedDatabaseService) -> bool:
             logger.warning("Embedding model not available - skipping embedding test")
         else:
             try:
+                # Retrieve expected dimensions from config or default to 384 for backward comp.
+                expected_dims = service.config['database']['embedding'].get('dimensions', 384)
                 test_embedding = service.embedding_model.encode("test")
-                if len(test_embedding) != 384:
+                if len(test_embedding) != expected_dims:
                     logger.error(
-                        f"Embedding model returned wrong dimensions: {len(test_embedding)}"
+                        f"Embedding model returned wrong dimensions: {len(test_embedding)} (expected {expected_dims})"
                     )
                     return False
                 logger.info("Embedding model test successful")

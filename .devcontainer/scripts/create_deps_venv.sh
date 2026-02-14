@@ -20,41 +20,93 @@ fi
 
 if command -v uv >/dev/null 2>&1; then
   echo "UV package manager found: $(uv --version)"
-  echo "Creating/verifying venv with UV..."
   
-  # Clean up any stale lock files that might cause hangs
-  if [ -f /deps/.venv/.lock ]; then
-    echo "Removing stale lock file in /deps/.venv"
-    rm -f /deps/.venv/.lock
-  fi
-  
-  uv venv /deps/.venv
-  
-  # Install from requirements-bootstrap.txt (curated, production-ready deps)
+  # IDEMPOTENCE: Check if venv exists and is up-to-date
+  REQUIREMENTS_FILE=""
   if [ -f /app/requirements-bootstrap.txt ]; then
-    echo "Installing dependencies from requirements-bootstrap.txt..."
-    uv pip install --python /deps/.venv/bin/python -r /app/requirements-bootstrap.txt
-    echo "✓ UV installation complete"
-  else
-    # Fallback to requirements.txt if bootstrap not available
-    if [ -f /app/requirements.txt ]; then
-      echo "requirements-bootstrap.txt not found, falling back to requirements.txt"
-      uv pip install --python /deps/.venv/bin/python -r /app/requirements.txt
-    else
-      echo "⚠ No requirements files found; created empty venv at /deps/.venv"
+    REQUIREMENTS_FILE="/app/requirements-bootstrap.txt"
+  elif [ -f /app/requirements.txt ]; then
+    REQUIREMENTS_FILE="/app/requirements.txt"
+  fi
+
+  SKIP_INSTALL=false
+  if [ -f "/deps/.venv/bin/python" ] && [ -n "$REQUIREMENTS_FILE" ]; then
+    # Calculate checksum of requirements file
+    CURRENT_HASH=$(md5sum "$REQUIREMENTS_FILE" | awk '{print $1}')
+    INSTALLED_HASH=""
+    
+    if [ -f "/deps/.venv/.requirements_hash" ]; then
+      INSTALLED_HASH=$(cat "/deps/.venv/.requirements_hash")
     fi
+    
+    if [ "$CURRENT_HASH" == "$INSTALLED_HASH" ]; then
+      echo "✓ Virtual environment is up-to-date (hash match). Skipping installation."
+      SKIP_INSTALL=true
+    else
+      echo "⚠ Requirements changed (hash mismatch). Updating venv..."
+    fi
+  fi
+
+  if [ "$SKIP_INSTALL" = false ]; then
+      echo "Creating/verifying venv with UV..."
+      
+      # Clean up any stale lock files that might cause hangs
+      if [ -f /deps/.venv/.lock ]; then
+        echo "Removing stale lock file in /deps/.venv"
+        rm -f /deps/.venv/.lock
+      fi
+      
+      uv venv /deps/.venv --allow-existing
+      
+      if [ -n "$REQUIREMENTS_FILE" ]; then
+        echo "Installing dependencies from $(basename $REQUIREMENTS_FILE)..."
+        uv pip install --python /deps/.venv/bin/python -r "$REQUIREMENTS_FILE"
+        
+        # Save the new hash
+        md5sum "$REQUIREMENTS_FILE" | awk '{print $1}' > "/deps/.venv/.requirements_hash"
+        echo "✓ UV installation complete"
+      else
+        echo "⚠ No requirements files found; created empty venv at /deps/.venv"
+      fi
   fi
 else
   echo "UV not available, using pip-only fallback"
-  python3 -m venv /deps/.venv
-  /deps/.venv/bin/pip install --upgrade pip
   
+  # IDEMPOTENCE: Check if venv exists and is up-to-date (Fallback)
+  REQUIREMENTS_FILE=""
   if [ -f /app/requirements-bootstrap.txt ]; then
-    echo "Installing from requirements-bootstrap.txt..."
-    /deps/.venv/bin/pip install -r /app/requirements-bootstrap.txt
+    REQUIREMENTS_FILE="/app/requirements-bootstrap.txt"
   elif [ -f /app/requirements.txt ]; then
-    echo "Installing from requirements.txt..."
-    /deps/.venv/bin/pip install -r /app/requirements.txt
+    REQUIREMENTS_FILE="/app/requirements.txt"
+  fi
+
+  SKIP_INSTALL=false
+  if [ -f "/deps/.venv/bin/python" ] && [ -n "$REQUIREMENTS_FILE" ]; then
+    # Calculate checksum of requirements file
+    CURRENT_HASH=$(md5sum "$REQUIREMENTS_FILE" | awk '{print $1}')
+    INSTALLED_HASH=""
+    
+    if [ -f "/deps/.venv/.requirements_hash" ]; then
+      INSTALLED_HASH=$(cat "/deps/.venv/.requirements_hash")
+    fi
+    
+    if [ "$CURRENT_HASH" == "$INSTALLED_HASH" ]; then
+      echo "✓ Virtual environment is up-to-date (hash match). Skipping installation."
+      SKIP_INSTALL=true
+    else
+      echo "⚠ Requirements changed (hash mismatch). Updating venv..."
+    fi
+  fi
+
+  if [ "$SKIP_INSTALL" = false ]; then
+      python3 -m venv /deps/.venv
+      /deps/.venv/bin/pip install --upgrade pip
+      
+      if [ -n "$REQUIREMENTS_FILE" ]; then
+        echo "Installing from $(basename $REQUIREMENTS_FILE)..."
+        /deps/.venv/bin/pip install -r "$REQUIREMENTS_FILE"
+        md5sum "$REQUIREMENTS_FILE" | awk '{print $1}' > "/deps/.venv/.requirements_hash"
+      fi
   fi
 fi
 

@@ -138,7 +138,8 @@ HITL_FORWARD_TOOL=queue_article
 ## MCP Bus (central message broker)
 
 MCP_BUS_HOST=localhost
-MCP_BUS_PORT=8017
+MCP_BUS_PORT=8000
+MCP_BUS_MISSING_AGENT_POLL_INTERVAL_SEC=30
 
 ## Unified Crawler
 
@@ -146,7 +147,12 @@ UNIFIED_CRAWLER_ENABLE_HTTP_FETCH=true
 
 ## Analytics Dashboard
 
-ANALYTICS_PORT=8011
+ANALYTICS_AGENT_PORT=8012
+
+## Fact Checker Shim
+
+FACT_CHECKER_AGENT_PORT=8018
+FACT_CHECKER_EXTERNAL_URL=http://localhost:8003
 
 ## Transparency/Evidence Service
 

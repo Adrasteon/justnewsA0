@@ -338,7 +338,7 @@ class TestAgentIntegrationPatterns:
         # Test health endpoints across all agents
         agents_to_test = [
             ("analyst", 8004),
-            ("fact_checker", 8003),
+            ("fact_checker", 8018),
             ("synthesizer", 8005),
             ("memory", 8007),
         ]

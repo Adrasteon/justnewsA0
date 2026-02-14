@@ -35,6 +35,7 @@ COPY ./app /app/app
 ENV PYTHONPATH=/app
 
 RUN useradd -m appuser && chown -R appuser /app
+RUN mkdir -p /logs && chown -R appuser /logs
 USER appuser
 
 EXPOSE 8000

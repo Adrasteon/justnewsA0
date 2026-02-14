@@ -4,6 +4,8 @@
 
 set -e
 cd /app
+LOG_DIR=${LOG_DIR:-logs}
+mkdir -p "$LOG_DIR"
 
 # Colors for output
 RED='\033[0;31m'
@@ -18,7 +20,13 @@ log_warning() { echo -e "${YELLOW}[⚠]${NC} $1"; }
 log_error() { echo -e "${RED}[✗]${NC} $1"; }
 
 # Activate virtualenv and load environment
-source /deps/.venv/bin/activate
+if [ -f "/deps/.venv/bin/activate" ]; then
+    source /deps/.venv/bin/activate
+elif [ -f "/app/.venv/bin/activate" ]; then
+    source /app/.venv/bin/activate
+else
+    log_warning "Virtualenv not found in standard locations"
+fi
 
 # Load environment variables and export them
 if [ -f "global.env" ]; then
@@ -38,19 +46,16 @@ log_info ""
 
 # Array of agents: name|module:app|port|env_vars (optional)|workers (optional)
 # Balanced workers to prevent RAM exhaustion (each worker ~1.2GB)
-if [ "$USE_EXTERNAL_FACT_CHECKER" == "true" ]; then
-    log_info "Using External Fact Checker Shim..."
-    # Point to the background process started on port 8011 for immediate usage
-    FACT_CHECKER_CMD="fact_checker|agents.fact_checker.shim:app|8003|FACT_CHECKER_EXTERNAL_URL=http://localhost:8011|1"
-else
-    FACT_CHECKER_CMD="fact_checker|agents.fact_checker.main:app|8003||2"
-fi
+# Run the shim on 8018 and forward to docker fact-check backend published on 8003
+log_info "Using mcp_fact_checker_server Shim..."
+# Use port 8018 for the Shim to avoid conflict with the stuck container on 8003
+FACT_CHECKER_CMD="fact_checker|agents.fact_checker.shim:app|8018|PORT=8018 FACT_CHECKER_EXTERNAL_URL=http://localhost:8003|1"
 
 AGENTS=(
   "mcp_bus|agents.mcp_bus.main:app|8000||1"
   "chief_editor|agents.chief_editor.main:app|8001||1"
   "$FACT_CHECKER_CMD"
-  "analyst|agents.analyst.main:app|8004||1"
+  "analyst|agents.analyst.main:app|8004|FACT_CHECKER_URL=http://localhost:8018|1"
   "synthesizer|agents.synthesizer.main:app|8005|EVIDENCE_AUDIT_BASE_URL=http://localhost:8000|2"
   "critic|agents.critic.main:app|8006||1"
   "memory|agents.memory.main:app|8007||1"
@@ -96,15 +101,18 @@ for entry in "${AGENTS[@]}"; do
   fi
   
   # Start agent in background
-  out_log="$LOG_DIR/${name}.log"
-  err_log="$LOG_DIR/${name}.err"
+  startup_log="$LOG_DIR/${name}.startup.log"
+  main_log="$LOG_DIR/${name}.log"
   
-  if eval "$agent_env uvicorn $module --host 0.0.0.0 --port $port --workers $workers --log-level info" > "$out_log" 2> "$err_log" &
+  # Use python -m common.agent_runner instead of direct uvicorn to ensure log rotation
+  cmd="$agent_env python -m common.agent_runner $module --host 0.0.0.0 --port $port --workers $workers --log-level info --agent-name $name"
+
+  if eval "$cmd > \"$startup_log\" 2>&1 &"
   then
     pid=$!
     PIDS+=("$pid")
     STARTED_AGENTS+=("$name:$port:$pid")
-    log_success "$name started (PID: $pid) → logs: $out_log"
+    log_success "$name started (PID: $pid) -> logs: $main_log (console: $startup_log)"
   else
     FAILED_AGENTS+=("$name")
     log_error "$name failed to start"
@@ -183,28 +191,13 @@ if [ ${#UNHEALTHY_AGENTS[@]} -gt 0 ]; then
   log_info ""
 fi
 
-log_info "Agent Status URLs:"
-log_info "  mcp_bus:      http://localhost:8000/docs"
-log_info "  chief_editor: http://localhost:8001/docs"
-log_info "  fact_checker: http://localhost:8003/docs"
-log_info "  analyst:      http://localhost:8004/docs"
-log_info "  synthesizer:  http://localhost:8005/docs (requires EVIDENCE_AUDIT_BASE_URL)"
-log_info "  critic:       http://localhost:8006/docs"
-log_info "  memory:       http://localhost:8007/docs"
-log_info "  reasoning:    http://localhost:8008/docs"
-log_info "  newsreader:   http://localhost:8009/docs"
-log_info "  dashboard:    http://localhost:8013/docs"
-log_info "  analytics:    http://localhost:8012/docs"
-log_info "  gpu_orchestrator: http://localhost:8014/docs"
-log_info "  archive:      http://localhost:8020/docs"
-log_info "  workflow_orchestrator: http://localhost:8023/docs"
-log_info "  crawler:      http://localhost:8022/docs"
-log_info "  crawler_control: http://localhost:8016/docs"
+log_info "Agent Status URLs shown above."
 log_info ""
 log_info "Log directory: $LOG_DIR"
 log_info "View logs: tail -f $LOG_DIR/*.log"
+log_info "View startup errors: tail -f $LOG_DIR/*.startup.log"
 log_info ""
-log_info "To stop all agents: pkill -f 'uvicorn agents'"
+log_info "To stop all agents: pkill -f 'common.agent_runner'"
 log_info ""
 
 if [ ${#FAILED_AGENTS[@]} -eq 0 ]; then

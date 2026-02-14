@@ -33,7 +33,7 @@
 - ✅ workflow_orchestrator (Port 8023) - Pipeline routing
 - ✅ crawler (Port 8022) - Article discovery
 - ✅ newsreader (Port 8009) - Feed processing
-- ✅ fact_checker (Port 8003) - **SCALED (2 WORKERS)**
+- ✅ fact_checker (Shim Port 8018 -> backend 8003) - Verification proxy
 - ✅ analyst (Port 8004) - Clustering & analysis
 - ✅ memory (Port 8007) - Embeddings storage
 - ✅ reasoning (Port 8008) - Logic processing
@@ -120,7 +120,19 @@ The DevContainer environment includes these pre-installed tools for advanced dev
 
 ## 🔄 How to Restart the Full System
 
-### Option 1: Quick Restart (Recommended for DevContainer)
+### Option 1: Canonical Startup Script (Recommended)
+
+This is the preferred way to start the entire system, including databases and agents, ensuring correct order and dependency handling.
+
+```bash
+# Start all services
+./start_all_services.sh
+
+# Stop all services
+./stop_all_services.sh
+```
+
+### Option 2: Quick Restart (DevContainer only)
 ```bash
 # Stop all agents
 pkill -f "uvicorn agents"
@@ -240,22 +252,18 @@ mysql -h mariadb -u justnews -pdev_justnews_password justnews -e "
 
 ## 📚 Startup Script Reference
 
-The startup script `/app/start_agents_devcontainer.sh` does the following:
+The `start_all_services.sh` script is the canonical entry point. It orchestrates the entire startup process:
 
-1. Activates the Python virtualenv (`/deps/.venv`)
-2. Loads configuration from `global.env`
-3. Creates a logs directory (`/tmp/justnews_agents_logs/`)
-4. **Starts 16 agents** using `uvicorn` on ports 8000-8023
-5. Sets environment variables per agent (e.g., EVIDENCE_AUDIT_BASE_URL for synthesizer)
-6. Performs health checks
-7. Reports final status
+1. **Environment Setup**: Loads `global.env` and sets up logging.
+2. **Database Services**: Starts Redis, checks/starts ChromaDB and MariaDB.
+3. **Migrations**: Runs any pending database migrations.
+4. **Agents Startup**: Launches all 16 agents using the underlying logic from `start_agents_devcontainer.sh` or explicit startup commands.
+5. **Health Verification**: Curls health endpoints for all services.
 
 **Key files involved:**
-- Virtual environment: `/deps/.venv/bin/activate`
-- Python packages: `/deps/.venv/lib/python3.10/site-packages/`
-- Code: `/app/agents/` (all agent modules)
-- Configuration: `/app/global.env`
-- Logs: `/tmp/justnews_agents_logs/`
+- Main Script: `/app/start_all_services.sh`
+- Agent Logic: `/app/start_agents_devcontainer.sh` (called/referenced for agent-specific logic in some contexts)
+- Manifest: `/app/infrastructure/agents_manifest.sh`
 
 ---
 

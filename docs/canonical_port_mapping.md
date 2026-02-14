@@ -1,8 +1,8 @@
 # Canonical Port Mapping — JustNews Infrastructure
 
 **STATUS: SINGLE SOURCE OF TRUTH**
-*Last Updated: 2026-02-10*
-*Latest Update: Fixed crawler port (8022), newsreader registration (8009), workflow orchestrator (8023)*
+*Last Updated: 2026-02-14*
+*Latest Update: Fact-check shim wiring (8018 -> external 8003) and MCP Bus periodic missing-agent discovery config*
 
 This document serves as the absolute reference for port allocations within the JustNews ecosystem. All service configurations, container definitions, and environment variables must adhere to this registry to prevent collision and ensure service discovery.
 
@@ -13,8 +13,9 @@ This document serves as the absolute reference for port allocations within the J
 | **8000** | `mcp-bus` | `MCP_BUS_PORT` | **MCP Bus Service**. Central message broker and discovery. Routes all inter-agent calls. |
 | **8001** | `chief-editor` | `CHIEF_EDITOR_AGENT_PORT` | **Chief Editor**. Orchestrates the editorial workflow. |
 | **8002** | `scout` | `SCOUT_AGENT_PORT` | (DEPRECATED) Scout Agent. Legacy discovery service - DO NOT USE. |
-| **8003** | `fact-checker` | `FACT_CHECKER_AGENT_PORT` | **Fact Checker**. Verifies claims against knowledge base. |
+| **8003** | `fact-checker-backend` | `FACT_CHECKER_EXTERNAL_URL` | Docker-published external fact-check backend endpoint consumed by the shim. |
 | **8004** | `analyst` | `ANALYST_AGENT_PORT` | **Analyst Agent**. Deep dive content analysis. |
+| **8018** | `fact-checker-shim`| `FACT_CHECKER_AGENT_PORT` | **Fact Checker Shim**. Active fact-check endpoint in dev/runtime; forwards to `FACT_CHECKER_EXTERNAL_URL` (currently `http://localhost:8003`). |
 | **8005** | `synthesizer` | `SYNTHESIZER_AGENT_PORT` | **Synthesizer**. Content generation and drafting. |
 | **8006** | `critic` | `CRITIC_AGENT_PORT` | **Critic Agent**. Quality assurance and review. |
 | **8007** | `memory` | `MEMORY_AGENT_PORT` | **Memory Service**. Long-term context and recall. Ingests analyzed articles. |
@@ -58,3 +59,9 @@ This document serves as the absolute reference for port allocations within the J
 | :--- | :--- | :--- | :--- |
 | **8040** | `hitl-legacy` | **Moved** | Moved to 8019 for block consistency. |
 | **8090** | `encoder-service` | **Retired** | Legacy embedding service. |
+
+## 5. Discovery & Polling Configuration (Non-Port)
+
+| Key | Default | Description |
+| :--- | :--- | :--- |
+| `MCP_BUS_MISSING_AGENT_POLL_INTERVAL_SEC` | `30` | Interval for MCP Bus periodic discovery of only missing agents. Set `0` to disable. |

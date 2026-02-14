@@ -117,7 +117,7 @@ class MockFactory:
             def __init__(self):
                 self.agents = agents or {
                     "analyst": "http://localhost:8004",
-                    "fact_checker": "http://localhost:8003",
+                    "fact_checker": "http://localhost:8018",
                     "synthesizer": "http://localhost:8005",
                 }
                 self.calls = []

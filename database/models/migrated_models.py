@@ -126,6 +126,8 @@ class Article:
         self.critic_result = kwargs.get('critic_result', {})
         self.fact_check_status = kwargs.get('fact_check_status')
         self.fact_check_trace = kwargs.get('fact_check_trace')
+        self.factual_accuracy_score = kwargs.get('factual_accuracy_score')
+        self.fact_check_details = kwargs.get('fact_check_details', {})
         self.is_published = kwargs.get('is_published', False)
         self.published_at = kwargs.get('published_at')
         self.created_by = kwargs.get('created_by')
@@ -172,6 +174,8 @@ class Article:
             , is_published=row[34] if len(row) > 34 else False
             , published_at=row[35] if len(row) > 35 else None
             , created_by=row[36] if len(row) > 36 else None
+            , factual_accuracy_score=row[37] if len(row) > 37 else None
+            , fact_check_details=json.loads(row[38]) if len(row) > 38 and row[38] else {}
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -211,6 +215,8 @@ class Article:
             , 'critic_result': self.critic_result
             , 'fact_check_status': self.fact_check_status
             , 'fact_check_trace': self.fact_check_trace
+            , 'factual_accuracy_score': self.factual_accuracy_score
+            , 'fact_check_details': self.fact_check_details
             , 'is_published': self.is_published
             , 'published_at': self.published_at
             , 'created_by': self.created_by
@@ -476,27 +482,8 @@ class MigratedDatabaseService:
         
         # Create collection if it doesn't exist - but fail gracefully if ChromaDB isn't available
         base_collection_name = chroma_config.get('collection')
-        # Optionally scope collection to embedding model and dimensions to support
-        # versioned indices when swapping embedding models/dimensions. This avoids
-        # mixing incompatible dimensionalities and provides clear traceability.
-        # Controlled by CHROMADB_MODEL_SCOPED_COLLECTION (default enabled).
-        collection_name = base_collection_name
-        try:
-            # Default behaviour: scoped collection enabled unless explicitly disabled.
-            # Treat unset or empty env values as enabled for backward compatibility.
-            _scoped_env = os.environ.get('CHROMADB_MODEL_SCOPED_COLLECTION')
-            if _scoped_env is None or _scoped_env == "" or str(_scoped_env).lower() in ('1', 'true', 'yes', 'on'):
-                enable_scoped = True
-            else:
-                enable_scoped = False
-            if enable_scoped and base_collection_name:
-                emb_model = self.config['database']['embedding'].get('model', '')
-                emb_dims = str(self.config['database']['embedding'].get('dimensions', ''))
-                # sanitize model name for collection
-                safe_model = ''.join(c if c.isalnum() or c in ('-', '_') else '_' for c in emb_model)
-                collection_name = f"{base_collection_name}__{safe_model}__{emb_dims}"
-        except Exception:
-            collection_name = base_collection_name
+        collection_name = self.get_scoped_collection_name(base_collection_name)
+        
         if self.chroma_client and collection_name:
             # If possible, try scoped collection name first (better traceability), fall back to base name
             tried_names = []
@@ -520,31 +507,12 @@ class MigratedDatabaseService:
 
             # Attempt scoped collection name first (when enabled and embedding config present), then fall back to base
             collection_candidates = [collection_name]
-            try:
-                _scoped_env = os.environ.get('CHROMADB_MODEL_SCOPED_COLLECTION')
-                if _scoped_env is None or _scoped_env == "" or str(_scoped_env).lower() in ('1', 'true', 'yes', 'on'):
-                    enable_scoped_flag = True
-                else:
-                    enable_scoped_flag = False
-            except Exception:
-                enable_scoped_flag = False
-
-            if enable_scoped_flag:
-                try:
-                    emb_model = self.config['database']['embedding'].get('model', '')
-                    emb_dims = str(self.config['database']['embedding'].get('dimensions', ''))
-                    safe_model = ''.join(c if c.isalnum() or c in ('-', '_') else '_' for c in emb_model)
-                    scoped_candidate = f"{base_collection_name}__{safe_model}__{emb_dims}"
-                    if scoped_candidate and scoped_candidate != base_collection_name:
-                        collection_candidates = [scoped_candidate, base_collection_name]
-                    else:
-                        collection_candidates = [base_collection_name]
-                except Exception:
-                    collection_candidates = [collection_name]
+            if collection_name != base_collection_name:
+                collection_candidates = [collection_name, base_collection_name]
             else:
                 collection_candidates = [base_collection_name]
 
-            logger.debug(f"CHROMADB scoping enabled=%s; candidates=%s", enable_scoped_flag, collection_candidates)
+            logger.debug(f"CHROMADB candidates=%s", collection_candidates)
             for candidate in collection_candidates:
                 tried_names.append(candidate)
                 c = try_get_or_create(candidate)
@@ -598,7 +566,38 @@ class MigratedDatabaseService:
                 logger.info(f"Loaded embedding model: {embedding_config.get('model')}")
             except Exception as e:
                 logger.warning(f"Failed to load embedding model '{embedding_config.get('model')}': {e}")
-                self.embedding_model = None
+
+    def get_scoped_collection_name(self, base_name: str) -> str:
+        """
+        Generate a scoped collection name based on the current embedding model and dimensions.
+        
+        Args:
+            base_name: The base collection name (e.g., 'articles')
+            
+        Returns:
+            The scoped collection name (e.g., 'articles__BAAI_bge-large-en-v1_5__1024')
+        """
+        if not base_name:
+            return base_name
+            
+        try:
+            # Scoped collection enabled unless explicitly disabled via environment variable.
+            _scoped_env = os.environ.get('CHROMADB_MODEL_SCOPED_COLLECTION')
+            if _scoped_env is not None and str(_scoped_env).lower() in ('0', 'false', 'no', 'off'):
+                return base_name
+                
+            embedding_config = self.config.get('database', {}).get('embedding', {})
+            emb_model = embedding_config.get('model', '')
+            emb_dims = str(embedding_config.get('dimensions', ''))
+            
+            if not emb_model or not emb_dims:
+                return base_name
+                
+            # Sanitize model name for collection (alphanumeric, -, _)
+            safe_model = ''.join(c if c.isalnum() or c in ('-', '_') else '_' for c in emb_model)
+            return f"{base_name}__{safe_model}__{emb_dims}"
+        except Exception:
+            return base_name
 
     def close(self):
         """Close database connections"""

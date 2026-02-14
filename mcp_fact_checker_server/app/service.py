@@ -51,11 +51,18 @@ class FactCheckerService:
                 # Setup semantic cache for fact checks
                 if self.db_service.chroma_client:
                     try:
+                        base_name = "fact_checks_vector"
+                        # Use the new scoping helper if available, otherwise fallback to hardcoded name
+                        if hasattr(self.db_service, 'get_scoped_collection_name'):
+                            collection_name = self.db_service.get_scoped_collection_name(base_name)
+                        else:
+                            collection_name = base_name
+
                         self.fact_checks_collection = self.db_service.chroma_client.get_or_create_collection(
-                            name="fact_checks_vector",
+                            name=collection_name,
                             metadata={"description": "Semantic cache of previously verified facts"}
                         )
-                        logger.info("FactCheckerService: Semantic claims cache initialized.")
+                        logger.info(f"FactCheckerService: Semantic claims cache initialized with collection: {collection_name}")
                     except Exception as ce:
                         logger.warning(f"Failed to initialize fact_checks collection: {ce}")
             except Exception as e:
@@ -231,6 +238,7 @@ class FactCheckerService:
                 fact_check_id = cursor.lastrowid
                 
                 # Semantic Indexing into ChromaDB
+                # MANDATORY: If configured, we must succeed here to continue to commit
                 if self.fact_checks_collection and self.db_service.embedding_model:
                     try:
                         emb = self.db_service.embedding_model.encode(result.fact).tolist()
@@ -245,8 +253,15 @@ class FactCheckerService:
                                 "timestamp": datetime.now().isoformat()
                             }]
                         )
+                        logger.info(f"Successfully indexed fact {fact_check_id} in ChromaDB")
                     except Exception as ce:
-                        logger.warning(f"Failed to index fact semantically: {ce}")
+                        logger.error(f"CRITICAL: Failed to index fact semantically: {ce}")
+                        # Rollback MariaDB if ChromaDB fails (if we have a connection we can rollback)
+                        if conn:
+                            conn.rollback()
+                        raise RuntimeError(f"ChromaDB indexing failed: {str(ce)}")
+                else:
+                    logger.warning("Skipping fact indexing: ChromaDB collection or embedding model not available")
 
                 # Insert evidence links
                 evidence_query = """
@@ -480,12 +495,12 @@ class FactCheckerService:
                     f"   - Logic Check: Identify logical fallacies or disinformation tactics (e.g., emotional manipulation, context stripping).\n"
                     f"   - Conclusion: Synthesize findings into one of the 5 verdicts.\n"
                     f"4. DEFINITIONS (5-Point Scale):\n"
-                    f"   - 'proven': Directly verified by multiple high-credibility sources or undisputed common knowledge. No significant counter-evidence exists.\n"
-                    f"   - 'plausible': Not explicitly confirmed by a primary source, but consistent with expert consensus, logical, or supported by high-trust circumstantial context.\n"
-                    f"   - 'unverified': Truly neutral/unknown; no relevant evidence found and not common knowledge.\n"
-                    f"   - 'improbable': Not explicitly debunked, but matches disinformation red flags or is unlikely given known physical/historical facts.\n"
-                    f"   - 'disproven': Directly contradicted, debunked, or proven false by multiple credible sources.\n"
-                    f"5. Respond with a valid JSON object ONLY: {{'verdict': 'proven'|'plausible'|'unverified'|'improbable'|'disproven', 'confidence': float, 'explanation': string, 'trusted_sources': list[url], 'misleading_sources': list[url]}}.\n"
+                    f"   - 'True': Directly verified by multiple high-credibility sources or undisputed common knowledge. No significant counter-evidence exists.\n"
+                    f"   - 'Likely True': Not explicitly confirmed by a primary source, but consistent with expert consensus, logical, or supported by high-trust circumstantial context.\n"
+                    f"   - 'Uncertain': Truly neutral/unknown; no relevant evidence found and not common knowledge.\n"
+                    f"   - 'Likely False': Not explicitly debunked, but matches disinformation red flags or is unlikely given known physical/historical facts.\n"
+                    f"   - 'False': Directly contradicted, debunked, or proven false by multiple credible sources.\n"
+                    f"5. Respond with a valid JSON object ONLY: {{'verdict': 'True'|'Likely True'|'Uncertain'|'Likely False'|'False', 'confidence': float, 'explanation': string, 'trusted_sources': list[url], 'misleading_sources': list[url]}}.\n"
                 )
 
                 async with httpx.AsyncClient() as client:
@@ -529,14 +544,14 @@ class FactCheckerService:
                             result_data = json.loads(content)
                         
                         # Calibrate confidence and verdict
-                        verdict = result_data.get("verdict", "unverified").lower()
-                        # Plausible/Proven are treated as 'accurate' in boolean terms
-                        is_accurate = verdict in ["proven", "plausible"]
+                        verdict = result_data.get("verdict", "Uncertain")
+                        # True/Likely True are treated as 'accurate' in boolean terms
+                        is_accurate = verdict in ["True", "Likely True"]
                         confidence = result_data.get("confidence", 0.0)
                         
-                        # Logic patch: If model says it's Disproven/Improbable because no evidence was found,
+                        # Logic patch: If model says it's False/Likely False because no evidence was found,
                         # it often sets low confidence. We elevate this if search returned many results.
-                        if verdict in ["disproven", "improbable"] and confidence < 0.5 and len(evidence) > 10:
+                        if verdict in ["False", "Likely False"] and confidence < 0.5 and len(evidence) > 10:
                             if "not mentioned" in result_data.get("explanation", "").lower() or \
                                "no evidence" in result_data.get("explanation", "").lower():
                                 confidence = 0.85 # High confidence in absence of evidence for major claims

@@ -47,7 +47,7 @@ AGENTS = [
     {"name": "MCP Bus", "port": 8000, "endpoint": "/health"},
     {"name": "Chief Editor", "port": 8001, "endpoint": "/health"},
     {"name": "Scout (Deprecated)", "port": 8002, "endpoint": "/health", "deprecated": True},
-    {"name": "Fact Checker (Verification)", "port": 8003, "endpoint": "/health"},
+    {"name": "Fact Checker (Verification)", "port": 8018, "endpoint": "/health"},
     {"name": "Analyst (Content Analysis)", "port": 8004, "endpoint": "/health"},
     {"name": "Synthesizer (Cluster Aggregation)", "port": 8005, "endpoint": "/health"},
     {"name": "Critic Agent", "port": 8006, "endpoint": "/health"},

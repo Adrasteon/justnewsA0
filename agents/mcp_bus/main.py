@@ -61,6 +61,23 @@ logger = get_logger(__name__)
 # Global variables
 ready = False
 startup_time = time.time()
+discovery_task = None
+discovery_stop_event = None
+
+
+def _agent_name_variants(agent_name: str) -> set[str]:
+    """Return normalized variants for tolerant agent-name matching."""
+    return {
+        agent_name,
+        agent_name.replace("-", "_"),
+        agent_name.replace("_", "-"),
+    }
+
+
+def _is_agent_registered_by_name(agent_name: str) -> bool:
+    """Check if an agent is already registered under any common name variant."""
+    registered_names = set(get_registered_agents().keys())
+    return bool(_agent_name_variants(agent_name).intersection(registered_names))
 
 
 # Request/Response Models
@@ -123,7 +140,7 @@ KNOWN_AGENTS = {
     # Core Agents (8001-8020)
     "chief-editor": {"port": 8001, "env_var": "CHIEF_EDITOR_AGENT_PORT"},
     "scout": {"port": 8002, "env_var": "SCOUT_AGENT_PORT"},
-    "fact-checker": {"port": 8003, "env_var": "FACT_CHECKER_AGENT_PORT"},
+    "fact-checker": {"port": 8018, "env_var": "FACT_CHECKER_AGENT_PORT"},
     "analyst": {"port": 8004, "env_var": "ANALYST_AGENT_PORT"},
     "synthesizer": {"port": 8005, "env_var": "SYNTHESIZER_AGENT_PORT"},
     "critic": {"port": 8006, "env_var": "CRITIC_AGENT_PORT"},
@@ -161,7 +178,7 @@ def get_agent_port(agent_name: str) -> int:
     return config.get("port")
 
 
-async def discover_and_register_agents():
+async def discover_and_register_agents(only_missing: bool = False):
     """
     Discover running agents by polling known ports and register them with the bus.
     This allows agents to be discovered even if they restart after MCP Bus.
@@ -169,10 +186,16 @@ async def discover_and_register_agents():
     import asyncio
     import httpx
     
-    logger.info("🔍 Starting agent discovery...")
+    if only_missing:
+        logger.debug("🔍 Starting missing-agent discovery...")
+    else:
+        logger.info("🔍 Starting agent discovery...")
     discovered = 0
     
     for agent_name, config in KNOWN_AGENTS.items():
+        if only_missing and _is_agent_registered_by_name(agent_name):
+            continue
+
         port = get_agent_port(agent_name)
         if not port:
             continue
@@ -203,11 +226,32 @@ async def discover_and_register_agents():
         logger.debug("ℹ️ No agents discovered via polling (they may register themselves)")
 
 
+async def periodic_missing_agent_discovery_loop(interval_seconds: int, stop_event):
+    """Periodically probe and register only missing agents."""
+    import asyncio
+
+    logger.info(
+        "🔁 Periodic missing-agent discovery enabled (interval=%ss)", interval_seconds
+    )
+
+    while not stop_event.is_set():
+        try:
+            await discover_and_register_agents(only_missing=True)
+        except Exception as e:
+            logger.warning(f"⚠️ Missing-agent discovery iteration failed: {e}")
+
+        try:
+            await asyncio.wait_for(stop_event.wait(), timeout=interval_seconds)
+        except asyncio.TimeoutError:
+            continue
+
+
 # Lifespan management
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager for startup and shutdown."""
-    global ready
+    global ready, discovery_task, discovery_stop_event
+    import asyncio
 
     # Startup
     logger.info("🚀 Starting MCP Bus Agent...")
@@ -215,6 +259,20 @@ async def lifespan(app: FastAPI):
     try:
         # Discover and register any running agents
         await discover_and_register_agents()
+
+        poll_interval = int(
+            os.getenv("MCP_BUS_MISSING_AGENT_POLL_INTERVAL_SEC", "30")
+        )
+        if poll_interval > 0:
+            discovery_stop_event = asyncio.Event()
+            discovery_task = asyncio.create_task(
+                periodic_missing_agent_discovery_loop(
+                    interval_seconds=poll_interval,
+                    stop_event=discovery_stop_event,
+                )
+            )
+        else:
+            logger.info("⏸️ Periodic missing-agent discovery disabled")
         
         # Notify GPU Orchestrator that MCP Bus is ready
         success = notify_gpu_orchestrator()
@@ -234,6 +292,16 @@ async def lifespan(app: FastAPI):
     finally:
         # Shutdown
         logger.info("🛑 Shutting down MCP Bus Agent...")
+        if discovery_stop_event is not None:
+            discovery_stop_event.set()
+        if discovery_task is not None:
+            discovery_task.cancel()
+            try:
+                await discovery_task
+            except Exception:
+                pass
+        discovery_task = None
+        discovery_stop_event = None
         ready = False
         logger.info("✅ MCP Bus Agent shutdown complete")
 

@@ -2,7 +2,7 @@ import requests
 import json
 import time
 
-url = "http://localhost:8003/fact_check"
+url = "http://localhost:8018/fact_check"
 
 variations = [
     "Australia is a country and a continent.", # True

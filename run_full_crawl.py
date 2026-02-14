@@ -20,7 +20,7 @@ def run_crawl():
         conn = db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT domain FROM sources")
+        cursor.execute("SELECT domain FROM sources LIMIT 100")
         domains = [r[0] for r in cursor.fetchall()]
         print(f"Found {len(domains)} domains.")
 
@@ -29,11 +29,10 @@ def run_crawl():
         # Body: ToolCall -> { "name": "unified_production_crawl", "kwargs": { ... } }
 
         payload = {
-            "name": "unified_production_crawl",
             "args": [],
             "kwargs": {
                 "domains": domains,
-                "max_articles_per_site": 10,
+                "max_articles_per_site": 5,
                 "concurrent_sites": 3
             }
         }

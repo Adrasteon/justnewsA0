@@ -79,6 +79,9 @@ async def process_analysis_request(
             result = engine.analyze_sentiment_and_bias(text)
         elif analysis_type == "claims":
             result = engine.extract_claims(text)
+        elif analysis_type == "factual_audit":
+            from .audit import audit_text
+            result = await audit_text(text)
         elif analysis_type == "analysis_report":
             # expects `texts` and optional `article_ids` provided as kwargs
             texts = kwargs.get("texts")
@@ -97,6 +100,8 @@ async def process_analysis_request(
                     "metrics",
                     "bias",
                     "sentiment_and_bias",
+                    "claims",
+                    "factual_audit",
                 ],
             }
 
@@ -584,7 +589,7 @@ __all__ = [
     "get_analyst_engine",
 ]
 
-def analyze_article(article_id: int) -> dict[str, Any]:
+async def analyze_article(article_id: int) -> dict[str, Any]:
     """
     Analyze a single article by ID and update the database.
 
@@ -594,20 +599,20 @@ def analyze_article(article_id: int) -> dict[str, Any]:
     logger.info(f"Starting analysis for article {article_id}")
     try:
         db = create_database_service()
-        db.ensure_conn()
+        # Ensure connection (might be sync or async depending on implementation, usually sync here)
+        db.ensure_conn() 
         cursor = db.mb_conn.cursor() 
         
-        # Fetch article content (index 3) and structured_metadata (index 21)
-        # Note: Indexing based on migrated_models.Article.from_row assumption
-        cursor.execute("SELECT * FROM articles WHERE id = %s", (article_id,))
+        # Fetch article content and structured_metadata explicitly to avoid index drift
+        cursor.execute("SELECT content, structured_metadata FROM articles WHERE id = %s", (article_id,))
         row = cursor.fetchone()
         
         if not row:
             cursor.close()
             return {"status": "error", "error": f"Article {article_id} not found"}
             
-        content = row[3]
-        structured_metadata_raw = row[21]
+        content = row[0]
+        structured_metadata_raw = row[1]
         
         if not content:
              logger.warning(f"Article {article_id} has no content")
@@ -644,6 +649,16 @@ def analyze_article(article_id: int) -> dict[str, Any]:
             entities = engine.extract_entities(content)
         except Exception as e:
             logger.warning(f"Entity analysis failed for {article_id}: {e}")
+
+        # Factual Audit (Async)
+        audit_result = {}
+        factual_score = None
+        try:
+            from .audit import audit_text
+            audit_result = await audit_text(content)
+            factual_score = audit_result.get("score")
+        except Exception as e:
+            logger.warning(f"Factual Audit failed for {article_id}: {e}")
         
         # Construct Metadata Update
         current_struct = json.loads(structured_metadata_raw) if structured_metadata_raw else {}
@@ -652,23 +667,31 @@ def analyze_article(article_id: int) -> dict[str, Any]:
             'metrics': metrics,
             'sentiment': sent_bias.get('sentiment'),
             'bias': sent_bias.get('bias'),
-            'entities': entities
+            'entities': entities,
+            'factual_audit': audit_result # Include full details in metadata
         }
         
         # Update DB
+        # Updates: analyzed=1, structured_metadata, fact columns
         update_query = """
             UPDATE articles 
             SET analyzed = 1, 
                 structured_metadata = %s,
+                factual_accuracy_score = %s,
+                fact_check_details = %s,
                 updated_at = NOW()
             WHERE id = %s
         """
-        cursor.execute(update_query, (json.dumps(current_struct), article_id))
+        
+        # Prepare params
+        audit_json = json.dumps(audit_result) if audit_result else None
+        
+        cursor.execute(update_query, (json.dumps(current_struct), factual_score, audit_json, article_id))
         db.mb_conn.commit()
         cursor.close()
         
-        logger.info(f"Article {article_id} analyzed successfully")
-        return {"status": "success", "article_id": article_id}
+        logger.info(f"Article {article_id} analyzed successfully (Score: {factual_score})")
+        return {"status": "success", "article_id": article_id, "factual_score": factual_score}
         
     except Exception as e:
         logger.error(f"Error analyzing article {article_id}: {e}")
