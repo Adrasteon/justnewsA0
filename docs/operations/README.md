@@ -12,6 +12,8 @@
 
 - [Living Story Runbook](./LIVING_STORY_RUNBOOK.md) — Canonical story philosophy, meaningful-change thresholds, and day-2 operations
 
+- `scripts/ops/living_story_dashboard_report.py` — Generates JSON/Markdown operator telemetry reports for living-story decisions and latency trends
+
 - [Fact Checker Troubleshooting](./FACT_CHECKER_TROUBLESHOOTING.md) — Devcontainer/backend routing, auth, and circuit-breaker recovery
 
 - [MCP Bus Health & Diagnostics](./MCP_BUS_HEALTH.md) — Details on `/health`and`/ready`, testing, and developer guidance

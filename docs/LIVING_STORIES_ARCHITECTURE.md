@@ -60,6 +60,26 @@ Overrides can be provided via:
 
 Override usage is persisted in explainability metadata for audit.
 
+Governance controls are enforced through environment policy:
+
+- owner required (`LIVING_STORY_OVERRIDE_REQUIRE_OWNER`),
+- optional approver requirement (`LIVING_STORY_OVERRIDE_REQUIRE_APPROVAL`),
+- max override TTL (`LIVING_STORY_OVERRIDE_MAX_TTL_HOURS`).
+
+Rejected overrides are captured in explainability payloads.
+
+### Urgency-Aware Calibration
+
+Decision scoring supports urgency-class calibration:
+
+- urgency classes: `breaking`, `active`, `background`,
+- profile selection: `LIVING_STORY_CALIBRATION_PROFILE`,
+- per-urgency multipliers:
+  - `LIVING_STORY_RECENCY_MULTIPLIER_<CLASS>`
+  - `LIVING_STORY_THRESHOLD_MULTIPLIER_<CLASS>`
+
+This enables conservative behavior for background updates and faster response for developing stories.
+
 ### Publish Idempotency
 
 - Publish state transitions are handled with a guarded update in Chief Editor tools.
@@ -134,6 +154,16 @@ Both use shared upsert + meaningful-gate logic before any critique/publish reset
 | `LIVING_STORY_WEIGHT_FACT` | `0.15` | Weight for fact-quality component in composite score. |
 | `LIVING_STORY_WEIGHT_NEW_ARTICLES` | `0.05` | Weight for new-article-pressure component in composite score. |
 | `LIVING_STORY_OPERATOR_OVERRIDES_JSON` | `{}` | Optional cluster/story override map (`force_update` / `force_hold` / `force_republish`). |
+| `LIVING_STORY_OVERRIDE_REQUIRE_OWNER` | `1` | Require owner field in override payload. |
+| `LIVING_STORY_OVERRIDE_REQUIRE_APPROVAL` | `0` | Require approved_by field in override payload. |
+| `LIVING_STORY_OVERRIDE_MAX_TTL_HOURS` | `168` | Maximum allowed override TTL horizon. |
+| `LIVING_STORY_CALIBRATION_PROFILE` | `balanced` | Calibration preset (`balanced`, `conservative`, `aggressive`, `breaking`). |
+| `LIVING_STORY_RECENCY_MULTIPLIER_BREAKING` | `1.35` | Recency weight multiplier for breaking stories. |
+| `LIVING_STORY_RECENCY_MULTIPLIER_ACTIVE` | `1.0` | Recency weight multiplier for active stories. |
+| `LIVING_STORY_RECENCY_MULTIPLIER_BACKGROUND` | `0.8` | Recency weight multiplier for background stories. |
+| `LIVING_STORY_THRESHOLD_MULTIPLIER_BREAKING` | `0.85` | Composite threshold multiplier for breaking stories. |
+| `LIVING_STORY_THRESHOLD_MULTIPLIER_ACTIVE` | `1.0` | Composite threshold multiplier for active stories. |
+| `LIVING_STORY_THRESHOLD_MULTIPLIER_BACKGROUND` | `1.1` | Composite threshold multiplier for background stories. |
 
 ---
 

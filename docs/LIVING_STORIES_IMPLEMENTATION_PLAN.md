@@ -69,7 +69,7 @@ Focus achieved: decision quality and operator visibility.
 
 ---
 
-## 4) Phase-3 (Partially Implemented)
+## 4) Phase-3 (Implemented Core)
 
 Focus: richer editorial semantics and stronger trust guarantees.
 
@@ -82,14 +82,34 @@ Focus: richer editorial semantics and stronger trust guarantees.
 
 ### Remaining roadmap
 
-1. Source-diversity and fact-quality calibration from production outcomes.
-2. Recency weighting policy tuning by topic urgency class.
-3. Editorial-facing explainability views/dashboards.
-4. Override governance (expiry, ownership, approval workflow).
+1. Ongoing calibration refinement from production outcomes (policy tuning, not missing functionality).
+2. Editorial UI surfacing for explainability in dashboard products.
 
 ---
 
-## 5) Validation Criteria
+## 5) Phase-4 (Implemented: Governance + Operator Reporting)
+
+Focus achieved: strong operator controls and auditable operational insight.
+
+### Delivered
+
+1. Override governance:
+    - owner/approver/expiry fields supported,
+    - configurable enforcement for owner and approval requirements,
+    - TTL guardrails and expired-override rejection tracking.
+
+2. Urgency-aware calibration:
+    - urgency class inference (`breaking`, `active`, `background`),
+    - calibration profiles (`balanced`, `conservative`, `aggressive`, `breaking`),
+    - per-urgency recency and threshold multipliers.
+
+3. Operator reporting artifact:
+    - `scripts/ops/living_story_dashboard_report.py` generates JSON/Markdown telemetry reports,
+    - summarizes actions, scores, override usage/rejections, and publish-latency trends.
+
+---
+
+## 6) Validation Criteria
 
 Current success criteria are validated when:
 
@@ -107,7 +127,7 @@ Current success criteria are validated when:
 
 ---
 
-## 6) Risks and Mitigations
+## 7) Risks and Mitigations
 
 1. **Over-sensitive thresholds** → noisy republish churn
     - Mitigation: raise text/new-article thresholds.
@@ -120,7 +140,7 @@ Current success criteria are validated when:
 
 ---
 
-## 7) Related Documents
+## 8) Related Documents
 
 - `docs/LIVING_STORIES_ARCHITECTURE.md`
 - `docs/operations/LIVING_STORY_RUNBOOK.md`

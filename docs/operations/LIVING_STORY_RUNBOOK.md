@@ -138,6 +138,16 @@ Living-story controls:
 - `LIVING_STORY_OPERATOR_OVERRIDES_JSON` (default empty JSON)
 - `LIVING_STORY_SCORE_WINDOW` (default `50`)
 - `LIVING_STORY_PUBLISH_LATENCY_WINDOW` (default `30`)
+- `LIVING_STORY_OVERRIDE_REQUIRE_OWNER` (default `1`)
+- `LIVING_STORY_OVERRIDE_REQUIRE_APPROVAL` (default `0`)
+- `LIVING_STORY_OVERRIDE_MAX_TTL_HOURS` (default `168`)
+- `LIVING_STORY_CALIBRATION_PROFILE` (default `balanced`)
+- `LIVING_STORY_RECENCY_MULTIPLIER_BREAKING` (default `1.35`)
+- `LIVING_STORY_RECENCY_MULTIPLIER_ACTIVE` (default `1.0`)
+- `LIVING_STORY_RECENCY_MULTIPLIER_BACKGROUND` (default `0.8`)
+- `LIVING_STORY_THRESHOLD_MULTIPLIER_BREAKING` (default `0.85`)
+- `LIVING_STORY_THRESHOLD_MULTIPLIER_ACTIVE` (default `1.0`)
+- `LIVING_STORY_THRESHOLD_MULTIPLIER_BACKGROUND` (default `1.1`)
 
 Set these in `global.env` to tune editorial sensitivity.
 
@@ -149,6 +159,12 @@ LIVING_STORY_OPERATOR_OVERRIDES_JSON='{
    "STORY-6d921889": "force_republish"
 }'
 ```
+
+Governance expectations for override payload entries:
+
+- `owner` (required by default),
+- optional `approved_by` (required if `LIVING_STORY_OVERRIDE_REQUIRE_APPROVAL=1`),
+- optional `expires_at` (must not exceed `LIVING_STORY_OVERRIDE_MAX_TTL_HOURS`).
 
 ---
 
@@ -215,6 +231,17 @@ ORDER BY updated_at DESC, id DESC
 LIMIT 1;
 ```
 
+### 5) Generate operator dashboard report artifact
+
+```bash
+/app/.venv/bin/python scripts/ops/living_story_dashboard_report.py \
+   --limit 500 \
+   --json-out /tmp/living_story_report.json \
+   --md-out /tmp/living_story_report.md
+```
+
+This report summarizes action distribution, calibration profile usage, override rejections, and publish-latency trends.
+
 ---
 
 ## Troubleshooting
@@ -259,6 +286,20 @@ Actions:
 - increase `LIVING_STORY_MIN_NEW_ARTICLES`.
 - increase `LIVING_STORY_COMPOSITE_THRESHOLD`.
 - reduce any aggressive `force_republish` overrides.
+- switch to `LIVING_STORY_CALIBRATION_PROFILE=conservative` for stricter defaults.
+
+### Symptom: overrides are ignored
+
+Potential causes:
+
+- missing `owner` when owner governance is enabled,
+- missing `approved_by` when approval governance is enabled,
+- expired or overlong `expires_at` TTL.
+
+Actions:
+
+- inspect `living_story.explainability.override_rejected` payload,
+- correct override entry and re-run synthesis cycle.
 
 ### Symptom: publish latency is rising after meaningful updates
 
