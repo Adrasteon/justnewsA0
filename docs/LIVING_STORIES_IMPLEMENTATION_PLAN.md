@@ -45,44 +45,53 @@ Phase-1 is implemented in orchestrator + chief-editor tooling.
 
 ---
 
-## 3) Phase-2 (Next)
+## 3) Phase-2 (Implemented)
 
-Focus: improve decision quality and operator visibility.
+Focus achieved: decision quality and operator visibility.
 
-### Planned work
+### Delivered hardening
 
-1. Add explicit decision telemetry (per cluster):
-    - `updated` vs `tracked_noop` counters,
-    - mean/median meaningful score,
-    - publish latency post-meaningful change.
+1. Decision telemetry (per cluster):
+    - `decision_counts` (including `updated`, `tracked_noop`, and forced actions),
+    - rolling mean/median meaningful score,
+    - publish latency telemetry (recent window + mean/median).
 
-2. Add revision diff summaries:
-    - lightweight title/body delta for each revision,
-    - source additions/removals snapshot.
+2. Revision diff summaries:
+    - title/body similarity + delta,
+    - source additions/removals snapshot,
+    - body length deltas.
 
-3. Add operator override controls (HITL):
-    - force-update,
-    - force-hold,
-    - force-republish.
+3. Operator override controls:
+    - `force_update`,
+    - `force_hold`,
+    - `force_republish`,
+    - supported through `synth_metadata` override payloads and `LIVING_STORY_OPERATOR_OVERRIDES_JSON`.
 
 ---
 
-## 4) Phase-3 (Future)
+## 4) Phase-3 (Partially Implemented)
 
 Focus: richer editorial semantics and stronger trust guarantees.
 
-### Planned work
+### Delivered now
 
 1. Source-diversity weighting in meaningful score.
-2. Temporal recency weighting (breaking vs background updates).
-3. Fact-quality weighting (confidence-aware update promotion).
-4. Policy-level explainability payload for every living-story decision.
+2. Temporal recency weighting in meaningful score.
+3. Fact-quality weighting in meaningful score.
+4. Policy-level explainability payload persisted per decision.
+
+### Remaining roadmap
+
+1. Source-diversity and fact-quality calibration from production outcomes.
+2. Recency weighting policy tuning by topic urgency class.
+3. Editorial-facing explainability views/dashboards.
+4. Override governance (expiry, ownership, approval workflow).
 
 ---
 
 ## 5) Validation Criteria
 
-Phase-1 success is validated when:
+Current success criteria are validated when:
 
 1. Canonical continuity:
     - same cluster maintains stable `story_id` across updates.

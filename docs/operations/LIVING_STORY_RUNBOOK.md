@@ -38,14 +38,14 @@ Core principles:
 
 ---
 
-## Current Phase-1 Implementation (Production Behavior)
+## Current Implementation (Phase-1 + Phase-2/3 Hardening)
 
 Phase-1 behavior is implemented in:
 
 - `agents/workflow_orchestrator/policies.py`
 - `agents/chief_editor/tools.py`
 
-### What Phase-1 does
+### What is implemented
 
 1. **Canonical per-cluster story upsert**
    - `ClusterToSynthesisPolicy` and `HeavyClusterRetryPolicy` call a shared upsert path.
@@ -53,7 +53,8 @@ Phase-1 behavior is implemented in:
 
 2. **Meaningful-change gating**
    - Computes text similarity delta and source/article delta.
-   - Decides whether the update is meaningful.
+   - Computes weighted composite score (text + source diversity + recency + fact quality + new article pressure).
+   - Applies threshold rules and operator overrides.
 
 3. **Action outcomes**
    - `action=updated` (meaningful):
@@ -61,17 +62,25 @@ Phase-1 behavior is implemented in:
      - `is_published` reset to `0`,
      - `critique_status` reset to `pending`,
      - `critique_text` cleared.
-   - `action=tracked_noop` (not meaningful):
+    - `action=tracked_noop` (not meaningful):
      - metadata + input tracking updated,
      - no critique/publish reset.
+    - Forced actions:
+       - `action=forced_update`
+       - `action=forced_hold`
+       - `action=forced_republish`
 
 4. **Revision metadata persisted** (`synthesized_articles.synth_metadata`)
    - `living_story.revision`
    - `living_story.input_fingerprint`
    - `living_story.last_meaningful_score`
+   - `living_story.last_composite_score`
    - `living_story.last_new_articles`
    - `living_story.last_update_action`
    - `living_story.updated_at`
+   - `living_story.last_diff`
+   - `living_story.explainability`
+   - `living_story.telemetry`
 
 5. **Publish conflict reduction**
    - Workflow no longer double-writes publish state.
@@ -81,10 +90,11 @@ Phase-1 behavior is implemented in:
 
 ## Decision Logic (Meaningful vs No-op)
 
-The Phase-1 gate evaluates:
+The gate evaluates:
 
 - text delta (`1 - similarity(previous_body, new_body)`),
 - count of newly-added input articles,
+- weighted composite score,
 - configurable thresholds.
 
 Default rules:
@@ -92,20 +102,53 @@ Default rules:
 - meaningful if text delta >= `LIVING_STORY_MAJOR_TEXT_DELTA` (default `0.12`), OR
 - meaningful if new articles exist AND text delta >= `LIVING_STORY_MINOR_TEXT_DELTA` (default `0.03`), OR
 - meaningful if new article count >= `LIVING_STORY_MIN_NEW_ARTICLES` (default `2`).
+- meaningful if weighted composite score >= `LIVING_STORY_COMPOSITE_THRESHOLD` (default `0.35`).
+
+Weighted components (defaults):
+
+- `LIVING_STORY_WEIGHT_TEXT=0.45`
+- `LIVING_STORY_WEIGHT_SOURCE=0.20`
+- `LIVING_STORY_WEIGHT_RECENCY=0.15`
+- `LIVING_STORY_WEIGHT_FACT=0.15`
+- `LIVING_STORY_WEIGHT_NEW_ARTICLES=0.05`
 
 Otherwise: `tracked_noop`.
+
+Operator override controls can replace the decision with:
+
+- `force_update`
+- `force_hold`
+- `force_republish`
 
 ---
 
 ## Environment Variables
 
-Current Phase-1 living-story controls:
+Living-story controls:
 
 - `LIVING_STORY_MAJOR_TEXT_DELTA` (default `0.12`)
 - `LIVING_STORY_MINOR_TEXT_DELTA` (default `0.03`)
 - `LIVING_STORY_MIN_NEW_ARTICLES` (default `2`)
+- `LIVING_STORY_COMPOSITE_THRESHOLD` (default `0.35`)
+- `LIVING_STORY_WEIGHT_TEXT` (default `0.45`)
+- `LIVING_STORY_WEIGHT_SOURCE` (default `0.20`)
+- `LIVING_STORY_WEIGHT_RECENCY` (default `0.15`)
+- `LIVING_STORY_WEIGHT_FACT` (default `0.15`)
+- `LIVING_STORY_WEIGHT_NEW_ARTICLES` (default `0.05`)
+- `LIVING_STORY_OPERATOR_OVERRIDES_JSON` (default empty JSON)
+- `LIVING_STORY_SCORE_WINDOW` (default `50`)
+- `LIVING_STORY_PUBLISH_LATENCY_WINDOW` (default `30`)
 
 Set these in `global.env` to tune editorial sensitivity.
+
+Example operator overrides:
+
+```bash
+LIVING_STORY_OPERATOR_OVERRIDES_JSON='{
+   "CL-1234abcd": {"action": "force_update", "reason": "major developing event"},
+   "STORY-6d921889": "force_republish"
+}'
+```
 
 ---
 
@@ -156,6 +199,22 @@ LIMIT 1;
 
 Confirm `synth_metadata.living_story` fields exist and revision increments over meaningful updates.
 
+### 4) Validate telemetry and explainability payload
+
+```sql
+SELECT
+   JSON_EXTRACT(synth_metadata, '$.living_story.last_update_action') AS action,
+   JSON_EXTRACT(synth_metadata, '$.living_story.last_composite_score') AS composite_score,
+   JSON_EXTRACT(synth_metadata, '$.living_story.telemetry.decision_counts') AS decision_counts,
+   JSON_EXTRACT(synth_metadata, '$.living_story.telemetry.mean_publish_latency_seconds') AS mean_publish_latency,
+   JSON_EXTRACT(synth_metadata, '$.living_story.explainability.reasons') AS reasons,
+   JSON_EXTRACT(synth_metadata, '$.living_story.last_diff') AS diff_snapshot
+FROM synthesized_articles
+WHERE cluster_id = '<CLUSTER_ID>'
+ORDER BY updated_at DESC, id DESC
+LIMIT 1;
+```
+
 ---
 
 ## Troubleshooting
@@ -185,6 +244,8 @@ Actions:
 - lower `LIVING_STORY_MINOR_TEXT_DELTA` or `LIVING_STORY_MIN_NEW_ARTICLES`,
 - verify `input_cluster_ids` growth for target cluster,
 - inspect `living_story.last_new_articles` and `last_meaningful_score`.
+- inspect `living_story.last_composite_score` and `living_story.explainability.reasons`.
+- check whether `force_hold` override is active for cluster/story.
 
 ### Symptom: excessive republishing churn
 
@@ -196,6 +257,16 @@ Actions:
 
 - increase `LIVING_STORY_MAJOR_TEXT_DELTA` and/or `LIVING_STORY_MINOR_TEXT_DELTA`,
 - increase `LIVING_STORY_MIN_NEW_ARTICLES`.
+- increase `LIVING_STORY_COMPOSITE_THRESHOLD`.
+- reduce any aggressive `force_republish` overrides.
+
+### Symptom: publish latency is rising after meaningful updates
+
+Actions:
+
+- inspect `living_story.telemetry.publish_latency_recent_seconds`.
+- verify critique/publish queue depth and retry behavior.
+- tune batch sizes or isolate heavy clusters when publish queue backs up.
 
 ---
 
@@ -203,10 +274,10 @@ Actions:
 
 For production hardening:
 
-1. Add a periodic report of `tracked_noop` vs `updated` decisions by cluster.
-2. Add HITL override for forced update / forced hold.
-3. Add source-diversity weighting into meaningful score.
-4. Add revision diff snapshots (title/body delta summary) for newsroom transparency.
+1. Add override expiry/approval governance for forced actions.
+2. Add editorial dashboards for explainability and churn monitoring.
+3. Calibrate composite weights using production revision outcomes.
+4. Add alerting on unusual spikes in forced overrides or publish latency.
 
 ---
 

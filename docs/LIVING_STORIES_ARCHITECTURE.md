@@ -1,4 +1,4 @@
-# Living Stories Architecture (Phase-1, Current)
+# Living Stories Architecture (Phase-1 + Phase-2/3 Hardening)
 
 ## Overview
 
@@ -9,6 +9,7 @@ The architecture prioritizes:
 1. **Continuity**: avoid duplicate story objects for the same event cluster.
 2. **Meaningful change**: re-run critique/publish only when updates materially change the narrative.
 3. **Operational safety**: publish is idempotent under retries and concurrent pipeline activity.
+4. **Operator control + explainability**: editorial overrides and decision traces are persisted for auditability.
 
 ---
 
@@ -29,7 +30,8 @@ Decision signals:
 
 - text delta (`1 - similarity(previous, candidate)`),
 - number of newly-added source articles for the cluster,
-- configured thresholds.
+- weighted contextual score (source diversity, recency, fact-quality, new-article pressure),
+- configured thresholds and operator overrides.
 
 If meaningful:
 
@@ -42,6 +44,21 @@ If not meaningful:
 
 - persist tracking metadata only,
 - keep critique/publish states unchanged (`tracked_noop`).
+
+### Operator Overrides (HITL Control)
+
+Living Story decision logic supports explicit operator actions:
+
+- `force_update`
+- `force_hold`
+- `force_republish`
+
+Overrides can be provided via:
+
+- `synth_metadata.living_story.operator_override`, or
+- `LIVING_STORY_OPERATOR_OVERRIDES_JSON` map in environment.
+
+Override usage is persisted in explainability metadata for audit.
 
 ### Publish Idempotency
 
@@ -66,14 +83,24 @@ Operational fields:
 
 ### `synth_metadata.living_story`
 
-Phase-1 metadata contract:
+Current metadata contract includes:
 
 - `revision`
 - `input_fingerprint`
 - `last_meaningful_score`
+- `last_composite_score`
 - `last_new_articles`
-- `last_update_action` (`updated` or `tracked_noop`)
+- `last_update_action` (`updated`, `tracked_noop`, `forced_update`, `forced_hold`, `forced_republish`)
 - `updated_at`
+- `last_diff` (title/body/source delta summary)
+- `explainability` (decision reasons, thresholds, weights, component scores, override source)
+- `telemetry`
+  - `decision_counts`
+  - `meaningful_scores_recent`
+  - `mean_meaningful_score` / `median_meaningful_score`
+  - `publish_latency_recent_seconds`
+  - `last_publish_latency_seconds`
+  - `mean_publish_latency_seconds` / `median_publish_latency_seconds`
 
 ### Supporting Inputs
 
@@ -100,6 +127,13 @@ Both use shared upsert + meaningful-gate logic before any critique/publish reset
 | `LIVING_STORY_MAJOR_TEXT_DELTA` | `0.12` | Large text change threshold that is always meaningful. |
 | `LIVING_STORY_MINOR_TEXT_DELTA` | `0.03` | Smaller text delta that can be meaningful when supported by new sources. |
 | `LIVING_STORY_MIN_NEW_ARTICLES` | `2` | Minimum number of new source articles that can force a meaningful update. |
+| `LIVING_STORY_COMPOSITE_THRESHOLD` | `0.35` | Threshold for weighted composite meaningful score. |
+| `LIVING_STORY_WEIGHT_TEXT` | `0.45` | Weight for text-delta component in composite score. |
+| `LIVING_STORY_WEIGHT_SOURCE` | `0.20` | Weight for source-diversity component in composite score. |
+| `LIVING_STORY_WEIGHT_RECENCY` | `0.15` | Weight for recency component in composite score. |
+| `LIVING_STORY_WEIGHT_FACT` | `0.15` | Weight for fact-quality component in composite score. |
+| `LIVING_STORY_WEIGHT_NEW_ARTICLES` | `0.05` | Weight for new-article-pressure component in composite score. |
+| `LIVING_STORY_OPERATOR_OVERRIDES_JSON` | `{}` | Optional cluster/story override map (`force_update` / `force_hold` / `force_republish`). |
 
 ---
 
@@ -115,6 +149,6 @@ Both use shared upsert + meaningful-gate logic before any critique/publish reset
 
 ## Operational Notes
 
-- This document reflects current Phase-1 implementation.
+- This document reflects current implementation including Phase-2/3 hardening controls.
 - For commands and day-2 diagnostics, see `docs/operations/LIVING_STORY_RUNBOOK.md`.
 - For roadmap and future phases, see `docs/LIVING_STORIES_IMPLEMENTATION_PLAN.md`.
