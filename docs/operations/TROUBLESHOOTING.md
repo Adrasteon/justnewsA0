@@ -6,6 +6,18 @@ Vault, MariaDB, ChromaDB, and systemd services ---
 This guide covers diagnosing and resolving common issues in the JustNews infrastructure, including Vault, MariaDB,
 ChromaDB, and systemd integration.
 
+## Living Story Pipeline Issues
+
+For canonical-story update behavior, meaningful-change tuning, publish idempotency checks, and validation commands, use:
+
+- [Living Story Runbook](./LIVING_STORY_RUNBOOK.md)
+
+Common symptoms covered in that runbook:
+
+- updates arriving but story not republishing,
+- excessive republish churn,
+- publish-state conflicts during concurrent activity.
+
 ## Known Issue: Fact Checker Shim / MCP Circuit Breaker
 
 If `fact_checker` appears healthy at startup but later returns `500/502` on `:8018` and MCP reports

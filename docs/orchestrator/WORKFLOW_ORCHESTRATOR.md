@@ -1,48 +1,59 @@
 # Workflow Orchestrator
 
-The **Workflow Orchestrator** (`agents/workflow_orchestrator`) is the central brain of the JustNews pipelne. Unlike the GPU Orchestrator (which manages hardware resources), the Workflow Orchestrator manages the **business logic** of moving news data through the pipeline.
+The Workflow Orchestrator (`agents/workflow_orchestrator`) executes business-stage transitions for JustNews. It continuously evaluates policy predicates, advances eligible records, and dispatches MCP tool calls to agents.
 
-## Architecture
+## Core Responsibilities
 
-The Orchestrator runs a continuous loop that executes a series of **Policies**. Each policy looks for items in the database that match a specific condition (e.g., "Article is analyzed but not summarized") and triggers an agent action (e.g., "Call Synthesizer").
+1. Move articles through analysis, embedding, summary, fact-check, clustering, synthesis, critique, and publish readiness.
+2. Prevent stage starvation with policy retries and bounded batching.
+3. Coordinate heavy-cluster retries without blocking normal throughput.
+4. Apply Living Story semantics at synthesis time.
 
-### Core Policies
+## Core Policies (Current)
 
-1.  **IngestionToAnalysisPolicy**: Picks up new raw articles and sends them to the Analyst.
-2.  **AnalysisToEmbeddingPolicy**: Sends analyzed articles to Memory for embedding/indexing.
-3.  **AnalysisToSummaryPolicy**: Sends analyzed articles to Synthesizer for individual summarization.
-4.  **SummaryToFactCheckPolicy**: Triggers Fact Checker (currently a stub/pass-through in some configs).
-5.  **FactCheckToClusterPolicy**: Groups verified stories into Clusters.
-6.  **ClusterToSynthesisPolicy**: The final step. Takes a cluster of articles and asks the Synthesizer to write a full report.
+- `IngestionToAnalysisPolicy`
+- `AnalysisToEmbeddingPolicy`
+- `AnalysisToSummaryPolicy`
+- `SummaryToFactCheckPolicy`
+- `FactCheckToClusterPolicy`
+- `ClusterToSynthesisPolicy`
+- `HeavyClusterRetryPolicy`
+- `SynthesisToCritiquePolicy`
+- `CritiqueToPublishingPolicy`
+
+Policy registration and ordering are defined in `agents/workflow_orchestrator/engine.py`.
+
+## Living Story Behavior in Orchestrator
+
+Living Story logic is applied in synthesis policies (`ClusterToSynthesisPolicy`, `HeavyClusterRetryPolicy`):
+
+1. Resolve canonical story row for `cluster_id`.
+2. Synthesize candidate content.
+3. Evaluate meaningful-change score (text + source-input deltas).
+4. Persist either:
+   - meaningful `updated` result (reset critique/publish states), or
+   - non-meaningful `tracked_noop` (metadata-only progression).
+
+This ensures one evolving story identity per cluster and prevents unnecessary republish churn.
+
+## Publish Ownership and Idempotency
+
+- Orchestrator no longer performs duplicate publish-state writes after publish success.
+- Publish-state mark is owned by Chief Editor tooling with guarded SQL updates.
+- Re-entrant publish attempts should produce idempotent outcomes (`published_already`) rather than conflict loops.
 
 ## Heavy Cluster Management
 
-Some news clusters can become extremely large (20-100+ articles). Processing these requires significant GPU time (~2-5 minutes) and context window management.
+`HeavyClusterRetryPolicy` isolates large/expensive clusters from the normal fast loop so large synthesis jobs do not block smaller cluster throughput.
 
-### The Problem
-During peak load, a single massive cluster can block the pipeline or trigger timeouts, causing the Orchestrator to retry infinitely and clog the system.
+Operational pattern:
 
-### HeavyClusterRetryPolicy
+1. normal policy processes regular work,
+2. heavy clusters are deferred when needed,
+3. retry policy re-attempts under lower-load conditions.
 
-To solve this, we introduced the `HeavyClusterRetryPolicy` (v3.0).
+## Operational References
 
-**How it works:**
-1.  **Detection**: If `ClusterToSynthesisPolicy` encounters a timeout (>300s) or error, it logs the Cluster ID to `heavy_clusters.log` in the root directory and **moves on**.
-2.  **Deferral**: The cluster is skipped during normal processing rounds.
-3.  **Retry**: The `HeavyClusterRetryPolicy` runs continuously but only activates when:
-    *   **System Load is Low**: Load average < 6.0 (on 16-core system).
-    *   **Queue is Empty**: Fewer than 10 pending regular items.
-    *   **Log Exists**: Entries are present in `heavy_clusters.log`.
-
-**Manual Intervention**:
-If automatic retry fails repeatedly, you can inspect `heavy_clusters.log`.
-To force a retry manually, you can use the diagnostic script:
-```bash
-python scripts/analyze_cluster.py --cluster-id CL-XXXX --force
-```
-(Note: `analyze_cluster.py` needs to be implemented/adapted if specific debugging is required).
-
-## Configuration
-
-Polices are loaded in `agents/workflow_orchestrator/engine.py`.
-Timeouts are configured in `agents/workflow_orchestrator/policies.py` (Default: 300s).
+- `docs/LIVING_STORIES_ARCHITECTURE.md`
+- `docs/operations/LIVING_STORY_RUNBOOK.md`
+- `docs/operations/TROUBLESHOOTING.md`

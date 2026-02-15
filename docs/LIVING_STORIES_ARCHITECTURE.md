@@ -1,57 +1,120 @@
-# Living Stories Architecture (v3)
+# Living Stories Architecture (Phase-1, Current)
 
 ## Overview
-"Living Stories" is a feature that dynamically clusters news articles into evolving event narratives. Unlike static clustering, Living Stories persist over time, allowing new updates to be merged into existing stories ("Fast Path") or new stories to be discovered from unassigned articles ("Slow Path").
 
-## Architecture
+Living Stories implement a **canonical narrative per cluster**: one story identity evolves over time as new reporting arrives.
 
-The system uses an **Assign-or-Buffer** strategy with a **Phased Workflow**.
+The architecture prioritizes:
 
-### 1. Data Models
-*   **`LivingStory`** (`living_stories`): Represents a cluster.
-    *   `id` (UUID)
-    *   `semantic_centroid` (JSON list of floats): The current center of the story in vector space.
-    *   `status`: `active`, `dormant`, or `archived`.
-*   **`StoryUpdate`** (`story_updates`): A record of a batch of articles added to a story.
-    *   `batch_centroid`: The centroid of the specific update batch.
-*   **`PendingArticle`** (`pending_articles_pool`): The "waiting room" for articles that didn't match an existing story.
-    *   `vector_blob`: Pre-computed embedding to avoid re-inference.
+1. **Continuity**: avoid duplicate story objects for the same event cluster.
+2. **Meaningful change**: re-run critique/publish only when updates materially change the narrative.
+3. **Operational safety**: publish is idempotent under retries and concurrent pipeline activity.
 
-### 2. Fast Path (Ingestion)
-**Component**: `Memory Agent` (`save_article` in `agents/memory/tools.py`)
+---
 
-When an article is saved:
-1.  **Vector Search**: The system queries the `active_living_stories` ChromaDB collection with the article's embedding.
-2.  **Threshold Check**:
-    *   If `Cosine Similarity > LS_SIMILARITY_THRESHOLD` (default 0.85):
-        *   **Assign**: The article is linked to the `LivingStory`.
-        *   **Update**: The story's centroid is updated (Drift Decay: `LS_DRIFT_DECAY_RATE`, default 0.2).
-        *   **Record**: A `StoryUpdate` is created.
-    *   If No Match:
-        *   **Buffer**: The article is inserted into `pending_articles_pool`.
+## Core Design
 
-### 3. Slow Path (Discovery)
-**Component**: `Analyst Agent` (`discovery_loop` in `agents/analyst/discovery.py`)
+### Canonical Story Identity
 
-A background task runs every 5 minutes:
-1.  **Fetch**: Retrieves all articles from `pending_articles_pool`.
-2.  **Filter**: Checks if `count < LS_MIN_SOURCES_FOR_CREATION` (default 3).
-3.  **Cluster**: Runs **HDBSCAN** on the pending vectors.
-4.  **Promote**: For each dense cluster found:
-    *   Checks source diversity (must be >= 3 unique domains).
-    *   Creates a new `LivingStory`.
-    *   Adds the centroid to ChromaDB `active_living_stories`.
-    *   Removes articles from the pending pool.
+- Canonical identity is anchored by `cluster_id` in `synthesized_articles`.
+- For each cluster, synthesis uses an upsert path:
+  - update existing latest story when cluster already has a canonical story,
+  - insert a new row only when no prior story exists for that cluster.
+
+### Meaningful-Change Gating
+
+Each new synthesis candidate is compared with the previous canonical body and input set.
+
+Decision signals:
+
+- text delta (`1 - similarity(previous, candidate)`),
+- number of newly-added source articles for the cluster,
+- configured thresholds.
+
+If meaningful:
+
+- update body/title/metadata,
+- reset `critique_status` to `pending`,
+- clear critique text,
+- set `is_published = 0` to trigger republish.
+
+If not meaningful:
+
+- persist tracking metadata only,
+- keep critique/publish states unchanged (`tracked_noop`).
+
+### Publish Idempotency
+
+- Publish state transitions are handled with a guarded update in Chief Editor tools.
+- Duplicate publish attempts become a no-op (`published_already`) rather than a conflict failure.
+- Workflow policy avoids duplicate publish-state writes.
+
+---
+
+## Data Model Usage (Current)
+
+### `synthesized_articles`
+
+Primary store for canonical living stories.
+
+Operational fields:
+
+- `story_id`, `cluster_id`
+- `is_published`
+- `critique_status`, `critique_text`
+- `synth_metadata` (JSON)
+
+### `synth_metadata.living_story`
+
+Phase-1 metadata contract:
+
+- `revision`
+- `input_fingerprint`
+- `last_meaningful_score`
+- `last_new_articles`
+- `last_update_action` (`updated` or `tracked_noop`)
+- `updated_at`
+
+### Supporting Inputs
+
+- `news_article` provides source inputs per cluster.
+- `articles` and memory/chroma flows provide embeddings and cluster assignment prerequisites.
+
+---
+
+## Workflow Placement
+
+Living-story behavior is executed in synthesis-stage orchestrator policies:
+
+- `ClusterToSynthesisPolicy`
+- `HeavyClusterRetryPolicy`
+
+Both use shared upsert + meaningful-gate logic before any critique/publish resets.
+
+---
 
 ## Configuration (`global.env`)
 
-| Variable | Default | Purpose |
+| Variable | Default | Role |
 | :--- | :--- | :--- |
-| `LS_SIMILARITY_THRESHOLD` | `0.85` | Cutoff for auto-merging an article into a story. |
-| `LS_DRIFT_DECAY_RATE` | `0.2` | How much a new article shifts the story centroid. |
-| `LS_MIN_SOURCES_FOR_CREATION` | `3` | Minimum pending articles/sources to form a new story. |
+| `LIVING_STORY_MAJOR_TEXT_DELTA` | `0.12` | Large text change threshold that is always meaningful. |
+| `LIVING_STORY_MINOR_TEXT_DELTA` | `0.03` | Smaller text delta that can be meaningful when supported by new sources. |
+| `LIVING_STORY_MIN_NEW_ARTICLES` | `2` | Minimum number of new source articles that can force a meaningful update. |
 
-## Infrastructure
-*   **Database**: MariaDB (tables defined in `justnews_publisher/news/models.py`).
-*   **Vector Store**: ChromaDB (Collection: `active_living_stories`).
-    *   *Note*: The `articles` collection is still used for general RAG. `active_living_stories` is a specialized optimization index.
+---
+
+## End-to-End Lifecycle
+
+1. Articles are analyzed, embedded, fact-checked, and clustered.
+2. Synthesis generates a candidate narrative for a cluster.
+3. Living-story gate evaluates significance against previous canonical version.
+4. Meaningful updates re-enter critique/publish flow; non-meaningful updates are tracked without churn.
+5. Published canonical story evolves across revisions while preserving `story_id` continuity.
+
+---
+
+## Operational Notes
+
+- This document reflects current Phase-1 implementation.
+- For commands and day-2 diagnostics, see `docs/operations/LIVING_STORY_RUNBOOK.md`.
+- For roadmap and future phases, see `docs/LIVING_STORIES_IMPLEMENTATION_PLAN.md`.

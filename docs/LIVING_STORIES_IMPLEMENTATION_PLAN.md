@@ -1,124 +1,119 @@
-# JustNews "Living Stories" Implementation Plan
+# JustNews Living Stories Implementation Plan
 
-**Date:** February 1, 2026
-**Status:** Draft (v3) - Includes Config & Chroma Strategy
-**Target Architecture:** Assign-or-Buffer (Fast/Slow Path) with Autonomous Drift
+**Status:** Active roadmap (updated to current implementation)
 
----
-
-## 1. Executive Summary
-
-### The Problem
-Single-source crawling results in sparse article batches that fail density-based clustering (HDBSCAN). Meanwhile, standard Snapshot Clustering forgets narrative history.
-- **Scenario:** We crawl CNN, get 1 article on "Event X". HDBSCAN sees it as noise (no density). Later, we crawl BBC, get 1 article. Still noise. Discovery fails.
-
-### The Solution: Assign-or-Buffer
-We bifurcate the pipeline:
-1.  **Fast Path (Update)**: Check every new article against existing stories immediately using Vector Search.
-2.  **Slow Path (Discovery)**: Buffer unmatched articles in a **Pending Pool** until enough sources (defined in `global.env`) corroborate the event.
+This plan tracks what is already in production behavior and what remains for future phases.
 
 ---
 
-## 2. Architecture Proposal
+## 1) Objective
 
-### 2.1. Path 1: The Fast Path (Ingestion)
-*Objective: Latency-free updates for known stories.*
-
-1.  **Ingest & Vectorize**: Crawler fetches a single article (embedding generated via `sentence-transformers`).
-2.  **Lookup**: Query **ChromaDB** (`active_living_stories` collection) for the nearest centroid.
-3.  **Decision**:
-    *   **Match**: If Distance < `LS_SIMILARITY_THRESHOLD` AND Entity Overlap > `LS_ENTITY_OVERLAP_THRESHOLD`:
-        *   Action: Create `StoryUpdate` (MariaDB).
-        *   Action: Update `LivingStory` centroid in ChromaDB (Drift).
-    *   **No Match**:
-        *   Action: Insert into `pending_articles_pool` (MariaDB) + Cache Vector.
-
-### 2.2. Path 2: The Slow Path (Discovery)
-*Objective: Noise-resistant creation of new stories.*
-
-1.  **Accumulate**: The `PendingPool` collects unmatched articles from various sources (CNN, BBC, Local).
-2.  **Cluster (Cron Job)**: Periodically, `DiscoveryAgent` runs **HDBSCAN** on the Pending Pool vectors.
-3.  **Resolution**:
-    *   **Dense Cluster Found**:
-        *   Condition: Cluster Size >= `LS_MIN_SOURCES_FOR_CREATION` (e.g., 3).
-        *   Safety: Double-check Centroid vs Active Stories (prevent split-brain).
-        *   Action: Create **NEW** `LivingStory` in MariaDB + ChromaDB.
-        *   Action: Move articles to `StoryUpdate`.
-    *   **Noise**: Leave in pool (waiting for more sources).
-    *   **Expired**: If `added_at` > `LS_PENDING_TTL_HOURS`, move to `ArchivedSingleton`.
-
-### 2.3. Autonomous Evolution
-*   **Rolling Centroids**: We use a weighted moving average to allow stories to evolve.
-    *   $C_{new} = (C_{old} \times (1 - \text{Decay})) + (V_{update} \times \text{Decay})$
-    *   Controlled by `LS_DRIFT_DECAY_RATE`.
-
-### 2.4. Phased Workflow Orchestration
-To prevent resource contention, the system will execute in 4 sequential phases:
-1.  **Ingestion & Encryption (Phase 1)**: Crawl -> Parse -> Vectorize.
-    *   *Exit Condition*: Crawler finished AND No un-enriched articles remaining.
-2.  **Clustering & Linkage (Phase 2)**: Fast/Slow Path clustering.
-    *   *Exit Condition*: All pending articles processed/pooled.
-3.  **Synthesis (Phase 3)**: LLM Generation.
-    *   *Trigger*: New `StoryUpdate` exists AND Phase 2 Complete.
-4.  **Publication (Phase 4)**: CMS Push.
+Deliver a newsroom-safe Living Story system where each cluster evolves as one canonical story, and republishing occurs only when updates are editorially meaningful.
 
 ---
 
-## 3. Data Model & Infrastructure Changes
+## 2) Phase-1 (Implemented)
 
-### A. Database (MariaDB/Django)
-We **DO** need schema changes.
-1.  **`living_stories` Table**:
-    *   `id` (UUID), `title`, `status` (`ACTIVE`/`DORMANT`), `created_at`, `last_updated_at`.
-2.  **`story_updates` Table**:
-    *   `id` (UUID), `story_id` (FK), `article_count`, `batch_centroid` (JSON/Blob is sufficient here).
-3.  **`pending_articles_pool` Table**:
-    *   `article_id` (OneToOne with `Article`), `source_domain`, `vector_blob` (optimization to avoid re-querying Chroma), `added_at`.
+Phase-1 is implemented in orchestrator + chief-editor tooling.
 
-### B. Vector Store (ChromaDB)
-We **DO** need a NEW collection.
-1.  **`active_living_stories` Collection**:
-    *   **Purpose**: Stores the current rolling centroid of every `ACTIVE` story.
-    *   **Metadata**: `{"story_id": "...", "last_updated": "...", "title": "..."}`.
-    *   **Why**: Enables $O(1)$ semantic search during the Fast Path (Ingestion) without loading all story vectors into memory. Active stories are removed from this collection when they go `DORMANT` (status update).
+### Delivered capabilities
 
----
+1. **Canonical per-cluster upsert**
+    - Synthesis reuses an existing cluster story instead of creating duplicates.
 
-## 4. Configuration Strategy (global.env)
-All critical logic thresholds must be externalized to `global.env` for tuning.
+2. **Meaningful-change gating**
+    - Update significance is computed from text delta + new article inputs.
+    - Non-meaningful updates are tracked as no-op revisions.
 
-| Variable Name | Default | Description |
+3. **State-safe repipeline behavior**
+    - Meaningful updates reset critique/publish state.
+    - Non-meaningful updates avoid critique/publish churn.
+
+4. **Metadata and revision tracking**
+    - `synth_metadata.living_story` stores revision/fingerprint/decision fields.
+
+5. **Publish idempotency hardening**
+    - Publish mark uses guarded update and returns `published_already` when retried.
+
+### Phase-1 config knobs
+
+| Variable | Default | Purpose |
 | :--- | :--- | :--- |
-| **`LS_MIN_SOURCES_FOR_CREATION`** | `3` | Minimum unique sources required in a cluster to spawn a new Living Story. |
-| **`LS_ACTIVE_WINDOW_DAYS`** | `7` | Days a story remains `ACTIVE` without updates before going `DORMANT`. |
-| **`LS_PENDING_TTL_HOURS`** | `48` | How long an unmatched article waits in the pool before being archived as noise. |
-| **`LS_SIMILARITY_THRESHOLD`** | `0.85` | Cosine similarity score required to auto-merge an article into a story. |
-| **`LS_ENTITY_OVERLAP_THRESHOLD`**| `0.4` | Percentage of Named Entities that must match for safety. |
-| **`LS_DRIFT_DECAY_RATE`** | `0.2` | How much a new update shifts the story's centroid (0.0=Static, 1.0=Instant). |
+| `LIVING_STORY_MAJOR_TEXT_DELTA` | `0.12` | Always-meaningful text-change threshold. |
+| `LIVING_STORY_MINOR_TEXT_DELTA` | `0.03` | Text-change threshold that can be meaningful with new sources. |
+| `LIVING_STORY_MIN_NEW_ARTICLES` | `2` | New-source count that can independently force meaningful update. |
 
 ---
 
-## 5. Implementation Steps
+## 3) Phase-2 (Next)
 
-### Phase 1: Environment & Config
-*   Update `environment.yml` (`hdbscan`, `umap-learn`).
-*   Update `global.env` with the new constants.
-*   Update `dashboard_config.json` to expose these constants for viewing.
+Focus: improve decision quality and operator visibility.
 
-### Phase 2: Infrastructure
-*   **Django**: Create models for `LivingStory`, `StoryUpdate`, `PendingArticle`.
-*   **Chroma**: Create utility script to initialize/reset `active_living_stories` collection.
+### Planned work
 
-### Phase 3: Logic Implementation
-*   **IngestionWorker**: Hook into the save pipeline -> Check `active_living_stories` -> Assign or Pool.
-*   **DiscoveryAgent**: Create the "Slow Path" cron job (Fetch Pool -> HDBSCAN -> Create Story).
+1. Add explicit decision telemetry (per cluster):
+    - `updated` vs `tracked_noop` counters,
+    - mean/median meaningful score,
+    - publish latency post-meaningful change.
 
-### Phase 4: Dashboard
-*   Add Visualizations: "Pending Pool Size", "Active Stories Count".
-*   Add Controls: "Force Merge" (HITL).
+2. Add revision diff summaries:
+    - lightweight title/body delta for each revision,
+    - source additions/removals snapshot.
 
-## 6. Success Metrics
-*   **Reduction in fragments**: Same story from 3 sources becomes 1 Living Story.
-*   **Drift Handling**: An "Election" story seamlessly transitions to "Results" without needing a new ID.
-*   **Zero-Touch**: System runs indefinitely without manual training, only occasional cleanup.
+3. Add operator override controls (HITL):
+    - force-update,
+    - force-hold,
+    - force-republish.
+
+---
+
+## 4) Phase-3 (Future)
+
+Focus: richer editorial semantics and stronger trust guarantees.
+
+### Planned work
+
+1. Source-diversity weighting in meaningful score.
+2. Temporal recency weighting (breaking vs background updates).
+3. Fact-quality weighting (confidence-aware update promotion).
+4. Policy-level explainability payload for every living-story decision.
+
+---
+
+## 5) Validation Criteria
+
+Phase-1 success is validated when:
+
+1. Canonical continuity:
+    - same cluster maintains stable `story_id` across updates.
+
+2. Churn control:
+    - non-meaningful updates do not trigger critique/publish resets.
+
+3. Meaningful responsiveness:
+    - meaningful updates reliably return to critique/publish.
+
+4. Conflict resilience:
+    - publish retries resolve idempotently (no recurring `1020` conflict loops).
+
+---
+
+## 6) Risks and Mitigations
+
+1. **Over-sensitive thresholds** → noisy republish churn
+    - Mitigation: raise text/new-article thresholds.
+
+2. **Under-sensitive thresholds** → missed meaningful updates
+    - Mitigation: lower thresholds and audit `tracked_noop` clusters.
+
+3. **Concurrent writers on publish state**
+    - Mitigation: keep single publish ownership + idempotent write guard.
+
+---
+
+## 7) Related Documents
+
+- `docs/LIVING_STORIES_ARCHITECTURE.md`
+- `docs/operations/LIVING_STORY_RUNBOOK.md`
+- `docs/orchestrator/WORKFLOW_ORCHESTRATOR.md`
 

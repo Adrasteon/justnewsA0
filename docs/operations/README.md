@@ -10,6 +10,8 @@
 
 - [Troubleshooting](./TROUBLESHOOTING.md) — Diagnostics and recovery procedures
 
+- [Living Story Runbook](./LIVING_STORY_RUNBOOK.md) — Canonical story philosophy, meaningful-change thresholds, and day-2 operations
+
 - [Fact Checker Troubleshooting](./FACT_CHECKER_TROUBLESHOOTING.md) — Devcontainer/backend routing, auth, and circuit-breaker recovery
 
 - [MCP Bus Health & Diagnostics](./MCP_BUS_HEALTH.md) — Details on `/health`and`/ready`, testing, and developer guidance

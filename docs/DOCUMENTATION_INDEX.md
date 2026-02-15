@@ -84,6 +84,10 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Environment Configuration](./operations/ENVIRONMENT_CONFIG.md) — Config management
 
+- [Living Stories Architecture](./LIVING_STORIES_ARCHITECTURE.md) — Canonical story model, meaningful-change gating, and lifecycle
+
+- [Living Story Runbook](./operations/LIVING_STORY_RUNBOOK.md) — Day-2 operations, validation, thresholds, and troubleshooting
+
 - [Vault Setup & Administration](./operations/VAULT_SETUP.md) — Secrets management
 
 - [Troubleshooting](./operations/TROUBLESHOOTING.md) — Diagnostics and recovery
@@ -222,6 +226,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Troubleshooting Guide](./operations/TROUBLESHOOTING.md) — Complete reference
 
+- [Living Story Runbook](./operations/LIVING_STORY_RUNBOOK.md) — Living-story-specific diagnostics and tuning
+
 - [GPU Monitoring](./operations/gpu-monitoring.md) — GPU resources
 
 - [Systemd Monitoring](./operations/systemd-monitoring.md) — Service health
@@ -243,11 +249,14 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 docs/
 ├── api/                           # REST API reference
 ├── developer/                     # Developer guides
+├── LIVING_STORIES_ARCHITECTURE.md # Living story architecture (current behavior)
+├── LIVING_STORIES_IMPLEMENTATION_PLAN.md # Phase roadmap and status
 ├── operations/                    # Operational procedures
 │   ├── SETUP_GUIDE.md            # ⭐ Start here: Complete installation
 │   ├── ENVIRONMENT_CONFIG.md     # Configuration management
 │   ├── VAULT_SETUP.md            # Secrets administration
 │   ├── TROUBLESHOOTING.md        # Diagnostics & recovery
+│   ├── LIVING_STORY_RUNBOOK.md   # Living story operations and tuning
 │   ├── README.md                 # Operations overview
 │   ├── gpu-monitoring.md         # GPU monitoring
 │   ├── systemd-monitoring.md     # Service health monitoring
