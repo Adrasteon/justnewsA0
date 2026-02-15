@@ -154,7 +154,8 @@ ANALYTICS_AGENT_PORT=8012
 ## Fact Checker Shim
 
 FACT_CHECKER_AGENT_PORT=8018
-FACT_CHECKER_EXTERNAL_URL=http://localhost:8003
+FACT_CHECKER_EXTERNAL_URL=http://fact-checker:8000
+FACT_CHECKER_API_KEY=dev_key_123
 
 ## Transparency/Evidence Service
 

@@ -10,6 +10,8 @@
 
 - [Troubleshooting](./TROUBLESHOOTING.md) — Diagnostics and recovery procedures
 
+- [Fact Checker Troubleshooting](./FACT_CHECKER_TROUBLESHOOTING.md) — Devcontainer/backend routing, auth, and circuit-breaker recovery
+
 - [MCP Bus Health & Diagnostics](./MCP_BUS_HEALTH.md) — Details on `/health`and`/ready`, testing, and developer guidance
 
 - [Crawler Maturity Checklist](./CRAWLER_MATURITY_CHECKLIST.md) — Phased roadmap and acceptance criteria to move toward enterprise-grade crawling

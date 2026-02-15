@@ -6,6 +6,19 @@ Vault, MariaDB, ChromaDB, and systemd services ---
 This guide covers diagnosing and resolving common issues in the JustNews infrastructure, including Vault, MariaDB,
 ChromaDB, and systemd integration.
 
+## Known Issue: Fact Checker Shim / MCP Circuit Breaker
+
+If `fact_checker` appears healthy at startup but later returns `500/502` on `:8018` and MCP reports
+`Circuit breaker open for agent fact_checker`, use the dedicated runbook:
+
+- [Fact Checker Troubleshooting](./FACT_CHECKER_TROUBLESHOOTING.md)
+
+This includes:
+
+- container-vs-host routing differences (`localhost:8003` vs `fact-checker:8000`),
+- required auth env (`FACT_CHECKER_API_KEY`),
+- circuit-breaker diagnostics and verification commands.
+
 ## Quick Health Check
 
 ```bash
