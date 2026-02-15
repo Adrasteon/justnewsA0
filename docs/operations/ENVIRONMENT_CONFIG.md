@@ -163,6 +163,27 @@ EVIDENCE_AUDIT_BASE_URL=http://localhost:8013/transparency
 
 ```
 
+#### Chief Editor (Qwen Runtime)
+
+```bash
+
+## Shared vLLM endpoint/model used by Chief Editor adapter
+
+VLLM_BASE_URL=http://127.0.0.1:8010/v1
+VLLM_MODEL=Qwen/Qwen2.5-14B-Instruct-AWQ
+VLLM_API_KEY=unused
+
+## Chief Editor runtime toggle (Qwen-only path)
+
+CHIEF_EDITOR_DISABLE_QWEN=0
+
+```
+
+Notes:
+
+- Chief Editor uses the Qwen adapter path for quality, categorization, sentiment, and commentary.
+- Legacy `CHIEF_EDITOR_DISABLE_MISTRAL` compatibility behavior is removed; use `CHIEF_EDITOR_DISABLE_QWEN` only.
+
 Crawler dedupe replacement tuning notes:
 
 - `UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR`
