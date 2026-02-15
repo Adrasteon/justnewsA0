@@ -87,9 +87,205 @@ def _safe_float(raw_value: Any, default: float = 0.0) -> float:
         return default
 
 
+def _safe_int(raw_value: Any, default: int = 0) -> int:
+    try:
+        return int(raw_value)
+    except Exception:
+        return default
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw_value = os.environ.get(name)
+    if raw_value is None:
+        return default
+    return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _safe_datetime(raw_value: Any) -> datetime | None:
     if raw_value is None:
         return None
+
+
+def _infer_urgency_class(title_text: str | None, body_text: str | None) -> str:
+    combined = _normalize_text_for_diff(f"{title_text or ''} {body_text or ''}")
+    if not combined:
+        return "active"
+
+    breaking_keywords = {
+        "breaking",
+        "urgent",
+        "alert",
+        "developing",
+        "explosion",
+        "evacuation",
+        "earthquake",
+        "attack",
+        "ceasefire",
+        "election",
+        "vote",
+    }
+    background_keywords = {
+        "analysis",
+        "opinion",
+        "feature",
+        "long read",
+        "explainer",
+        "retrospective",
+        "background",
+    }
+
+    if any(keyword in combined for keyword in breaking_keywords):
+        return "breaking"
+    if any(keyword in combined for keyword in background_keywords):
+        return "background"
+    return "active"
+
+
+def _resolve_living_story_calibration(urgency_class: str) -> dict[str, float]:
+    profile = str(os.environ.get("LIVING_STORY_CALIBRATION_PROFILE", "balanced")).strip().lower()
+    if profile not in {"balanced", "conservative", "aggressive", "breaking"}:
+        profile = "balanced"
+
+    profile_defaults = {
+        "balanced": {
+            "major_delta": 0.12,
+            "minor_delta": 0.03,
+            "min_new_articles": 2,
+            "composite_threshold": 0.35,
+            "weight_text": 0.45,
+            "weight_source": 0.20,
+            "weight_recency": 0.15,
+            "weight_fact": 0.15,
+            "weight_new": 0.05,
+        },
+        "conservative": {
+            "major_delta": 0.16,
+            "minor_delta": 0.05,
+            "min_new_articles": 3,
+            "composite_threshold": 0.45,
+            "weight_text": 0.55,
+            "weight_source": 0.15,
+            "weight_recency": 0.10,
+            "weight_fact": 0.15,
+            "weight_new": 0.05,
+        },
+        "aggressive": {
+            "major_delta": 0.08,
+            "minor_delta": 0.02,
+            "min_new_articles": 1,
+            "composite_threshold": 0.28,
+            "weight_text": 0.35,
+            "weight_source": 0.20,
+            "weight_recency": 0.20,
+            "weight_fact": 0.15,
+            "weight_new": 0.10,
+        },
+        "breaking": {
+            "major_delta": 0.06,
+            "minor_delta": 0.015,
+            "min_new_articles": 1,
+            "composite_threshold": 0.22,
+            "weight_text": 0.25,
+            "weight_source": 0.20,
+            "weight_recency": 0.30,
+            "weight_fact": 0.15,
+            "weight_new": 0.10,
+        },
+    }
+
+    defaults = dict(profile_defaults[profile])
+    major_delta = _safe_float(os.environ.get("LIVING_STORY_MAJOR_TEXT_DELTA"), defaults["major_delta"])
+    minor_delta = _safe_float(os.environ.get("LIVING_STORY_MINOR_TEXT_DELTA"), defaults["minor_delta"])
+    min_new_articles = _safe_int(os.environ.get("LIVING_STORY_MIN_NEW_ARTICLES"), int(defaults["min_new_articles"]))
+    composite_threshold = _safe_float(os.environ.get("LIVING_STORY_COMPOSITE_THRESHOLD"), defaults["composite_threshold"])
+
+    weight_text = _safe_float(os.environ.get("LIVING_STORY_WEIGHT_TEXT"), defaults["weight_text"])
+    weight_source = _safe_float(os.environ.get("LIVING_STORY_WEIGHT_SOURCE"), defaults["weight_source"])
+    weight_recency = _safe_float(os.environ.get("LIVING_STORY_WEIGHT_RECENCY"), defaults["weight_recency"])
+    weight_fact = _safe_float(os.environ.get("LIVING_STORY_WEIGHT_FACT"), defaults["weight_fact"])
+    weight_new = _safe_float(os.environ.get("LIVING_STORY_WEIGHT_NEW_ARTICLES"), defaults["weight_new"])
+
+    recency_multiplier_defaults = {
+        "breaking": 1.35,
+        "active": 1.0,
+        "background": 0.80,
+    }
+    threshold_multiplier_defaults = {
+        "breaking": 0.85,
+        "active": 1.0,
+        "background": 1.10,
+    }
+    recency_multiplier = _safe_float(
+        os.environ.get(f"LIVING_STORY_RECENCY_MULTIPLIER_{urgency_class.upper()}"),
+        recency_multiplier_defaults.get(urgency_class, 1.0),
+    )
+    threshold_multiplier = _safe_float(
+        os.environ.get(f"LIVING_STORY_THRESHOLD_MULTIPLIER_{urgency_class.upper()}"),
+        threshold_multiplier_defaults.get(urgency_class, 1.0),
+    )
+
+    weight_recency *= max(recency_multiplier, 0.0)
+    total_weight = max(weight_text + weight_source + weight_recency + weight_fact + weight_new, 1e-6)
+    weight_text /= total_weight
+    weight_source /= total_weight
+    weight_recency /= total_weight
+    weight_fact /= total_weight
+    weight_new /= total_weight
+
+    return {
+        "profile": profile,
+        "major_delta": major_delta,
+        "minor_delta": minor_delta,
+        "min_new_articles": float(max(min_new_articles, 1)),
+        "composite_threshold": max(composite_threshold * max(threshold_multiplier, 0.1), 0.01),
+        "weight_text": weight_text,
+        "weight_source": weight_source,
+        "weight_recency": weight_recency,
+        "weight_fact": weight_fact,
+        "weight_new": weight_new,
+        "recency_multiplier": recency_multiplier,
+        "threshold_multiplier": threshold_multiplier,
+    }
+
+
+def _govern_override(override: dict[str, Any]) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    require_owner = _env_bool("LIVING_STORY_OVERRIDE_REQUIRE_OWNER", default=True)
+    require_approval = _env_bool("LIVING_STORY_OVERRIDE_REQUIRE_APPROVAL", default=False)
+    max_ttl_hours = _safe_int(os.environ.get("LIVING_STORY_OVERRIDE_MAX_TTL_HOURS"), 168)
+
+    owner = str(override.get("owner", "")).strip()
+    approved_by = str(override.get("approved_by", "")).strip()
+    expires_at = _safe_datetime(override.get("expires_at")) if override.get("expires_at") else None
+    now_utc = datetime.utcnow()
+
+    if require_owner and not owner:
+        return None, {"reason": "missing_owner", "required": "owner"}
+    if require_approval and not approved_by:
+        return None, {"reason": "missing_approval", "required": "approved_by"}
+    if expires_at is not None and expires_at < now_utc:
+        return None, {"reason": "override_expired", "expires_at": override.get("expires_at")}
+
+    if max_ttl_hours > 0 and expires_at is not None:
+        ttl_hours = (expires_at - now_utc).total_seconds() / 3600.0
+        if ttl_hours > max_ttl_hours:
+            return None, {
+                "reason": "override_ttl_exceeds_limit",
+                "ttl_hours": round(ttl_hours, 2),
+                "max_ttl_hours": max_ttl_hours,
+            }
+
+    governed = dict(override)
+    governed["owner"] = owner
+    governed["approved_by"] = approved_by
+    if expires_at is not None:
+        governed["expires_at"] = expires_at.isoformat() + "Z"
+    governed["governed_at"] = datetime.utcnow().isoformat() + "Z"
+    governed["governance"] = {
+        "require_owner": require_owner,
+        "require_approval": require_approval,
+        "max_ttl_hours": max_ttl_hours,
+    }
+    return governed, None
     if isinstance(raw_value, datetime):
         return raw_value
     try:
@@ -126,18 +322,22 @@ def _resolve_operator_override(
     cluster_id: str,
     story_id: str | None,
     living_story_meta: dict[str, Any],
-) -> dict[str, Any] | None:
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
     valid_actions = {"force_update", "force_hold", "force_republish"}
 
     inline_override = living_story_meta.get("operator_override")
     if isinstance(inline_override, dict):
         action = str(inline_override.get("action", "")).strip().lower()
         if action in valid_actions:
-            return {
+            candidate = {
                 "action": action,
                 "reason": str(inline_override.get("reason", "manual override")).strip(),
                 "source": "synth_metadata",
+                "owner": inline_override.get("owner"),
+                "approved_by": inline_override.get("approved_by"),
+                "expires_at": inline_override.get("expires_at"),
             }
+            return _govern_override(candidate)
 
     override_map = _load_operator_override_map()
     candidates = [cluster_id]
@@ -151,21 +351,25 @@ def _resolve_operator_override(
         if isinstance(raw_entry, str):
             action = raw_entry.strip().lower()
             if action in valid_actions:
-                return {
+                return _govern_override({
                     "action": action,
                     "reason": "env override",
                     "source": "env_json",
-                }
+                })
         elif isinstance(raw_entry, dict):
             action = str(raw_entry.get("action", "")).strip().lower()
             if action in valid_actions:
-                return {
+                candidate = {
                     "action": action,
                     "reason": str(raw_entry.get("reason", "env override")).strip(),
                     "source": "env_json",
+                    "owner": raw_entry.get("owner"),
+                    "approved_by": raw_entry.get("approved_by"),
+                    "expires_at": raw_entry.get("expires_at"),
                 }
+                return _govern_override(candidate)
 
-    return None
+    return None, None
 
 
 def _compute_story_diff(
@@ -365,16 +569,18 @@ def upsert_living_story_record(
     input_arts_json = json.dumps(normalized_ids)
     fingerprint = _cluster_input_fingerprint(normalized_ids)
     now_iso = datetime.utcnow().isoformat() + "Z"
+    urgency_class = _infer_urgency_class(title_text, body_text)
+    calibration = _resolve_living_story_calibration(urgency_class)
 
-    major_delta = float(os.environ.get("LIVING_STORY_MAJOR_TEXT_DELTA", "0.12"))
-    minor_delta = float(os.environ.get("LIVING_STORY_MINOR_TEXT_DELTA", "0.03"))
-    min_new_articles = int(os.environ.get("LIVING_STORY_MIN_NEW_ARTICLES", "2"))
-    composite_threshold = float(os.environ.get("LIVING_STORY_COMPOSITE_THRESHOLD", "0.35"))
-    weight_text = float(os.environ.get("LIVING_STORY_WEIGHT_TEXT", "0.45"))
-    weight_source = float(os.environ.get("LIVING_STORY_WEIGHT_SOURCE", "0.20"))
-    weight_recency = float(os.environ.get("LIVING_STORY_WEIGHT_RECENCY", "0.15"))
-    weight_fact = float(os.environ.get("LIVING_STORY_WEIGHT_FACT", "0.15"))
-    weight_new = float(os.environ.get("LIVING_STORY_WEIGHT_NEW_ARTICLES", "0.05"))
+    major_delta = _safe_float(calibration.get("major_delta"), 0.12)
+    minor_delta = _safe_float(calibration.get("minor_delta"), 0.03)
+    min_new_articles = max(_safe_int(calibration.get("min_new_articles"), 2), 1)
+    composite_threshold = _safe_float(calibration.get("composite_threshold"), 0.35)
+    weight_text = _safe_float(calibration.get("weight_text"), 0.45)
+    weight_source = _safe_float(calibration.get("weight_source"), 0.20)
+    weight_recency = _safe_float(calibration.get("weight_recency"), 0.15)
+    weight_fact = _safe_float(calibration.get("weight_fact"), 0.15)
+    weight_new = _safe_float(calibration.get("weight_new"), 0.05)
 
     db_service.ensure_conn()
     cursor = db_service.mb_conn.cursor()
@@ -421,6 +627,8 @@ def upsert_living_story_record(
                 "explainability": {
                     "decision": "created",
                     "reasons": ["first_story_for_cluster"],
+                    "urgency_class": urgency_class,
+                    "calibration_profile": calibration.get("profile", "balanced"),
                 },
             }
         }
@@ -482,7 +690,11 @@ def upsert_living_story_record(
 
     previous_meta = _load_json_dict(prev_meta_raw)
     living_story_meta = previous_meta.get("living_story", {}) if isinstance(previous_meta.get("living_story"), dict) else {}
-    override = _resolve_operator_override(cluster_id=cluster_id, story_id=story_id, living_story_meta=living_story_meta)
+    override, override_rejected = _resolve_operator_override(
+        cluster_id=cluster_id,
+        story_id=story_id,
+        living_story_meta=living_story_meta,
+    )
 
     final_action = "updated" if meaningful else "tracked_noop"
     if override:
@@ -533,6 +745,8 @@ def upsert_living_story_record(
         "explainability": {
             "decision": final_action,
             "reasons": sorted(set(reasons)) if reasons else ["no_meaningful_change"],
+            "urgency_class": urgency_class,
+            "calibration_profile": calibration.get("profile", "balanced"),
             "scores": {
                 "text_delta": round(text_delta, 4),
                 "composite_score": round(composite_score, 4),
@@ -547,6 +761,8 @@ def upsert_living_story_record(
                 "recency": weight_recency,
                 "fact_quality": weight_fact,
                 "new_articles": weight_new,
+                "recency_multiplier": _safe_float(calibration.get("recency_multiplier"), 1.0),
+                "threshold_multiplier": _safe_float(calibration.get("threshold_multiplier"), 1.0),
             },
             "thresholds": {
                 "major_delta": major_delta,
@@ -556,6 +772,7 @@ def upsert_living_story_record(
             },
             "source_count": int(context_metrics.get("source_count", 0)),
             "override": override,
+            "override_rejected": override_rejected,
         },
     }
 
@@ -595,6 +812,7 @@ def upsert_living_story_record(
         "text_delta": round(text_delta, 4),
         "composite_score": round(composite_score, 4),
         "override": override,
+        "override_rejected": override_rejected,
     }
 
 class WorkflowPolicy(ABC):
