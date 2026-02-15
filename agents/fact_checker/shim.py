@@ -142,7 +142,7 @@ def _load_article_for_fact_check(article_id: int) -> dict[str, Any]:
         cursor, conn = db_service.get_safe_cursor(per_call=True, dictionary=True)
         cursor.execute(
             """
-            SELECT id, title, content, summary, url, source_id
+            SELECT id, title, content, summary, source_url AS url, source_id
             FROM articles
             WHERE id = %s
             LIMIT 1

@@ -45,6 +45,25 @@ Backend responded with `401 Unauthorized` until key was provided.
 
 - Fixed in `agents/fact_checker/shim.py` by using `time.monotonic()` for breaker timing.
 
+### 4) `verify_article` failed due to articles schema mismatch (`url` vs `source_url`)
+
+Workflow policy `summary_to_fact_check` calls `fact_checker.verify_article` with `article_id`.
+In this environment, `articles` stores source links in `source_url` (not `url`).
+
+- Failure mode:
+  - shim returned `503` with `{"detail":"Unable to load article <id>"}`
+  - MCP bus retried then opened breaker for `fact_checker`
+  - workflow logs showed repeated `400`/`502` and `Success: 0/5`
+
+- Fix applied:
+  - In `agents/fact_checker/shim.py`, article loader query changed to:
+    - `SELECT ..., source_url AS url, ... FROM articles WHERE id = %s`
+
+- Post-fix expected state:
+  - `POST /call` with `fact_checker.verify_article` returns `200`
+  - MCP breaker for `fact_checker` stays closed
+  - workflow logs show `Fact check batch complete. Success: 5/5`
+
 ---
 
 ## Canonical DevContainer Configuration
