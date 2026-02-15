@@ -14,6 +14,8 @@ import json
 import uuid
 import time
 import hashlib
+import statistics
+from urllib.parse import urlparse
 from difflib import SequenceMatcher
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
@@ -78,6 +80,280 @@ def _load_json_dict(raw_value: Any) -> dict[str, Any]:
     return {}
 
 
+def _safe_float(raw_value: Any, default: float = 0.0) -> float:
+    try:
+        return float(raw_value)
+    except Exception:
+        return default
+
+
+def _safe_datetime(raw_value: Any) -> datetime | None:
+    if raw_value is None:
+        return None
+    if isinstance(raw_value, datetime):
+        return raw_value
+    try:
+        raw_text = str(raw_value).replace("Z", "+00:00")
+        return datetime.fromisoformat(raw_text)
+    except Exception:
+        return None
+
+
+def _extract_domain(raw_url: Any) -> str:
+    if not raw_url:
+        return ""
+    try:
+        parsed = urlparse(str(raw_url))
+        return (parsed.netloc or "").lower()
+    except Exception:
+        return ""
+
+
+def _load_operator_override_map() -> dict[str, Any]:
+    raw_json = os.environ.get("LIVING_STORY_OPERATOR_OVERRIDES_JSON", "").strip()
+    if not raw_json:
+        return {}
+    try:
+        parsed = json.loads(raw_json)
+        if isinstance(parsed, dict):
+            return parsed
+    except Exception:
+        pass
+    return {}
+
+
+def _resolve_operator_override(
+    cluster_id: str,
+    story_id: str | None,
+    living_story_meta: dict[str, Any],
+) -> dict[str, Any] | None:
+    valid_actions = {"force_update", "force_hold", "force_republish"}
+
+    inline_override = living_story_meta.get("operator_override")
+    if isinstance(inline_override, dict):
+        action = str(inline_override.get("action", "")).strip().lower()
+        if action in valid_actions:
+            return {
+                "action": action,
+                "reason": str(inline_override.get("reason", "manual override")).strip(),
+                "source": "synth_metadata",
+            }
+
+    override_map = _load_operator_override_map()
+    candidates = [cluster_id]
+    if story_id:
+        candidates.append(story_id)
+
+    for candidate in candidates:
+        raw_entry = override_map.get(candidate)
+        if not raw_entry:
+            continue
+        if isinstance(raw_entry, str):
+            action = raw_entry.strip().lower()
+            if action in valid_actions:
+                return {
+                    "action": action,
+                    "reason": "env override",
+                    "source": "env_json",
+                }
+        elif isinstance(raw_entry, dict):
+            action = str(raw_entry.get("action", "")).strip().lower()
+            if action in valid_actions:
+                return {
+                    "action": action,
+                    "reason": str(raw_entry.get("reason", "env override")).strip(),
+                    "source": "env_json",
+                }
+
+    return None
+
+
+def _compute_story_diff(
+    prev_title: str | None,
+    next_title: str | None,
+    prev_body: str | None,
+    next_body: str | None,
+    prev_ids: list[int],
+    next_ids: list[int],
+) -> dict[str, Any]:
+    prev_title_norm = _normalize_text_for_diff(prev_title)
+    next_title_norm = _normalize_text_for_diff(next_title)
+    title_similarity = _text_similarity(prev_title_norm, next_title_norm)
+    body_similarity = _text_similarity(prev_body, next_body)
+
+    prev_set = set(prev_ids)
+    next_set = set(next_ids)
+    added = sorted(next_set - prev_set)
+    removed = sorted(prev_set - next_set)
+
+    return {
+        "title_similarity": round(title_similarity, 4),
+        "title_delta": round(1.0 - title_similarity, 4),
+        "body_similarity": round(body_similarity, 4),
+        "body_delta": round(1.0 - body_similarity, 4),
+        "previous_body_length": len(prev_body or ""),
+        "new_body_length": len(next_body or ""),
+        "body_length_delta": len(next_body or "") - len(prev_body or ""),
+        "sources_added": added,
+        "sources_removed": removed,
+        "source_delta_count": len(added) + len(removed),
+    }
+
+
+def _fetch_article_context_metrics(db_service, article_ids: list[int]) -> dict[str, Any]:
+    if not article_ids:
+        return {
+            "source_diversity_score": 0.0,
+            "source_count": 0,
+            "fact_quality_score": 0.5,
+            "recency_score": 0.0,
+        }
+
+    db_service.ensure_conn()
+    cursor = db_service.mb_conn.cursor()
+    format_strings = ",".join(["%s"] * len(article_ids))
+    cursor.execute(
+        f"""
+        SELECT source_id, source_url, created_at, factual_accuracy_score, fact_check_status
+        FROM articles
+        WHERE id IN ({format_strings})
+        """,
+        tuple(article_ids),
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+
+    unique_sources = set()
+    created_values = []
+    fact_scores = []
+
+    fact_status_map = {
+        "proven": 1.0,
+        "plausible": 0.8,
+        "verified": 0.8,
+        "unverified": 0.5,
+        "pending": 0.5,
+        "improbable": 0.2,
+        "disproven": 0.0,
+        "false": 0.0,
+    }
+
+    for source_id, source_url, created_at, factual_accuracy_score, fact_check_status in rows:
+        if source_id is not None:
+            unique_sources.add(f"sid:{source_id}")
+        else:
+            domain = _extract_domain(source_url)
+            if domain:
+                unique_sources.add(f"domain:{domain}")
+
+        if created_at:
+            created_values.append(created_at)
+
+        status_key = str(fact_check_status or "").strip().lower()
+        mapped_score = fact_status_map.get(status_key, 0.5)
+        factual_score = _safe_float(factual_accuracy_score, mapped_score)
+        fact_scores.append((mapped_score + factual_score) / 2.0)
+
+    source_count = len(unique_sources)
+    source_diversity_score = min(source_count / 3.0, 1.0)
+
+    if created_values:
+        newest = max(created_values)
+        age_seconds = max((datetime.now() - newest).total_seconds(), 0.0)
+        age_hours = age_seconds / 3600.0
+        recency_score = 1.0 / (1.0 + (age_hours / 24.0))
+    else:
+        recency_score = 0.0
+
+    fact_quality_score = sum(fact_scores) / len(fact_scores) if fact_scores else 0.5
+
+    return {
+        "source_diversity_score": round(source_diversity_score, 4),
+        "source_count": source_count,
+        "fact_quality_score": round(fact_quality_score, 4),
+        "recency_score": round(recency_score, 4),
+    }
+
+
+def _update_decision_telemetry(
+    telemetry: dict[str, Any],
+    action_label: str,
+    score_value: float,
+) -> dict[str, Any]:
+    updated = dict(telemetry or {})
+    decision_counts = dict(updated.get("decision_counts") or {})
+    decision_counts[action_label] = int(decision_counts.get(action_label, 0)) + 1
+    updated["decision_counts"] = decision_counts
+
+    score_window = int(os.environ.get("LIVING_STORY_SCORE_WINDOW", "50"))
+    scores_recent = list(updated.get("meaningful_scores_recent") or [])
+    scores_recent.append(round(score_value, 4))
+    updated["meaningful_scores_recent"] = scores_recent[-score_window:]
+
+    if updated["meaningful_scores_recent"]:
+        scores = updated["meaningful_scores_recent"]
+        updated["mean_meaningful_score"] = round(sum(scores) / len(scores), 4)
+        updated["median_meaningful_score"] = round(statistics.median(scores), 4)
+
+    return updated
+
+
+def record_living_story_publish_telemetry(db_service, story_id: str) -> None:
+    db_service.ensure_conn()
+    cursor = db_service.mb_conn.cursor()
+    cursor.execute(
+        """
+        SELECT synth_metadata, updated_at
+        FROM synthesized_articles
+        WHERE story_id = %s
+        LIMIT 1
+        """,
+        (story_id,),
+    )
+    row = cursor.fetchone()
+    if not row:
+        cursor.close()
+        return
+
+    raw_meta, updated_at = row
+    metadata = _load_json_dict(raw_meta)
+    living_story = metadata.get("living_story") if isinstance(metadata.get("living_story"), dict) else {}
+    telemetry = living_story.get("telemetry") if isinstance(living_story.get("telemetry"), dict) else {}
+
+    updated_dt = _safe_datetime(updated_at)
+    if updated_dt is None:
+        cursor.close()
+        return
+
+    now_dt = datetime.now()
+    latency_sec = max((now_dt - updated_dt).total_seconds(), 0.0)
+
+    latency_window = int(os.environ.get("LIVING_STORY_PUBLISH_LATENCY_WINDOW", "30"))
+    recent_latencies = list(telemetry.get("publish_latency_recent_seconds") or [])
+    recent_latencies.append(round(latency_sec, 2))
+    recent_latencies = recent_latencies[-latency_window:]
+
+    telemetry["publish_latency_recent_seconds"] = recent_latencies
+    telemetry["last_publish_latency_seconds"] = round(latency_sec, 2)
+    telemetry["mean_publish_latency_seconds"] = round(sum(recent_latencies) / len(recent_latencies), 2)
+    telemetry["median_publish_latency_seconds"] = round(statistics.median(recent_latencies), 2)
+    telemetry["last_published_at"] = now_dt.isoformat() + "Z"
+
+    living_story["telemetry"] = telemetry
+    metadata["living_story"] = living_story
+
+    cursor.execute(
+        """
+        UPDATE synthesized_articles
+        SET synth_metadata = %s
+        WHERE story_id = %s
+        """,
+        (json.dumps(metadata), story_id),
+    )
+    db_service.mb_conn.commit()
+    cursor.close()
+
+
 def upsert_living_story_record(
     db_service,
     cluster_id: str,
@@ -93,12 +369,18 @@ def upsert_living_story_record(
     major_delta = float(os.environ.get("LIVING_STORY_MAJOR_TEXT_DELTA", "0.12"))
     minor_delta = float(os.environ.get("LIVING_STORY_MINOR_TEXT_DELTA", "0.03"))
     min_new_articles = int(os.environ.get("LIVING_STORY_MIN_NEW_ARTICLES", "2"))
+    composite_threshold = float(os.environ.get("LIVING_STORY_COMPOSITE_THRESHOLD", "0.35"))
+    weight_text = float(os.environ.get("LIVING_STORY_WEIGHT_TEXT", "0.45"))
+    weight_source = float(os.environ.get("LIVING_STORY_WEIGHT_SOURCE", "0.20"))
+    weight_recency = float(os.environ.get("LIVING_STORY_WEIGHT_RECENCY", "0.15"))
+    weight_fact = float(os.environ.get("LIVING_STORY_WEIGHT_FACT", "0.15"))
+    weight_new = float(os.environ.get("LIVING_STORY_WEIGHT_NEW_ARTICLES", "0.05"))
 
     db_service.ensure_conn()
     cursor = db_service.mb_conn.cursor()
     cursor.execute(
         """
-        SELECT story_id, body, input_articles, synth_metadata, is_published
+        SELECT story_id, title, body, input_articles, synth_metadata, is_published
         FROM synthesized_articles
         WHERE cluster_id = %s
         ORDER BY created_at DESC, id DESC
@@ -118,6 +400,28 @@ def upsert_living_story_record(
                 "last_new_articles": len(normalized_ids),
                 "last_update_action": "created",
                 "updated_at": now_iso,
+                "telemetry": {
+                    "decision_counts": {"created": 1},
+                    "meaningful_scores_recent": [1.0],
+                    "mean_meaningful_score": 1.0,
+                    "median_meaningful_score": 1.0,
+                },
+                "last_diff": {
+                    "title_similarity": 0.0,
+                    "title_delta": 1.0,
+                    "body_similarity": 0.0,
+                    "body_delta": 1.0,
+                    "previous_body_length": 0,
+                    "new_body_length": len(body_text or ""),
+                    "body_length_delta": len(body_text or ""),
+                    "sources_added": normalized_ids,
+                    "sources_removed": [],
+                    "source_delta_count": len(normalized_ids),
+                },
+                "explainability": {
+                    "decision": "created",
+                    "reasons": ["first_story_for_cluster"],
+                },
             }
         }
         cursor.execute(
@@ -134,9 +438,10 @@ def upsert_living_story_record(
             "meaningful": True,
             "new_article_count": len(normalized_ids),
             "text_delta": 1.0,
+            "composite_score": 1.0,
         }
 
-    story_id, prev_body, prev_input_articles, prev_meta_raw, _is_published = existing
+    story_id, prev_title, prev_body, prev_input_articles, prev_meta_raw, _is_published = existing
     prev_ids = _safe_json_list(prev_input_articles)
     prev_ids_set = set(prev_ids)
     new_ids_set = set(normalized_ids)
@@ -144,25 +449,114 @@ def upsert_living_story_record(
     similarity = _text_similarity(prev_body, body_text)
     text_delta = 1.0 - similarity
 
+    context_metrics = _fetch_article_context_metrics(db_service, normalized_ids)
+    source_diversity_score = _safe_float(context_metrics.get("source_diversity_score"), 0.0)
+    recency_score = _safe_float(context_metrics.get("recency_score"), 0.0)
+    fact_quality_score = _safe_float(context_metrics.get("fact_quality_score"), 0.5)
+    new_article_score = min((new_article_count / max(min_new_articles, 1)), 1.0)
+
+    composite_score = (
+        (text_delta * weight_text)
+        + (source_diversity_score * weight_source)
+        + (recency_score * weight_recency)
+        + (fact_quality_score * weight_fact)
+        + (new_article_score * weight_new)
+    )
+
+    reasons = []
+    if text_delta >= major_delta:
+        reasons.append("major_text_delta")
+    if new_article_count > 0 and text_delta >= minor_delta:
+        reasons.append("minor_delta_with_new_articles")
+    if new_article_count >= min_new_articles:
+        reasons.append("new_articles_threshold")
+    if composite_score >= composite_threshold:
+        reasons.append("composite_threshold")
+
     meaningful = (
         text_delta >= major_delta
         or (new_article_count > 0 and text_delta >= minor_delta)
         or new_article_count >= min_new_articles
+        or composite_score >= composite_threshold
     )
 
     previous_meta = _load_json_dict(prev_meta_raw)
     living_story_meta = previous_meta.get("living_story", {}) if isinstance(previous_meta.get("living_story"), dict) else {}
+    override = _resolve_operator_override(cluster_id=cluster_id, story_id=story_id, living_story_meta=living_story_meta)
+
+    final_action = "updated" if meaningful else "tracked_noop"
+    if override:
+        override_action = override.get("action")
+        if override_action == "force_hold":
+            meaningful = False
+            final_action = "forced_hold"
+            reasons.append("operator_force_hold")
+        elif override_action == "force_update":
+            meaningful = True
+            final_action = "forced_update"
+            reasons.append("operator_force_update")
+        elif override_action == "force_republish":
+            meaningful = True
+            final_action = "forced_republish"
+            reasons.append("operator_force_republish")
+
     previous_revision = int(living_story_meta.get("revision", 1)) if living_story_meta else 1
     revision = previous_revision + 1 if meaningful else previous_revision
+
+    diff_summary = _compute_story_diff(
+        prev_title=prev_title,
+        next_title=title_text,
+        prev_body=prev_body,
+        next_body=body_text,
+        prev_ids=prev_ids,
+        next_ids=normalized_ids,
+    )
+
+    telemetry_prev = living_story_meta.get("telemetry") if isinstance(living_story_meta.get("telemetry"), dict) else {}
+    telemetry_next = _update_decision_telemetry(
+        telemetry=telemetry_prev,
+        action_label=final_action,
+        score_value=text_delta,
+    )
 
     next_meta = previous_meta.copy()
     next_meta["living_story"] = {
         "revision": revision,
         "input_fingerprint": fingerprint,
         "last_meaningful_score": round(text_delta, 4),
+        "last_composite_score": round(composite_score, 4),
         "last_new_articles": new_article_count,
-        "last_update_action": "updated" if meaningful else "tracked_noop",
+        "last_update_action": final_action,
         "updated_at": now_iso,
+        "telemetry": telemetry_next,
+        "last_diff": diff_summary,
+        "explainability": {
+            "decision": final_action,
+            "reasons": sorted(set(reasons)) if reasons else ["no_meaningful_change"],
+            "scores": {
+                "text_delta": round(text_delta, 4),
+                "composite_score": round(composite_score, 4),
+                "source_diversity_score": round(source_diversity_score, 4),
+                "recency_score": round(recency_score, 4),
+                "fact_quality_score": round(fact_quality_score, 4),
+                "new_article_score": round(new_article_score, 4),
+            },
+            "weights": {
+                "text": weight_text,
+                "source_diversity": weight_source,
+                "recency": weight_recency,
+                "fact_quality": weight_fact,
+                "new_articles": weight_new,
+            },
+            "thresholds": {
+                "major_delta": major_delta,
+                "minor_delta": minor_delta,
+                "min_new_articles": min_new_articles,
+                "composite_threshold": composite_threshold,
+            },
+            "source_count": int(context_metrics.get("source_count", 0)),
+            "override": override,
+        },
     }
 
     if meaningful:
@@ -195,10 +589,12 @@ def upsert_living_story_record(
 
     return {
         "story_id": story_id,
-        "action": "updated" if meaningful else "tracked_noop",
+        "action": final_action,
         "meaningful": meaningful,
         "new_article_count": new_article_count,
         "text_delta": round(text_delta, 4),
+        "composite_score": round(composite_score, 4),
+        "override": override,
     }
 
 class WorkflowPolicy(ABC):
@@ -872,13 +1268,15 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                     if upsert_result.get("action") == "tracked_noop":
                         logger.info(
                             f"ℹ️ Cluster {cid} produced no meaningful story delta "
-                            f"(text_delta={upsert_result.get('text_delta')}, new_articles={upsert_result.get('new_article_count')}). "
+                            f"(text_delta={upsert_result.get('text_delta')}, composite_score={upsert_result.get('composite_score')}, "
+                            f"new_articles={upsert_result.get('new_article_count')}). "
                             f"Tracked inputs without republish for story {upsert_result.get('story_id')}."
                         )
                     else:
                         logger.info(
                             f"✅ Upserted living story {upsert_result.get('story_id')} from cluster {cid} "
                             f"(action={upsert_result.get('action')}, text_delta={upsert_result.get('text_delta')}, "
+                            f"composite_score={upsert_result.get('composite_score')}, "
                             f"new_articles={upsert_result.get('new_article_count')})."
                         )
                 else:
@@ -1061,13 +1459,15 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                     if upsert_result.get("action") == "tracked_noop":
                         logger.info(
                             f"ℹ️ Heavy cluster {cid} produced no meaningful story delta "
-                            f"(text_delta={upsert_result.get('text_delta')}, new_articles={upsert_result.get('new_article_count')}). "
+                            f"(text_delta={upsert_result.get('text_delta')}, composite_score={upsert_result.get('composite_score')}, "
+                            f"new_articles={upsert_result.get('new_article_count')}). "
                             f"Tracked inputs without republish for story {upsert_result.get('story_id')}."
                         )
                     else:
                         logger.info(
                             f"✅ Successfully upserted living story {upsert_result.get('story_id')} from heavy cluster {cid} "
                             f"(action={upsert_result.get('action')}, text_delta={upsert_result.get('text_delta')}, "
+                            f"composite_score={upsert_result.get('composite_score')}, "
                             f"new_articles={upsert_result.get('new_article_count')})."
                         )
                     
@@ -1256,6 +1656,10 @@ class SynthesisToPublishingPolicy(WorkflowPolicy):
                 # 2. Update DB on Success
                 # We accept 'published' or 'published_locally'
                 if isinstance(result, dict) and "published" in result.get("status", ""):
+                    try:
+                        record_living_story_publish_telemetry(self.db_service, story_id)
+                    except Exception as telemetry_error:
+                        logger.warning(f"Failed to record publish telemetry for {story_id}: {telemetry_error}")
                     logger.info(f"✅ Published story {story_id}")
                 else:
                     err = result.get('error') if isinstance(result, dict) else str(result)
