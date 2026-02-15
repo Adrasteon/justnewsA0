@@ -5,10 +5,10 @@ This module provides utility functions for editorial workflow orchestration,
 content analysis, and multi-agent coordination.
 
 Key Functions:
-- assess_content_quality: BERT-based quality assessment
-- categorize_content: DistilBERT-based categorization
-- analyze_editorial_sentiment: RoBERTa-based sentiment analysis
-- generate_editorial_commentary: T5-based commentary generation
+- assess_content_quality: Qwen-based quality assessment
+- categorize_content: Qwen-based categorization
+- analyze_editorial_sentiment: Qwen-based sentiment analysis
+- generate_editorial_commentary: Qwen-based commentary generation
 - make_editorial_decision: Comprehensive editorial decision making
 - request_story_brief: Story brief generation
 - publish_story: Publishing coordination
@@ -66,14 +66,14 @@ async def process_editorial_request(
         )
 
         if operation_type == "quality":
-            result = engine.assess_content_quality_bert(content)
+            result = engine.assess_content_quality(content)
         elif operation_type == "categorize":
-            result = engine.categorize_content_distilbert(content)
+            result = engine.categorize_content(content)
         elif operation_type == "sentiment":
-            result = engine.analyze_editorial_sentiment_roberta(content)
+            result = engine.analyze_editorial_sentiment(content)
         elif operation_type == "commentary":
             context = kwargs.get("context", "news article")
-            result = engine.generate_editorial_commentary_t5(content, context)
+            result = engine.generate_editorial_commentary(content, context)
         elif operation_type == "decision":
             metadata = kwargs.get("metadata")
             result = engine.make_editorial_decision(content, metadata)
@@ -92,7 +92,7 @@ def assess_content_quality(
     content: str, metadata: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """
-    Assess content quality using BERT-based analysis.
+    Assess content quality using Qwen-based analysis.
 
     This function evaluates the overall quality of news content using
     advanced NLP models to determine publication readiness.
@@ -112,14 +112,14 @@ def assess_content_quality(
         }
 
     engine = get_chief_editor_engine()
-    return engine.assess_content_quality_bert(content)
+    return engine.assess_content_quality(content)
 
 
 def categorize_content(
     content: str, metadata: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """
-    Categorize content using DistilBERT-based classification.
+    Categorize content using Qwen-based classification.
 
     This function automatically categorizes news content into appropriate
     editorial categories for workflow routing.
@@ -139,14 +139,14 @@ def categorize_content(
         }
 
     engine = get_chief_editor_engine()
-    return engine.categorize_content_distilbert(content)
+    return engine.categorize_content(content)
 
 
 def analyze_editorial_sentiment(
     content: str, metadata: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """
-    Analyze editorial sentiment using RoBERTa-based analysis.
+    Analyze editorial sentiment using Qwen-based analysis.
 
     This function determines the editorial tone and sentiment of content
     to inform publication decisions.
@@ -166,14 +166,14 @@ def analyze_editorial_sentiment(
         }
 
     engine = get_chief_editor_engine()
-    return engine.analyze_editorial_sentiment_roberta(content)
+    return engine.analyze_editorial_sentiment(content)
 
 
 def generate_editorial_commentary(
     content: str, context: str = "news article"
 ) -> dict[str, Any]:
     """
-    Generate editorial commentary using T5-based generation.
+    Generate editorial commentary using Qwen-based generation.
 
     This function creates editorial notes and commentary for content
     to guide the editorial workflow.
@@ -189,13 +189,13 @@ def generate_editorial_commentary(
         return {"commentary": "", "error": "Empty content provided"}
 
     engine = get_chief_editor_engine()
-    commentary = engine.generate_editorial_commentary_t5(content, context)
+    commentary = engine.generate_editorial_commentary(content, context)
 
     return {
         "commentary": commentary,
         "context": context,
         "content_length": len(content),
-        "model": "t5",
+        "model": "qwen-14b",
     }
 
 
@@ -203,7 +203,7 @@ def make_editorial_decision(
     content: str, metadata: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """
-    Make comprehensive editorial decision using all 5 AI models.
+    Make comprehensive editorial decision using Qwen-based multi-task analysis.
 
     This function provides a complete editorial assessment including
     quality, categorization, sentiment, and workflow recommendations.
@@ -255,14 +255,10 @@ def request_story_brief(topic: str, scope: str) -> dict[str, Any]:
         # Use the engine for brief generation if available, otherwise fallback
         engine = get_chief_editor_engine()
 
-        # Generate brief using T5 if available, otherwise use template
-        if hasattr(engine, "generate_editorial_commentary_t5"):
-            brief_content = engine.generate_editorial_commentary_t5(
-                f"Generate a story brief for topic: {topic} with scope: {scope}",
-                "story brief",
-            )
-        else:
-            brief_content = f"Story brief for topic '{topic}' within scope '{scope}'."
+        brief_content = engine.generate_editorial_commentary(
+            f"Generate a story brief for topic: {topic} with scope: {scope}",
+            "story brief",
+        )
 
         brief = {
             "topic": topic,
@@ -506,12 +502,11 @@ async def health_check() -> dict[str, Any]:
                 f"Component {comp} is unhealthy" for comp in unhealthy_components
             ]
 
-        # Check model availability
-        loaded_models = sum(1 for status in model_status.values() if status is True)
-        if loaded_models < 3:  # Require at least 3 of 5 models
+        # Check primary model availability
+        if not model_status.get("qwen_adapter", False):
             health_status["overall_status"] = "degraded"
             health_status["issues"] = health_status.get("issues", []) + [
-                f"Only {loaded_models}/5 AI models loaded"
+                "Qwen adapter is disabled or unavailable"
             ]
 
         logger.info(f"🏥 Chief Editor health check: {health_status['overall_status']}")
