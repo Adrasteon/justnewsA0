@@ -13,6 +13,8 @@ import os
 import json
 import uuid
 import time
+import hashlib
+from difflib import SequenceMatcher
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
@@ -20,6 +22,184 @@ from common.observability import get_logger
 from database.utils.migrated_database_utils import create_database_service
 
 logger = get_logger(__name__)
+
+
+def _safe_json_list(raw_value: Any) -> list[int]:
+    if raw_value is None:
+        return []
+    try:
+        parsed = json.loads(raw_value) if isinstance(raw_value, str) else raw_value
+    except Exception:
+        return []
+    if not isinstance(parsed, list):
+        return []
+    out: list[int] = []
+    for item in parsed:
+        try:
+            out.append(int(item))
+        except Exception:
+            continue
+    return out
+
+
+def _normalize_text_for_diff(text: str | None) -> str:
+    if not text:
+        return ""
+    return " ".join(str(text).lower().split())
+
+
+def _text_similarity(left: str | None, right: str | None) -> float:
+    a = _normalize_text_for_diff(left)
+    b = _normalize_text_for_diff(right)
+    if not a and not b:
+        return 1.0
+    if not a or not b:
+        return 0.0
+    return SequenceMatcher(None, a, b).ratio()
+
+
+def _cluster_input_fingerprint(article_ids: list[int]) -> str:
+    normalized = sorted({int(x) for x in article_ids})
+    payload = ",".join(str(x) for x in normalized)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _load_json_dict(raw_value: Any) -> dict[str, Any]:
+    if isinstance(raw_value, dict):
+        return raw_value
+    if not raw_value:
+        return {}
+    try:
+        parsed = json.loads(raw_value)
+        if isinstance(parsed, dict):
+            return parsed
+    except Exception:
+        pass
+    return {}
+
+
+def upsert_living_story_record(
+    db_service,
+    cluster_id: str,
+    article_ids: list[int],
+    title_text: str,
+    body_text: str,
+) -> dict[str, Any]:
+    normalized_ids = sorted({int(x) for x in article_ids})
+    input_arts_json = json.dumps(normalized_ids)
+    fingerprint = _cluster_input_fingerprint(normalized_ids)
+    now_iso = datetime.utcnow().isoformat() + "Z"
+
+    major_delta = float(os.environ.get("LIVING_STORY_MAJOR_TEXT_DELTA", "0.12"))
+    minor_delta = float(os.environ.get("LIVING_STORY_MINOR_TEXT_DELTA", "0.03"))
+    min_new_articles = int(os.environ.get("LIVING_STORY_MIN_NEW_ARTICLES", "2"))
+
+    db_service.ensure_conn()
+    cursor = db_service.mb_conn.cursor()
+    cursor.execute(
+        """
+        SELECT story_id, body, input_articles, synth_metadata, is_published
+        FROM synthesized_articles
+        WHERE cluster_id = %s
+        ORDER BY created_at DESC, id DESC
+        LIMIT 1
+        """,
+        (cluster_id,),
+    )
+    existing = cursor.fetchone()
+
+    if not existing:
+        story_id = f"STORY-{uuid.uuid4().hex[:8]}"
+        synth_metadata = {
+            "living_story": {
+                "revision": 1,
+                "input_fingerprint": fingerprint,
+                "last_meaningful_score": 1.0,
+                "last_new_articles": len(normalized_ids),
+                "last_update_action": "created",
+                "updated_at": now_iso,
+            }
+        }
+        cursor.execute(
+            """
+            INSERT INTO synthesized_articles
+            (story_id, cluster_id, input_articles, title, body, created_at, updated_at, is_published, critique_status, synth_metadata)
+            VALUES (%s, %s, %s, %s, %s, NOW(), NOW(), 0, 'pending', %s)
+            """,
+            (story_id, cluster_id, input_arts_json, title_text, body_text, json.dumps(synth_metadata)),
+        )
+        return {
+            "story_id": story_id,
+            "action": "created",
+            "meaningful": True,
+            "new_article_count": len(normalized_ids),
+            "text_delta": 1.0,
+        }
+
+    story_id, prev_body, prev_input_articles, prev_meta_raw, _is_published = existing
+    prev_ids = _safe_json_list(prev_input_articles)
+    prev_ids_set = set(prev_ids)
+    new_ids_set = set(normalized_ids)
+    new_article_count = len(new_ids_set - prev_ids_set)
+    similarity = _text_similarity(prev_body, body_text)
+    text_delta = 1.0 - similarity
+
+    meaningful = (
+        text_delta >= major_delta
+        or (new_article_count > 0 and text_delta >= minor_delta)
+        or new_article_count >= min_new_articles
+    )
+
+    previous_meta = _load_json_dict(prev_meta_raw)
+    living_story_meta = previous_meta.get("living_story", {}) if isinstance(previous_meta.get("living_story"), dict) else {}
+    previous_revision = int(living_story_meta.get("revision", 1)) if living_story_meta else 1
+    revision = previous_revision + 1 if meaningful else previous_revision
+
+    next_meta = previous_meta.copy()
+    next_meta["living_story"] = {
+        "revision": revision,
+        "input_fingerprint": fingerprint,
+        "last_meaningful_score": round(text_delta, 4),
+        "last_new_articles": new_article_count,
+        "last_update_action": "updated" if meaningful else "tracked_noop",
+        "updated_at": now_iso,
+    }
+
+    if meaningful:
+        cursor.execute(
+            """
+            UPDATE synthesized_articles
+            SET title = %s,
+                body = %s,
+                input_articles = %s,
+                synth_metadata = %s,
+                updated_at = NOW(),
+                is_published = 0,
+                critique_status = 'pending',
+                critique_text = NULL
+            WHERE story_id = %s
+            """,
+            (title_text, body_text, input_arts_json, json.dumps(next_meta), story_id),
+        )
+    else:
+        cursor.execute(
+            """
+            UPDATE synthesized_articles
+            SET input_articles = %s,
+                synth_metadata = %s,
+                updated_at = NOW()
+            WHERE story_id = %s
+            """,
+            (input_arts_json, json.dumps(next_meta), story_id),
+        )
+
+    return {
+        "story_id": story_id,
+        "action": "updated" if meaningful else "tracked_noop",
+        "meaningful": meaningful,
+        "new_article_count": new_article_count,
+        "text_delta": round(text_delta, 4),
+    }
 
 class WorkflowPolicy(ABC):
     """Abstract base class for a workflow policy."""
@@ -358,7 +538,8 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
             query = """
                 SELECT id FROM articles 
                 WHERE fact_check_status IS NOT NULL 
-                  AND (input_cluster_ids IS NULL OR input_cluster_ids = '[]' OR input_cluster_ids = '')
+                      AND embedded = 1
+                      AND (input_cluster_ids IS NULL OR input_cluster_ids = '[]' OR input_cluster_ids = '')
                 ORDER BY created_at DESC
                 LIMIT %s
             """
@@ -669,31 +850,37 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                     title_prefix = "[Brief] " if is_brief else ""
                     title_text = f"{title_prefix}Synthesis Report: {cid}" 
                     
-                    # 3. Save to synthesized_articles
+                    # 3. Upsert canonical living story per cluster
                     self.db_service.ensure_conn()
                     cursor = self.db_service.mb_conn.cursor()
-                    
-                    # Columns: id, story_id, cluster_id, input_articles, title, body, created_at, is_published
-                    new_id = int(time.time() * 1000) # Simple numeric ID gen or use auto-increment if schema allows
-                    story_id = f"STORY-{uuid.uuid4().hex[:8]}"
-                    input_arts_json = json.dumps(article_ids)
-                    
-                    insert_query = """
-                        INSERT INTO synthesized_articles 
-                        (story_id, cluster_id, input_articles, title, body, created_at, is_published)
-                        VALUES (%s, %s, %s, %s, %s, NOW(), 0)
-                    """
-                    cursor.execute(insert_query, (story_id, cid, input_arts_json, title_text, body_text))
-                    
-                    # 4. Mark articles as synthesized
+                    upsert_result = upsert_living_story_record(
+                        db_service=self.db_service,
+                        cluster_id=cid,
+                        article_ids=article_ids,
+                        title_text=title_text,
+                        body_text=body_text,
+                    )
+
+                    # 4. Mark articles as synthesized (always, even when update is not meaningful)
                     format_strings = ','.join(['%s'] * len(article_ids))
                     update_query = f"UPDATE articles SET is_synthesized = 1 WHERE id IN ({format_strings})"
                     cursor.execute(update_query, tuple(article_ids))
                     
                     self.db_service.mb_conn.commit()
                     cursor.close()
-                    
-                    logger.info(f"✅ Created story {story_id} from cluster {cid}.")
+
+                    if upsert_result.get("action") == "tracked_noop":
+                        logger.info(
+                            f"ℹ️ Cluster {cid} produced no meaningful story delta "
+                            f"(text_delta={upsert_result.get('text_delta')}, new_articles={upsert_result.get('new_article_count')}). "
+                            f"Tracked inputs without republish for story {upsert_result.get('story_id')}."
+                        )
+                    else:
+                        logger.info(
+                            f"✅ Upserted living story {upsert_result.get('story_id')} from cluster {cid} "
+                            f"(action={upsert_result.get('action')}, text_delta={upsert_result.get('text_delta')}, "
+                            f"new_articles={upsert_result.get('new_article_count')})."
+                        )
                 else:
                     err = synthesis_result.get('error') if isinstance(synthesis_result, dict) else str(synthesis_result)
                     logger.error(f"Synthesis failed for cluster {cid}: {err}")
@@ -852,30 +1039,37 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                     body_text = synthesis_result.get("summary", "")
                     title_text = f"Synthesis Report: {cid}" 
                     
-                    # 3. Save to synthesized_articles
+                    # 3. Upsert canonical living story per cluster
                     self.db_service.ensure_conn()
                     cursor = self.db_service.mb_conn.cursor()
-                    
-                    new_id = int(time.time() * 1000)
-                    story_id = f"STORY-{uuid.uuid4().hex[:8]}"
-                    input_arts_json = json.dumps(article_ids)
-                    
-                    insert_query = """
-                        INSERT INTO synthesized_articles 
-                        (story_id, cluster_id, input_articles, title, body, created_at, is_published)
-                        VALUES (%s, %s, %s, %s, %s, NOW(), 0)
-                    """
-                    cursor.execute(insert_query, (story_id, cid, input_arts_json, title_text, body_text))
-                    
-                    # 4. Mark articles as synthesized
+                    upsert_result = upsert_living_story_record(
+                        db_service=self.db_service,
+                        cluster_id=cid,
+                        article_ids=article_ids,
+                        title_text=title_text,
+                        body_text=body_text,
+                    )
+
+                    # 4. Mark articles as synthesized (always, even when update is not meaningful)
                     format_strings = ','.join(['%s'] * len(article_ids))
                     update_query = f"UPDATE articles SET is_synthesized = 1 WHERE id IN ({format_strings})"
                     cursor.execute(update_query, tuple(article_ids))
                     
                     self.db_service.mb_conn.commit()
                     cursor.close()
-                    
-                    logger.info(f"✅ Successfully created story {story_id} from heavy cluster {cid}.")
+
+                    if upsert_result.get("action") == "tracked_noop":
+                        logger.info(
+                            f"ℹ️ Heavy cluster {cid} produced no meaningful story delta "
+                            f"(text_delta={upsert_result.get('text_delta')}, new_articles={upsert_result.get('new_article_count')}). "
+                            f"Tracked inputs without republish for story {upsert_result.get('story_id')}."
+                        )
+                    else:
+                        logger.info(
+                            f"✅ Successfully upserted living story {upsert_result.get('story_id')} from heavy cluster {cid} "
+                            f"(action={upsert_result.get('action')}, text_delta={upsert_result.get('text_delta')}, "
+                            f"new_articles={upsert_result.get('new_article_count')})."
+                        )
                     
                     # 5. Remove from heavy_clusters.log
                     self._remove_from_log(cid)
@@ -1062,16 +1256,6 @@ class SynthesisToPublishingPolicy(WorkflowPolicy):
                 # 2. Update DB on Success
                 # We accept 'published' or 'published_locally'
                 if isinstance(result, dict) and "published" in result.get("status", ""):
-                    self.db_service.ensure_conn()
-                    cursor = self.db_service.mb_conn.cursor()
-                    
-                    cursor.execute(
-                        "UPDATE synthesized_articles SET is_published = 1 WHERE story_id = %s",
-                        (story_id,)
-                    )
-                    
-                    self.db_service.mb_conn.commit()
-                    cursor.close()
                     logger.info(f"✅ Published story {story_id}")
                 else:
                     err = result.get('error') if isinstance(result, dict) else str(result)

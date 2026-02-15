@@ -379,15 +379,16 @@ def publish_story(story_id: str) -> dict[str, Any]:
 
                 # 4. Mark as Published
                 cursor.execute(
-                    "UPDATE synthesized_articles SET is_published = 1, published_at = %s WHERE story_id = %s",
+                    "UPDATE synthesized_articles SET is_published = 1, published_at = %s WHERE story_id = %s AND is_published = 0",
                     (now, story_id)
                 )
+                publish_marked = cursor.rowcount > 0
 
-        status = "published"
+        status = "published" if publish_marked else "published_already"
         result = {
             "status": status,
             "story_id": story_id,
-            "message": "Story published to website successfully",
+            "message": "Story published to website successfully" if publish_marked else "Story already published; publication refreshed successfully",
             "published_at": time.time(),
             "timestamp": time.time(),
             "model": "rule_based"
