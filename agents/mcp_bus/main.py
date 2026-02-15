@@ -148,7 +148,7 @@ KNOWN_AGENTS = {
     "reasoning": {"port": 8008, "env_var": "REASONING_AGENT_PORT"},
     "newsreader": {"port": 8009, "env_var": "NEWSREADER_PORT"},  # Crawler
     "vllm-service": {"port": 8010, "env_var": "VLLM_SERVICE_PORT"},
-    "analytics": {"port": 8011, "env_var": "ANALYTICS_AGENT_PORT"},
+    "analytics": {"port": 8012, "env_var": "ANALYTICS_AGENT_PORT"},
     "archive": {"port": 8012, "env_var": "ARCHIVE_AGENT_PORT"},
     "dashboard": {"port": 8013, "env_var": "DASHBOARD_PORT"},
     "gpu-orchestrator": {"port": 8014, "env_var": "GPU_ORCHESTRATOR_PORT"},

@@ -141,7 +141,7 @@ while [[ ${#} -gt 0 ]]; do
   esac
 done
 
-# Pre-flight: check ports 8000..8011 and attempt graceful shutdown if occupied
+# Pre-flight: check ports 8000..8025 and attempt graceful shutdown if occupied
 
 # Ensure MODEL_STORE_ROOT and per-agent caches point to the central data directory.
 # Be resilient to the mountpoint case (Data vs data) or missing external drive after reboots.

@@ -23,7 +23,7 @@ spec:
       - name: analytics
         image: justnews/analytics:latest
         ports:
-        - containerPort: 8011
+        - containerPort: 8012
           name: http
         envFrom:
         - configMapRef:
@@ -34,7 +34,7 @@ spec:
         - name: AGENT_NAME
           value: "analytics"
         - name: AGENT_PORT
-          value: "8011"
+          value: "8012"
         resources:
           limits:
             memory: 2Gi
@@ -72,7 +72,7 @@ spec:
   selector:
     app: analytics
   ports:
-  - port: 8011
+  - port: 8012
     targetPort: http
     name: http
   type: ClusterIP

@@ -5,7 +5,7 @@ LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
 
 # Ports and agent mapping must match start_services_daemon.sh
-AGENT_PORTS=(8000 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010 8011 8012 8013 8014)
+AGENT_PORTS=(8000 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010 8012 8013 8014)
 
 is_port_in_use() {
   local port="$1"

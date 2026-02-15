@@ -15,7 +15,7 @@ from common.observability import get_logger
 logger = get_logger(__name__)
 
 # Analytics service configuration
-ANALYTICS_SERVICE_URL = os.environ.get("ANALYTICS_SERVICE_URL", "http://localhost:8011")
+ANALYTICS_SERVICE_URL = os.environ.get("ANALYTICS_SERVICE_URL", "http://localhost:8012")
 ANALYTICS_SERVICE_TIMEOUT = int(os.environ.get("ANALYTICS_TIMEOUT", "30"))
 
 

@@ -36,7 +36,7 @@ class AnalyticsEngine:
         self._health_status = "initializing"
         self._analytics_engine = None
         self._mcp_bus_url = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
-        self._agent_port = int(os.environ.get("ANALYTICS_AGENT_PORT", "8011"))
+        self._agent_port = int(os.environ.get("ANALYTICS_AGENT_PORT", "8012"))
 
     async def initialize(self) -> bool:
         """

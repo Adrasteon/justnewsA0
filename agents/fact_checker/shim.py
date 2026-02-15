@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from typing import Any
@@ -62,7 +63,7 @@ class CircuitBreaker:
         self.open_until = 0.0
 
     def is_open(self) -> bool:
-        return asyncio.get_event_loop().time() < self.open_until
+        return time.monotonic() < self.open_until
 
     def record_success(self):
         self.failure_count = 0
@@ -71,7 +72,7 @@ class CircuitBreaker:
     def record_failure(self):
         self.failure_count += 1
         if self.failure_count >= self.failure_threshold:
-            self.open_until = asyncio.get_event_loop().time() + self.open_seconds
+            self.open_until = time.monotonic() + self.open_seconds
 
 
 _circuit_breaker = CircuitBreaker(CB_FAILURE_THRESHOLD, CB_OPEN_SEC)

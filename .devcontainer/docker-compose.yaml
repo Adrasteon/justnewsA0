@@ -42,7 +42,7 @@ services:
       - ../config:/app/config
       - justnews_deps:/deps
     ports:
-      - "8011:8000"
+      - "8003:8000"
     # Use default CMD from Dockerfile (port 8000) to align with HEALTHCHECK
     # command: uvicorn app.main:app --host 0.0.0.0 --port 8003
     restart: unless-stopped

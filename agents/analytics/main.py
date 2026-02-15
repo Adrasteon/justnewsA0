@@ -29,7 +29,7 @@ bootstrap_observability("analytics")
 logger = get_logger(__name__)
 
 # Environment variables
-ANALYTICS_AGENT_PORT = int(os.environ.get("ANALYTICS_AGENT_PORT", 8011))
+ANALYTICS_AGENT_PORT = int(os.environ.get("ANALYTICS_AGENT_PORT", 8012))
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
 
 ready = False

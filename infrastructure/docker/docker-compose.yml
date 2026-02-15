@@ -358,7 +358,7 @@ services:
       MCP_BUS_HOST: mcp-bus
       MCP_BUS_PORT: 8000
     ports:
-      - "8011:8011"
+      - "8012:8012"
     networks:
       - justnews-network
     restart: unless-stopped

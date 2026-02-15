@@ -144,7 +144,7 @@ justnews:
       name: analytics
       enabled: true
       replicas: 1
-      port: 8011
+      port: 8012
       gpuRequired: false
     archive:
       name: archive
