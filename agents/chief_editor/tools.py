@@ -38,10 +38,80 @@ _PLACEHOLDER_SYNTH_TITLE = re.compile(
 )
 
 
+def _strip_generic_lede(text: str) -> str:
+    patterns = [
+        r"^the article (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
+        r"^this article (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
+        r"^the report (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
+    ]
+    cleaned = text
+    for pattern in patterns:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
+    return cleaned.strip()
+
+
+def _trim_trailing_stopwords(text: str) -> str:
+    stopwords = {
+        "a",
+        "an",
+        "the",
+        "and",
+        "or",
+        "but",
+        "of",
+        "to",
+        "in",
+        "on",
+        "for",
+        "with",
+        "from",
+        "by",
+        "at",
+    }
+    words = text.split()
+    while words and words[-1].lower().strip(".,;:!?") in stopwords:
+        words.pop()
+    return " ".join(words).strip()
+
+
+def _capitalize_headline(text: str) -> str:
+    if not text:
+        return ""
+    first_char = text[0]
+    if first_char.isalpha():
+        return first_char.upper() + text[1:]
+    return text
+
+
+def _headlineize(raw_text: str, max_words: int = 12, max_len: int = 88) -> str:
+    normalized = re.sub(r"\s+", " ", (raw_text or "").strip())
+    normalized = re.sub(r"^[\-–—:\s]+", "", normalized)
+    if not normalized:
+        return ""
+
+    normalized = _strip_generic_lede(normalized)
+    if not normalized:
+        return ""
+
+    clause = re.split(r"[;|]\s+|\s+[–—-]\s+", normalized, maxsplit=1)[0].strip()
+    clause = re.split(r"(?<=\w),\s+(?=[A-Z])", clause, maxsplit=1)[0].strip()
+
+    words = clause.split()
+    if len(words) > max_words:
+        clause = " ".join(words[:max_words]).rstrip(" ,.;:-")
+
+    clause = _trim_trailing_stopwords(clause)
+    clause = clause.rstrip(" ,.;:-")
+    if len(clause) > max_len:
+        clause = clause[:max_len].rstrip(" ,.;:-")
+        clause = _trim_trailing_stopwords(clause)
+    return _capitalize_headline(clause)
+
+
 def _derive_publication_title(raw_title: str, summary: str, body: str) -> str:
     title = (raw_title or "").strip()
     if title and not _PLACEHOLDER_SYNTH_TITLE.match(title):
-        return title
+        return _headlineize(title)
 
     for candidate in (summary, body):
         normalized = re.sub(r"\s+", " ", (candidate or "").strip())
@@ -50,9 +120,7 @@ def _derive_publication_title(raw_title: str, summary: str, body: str) -> str:
         sentence = re.split(r"(?<=[.!?])\s+", normalized, maxsplit=1)[0].strip()
         if len(sentence) < 12:
             continue
-        if len(sentence) > 120:
-            sentence = sentence[:120].rstrip(" ,.;:-") + "…"
-        return sentence
+        return _headlineize(sentence)
 
     return "Developing Story"
 

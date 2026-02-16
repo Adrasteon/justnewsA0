@@ -27,16 +27,86 @@ from database.utils.migrated_database_utils import create_database_service
 logger = get_logger(__name__)
 
 
-def _normalize_headline_text(raw_text: Any, max_len: int = 120) -> str:
+def _normalize_headline_text(raw_text: Any, max_len: int = 88) -> str:
     if not raw_text:
         return ""
     cleaned = re.sub(r"\s+", " ", str(raw_text)).strip().strip('"\'')
     cleaned = re.sub(r"^(headline|title)\s*:\s*", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^[\-–—:\s]+", "", cleaned)
     if not cleaned:
         return ""
     if len(cleaned) > max_len:
-        cleaned = cleaned[:max_len].rstrip(" ,.;:-") + "…"
+        cleaned = cleaned[:max_len].rstrip(" ,.;:-")
     return cleaned
+
+
+def _strip_generic_lede(text: str) -> str:
+    patterns = [
+        r"^the article (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
+        r"^this article (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
+        r"^the report (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
+    ]
+    cleaned = text
+    for pattern in patterns:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
+    return cleaned.strip()
+
+
+def _trim_trailing_stopwords(text: str) -> str:
+    stopwords = {
+        "a",
+        "an",
+        "the",
+        "and",
+        "or",
+        "but",
+        "of",
+        "to",
+        "in",
+        "on",
+        "for",
+        "with",
+        "from",
+        "by",
+        "at",
+    }
+    words = text.split()
+    while words and words[-1].lower().strip(".,;:!?") in stopwords:
+        words.pop()
+    return " ".join(words).strip()
+
+
+def _capitalize_headline(text: str) -> str:
+    if not text:
+        return ""
+    first_char = text[0]
+    if first_char.isalpha():
+        return first_char.upper() + text[1:]
+    return text
+
+
+def _headlineize(raw_text: Any, max_words: int = 12, max_len: int = 88) -> str:
+    normalized = _normalize_headline_text(raw_text, max_len=180)
+    if not normalized:
+        return ""
+
+    normalized = _strip_generic_lede(normalized)
+    if not normalized:
+        return ""
+
+    clause = re.split(r"[;|]\s+|\s+[–—-]\s+", normalized, maxsplit=1)[0].strip()
+    clause = re.split(r"(?<=\w),\s+(?=[A-Z])", clause, maxsplit=1)[0].strip()
+
+    words = clause.split()
+    if len(words) > max_words:
+        clause = " ".join(words[:max_words]).rstrip(" ,.;:-")
+
+    clause = _trim_trailing_stopwords(clause)
+    if clause and not re.search(r"[.!?…]$", clause):
+        clause = clause.rstrip(" ,.;:-")
+    clause = _capitalize_headline(clause)
+
+    return _normalize_headline_text(clause, max_len=max_len)
 
 
 def _derive_story_title(
@@ -73,12 +143,12 @@ def _derive_story_title(
 
     disallowed = re.compile(r"^\s*(\[brief\]\s*)?synthesis report\s*:", re.IGNORECASE)
     for candidate in candidates:
-        headline = _normalize_headline_text(candidate)
+        headline = _headlineize(candidate)
         if not headline:
             continue
         if disallowed.match(headline):
             continue
-        if len(headline) < 12:
+        if len(headline) < 10:
             continue
         return headline
 

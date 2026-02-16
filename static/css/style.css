@@ -117,11 +117,18 @@ body.jn-body {
 }
 
 .jn-hero-title {
-	font-size: clamp(1.6rem, 3vw, 2.3rem);
+	font-size: clamp(1.35rem, 2.2vw, 1.8rem);
 	line-height: 1.24;
 	font-weight: 700;
 	letter-spacing: -0.015em;
 	margin-bottom: 0.65rem;
+}
+
+.jn-hero-title a {
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
 }
 
 .jn-hero-summary {
@@ -216,11 +223,24 @@ body.jn-body {
 	font-weight: 700;
 	line-height: 1.35;
 	margin-bottom: 0.55rem;
+	font-size: clamp(0.98rem, 1.15vw, 1.1rem);
+}
+
+.jn-story-title a {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
 }
 
 .jn-story-summary {
 	color: var(--jn-muted);
 	line-height: 1.48;
+	font-size: 0.94rem;
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
 }
 
 .jn-story-footer {
