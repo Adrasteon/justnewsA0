@@ -35,6 +35,22 @@ class Article(models.Model):
         return self.title
 
 
+class ArticleSlugRedirect(models.Model):
+    article = models.ForeignKey(
+        Article,
+        on_delete=models.CASCADE,
+        related_name="slug_redirects",
+    )
+    old_slug = models.CharField(max_length=255, unique=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.old_slug} -> {self.article.slug}"
+
+
 class PublishAudit(models.Model):
     """A record of publishing attempts made against this publisher instance.
 

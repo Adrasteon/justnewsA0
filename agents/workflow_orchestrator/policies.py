@@ -15,6 +15,7 @@ import uuid
 import time
 import hashlib
 import statistics
+import re
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
 from datetime import datetime, timedelta
@@ -24,6 +25,66 @@ from common.observability import get_logger
 from database.utils.migrated_database_utils import create_database_service
 
 logger = get_logger(__name__)
+
+
+def _normalize_headline_text(raw_text: Any, max_len: int = 120) -> str:
+    if not raw_text:
+        return ""
+    cleaned = re.sub(r"\s+", " ", str(raw_text)).strip().strip('"\'')
+    cleaned = re.sub(r"^(headline|title)\s*:\s*", "", cleaned, flags=re.IGNORECASE)
+    if not cleaned:
+        return ""
+    if len(cleaned) > max_len:
+        cleaned = cleaned[:max_len].rstrip(" ,.;:-") + "…"
+    return cleaned
+
+
+def _derive_story_title(
+    cluster_id: str,
+    synthesis_result: dict[str, Any] | None,
+    *,
+    is_brief: bool = False,
+) -> str:
+    result = synthesis_result if isinstance(synthesis_result, dict) else {}
+
+    candidates: list[Any] = []
+    qwen_payload = result.get("qwen")
+    if isinstance(qwen_payload, dict):
+        candidates.extend(
+            [
+                qwen_payload.get("headline"),
+                qwen_payload.get("title"),
+                qwen_payload.get("topic_title"),
+            ]
+        )
+
+    candidates.extend(
+        [
+            result.get("headline"),
+            result.get("title"),
+            result.get("topic_title"),
+            result.get("summary"),
+        ]
+    )
+
+    key_points = result.get("key_points")
+    if isinstance(key_points, list) and key_points:
+        candidates.append(key_points[0])
+
+    disallowed = re.compile(r"^\s*(\[brief\]\s*)?synthesis report\s*:", re.IGNORECASE)
+    for candidate in candidates:
+        headline = _normalize_headline_text(candidate)
+        if not headline:
+            continue
+        if disallowed.match(headline):
+            continue
+        if len(headline) < 12:
+            continue
+        return headline
+
+    if is_brief:
+        return f"Brief Update: {cluster_id}"
+    return f"Developing Story: {cluster_id}"
 
 
 def _safe_json_list(raw_value: Any) -> list[int]:
@@ -1469,10 +1530,12 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                 
                 if isinstance(synthesis_result, dict) and synthesis_result.get("success"):
                     body_text = synthesis_result.get("summary", "")
-                    # Mark if it is a brief in the title (optional, can also be a column if schema supports)
-                    is_brief = (len(texts) == 1)
-                    title_prefix = "[Brief] " if is_brief else ""
-                    title_text = f"{title_prefix}Synthesis Report: {cid}" 
+                    is_brief = len(texts) == 1
+                    title_text = _derive_story_title(
+                        cid,
+                        synthesis_result,
+                        is_brief=is_brief,
+                    )
                     
                     # 3. Upsert canonical living story per cluster
                     self.db_service.ensure_conn()
@@ -1663,7 +1726,11 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                 
                 if isinstance(synthesis_result, dict) and synthesis_result.get("success"):
                     body_text = synthesis_result.get("summary", "")
-                    title_text = f"Synthesis Report: {cid}" 
+                    title_text = _derive_story_title(
+                        cid,
+                        synthesis_result,
+                        is_brief=len(texts) == 1,
+                    )
                     
                     # 3. Upsert canonical living story per cluster
                     self.db_service.ensure_conn()

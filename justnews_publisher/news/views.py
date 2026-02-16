@@ -6,11 +6,11 @@ from html import escape
 
 from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseForbidden, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
-from .models import Article, PublishAudit
+from .models import Article, ArticleSlugRedirect, PublishAudit
 
 
 SOURCE_LINK_PATTERN = re.compile(r"https?://[^\s)\]]+", re.IGNORECASE)
@@ -124,7 +124,12 @@ def home(request):
 
 
 def article_detail(request, slug):
-    article = get_object_or_404(Article, slug=slug)
+    article = Article.objects.filter(slug=slug).first()
+    if article is None:
+        legacy = ArticleSlugRedirect.objects.select_related("article").filter(old_slug=slug).first()
+        if legacy and legacy.article_id:
+            return redirect("article_detail", slug=legacy.article.slug, permanent=True)
+        raise Http404("Article not found")
     trust_label, trust_class = _trust_band(float(article.score or 0.0))
     evidence_links = _extract_source_links(article.evidence or "")
     narrative_signals = _derive_narrative_signals(article)

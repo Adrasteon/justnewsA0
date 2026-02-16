@@ -31,6 +31,31 @@ from .chief_editor_engine import ChiefEditorConfig, ChiefEditorEngine
 
 logger = get_logger(__name__)
 
+
+_PLACEHOLDER_SYNTH_TITLE = re.compile(
+    r"^\s*(\[brief\]\s*)?synthesis\s+report\s*:\s*cl-[a-f0-9]+\s*$",
+    re.IGNORECASE,
+)
+
+
+def _derive_publication_title(raw_title: str, summary: str, body: str) -> str:
+    title = (raw_title or "").strip()
+    if title and not _PLACEHOLDER_SYNTH_TITLE.match(title):
+        return title
+
+    for candidate in (summary, body):
+        normalized = re.sub(r"\s+", " ", (candidate or "").strip())
+        if not normalized:
+            continue
+        sentence = re.split(r"(?<=[.!?])\s+", normalized, maxsplit=1)[0].strip()
+        if len(sentence) < 12:
+            continue
+        if len(sentence) > 120:
+            sentence = sentence[:120].rstrip(" ,.;:-") + "…"
+        return sentence
+
+    return "Developing Story"
+
 # Global engine instance
 _engine: ChiefEditorEngine | None = None
 
@@ -339,12 +364,14 @@ def publish_story(story_id: str) -> dict[str, Any]:
 
                 # 2. Extract and Transform
                 title = source.get('title') or "Untitled Story"
+                summary = source.get('summary') or ""
+                body = source.get('body') or ""
+                title = _derive_publication_title(title, summary, body)
+
                 # Create slug
                 slug_base = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower()).strip('-')
                 slug = f"{slug_base[:40]}-{story_id[:8]}" 
-                
-                summary = source.get('summary') or ""
-                body = source.get('body') or ""
+
                 evidence = source.get('input_articles') or "{}"
                 
                 category = "General"
