@@ -1,27 +1,66 @@
 {% extends "news/base.html" %}
-{% block title %}JustNews - {{ category }} News{% endblock %}
+{% block title %}JustNews - {{ category }}{% endblock %}
+{% block meta_description %}{% if invalid %}Invalid JustNews category page.{% else %}Latest {{ category }} news with evidence-backed reporting, trust indicators, and source transparency from JustNews.{% endif %}{% endblock %}
+{% block robots_content %}{% if invalid %}noindex, nofollow, noarchive{% else %}index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1{% endif %}{% endblock %}
+{% block og_title %}{% if invalid %}JustNews - Invalid Category{% else %}JustNews {{ category }} News{% endif %}{% endblock %}
+{% block og_description %}{% if invalid %}This category does not exist on JustNews.{% else %}Browse {{ category }} stories with trust and sourcing context.{% endif %}{% endblock %}
+{% block twitter_title %}{% if invalid %}JustNews - Invalid Category{% else %}JustNews {{ category }} News{% endif %}{% endblock %}
+{% block twitter_description %}{% if invalid %}This category does not exist on JustNews.{% else %}Browse {{ category }} stories with trust and sourcing context.{% endif %}{% endblock %}
+{% block extra_head %}
+{% if not invalid %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "JustNews {{ category }} News",
+    "url": "{{ request.scheme }}://{{ request.get_host }}{{ request.path }}",
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "JustNews",
+        "url": "{{ request.scheme }}://{{ request.get_host }}/"
+    }
+}
+</script>
+{% endif %}
+{% endblock %}
 {% block content %}
-<section class="category">
-    <h2>{{ category }} News</h2>
+<section class="jn-section">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+        <div>
+            <h1 class="jn-section-title mb-1">{{ category }} News</h1>
+            <p class="text-muted mb-0">Evidence-backed coverage and narrative context.</p>
+        </div>
+        <a href="/archive/" class="jn-link-subtle">View all stories</a>
+    </div>
+
     {% if invalid %}
-        <div class="card">
-            <div class="card-title">Invalid category: {{ category }}</div>
-        </div>
+        <div class="alert alert-warning">Invalid category: {{ category }}</div>
     {% else %}
-        {% for article in articles %}
-        <div class="card">
-            <div class="card-title">{{ article.title }}</div>
-            <div class="card-summary">{{ article.summary }}</div>
-            <div>{{ article.body|truncatewords:50 }}</div>
-            <div class="card-footer">
-                <a href="{% url 'article_detail' article.slug %}" class="button">Read More</a>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+            {% for item in articles %}
+            <div class="col">
+                <article class="jn-card jn-card-story h-100 position-relative">
+                    <div class="jn-meta-row mb-2">
+                        <span class="jn-chip">{{ item.article.category|title }}</span>
+                        <span class="jn-chip {{ item.trust_class }}">{{ item.trust_label }}</span>
+                    </div>
+                    <h2 class="jn-story-title h5">
+                        <a href="{% url 'article_detail' item.article.slug %}" class="stretched-link text-decoration-none text-dark">{{ item.article.title }}</a>
+                    </h2>
+                    <p class="jn-story-summary">{{ item.article.summary|truncatewords:28 }}</p>
+                    <div class="jn-story-footer mt-auto">
+                        <span class="jn-meta-muted"><i class="fa-regular fa-clock me-1"></i>{{ item.article.published_at|timesince }} ago</span>
+                        <span class="jn-meta-muted ms-3"><i class="fa-solid fa-link me-1"></i>{{ item.source_count }} sources</span>
+                        <span class="jn-meta-muted ms-3"><i class="fa-regular fa-file-lines me-1"></i>{{ item.read_time }} min</span>
+                    </div>
+                </article>
             </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-info">No articles found in this category.</div>
+            </div>
+            {% endfor %}
         </div>
-        {% empty %}
-        <div class="card">
-            <div class="card-title">No articles found in this category.</div>
-        </div>
-        {% endfor %}
     {% endif %}
 </section>
 {% endblock %}

@@ -100,6 +100,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Operations Guide](./operations/README.md) — General operational procedures
 
+- [Live SEO Launch Checklist](./operations/LIVE_SEO_LAUNCH_CHECKLIST.md) — Required pre-launch and post-launch SEO/crawler actions for the public website
+
 **Monitoring & Maintenance**:
 
 - [GPU Monitoring](./operations/gpu-monitoring.md) — GPU resource monitoring

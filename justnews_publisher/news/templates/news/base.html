@@ -5,33 +5,41 @@
     <meta charset="UTF-8">
     <title>{% block title %}JustNews{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{% block meta_description %}JustNews: evidence-aware reporting with trust and narrative context.{% endblock %}">
+    <meta name="robots" content="{% block robots_content %}index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1{% endblock %}">
+    <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    <meta property="og:site_name" content="JustNews">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}JustNews{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Evidence-aware reporting with trust and narrative context.{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{% block og_title_fallback %}JustNews{% endblock %}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{% block og_description_fallback %}Evidence-aware reporting with trust and narrative context.{% endblock %}{% endblock %}">
+    <link rel="alternate" type="application/rss+xml" title="JustNews Feed" href="{{ request.scheme }}://{{ request.get_host }}/feed.xml">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="{% static 'css/style.css' %}" rel="stylesheet">
-    <style>
-        .bbc-red { background-color: #B80000; }
-        .bbc-dark-red { background-color: #920000; }
-        .nav-link { color: white !important; font-weight: bold; border-right: 1px solid #920000; }
-        .nav-link:hover { background-color: #920000; text-decoration: underline white; }
-        .brand-text { font-family: sans-serif; font-weight: 700; font-size: 2rem; letter-spacing: -1px; }
-        .footer { border-top: 1px solid #ddd; margin-top: 2rem; padding: 2rem 0; background-color: #f8f9fa; }
-    </style>
+    {% block extra_head %}{% endblock %}
 </head>
-<body>
-    <header class="bbc-red text-white py-3">
-        <div class="container d-flex align-items-center justify-content-between">
+<body class="jn-body">
+    <header class="jn-header py-3">
+        <div class="container d-flex align-items-center justify-content-between flex-wrap gap-2">
             <div class="d-flex align-items-center">
-                <a href="/" class="text-white text-decoration-none me-3 brand-text">JustNews</a>
-                <span class="d-none d-md-block ms-3 border-start ps-3 border-light opacity-75">Trusted, accurate news. Evidence-based journalism.</span>
+                <a href="/" class="jn-brand me-3">JustNews</a>
+                <span class="d-none d-md-block ms-3 border-start ps-3 border-light-subtle opacity-75 text-light">
+                    Evidence-aware reporting with trust and narrative context.
+                </span>
             </div>
+            <span class="jn-header-chip">Live Editorial Intelligence</span>
         </div>
     </header>
 
-    <nav class="bbc-red sticky-top border-top border-white overflow-x-auto">
+    <nav class="jn-nav sticky-top overflow-x-auto">
         <div class="container">
-            <ul class="nav flex-nowrap">
+            <ul class="nav flex-nowrap jn-nav-list">
                 <li class="nav-item"><a class="nav-link px-3" href="/">Home</a></li>
                 <li class="nav-item"><a class="nav-link px-3" href="/world/">World</a></li>
                 <li class="nav-item"><a class="nav-link px-3" href="/uk/">UK</a></li>
@@ -47,15 +55,16 @@
         </div>
     </nav>
 
-    <main class="container my-4">
+    <main class="container my-4 jn-main">
         {% block content %}{% endblock %}
     </main>
-    <footer class="footer">
+    <footer class="jn-footer">
         <div class="container text-center text-muted">
             <p>&copy; 2026 JustNews. All rights reserved.</p>
         </div>
     </footer>
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

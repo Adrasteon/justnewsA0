@@ -6,6 +6,14 @@ A production-ready multi-agent news analysis system featuring GPU-accelerated pr
 
 **All detailed documentation has been moved to the `docs/` directory.**
 
+## 🔴 Live Launch SEO Actions (Do This When Going Public)
+
+Before pointing real traffic/crawlers to the production domain, complete:
+
+- [Live SEO Launch Checklist](docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md)
+
+This includes Search Console/Bing submission, live-domain sitemap/feed verification, recrawl requests, and post-launch crawl monitoring.
+
 - **Quick Start**: [docs/operations/STARTUP_CHECKLIST.md](docs/operations/STARTUP_CHECKLIST.md)
 - **Architecture**: [docs/architecture_overview.md](docs/architecture_overview.md)
 - **Workflow Orchestrator**: [docs/orchestrator/WORKFLOW_ORCHESTRATOR.md](docs/orchestrator/WORKFLOW_ORCHESTRATOR.md)
@@ -13,6 +21,7 @@ A production-ready multi-agent news analysis system featuring GPU-accelerated pr
 - **Diagnostic Tools**: [docs/tools/DIAGNOSTIC_SCRIPTS.md](docs/tools/DIAGNOSTIC_SCRIPTS.md)
 - **API Reference**: [docs/api/README.md](docs/api/README.md)
 - **Operations**: [docs/operations/README.md](docs/operations/README.md)
+- **Live SEO Launch Checklist**: [docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md](docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md)
 
 ## 🚀 Quick Start
 

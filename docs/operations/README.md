@@ -2,6 +2,10 @@
 
 ## Quick Links
 
+**🔴 Live Server Go-Live (SEO/Crawler Priority):**
+
+- [Live SEO Launch Checklist](./LIVE_SEO_LAUNCH_CHECKLIST.md) — Required actions before and during production launch to maximize crawl frequency and ranking readiness
+
 **Getting Started**:
 
 - [Setup Guide](./SETUP_GUIDE.md) — Complete end-to-end installation (Python, Vault, MariaDB, ChromaDB, systemd)

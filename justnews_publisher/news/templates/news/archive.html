@@ -1,20 +1,59 @@
 {% extends "news/base.html" %}
 {% block title %}JustNews - Archive{% endblock %}
+{% block meta_description %}JustNews archive: full publication history with trust indicators, evidence context, and categorized coverage for crawler discovery.{% endblock %}
+{% block og_title %}JustNews Archive{% endblock %}
+{% block og_description %}Explore the complete JustNews archive with evidence-aware reporting and trust context.{% endblock %}
+{% block twitter_title %}JustNews Archive{% endblock %}
+{% block twitter_description %}Explore the complete JustNews archive with evidence-aware reporting and trust context.{% endblock %}
+{% block extra_head %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "JustNews Archive",
+    "url": "{{ request.scheme }}://{{ request.get_host }}{{ request.path }}",
+    "isPartOf": {
+        "@type": "WebSite",
+        "name": "JustNews",
+        "url": "{{ request.scheme }}://{{ request.get_host }}/"
+    }
+}
+</script>
+{% endblock %}
 {% block content %}
-<section class="archive">
-    <h2>News Archive</h2>
-    <h1>Archive</h1>
-    {% for article in articles %}
-    <div class="card">
-        <div class="card-title">{{ article.title }}</div>
-        <div class="card-summary">{{ article.summary }}</div>
-        <div>{{ article.body|truncatewords:50 }}</div>
-        <div class="card-footer">
-            <a href="{% url 'article_detail' article.slug %}" class="button">Read More</a>
+<section class="jn-section">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+        <div>
+            <h1 class="jn-section-title mb-1">Archive</h1>
+            <p class="text-muted mb-0">Full publication history with trust and evidence indicators.</p>
         </div>
+        <a href="/" class="jn-link-subtle">Back to homepage</a>
     </div>
-    {% empty %}
-    <div>No archived articles found.</div>
-    {% endfor %}
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+        {% for item in articles %}
+        <div class="col">
+            <article class="jn-card jn-card-story h-100 position-relative">
+                <div class="jn-meta-row mb-2">
+                    <span class="jn-chip">{{ item.article.category|title }}</span>
+                    <span class="jn-chip {{ item.trust_class }}">{{ item.article.score|floatformat:2 }}</span>
+                </div>
+                <h2 class="jn-story-title h5">
+                    <a href="{% url 'article_detail' item.article.slug %}" class="stretched-link text-decoration-none text-dark">{{ item.article.title }}</a>
+                </h2>
+                <p class="jn-story-summary">{{ item.article.summary|truncatewords:30 }}</p>
+                <div class="jn-story-footer mt-auto">
+                    <span class="jn-meta-muted"><i class="fa-regular fa-calendar me-1"></i>{{ item.article.published_at|date:"M d, Y" }}</span>
+                    <span class="jn-meta-muted ms-3"><i class="fa-solid fa-link me-1"></i>{{ item.source_count }}</span>
+                    <span class="jn-meta-muted ms-3"><i class="fa-regular fa-file-lines me-1"></i>{{ item.read_time }} min</span>
+                </div>
+            </article>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">No archived articles found.</div>
+        </div>
+        {% endfor %}
+    </div>
 </section>
 {% endblock %}

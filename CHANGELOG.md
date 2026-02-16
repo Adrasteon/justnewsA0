@@ -3,6 +3,34 @@ last_updated: 2025-09-12 last_updated: 2025-11-01 ---
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-02-16 - **PUBLISHER UX + SEO DISCOVERABILITY OVERHAUL**
+
+### 📰 **Website Publishing Experience Upgrade**
+
+- **✅** Rebuilt publisher page templates for a premium, airy reading experience across home, archive, category, and article views.
+- **✅** Improved click-through UX with full-card story interaction patterns, clearer hierarchy, and stronger scanability.
+- **✅** Added analysis-rich article surfaces: trust bands, read-time, evidence links, narrative signals, publish metadata, and related coverage.
+- **✅** Added robust publisher styling system in `static/css/style.css` for cards, rails, chips, trust states, and responsive behavior.
+
+### 🔎 **Technical SEO & Crawlability Enhancements**
+
+- **✅** Added canonical/robots/OpenGraph/Twitter metadata architecture with page-specific overrides and duplicate-tag elimination.
+- **✅** Added article `NewsArticle` JSON-LD and section/homepage structured data (`CollectionPage`, `WebSite`, `Organization`).
+- **✅** Added crawler endpoints:
+  - `/robots.txt`
+  - `/sitemap.xml` (sitemap index)
+  - `/sitemap-static.xml`
+  - `/sitemap-articles-<page>.xml` (paged article sitemaps for scale)
+  - `/feed.xml` (RSS)
+- **✅** Added dynamic sitemap freshness/priority tuning and page-level splitting to improve crawl budget behavior at scale.
+- **✅** Added production go-live checklist and operator reminders:
+  - `docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md`
+  - Startup script banner reminders in `start_all_services.sh`.
+
+### 🛠️ **Stability Fixes Supporting Publisher Reliability**
+
+- **✅** Fixed invalid Django timezone configuration in `justnews_publisher/settings.py` (`TIME_ZONE="UTC"`) to prevent article page 500s during template datetime rendering.
+
 ## [Unreleased] - 2026-02-10 - **GPU OPTIMIZATION & WORKFLOW SCALING**
 
 ### 🚀 **Performance & Scalability Overhaul**

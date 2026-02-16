@@ -50,9 +50,11 @@ from .crawler_utils import (
     RateLimiter,
     RobotsChecker,
     create_crawling_performance_table,
+    get_active_sources,
     get_source_performance_history,
     get_sources_by_domain,
     initialize_connection_pool,
+    record_crawling_performance,
     record_paywall_detection,
 )
 
@@ -791,7 +793,10 @@ class CrawlerEngine:
         semaphore = asyncio.Semaphore(max(1, concurrent_sites))
         aggregation_lock = asyncio.Lock()
 
-        async def crawl_site_with_limit(site_config: SiteConfig):
+        async def crawl_site_with_limit(
+            site_config: SiteConfig,
+            site_budget: int | None = None,
+        ):
             nonlocal total_successful, total_candidates
             async with semaphore:
                 domain_key = site_config.domain or site_config.name or "unknown"
@@ -804,12 +809,27 @@ class CrawlerEngine:
                 site_details: list[dict[str, Any]] = []
                 seen_keys: set[str] = set()
                 remaining_budget: int | None = (
-                    max_articles_per_site if max_articles_per_site is not None else None
+                    site_budget
+                    if site_budget is not None
+                    else (
+                        max_articles_per_site
+                        if max_articles_per_site is not None
+                        else None
+                    )
                 )
                 exhaustion_reason: str | None = None
                 batches_run = 0
 
                 profile_override = _lookup_profile(site_config)
+                site_started_at = time.time()
+                strategy_used = (
+                    "crawl4ai_profiled"
+                    if (
+                        profile_override
+                        and profile_override.get("engine", "crawl4ai") != "generic"
+                    )
+                    else "generic"
+                )
 
                 dedupe_replacement_factor = max(
                     1, int(os.environ.get("UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR", "3"))
@@ -817,6 +837,52 @@ class CrawlerEngine:
                 max_candidate_request = max(
                     1, int(os.environ.get("UNIFIED_CRAWLER_MAX_REQUEST_CAP", "150"))
                 )
+                adaptive_depth_enabled = (
+                    str(os.environ.get("UNIFIED_CRAWLER_ADAPTIVE_DEPTH_ENABLED", "true"))
+                    .strip()
+                    .lower()
+                    in {"1", "true", "yes", "on"}
+                )
+                try:
+                    adaptive_initial_depth = max(
+                        0,
+                        int(
+                            os.environ.get(
+                                "UNIFIED_CRAWLER_ADAPTIVE_DEPTH_INITIAL", "2"
+                            )
+                        ),
+                    )
+                except (TypeError, ValueError):
+                    adaptive_initial_depth = 2
+                try:
+                    adaptive_fallback_depth = max(
+                        adaptive_initial_depth,
+                        int(
+                            os.environ.get(
+                                "UNIFIED_CRAWLER_ADAPTIVE_DEPTH_FALLBACK", "3"
+                            )
+                        ),
+                    )
+                except (TypeError, ValueError):
+                    adaptive_fallback_depth = max(adaptive_initial_depth, 3)
+                try:
+                    adaptive_max_batches = max(
+                        1,
+                        int(
+                            os.environ.get(
+                                "UNIFIED_CRAWLER_ADAPTIVE_DEPTH_MAX_BATCHES", "2"
+                            )
+                        ),
+                    )
+                except (TypeError, ValueError):
+                    adaptive_max_batches = 2
+                try:
+                    adaptive_min_fill_ratio = float(
+                        os.environ.get("UNIFIED_CRAWLER_ADAPTIVE_MIN_FILL_RATIO", "0.9")
+                    )
+                except (TypeError, ValueError):
+                    adaptive_min_fill_ratio = 0.9
+                adaptive_min_fill_ratio = max(0.0, min(adaptive_min_fill_ratio, 1.0))
 
                 def _candidate_request_cap() -> int:
                     base = (
@@ -827,6 +893,47 @@ class CrawlerEngine:
                     base = base or max_articles_per_site or 25
                     base = max(1, int(base))
                     return max(1, min(max_candidate_request, base * dedupe_replacement_factor))
+
+                def _build_adaptive_depth_profile(
+                    base_profile: dict[str, Any] | None,
+                ) -> tuple[dict[str, Any] | None, bool]:
+                    profile: dict[str, Any] = dict(base_profile or {})
+                    if not profile:
+                        profile = {"engine": "crawl4ai", "mode": "landing"}
+
+                    engine = str(profile.get("engine", "crawl4ai")).strip().lower()
+                    if engine == "generic":
+                        return None, False
+                    if engine not in {"", "crawl4ai"}:
+                        return None, False
+                    profile["engine"] = "crawl4ai"
+
+                    extra = dict(profile.get("extra") or {})
+                    raw_depth = extra.get("crawl_depth")
+                    try:
+                        current_depth = (
+                            max(0, int(raw_depth))
+                            if raw_depth is not None
+                            else adaptive_initial_depth
+                        )
+                    except (TypeError, ValueError):
+                        current_depth = adaptive_initial_depth
+
+                    target_depth = max(current_depth, adaptive_fallback_depth)
+                    if target_depth <= current_depth and raw_depth is not None:
+                        return None, False
+
+                    extra["crawl_depth"] = target_depth
+                    profile["extra"] = extra
+                    profile["follow_internal_links"] = True
+
+                    request_cap = _candidate_request_cap()
+                    try:
+                        existing_pages = int(profile.get("max_pages") or 0)
+                    except (TypeError, ValueError):
+                        existing_pages = 0
+                    profile["max_pages"] = max(existing_pages, request_cap)
+                    return profile, True
 
                 async def _ingest_with_replacements(filtered_batch: list[dict[str, Any]]) -> int:
                     """Ingest candidates in chunks, pulling replacements from the same batch when dedupe occurs."""
@@ -1023,6 +1130,99 @@ class CrawlerEngine:
                                 exhaustion_reason = "ingestion_stalled"
                                 continue
 
+                    target_articles = (
+                        site_budget
+                        if site_budget is not None
+                        else (max_articles_per_site or 25)
+                    )
+                    min_expected_articles = max(
+                        1, int(target_articles * adaptive_min_fill_ratio)
+                    )
+                    can_retry_depth = (
+                        adaptive_depth_enabled
+                        and site_ingested < min_expected_articles
+                        and (remaining_budget is None or remaining_budget > 0)
+                        and exhaustion_reason
+                        in {
+                            "no_candidates",
+                            "no_new_candidates",
+                            "ingestion_stalled",
+                            "max_batches_reached",
+                            "paywalls_only",
+                        }
+                    )
+
+                    if can_retry_depth:
+                        adaptive_profile, profile_changed = _build_adaptive_depth_profile(
+                            profile_override
+                        )
+                        if adaptive_profile and profile_changed:
+                            logger.info(
+                                "↗️ Adaptive depth fallback for %s (ingested=%s/%s, reason=%s, depth=%s)",
+                                site_config.name,
+                                site_ingested,
+                                target_articles,
+                                exhaustion_reason,
+                                (adaptive_profile.get("extra") or {}).get("crawl_depth"),
+                            )
+                            adaptive_batches = 0
+                            while adaptive_batches < adaptive_max_batches:
+                                if remaining_budget is not None and remaining_budget <= 0:
+                                    exhaustion_reason = "limit_reached"
+                                    break
+
+                                request_cap = _candidate_request_cap()
+                                raw_batch = await self._crawl_with_profile(
+                                    site_config,
+                                    adaptive_profile,
+                                    request_cap,
+                                )
+                                adaptive_batches += 1
+                                batches_run += 1
+                                self.performance_metrics["mode_usage"][
+                                    "crawl4ai_profiled"
+                                ] += 1
+
+                                filtered_batch: list[dict[str, Any]] = []
+                                for article in raw_batch or []:
+                                    key = (
+                                        article.get("url_hash")
+                                        or article.get("normalized_url")
+                                        or article.get("url")
+                                    )
+                                    if key and key in seen_keys:
+                                        continue
+                                    if key:
+                                        seen_keys.add(key)
+                                    filtered_batch.append(article)
+
+                                if not filtered_batch:
+                                    exhaustion_reason = "adaptive_no_new_candidates"
+                                    break
+
+                                filtered_batch, paywall_skipped = _filter_paywall_skips(
+                                    filtered_batch
+                                )
+                                if not filtered_batch:
+                                    if paywall_skipped:
+                                        exhaustion_reason = "adaptive_paywalls_only"
+                                    else:
+                                        exhaustion_reason = "adaptive_no_new_candidates"
+                                    break
+
+                                batch_new = await _ingest_with_replacements(filtered_batch)
+                                if remaining_budget is not None and remaining_budget <= 0:
+                                    exhaustion_reason = "limit_reached"
+                                    break
+                                if batch_new == 0:
+                                    exhaustion_reason = "adaptive_ingestion_stalled"
+                                    continue
+
+                            if site_ingested >= min_expected_articles and (
+                                remaining_budget is None or remaining_budget > 0
+                            ):
+                                exhaustion_reason = "adaptive_depth_target_reached"
+
                         if (
                             exhaustion_reason is None
                             and site_ingested == 0
@@ -1103,8 +1303,216 @@ class CrawlerEngine:
 
                     await self._cleanup_orphaned_processes()
 
+                try:
+                    record_crawling_performance(
+                        source_id=site_config.source_id,
+                        domain=site_config.domain or domain_key,
+                        strategy_used=strategy_used,
+                        articles_processed=site_ingested,
+                        duration_seconds=max(time.time() - site_started_at, 1e-6),
+                    )
+                except Exception as perf_exc:  # noqa: BLE001 - non-critical telemetry
+                    logger.debug(
+                        "Unable to record crawling performance for %s: %s",
+                        domain_key,
+                        perf_exc,
+                    )
+
         tasks = [crawl_site_with_limit(config) for config in site_configs]
         await asyncio.gather(*tasks, return_exceptions=True)
+
+        constrained_backfill_enabled = (
+            str(
+                os.environ.get(
+                    "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_ENABLED", "true"
+                )
+            )
+            .strip()
+            .lower()
+            in {"1", "true", "yes", "on"}
+        )
+        try:
+            constrained_max_articles = max(
+                1,
+                int(
+                    os.environ.get(
+                        "UNIFIED_CRAWLER_CONSTRAINED_MAX_ARTICLES_PER_SITE", "10"
+                    )
+                ),
+            )
+        except (TypeError, ValueError):
+            constrained_max_articles = 10
+        try:
+            constrained_backfill_max_sites = max(
+                1,
+                int(
+                    os.environ.get(
+                        "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_MAX_SITES", "12"
+                    )
+                ),
+            )
+        except (TypeError, ValueError):
+            constrained_backfill_max_sites = 12
+        try:
+            constrained_backfill_source_limit = max(
+                10,
+                int(
+                    os.environ.get(
+                        "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_SOURCE_LIMIT", "200"
+                    )
+                ),
+            )
+        except (TypeError, ValueError):
+            constrained_backfill_source_limit = 200
+
+        constrained_mode = (
+            constrained_backfill_enabled
+            and max_articles_per_site is not None
+            and int(max_articles_per_site) <= constrained_max_articles
+        )
+
+        if constrained_mode and site_configs:
+            target_total_articles = len(site_configs) * int(max_articles_per_site)
+            if total_successful < target_total_articles:
+                remaining_target = target_total_articles - total_successful
+                attempted_domains = {
+                    (cfg.domain or cfg.name or "").strip().lower()
+                    for cfg in site_configs
+                    if (cfg.domain or cfg.name)
+                }
+                try:
+                    constrained_backfill_max_zero_streak = max(
+                        1,
+                        int(
+                            os.environ.get(
+                                "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_MAX_ZERO_STREAK",
+                                "4",
+                            )
+                        ),
+                    )
+                except (TypeError, ValueError):
+                    constrained_backfill_max_zero_streak = 4
+
+                priority_domains = [
+                    d.strip().lower()
+                    for d in os.environ.get(
+                        "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_PRIORITY_DOMAINS",
+                        "motherjones.com,slate.com,psychologytoday.com,news.yale.edu,news.berkeley.edu,time.com,elpais.com",
+                    ).split(",")
+                    if d.strip()
+                ]
+                priority_rank = {
+                    domain: (len(priority_domains) - idx)
+                    for idx, domain in enumerate(priority_domains)
+                }
+
+                def _source_health_score(source_row: dict[str, Any]) -> float:
+                    domain_value = str(source_row.get("domain") or "").strip().lower()
+                    heuristic = 0.0
+                    if domain_value:
+                        if domain_value in priority_rank:
+                            heuristic += 100.0 + priority_rank[domain_value]
+                        if domain_value.endswith(".edu") or domain_value.endswith(".gov"):
+                            heuristic -= 3.0
+                        news_tokens = (
+                            "news",
+                            "times",
+                            "post",
+                            "tribune",
+                            "journal",
+                            "guardian",
+                            "herald",
+                            "observer",
+                        )
+                        if any(token in domain_value for token in news_tokens):
+                            heuristic += 1.0
+
+                    identifier = source_row.get("id") or source_row.get("domain")
+                    history = get_source_performance_history(identifier, limit=3)
+                    if not history:
+                        return heuristic
+                    processed = [
+                        max(0.0, float(item.get("articles_processed") or 0.0))
+                        for item in history
+                    ]
+                    speeds = [
+                        max(0.0, float(item.get("articles_per_second") or 0.0))
+                        for item in history
+                    ]
+                    avg_processed = sum(processed) / len(processed) if processed else 0.0
+                    avg_speed = sum(speeds) / len(speeds) if speeds else 0.0
+                    return heuristic + avg_processed + avg_speed
+
+                source_candidates = get_active_sources(
+                    limit=constrained_backfill_source_limit,
+                    include_paywalled=False,
+                )
+                ranked_candidates: list[tuple[float, int, dict[str, Any]]] = []
+                for idx, source in enumerate(source_candidates):
+                    domain = str(source.get("domain") or "").strip().lower()
+                    if not domain or domain in attempted_domains:
+                        continue
+                    ranked_candidates.append((_source_health_score(source), idx, source))
+
+                ranked_candidates.sort(key=lambda item: (item[0], -item[1]), reverse=True)
+
+                backfill_used = 0
+                zero_yield_streak = 0
+                for score, _idx, source in ranked_candidates:
+                    if total_successful >= target_total_articles:
+                        break
+                    if backfill_used >= constrained_backfill_max_sites:
+                        break
+                    if zero_yield_streak >= constrained_backfill_max_zero_streak:
+                        logger.info(
+                            "🔁 Constrained backfill early stop after %s consecutive zero-yield domains",
+                            zero_yield_streak,
+                        )
+                        break
+
+                    try:
+                        replacement_config = SiteConfig(source)
+                    except Exception as exc:  # noqa: BLE001
+                        logger.debug("Skipping backfill source due to config error: %s", exc)
+                        continue
+
+                    domain_key = (
+                        replacement_config.domain
+                        or replacement_config.name
+                        or str(source.get("domain") or "")
+                    ).strip().lower()
+                    if not domain_key or domain_key in attempted_domains:
+                        continue
+
+                    attempted_domains.add(domain_key)
+                    remaining_target = max(target_total_articles - total_successful, 0)
+                    if remaining_target <= 0:
+                        break
+
+                    site_budget = min(int(max_articles_per_site), max(1, remaining_target))
+                    logger.info(
+                        "🔁 Constrained backfill: adding domain %s (score=%.3f, budget=%s, remaining_target=%s)",
+                        domain_key,
+                        score,
+                        site_budget,
+                        remaining_target,
+                    )
+                    before_total = total_successful
+                    await crawl_site_with_limit(replacement_config, site_budget=site_budget)
+                    after_total = total_successful
+                    if after_total > before_total:
+                        zero_yield_streak = 0
+                    else:
+                        zero_yield_streak += 1
+                    backfill_used += 1
+
+                if backfill_used > 0:
+                    logger.info(
+                        "🔁 Constrained backfill summary: added_sites=%s total_ingested=%s target=%s",
+                        backfill_used,
+                        total_successful,
+                        target_total_articles,
+                    )
 
         total_time = time.time() - start_time
         total_ingested = ingestion_totals["new_articles"]

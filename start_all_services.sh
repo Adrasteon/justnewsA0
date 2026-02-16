@@ -894,6 +894,13 @@ print_docker_instructions() {
   echo "  Then run this script with --skip-db"
 }
 
+print_live_seo_reminder() {
+  log_warn "LIVE SERVER SEO NOTE (Read before public launch):"
+  echo "  • Checklist: docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md"
+  echo "  • Required at go-live: submit https://<domain>/sitemap.xml and https://<domain>/feed.xml"
+  echo "  • Verify production: /robots.txt, /sitemap.xml, /sitemap-static.xml, /sitemap-articles-1.xml, /feed.xml"
+}
+
 # ============================================================================
 # MAIN
 # ============================================================================
@@ -903,6 +910,7 @@ main() {
 
   log_info "JustNews Service Startup Script"
   log_info "Repository: ${PROJECT_ROOT}"
+  print_live_seo_reminder
   echo
 
   # Register cleanup handler
@@ -945,6 +953,8 @@ main() {
 
   # Print summary
   print_status_summary
+  echo
+  print_live_seo_reminder
 
   return ${exit_code}
 }

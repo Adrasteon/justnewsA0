@@ -1343,16 +1343,18 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                 except:
                     continue
             
-            # Filter: 
+            # Filter:
             # 1. Count >= 2
             # 2. Maturity: Last article > 20 mins ago
-            # 3. Stale Snapshot: Count == 1 AND Age > 18 hours -> Synthesize as Brief
+            # 3. Optional singleton processing via env flag
+            # 4. Stale Snapshot fallback: Count == 1 AND Age > 18 hours -> Synthesize as Brief
             valid_counts = {}
             now = datetime.now()
             # Use 20 minutes maturity window for active clusters
             maturity_window = timedelta(minutes=20)
             # Use 18 hours for stale singletons (Briefs)
             stale_window = timedelta(hours=18)
+            process_singletons = _env_bool("PROCESS_SINGLETON_CLUSTERS", default=False)
             
             for cid, count in counts.items():
                 last_ts = latest_activity.get(cid)
@@ -1364,12 +1366,20 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                          if age > maturity_window:
                              valid_counts[cid] = count
                     elif count == 1:
+                         if process_singletons:
+                             valid_counts[cid] = count
+                             continue
                          # Stale Brief Rule
                          if age > stale_window:
                              valid_counts[cid] = count
             
-            # Pick the largest clusters first
-            sorted_clusters = sorted(valid_counts.items(), key=lambda x: x[1], reverse=True)
+            # Prioritize freshest clusters first, then larger clusters.
+            # This prevents newer pipeline output from being starved behind older backlog.
+            sorted_clusters = sorted(
+                valid_counts.items(),
+                key=lambda x: (latest_activity.get(x[0], datetime.min), x[1]),
+                reverse=True,
+            )
             cluster_ids = [c[0] for c in sorted_clusters[:limit]]
             
         except Exception as e:
