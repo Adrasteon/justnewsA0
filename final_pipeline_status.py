@@ -6,27 +6,59 @@ import os
 import sys
 import time
 
+import mysql.connector
+from dotenv import load_dotenv
+
 sys.path.insert(0, os.getcwd())
 os.environ['JUSTNEWS_DISABLE_TEST_DB_FALLBACK'] = '1'
 
-from database.utils.migrated_database_utils import create_database_service
+load_dotenv('/app/global.env')
+
+
+def get_db_conn():
+    host = os.getenv('MARIADB_HOST', 'mariadb')
+    port = int(os.getenv('MARIADB_PORT', 3306))
+    user = os.getenv('MARIADB_USER', 'justnews')
+    password = os.getenv('MARIADB_PASSWORD', 'dev_justnews_password')
+    database = os.getenv('MARIADB_DB', 'justnews')
+    return mysql.connector.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+    )
 
 def check_status():
-    db = create_database_service()
-    db.ensure_conn()
-    conn = db.get_connection()
+    conn = get_db_conn()
     cursor = conn.cursor()
     
     print("\n" + "="*80)
     print("JUSTNEWS PIPELINE - FINAL STATUS REPORT")
     print("="*80)
     
-    # Crawling metrics
-    cursor.execute("SELECT COUNT(*) FROM crawler_tasks")
-    crawl_tasks = cursor.fetchone()[0]
-    
-    cursor.execute("SELECT COUNT(*) FROM crawler_task_articles")
-    found_articles = cursor.fetchone()[0]
+    # Crawling metrics (support both legacy and current schemas)
+    cursor.execute("SHOW TABLES LIKE 'crawler_tasks'")
+    has_crawler_tasks = cursor.fetchone() is not None
+    cursor.execute("SHOW TABLES LIKE 'crawler_task_articles'")
+    has_crawler_task_articles = cursor.fetchone() is not None
+
+    crawl_tasks_legacy = 0
+    if has_crawler_tasks:
+        cursor.execute("SELECT COUNT(*) FROM crawler_tasks")
+        crawl_tasks_legacy = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM crawler_jobs")
+    crawl_tasks_jobs = cursor.fetchone()[0]
+    crawl_tasks = max(crawl_tasks_legacy, crawl_tasks_jobs)
+
+    found_articles_legacy = 0
+    if has_crawler_task_articles:
+        cursor.execute("SELECT COUNT(*) FROM crawler_task_articles")
+        found_articles_legacy = cursor.fetchone()[0]
+    # Best available proxy in newer flows
+    cursor.execute("SELECT COUNT(*) FROM articles")
+    found_articles_current = cursor.fetchone()[0]
+    found_articles = max(found_articles_legacy, found_articles_current)
     
     # Ingestion metrics
     cursor.execute("SELECT COUNT(*) FROM articles")
@@ -36,12 +68,15 @@ def check_status():
     cursor.execute("SELECT COUNT(*) FROM embeddings_document")
     embeddings = cursor.fetchone()[0]
     
-    # Check articles table schema
+    # Check articles table schema readiness
     cursor.execute("""
         SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS 
-        WHERE TABLE_NAME='articles' AND COLUMN_NAME='last_crawl_at'
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME='articles'
+          AND COLUMN_NAME IN ('analyzed', 'embedded', 'fact_check_status', 'input_cluster_ids')
     """)
-    has_last_crawl_at = cursor.fetchone()[0]
+    schema_feature_count = cursor.fetchone()[0]
+    schema_ready = schema_feature_count >= 4
     
     print(f"\n📊 CRAWLING PHASE:")
     print(f"   Crawl Tasks:              {crawl_tasks:>8}")
@@ -49,7 +84,7 @@ def check_status():
     
     print(f"\n📰 INGESTION PHASE:")
     print(f"   Articles Ingested:        {ingested_articles:>8}")
-    print(f"   Schema Ready:             {'✅ YES' if has_last_crawl_at else '❌ NO'}")
+    print(f"   Schema Ready:             {'✅ YES' if schema_ready else '❌ NO'}")
     
     print(f"\n🔍 EMBEDDINGS PHASE:")
     print(f"   Documents Embedded:       {embeddings:>8}")

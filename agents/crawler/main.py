@@ -36,8 +36,10 @@ from .job_store import (
     create_job,
     get_job,
     recover_running_jobs,
+    set_cancelled,
     set_error,
     set_result,
+    update_status,
 )
 from .job_store import list_jobs as jobstore_list_jobs
 from .tools import get_crawler_info
@@ -103,6 +105,10 @@ async def run_crawl_background(
     try:
         cancel_requested_jobs.discard(job_id)
         crawl_jobs[job_id]["status"] = "running"
+        try:
+            update_status(job_id, "running")
+        except Exception:
+            pass
         logger.info(f"Starting background crawl task {job_id} for domains: {domains}")
         async with CrawlerEngine() as crawler:
             await crawler._load_ai_models()
@@ -115,7 +121,7 @@ async def run_crawl_background(
         if job_id in cancel_requested_jobs:
             crawl_jobs[job_id] = {"status": "cancelled"}
             try:
-                set_error(job_id, "cancelled by user")
+                set_cancelled(job_id, "cancelled by user")
             except Exception:
                 pass
             return
@@ -133,7 +139,7 @@ async def run_crawl_background(
         if job_id in cancel_requested_jobs:
             crawl_jobs[job_id] = {"status": "cancelled"}
             try:
-                set_error(job_id, "cancelled by user")
+                set_cancelled(job_id, "cancelled by user")
             except Exception:
                 pass
             return
@@ -315,7 +321,7 @@ async def stop_job(job_id: str):
             logger.debug(f"Task for job {job_id} cancelled")
 
         try:
-            set_error(job_id, "cancelled by user")
+            set_cancelled(job_id, "cancelled by user")
         except Exception:
             # Best-effort fallback to in-memory status
             if job_id in crawl_jobs:
@@ -330,7 +336,7 @@ async def stop_job(job_id: str):
             # Only update if job is not already completed/failed
             current = job.get("status")
             if current in {"pending", "running"}:
-                set_error(job_id, "cancelled by user")
+                set_cancelled(job_id, "cancelled by user")
                 return {"status": "cancelled", "job_id": job_id}
             return {"status": current, "job_id": job_id}
     except Exception:
@@ -342,7 +348,7 @@ async def stop_job(job_id: str):
         if status in ["running", "pending"]:
             crawl_jobs[job_id]["status"] = "cancelled"
             try:
-                set_error(job_id, "cancelled by user")
+                set_cancelled(job_id, "cancelled by user")
             except Exception:
                 pass
             return {"status": "cancelled", "job_id": job_id}
