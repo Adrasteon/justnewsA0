@@ -1,8 +1,8 @@
-# Service Dependencies & Docker-Compose Configuration Guide
+# Service Dependencies & Docker Compose Configuration Guide
 
 **Phase 1.4 Deliverable: Service Dependency Documentation**
 
-This guide documents the service startup order, dependencies, and recommended docker-compose enhancements.
+This guide documents the service startup order, dependencies, and recommended Docker Compose enhancements.
 
 ---
 
@@ -51,13 +51,13 @@ mariadb:
   volumes:
     - mariadb_data:/var/lib/mysql
 
-# ChromaDB (v0.4.18 - pinned for stability)
+# ChromaDB (latest image, API route may be v1 or v2)
 chromadb:
-  image: chromadb/chroma:0.4.18
+  image: chromadb/chroma:latest
   ports:
     - "3307:8000"
   healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+    test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v2/heartbeat || curl -f http://localhost:8000/api/v1/heartbeat"]
     interval: 10s
     timeout: 5s
     retries: 3
@@ -101,7 +101,7 @@ services:
       - "service.type=infrastructure"
       - "service.role=optional"
       - "service.resource.type=vector-store"
-      - "service.health.endpoint=/api/v1/heartbeat"
+      - "service.health.endpoint=/api/v2/heartbeat (fallback /api/v1/heartbeat)"
   
   vllm:
     labels:
@@ -118,7 +118,7 @@ services:
 ```yaml
 chromadb:
   healthcheck:
-    test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+    test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v2/heartbeat || curl -f http://localhost:8000/api/v1/heartbeat"]
     interval: 10s
     timeout: 5s
     retries: 3
@@ -185,10 +185,10 @@ services:
 ```
 Time    Event
 ────────────────────────────────────────────────────────
-  0s    docker-compose up -d
+  0s    docker compose up -d
   0-1s  All containers created and started simultaneously
   1-5s  MariaDB initializes schema (first run)
-  1-2s  ChromaDB loads in-memory store
+  1-2s  ChromaDB initializes (loads persisted store if present)
   1-120s vLLM downloads model from HuggingFace (first run)
   5-30s  Django migrations run (waits for MariaDB)
   30-60s post-create.sh completes tasks
@@ -198,9 +198,9 @@ Time    Event
   Subsequent starts (cache warm): 30-60 seconds total
 ```
 
-### Expected Output in `docker-compose logs`
+### Expected Output in `docker compose logs`
 
-**Healthy startup (docker-compose logs -f):**
+**Healthy startup (docker compose logs -f):**
 
 ```
 mariadb       | 2026-02-08 14:50:01+00:00 [Note] InnoDB: buffer pool size = 128MB
@@ -226,10 +226,10 @@ app           | [✓ SUCCESS] Dev Container Initialization Complete!
 | Step | Check | Command | Expected | Action if Failed |
 |------|-------|---------|----------|------------------|
 | 1 | MariaDB socket | `python .devcontainer/diagnostic.py` | `✓ connected` | Wait 10s, retry |
-| 2 | ChromaDB socket | `python .devcontainer/diagnostic.py` | `✓ connected` | Restart: `docker-compose restart chromadb` |
-| 3 | ChromaDB health | `curl http://chromadb:3307/api/v1/heartbeat` | HTTP 200 | Check logs: `docker-compose logs chromadb` |
+| 2 | ChromaDB socket | `python .devcontainer/diagnostic.py` | `✓ connected` | Restart: `docker compose restart chromadb` |
+| 3 | ChromaDB health | `curl http://chromadb:8000/api/v2/heartbeat \|\| curl http://chromadb:8000/api/v1/heartbeat` | HTTP 200 | Check logs: `docker compose logs chromadb` |
 | 4 | vLLM socket | `python .devcontainer/diagnostic.py` | `✓ connected` or ⚠ | Might still be loading (wait 2-5 min) |
-| 5 | vLLM models | `curl http://vllm:8001/v1/models` | Model list | Check: `docker-compose logs vllm -f` |
+| 5 | vLLM models | `curl http://vllm:8001/v1/models` | Model list | Check: `docker compose logs vllm -f` |
 | 6 | Django migrations | `python manage.py showmigrations` | No pending | Rerun: `python manage.py migrate --fake-initial` |
 | 7 | Full pipeline | `python tests/integration/test_devcontainer.py` | All pass | Review: `.devcontainer/SERVICE_STARTUP.md` |
 
@@ -260,56 +260,57 @@ app           | [✓ SUCCESS] Dev Container Initialization Complete!
 
 ```bash
 # Check for data corruption
-docker-compose logs mariadb -n 100 | grep -i error
+docker compose logs mariadb -n 100 | grep -i error
 
 # If corrupted, reset and rebuild
-docker-compose down
+docker compose down
 docker volume rm justnews_mariadb_data
-docker-compose up -d mariadb
+docker compose up -d mariadb
 sleep 30
-docker-compose logs mariadb | grep "Ready for connections"
+docker compose logs mariadb | grep "Ready for connections"
 ```
 
 ### ChromaDB Stuck on Startup
 
 ```bash
-# Check if it's a v0.4.18 health check issue
-curl -v http://chromadb:3307/api/v1/heartbeat
+# Check both supported heartbeat routes
+curl -v http://chromadb:8000/api/v2/heartbeat || curl -v http://chromadb:8000/api/v1/heartbeat
 
-# If API version mismatch, verify image
-docker inspect $(docker-compose ps -q chromadb) | grep Image
+# Verify running image
+docker inspect $(docker compose ps -q chromadb) | grep Image
 
-# Should be: chromadb/chroma:0.4.18
-# If not, update docker-compose.yaml and rebuild
-docker-compose build --no-cache chromadb
+# If endpoint mismatch persists, restart and recheck
+docker compose restart chromadb
+sleep 3
+curl -f http://chromadb:8000/api/v2/heartbeat || curl -f http://chromadb:8000/api/v1/heartbeat
 ```
 
 ### vLLM Model Download Stalled
 
 ```bash
 # Check download progress
-docker-compose logs vllm -f | grep -i "downloaded\|cache\|saved"
+docker compose logs vllm -f | grep -i "downloaded\|cache\|saved"
 
 # If networking is issue, pre-download on host
 huggingface-cli download Qwen/Qwen2.5-14B-Instruct-AWQ
 
 # If CUDA memory issue
 nvidia-smi -l 2  # Watch GPU usage
-docker-compose logs vllm -n 50 | grep -i "cuda\|oom\|memory"
+docker compose logs vllm -n 50 | grep -i "cuda\|oom\|memory"
 ```
 
 ### app Container Exits
 
 ```bash
 # Django setup issue
-docker-compose logs app -n 100
+docker compose logs app -n 100
 
 # Try manual setup
-docker-compose exec app /usr/local/bin/post-create.sh
+docker compose exec app /usr/local/bin/post-create.sh
 
 # Or start fresh
-docker-compose down app
-docker-compose up -d app
+docker compose down app
+docker compose up -d app
 ```
 
 ---
@@ -328,8 +329,8 @@ python .devcontainer/diagnostic.py
 python tests/integration/test_devcontainer.py
 
 # 3. If services still loading, check status
-docker-compose ps -a
-docker-compose logs vllm -f --tail 20
+docker compose ps -a
+docker compose logs vllm -f --tail 20
 ```
 
 ### Test Output Interpretation
@@ -350,7 +351,7 @@ docker-compose logs vllm -f --tail 20
   
 ✗ Step 5: vLLM Inference Test
   → Can't test if model still loading
-  → Retry after docker-compose logs shows "Loaded model"
+  → Retry after docker compose logs shows "Loaded model"
 ```
 
 ---
@@ -379,29 +380,29 @@ cp .devcontainer/docker-compose.yaml \
 ```
 Services not responding?
 │
-├─ Are containers running? (docker-compose ps)
-│  ├─ NO  → Start them: docker-compose up -d
+├─ Are containers running? (docker compose ps)
+│  ├─ NO  → Start them: docker compose up -d
 │  └─ YES → Continue
 │
 ├─ Is it MariaDB?
-│  ├─ YES → Check: docker-compose logs mariadb | grep -i error
+│  ├─ YES → Check: docker compose logs mariadb | grep -i error
 │  └─ NO  → Continue
 │
 ├─ Is it ChromaDB?
-│  ├─ YES → Verify image: grep "chromadb/chroma" docker-compose.yaml
-│  │      → Should be: 0.4.18
+│  ├─ YES → Probe both endpoints:
+│  │      curl -f http://chromadb:8000/api/v2/heartbeat || curl -f http://chromadb:8000/api/v1/heartbeat
 │  └─ NO  → Continue
 │
 ├─ Is it vLLM?
-│  ├─ YES → Check download: docker-compose logs vllm | grep -i "downloading"
+│  ├─ YES → Check download: docker compose logs vllm | grep -i "downloading"
 │  │      → First run: Wait 2-5 minutes
 │  │      → Then: Retry full test
 │  └─ NO  → Continue
 │
 └─ Still stuck?
-   └─ Nuke & rebuild: docker-compose down
+  └─ Nuke & rebuild: docker compose down
                       docker volume prune -f
-                      docker-compose up -d
+                      docker compose up -d
 ```
 
 ---
@@ -416,33 +417,36 @@ python .devcontainer/diagnostic.py
 python tests/integration/test_devcontainer.py
 
 # Status
-docker-compose ps -a
-docker-compose ps mariadb
+docker compose ps -a
+docker compose ps mariadb
 
 # Logs (most recent 50 lines)
-docker-compose logs mariadb -n 50
-docker-compose logs chromadb -n 50
-docker-compose logs vllm -n 50
+docker compose logs mariadb -n 50
+docker compose logs chromadb -n 50
+docker compose logs vllm -n 50
 
 # Live logs
-docker-compose logs -f
+docker compose logs -f
 
 # Health check
-curl -f http://chromadb:3307/api/v1/heartbeat
+curl -f http://chromadb:8000/api/v2/heartbeat || curl -f http://chromadb:8000/api/v1/heartbeat
 curl -f http://vllm:8001/v1/models
 
 # Restart service
-docker-compose restart mariadb
-docker-compose restart chromadb
-docker-compose restart vllm
+docker compose restart mariadb
+docker compose restart chromadb
+docker compose restart vllm
 
 # Full rebuild
-docker-compose down
+docker compose down
 docker volume prune -f
-docker-compose up -d
+docker compose up -d
+
+# If Docker CLI/daemon is unavailable during cleanup, run:
+PREBUILD_WAIT_ON_DOCKER_MISSING=false bash .devcontainer/scripts/pre-build-cleanup.sh
 
 # Setup from scratch
-docker-compose down
+docker compose down
 docker volume rm justnews_deps justnews_data mariadb_data
-docker-compose up -d
+docker compose up -d
 ```

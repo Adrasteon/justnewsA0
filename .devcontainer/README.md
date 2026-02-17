@@ -91,7 +91,8 @@ Automatic Initialization on First Start
   - Loads environment from `global.env` (with proper line endings)
   - Waits up to 60 seconds for MariaDB to be ready (using Python socket checks)
   - Runs Django migrations with `--fake-initial` flag (handles pre-existing schema)
-  - Verifies ChromaDB and vLLM connectivity (with INFO level warnings if still loading)
+  - Verifies ChromaDB and vLLM connectivity (with INFO/WARNING output that is condition-driven)
+  - Reports idempotence status from observed runtime state (existing schema vs fresh migration path, collection detection state)
   - Collects Django static files
 
 - **Success Indicator:** If initialization completes, you'll see:
@@ -101,6 +102,12 @@ Automatic Initialization on First Start
   ```
 - **Warning Level:** If MariaDB/services aren't ready during init, you'll see warnings (they may still be loading).
 - **Troubleshooting:** Check `/tmp/setup_complete_v*.log` for detailed initialization output.
+
+Pre-build Cleanup Behavior (Docker Availability)
+- `.devcontainer/scripts/pre-build-cleanup.sh` now handles missing Docker in an idempotent and developer-friendly way.
+- If Docker is unavailable in an interactive terminal, the script pauses and waits for Enter so you can fix Docker state first.
+- After keypress, it exits without making changes and asks you to re-run cleanup.
+- For CI/non-interactive runs, set `PREBUILD_WAIT_ON_DOCKER_MISSING=false` to skip the pause.
 
 First-Time Usage Checklist (After Container Starts)
 
@@ -133,8 +140,8 @@ print('✓ Database connected successfully')
 # 4. Verify vLLM is accessible (may take 1-2 minutes to load model)
 curl -s http://vllm:8001/v1/models | python -m json.tool | head -10 && echo "✓ vLLM accessible"
 
-# 5. Verify ChromaDB is accessible (pinned to v0.4.18 for stability)
-curl -s http://chromadb:3307/api/v1/heartbeat && echo "✓ ChromaDB accessible"
+# 5. Verify ChromaDB is accessible (supports current API variants)
+curl -s http://chromadb:8000/api/v2/heartbeat || curl -s http://chromadb:8000/api/v1/heartbeat
 
 # 6. Check Django migrations
 /deps/.venv/bin/python manage.py showmigrations --list 2>/dev/null | head -10 && echo "✓ Django migrations available"
@@ -170,11 +177,9 @@ docker compose logs vllm -n 100
 ```
 
 **ChromaDB not responding:**
-- ChromaDB is pinned to **v0.4.18** for API stability
-- Verify health endpoint: `curl -s http://chromadb:3307/api/v1/heartbeat`
+- Verify health endpoint: `curl -s http://chromadb:8000/api/v2/heartbeat || curl -s http://chromadb:8000/api/v1/heartbeat`
 - Check logs: `docker compose logs chromadb -n 100`
-- If you see 404 errors, the container may be running `latest` image with breaking API changes
-- Update docker-compose.yaml to use image: `chromadb/chroma:0.4.18`
+- If you see endpoint-specific 404s, test both `v1` and `v2` API paths.
 
 **Line ending issues (CRLF vs LF):**
 - The init script now handles this automatically
@@ -219,7 +224,7 @@ python manage.py runserver 0.0.0.0:8100
 |-----------|------|--------|-------|
 | **Django Publisher** | **8100** | ✓ Development | Development server (localhost only) |
 | MariaDB | 3306 | ✓ Production | Database backend (20+ GB support) |
-| ChromaDB | 3307 | ✓ Stable | Vector embeddings (**v0.4.18**) |
+| ChromaDB | 3307 | ✓ Stable | Host-mapped to container `8000` |
 | vLLM | 8001 | ✓ Production-Ready | LLM inference (Qwen 2.5 14B) |
 
 ### Database Initialization

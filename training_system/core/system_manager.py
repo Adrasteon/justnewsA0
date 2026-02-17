@@ -122,6 +122,7 @@ class SystemWideTrainingManager:
                     "performance_monitoring",
                 ],
                 "tasks": [
+                    "headline_generation",
                     "workflow_routing",
                     "quality_assurance",
                     "deadline_management",

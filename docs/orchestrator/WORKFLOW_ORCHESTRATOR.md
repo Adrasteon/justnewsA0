@@ -4,7 +4,7 @@ The Workflow Orchestrator (`agents/workflow_orchestrator`) executes business-sta
 
 ## Core Responsibilities
 
-1. Move articles through analysis, embedding, summary, fact-check, clustering, synthesis, critique, and publish readiness.
+1. Move articles through analysis, embedding, fact-check, clustering, synthesis, critique, and publish readiness.
 2. Prevent stage starvation with policy retries and bounded batching.
 3. Coordinate heavy-cluster retries without blocking normal throughput.
 4. Apply Living Story semantics at synthesis time.
@@ -13,8 +13,8 @@ The Workflow Orchestrator (`agents/workflow_orchestrator`) executes business-sta
 
 - `IngestionToAnalysisPolicy`
 - `AnalysisToEmbeddingPolicy`
-- `AnalysisToSummaryPolicy`
-- `SummaryToFactCheckPolicy`
+- `AnalysisToSummaryPolicy` *(optional; disabled by default via `ORCHESTRATOR_ENABLE_SOURCE_SUMMARY_STAGE=0`)*
+- `SummaryToFactCheckPolicy` *(fact-check gating no longer depends on per-source summary presence)*
 - `FactCheckToClusterPolicy`
 - `ClusterToSynthesisPolicy`
 - `HeavyClusterRetryPolicy`
@@ -33,6 +33,11 @@ Living Story logic is applied in synthesis policies (`ClusterToSynthesisPolicy`,
 4. Persist either:
    - meaningful `updated` result (reset critique/publish states), or
    - non-meaningful `tracked_noop` (metadata-only progression).
+
+Synthesis payload contract now separates:
+
+- `body`: full synthesized article body used for publication detail pages
+- `summary`: short abstract used for cards/SEO previews
 
 This ensures one evolving story identity per cluster and prevents unnecessary republish churn.
 

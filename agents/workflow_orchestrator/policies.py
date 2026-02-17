@@ -23,90 +23,26 @@ from concurrent.futures import ThreadPoolExecutor
 
 from common.observability import get_logger
 from database.utils.migrated_database_utils import create_database_service
+from agents.common.headline_adapter import HeadlineAdapter
 
 logger = get_logger(__name__)
 
-
-def _normalize_headline_text(raw_text: Any, max_len: int = 88) -> str:
-    if not raw_text:
-        return ""
-    cleaned = re.sub(r"\s+", " ", str(raw_text)).strip().strip('"\'')
-    cleaned = re.sub(r"^(headline|title)\s*:\s*", "", cleaned, flags=re.IGNORECASE)
-    cleaned = re.sub(r"^[\-–—:\s]+", "", cleaned)
-    if not cleaned:
-        return ""
-    if len(cleaned) > max_len:
-        cleaned = cleaned[:max_len].rstrip(" ,.;:-")
-    return cleaned
+_HEADLINE_ADAPTER = HeadlineAdapter(name="orchestrator_title_llm")
 
 
-def _strip_generic_lede(text: str) -> str:
-    patterns = [
-        r"^the article (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
-        r"^this article (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
-        r"^the report (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
-    ]
-    cleaned = text
-    for pattern in patterns:
-        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
-    return cleaned.strip()
+def _generate_llm_title_candidates(synthesis_result: dict[str, Any] | None) -> list[str]:
+    result = synthesis_result if isinstance(synthesis_result, dict) else {}
+    summary = str(result.get("summary") or "").strip()
+    key_points = result.get("key_points")
+    key_points_text = ""
+    if isinstance(key_points, list):
+        key_points_text = "\n".join(f"- {str(item).strip()}" for item in key_points[:5] if str(item).strip())
 
-
-def _trim_trailing_stopwords(text: str) -> str:
-    stopwords = {
-        "a",
-        "an",
-        "the",
-        "and",
-        "or",
-        "but",
-        "of",
-        "to",
-        "in",
-        "on",
-        "for",
-        "with",
-        "from",
-        "by",
-        "at",
-    }
-    words = text.split()
-    while words and words[-1].lower().strip(".,;:!?") in stopwords:
-        words.pop()
-    return " ".join(words).strip()
-
-
-def _capitalize_headline(text: str) -> str:
-    if not text:
-        return ""
-    first_char = text[0]
-    if first_char.isalpha():
-        return first_char.upper() + text[1:]
-    return text
-
-
-def _headlineize(raw_text: Any, max_words: int = 12, max_len: int = 88) -> str:
-    normalized = _normalize_headline_text(raw_text, max_len=180)
-    if not normalized:
-        return ""
-
-    normalized = _strip_generic_lede(normalized)
-    if not normalized:
-        return ""
-
-    clause = re.split(r"[;|]\s+|\s+[–—-]\s+", normalized, maxsplit=1)[0].strip()
-    clause = re.split(r"(?<=\w),\s+(?=[A-Z])", clause, maxsplit=1)[0].strip()
-
-    words = clause.split()
-    if len(words) > max_words:
-        clause = " ".join(words[:max_words]).rstrip(" ,.;:-")
-
-    clause = _trim_trailing_stopwords(clause)
-    if clause and not re.search(r"[.!?…]$", clause):
-        clause = clause.rstrip(" ,.;:-")
-    clause = _capitalize_headline(clause)
-
-    return _normalize_headline_text(clause, max_len=max_len)
+    body = str(result.get("body") or "").strip()
+    context = "\n".join(part for part in [summary, key_points_text, body[:1500]] if part).strip()
+    if not context:
+        return []
+    return _HEADLINE_ADAPTER.generate_candidates(context)
 
 
 def _derive_story_title(
@@ -118,6 +54,8 @@ def _derive_story_title(
     result = synthesis_result if isinstance(synthesis_result, dict) else {}
 
     candidates: list[Any] = []
+    candidates.extend(_generate_llm_title_candidates(result))
+
     qwen_payload = result.get("qwen")
     if isinstance(qwen_payload, dict):
         candidates.extend(
@@ -142,14 +80,12 @@ def _derive_story_title(
         candidates.append(key_points[0])
 
     disallowed = re.compile(r"^\s*(\[brief\]\s*)?synthesis report\s*:", re.IGNORECASE)
-    for candidate in candidates:
-        headline = _headlineize(candidate)
-        if not headline:
-            continue
-        if disallowed.match(headline):
-            continue
-        if len(headline) < 10:
-            continue
+    headline = HeadlineAdapter.select_best_headline(
+        candidates,
+        min_len=10,
+        disallowed_pattern=disallowed,
+    )
+    if headline:
         return headline
 
     if is_brief:
@@ -1146,6 +1082,8 @@ class AnalysisToSummaryPolicy(WorkflowPolicy):
         return "analysis_to_summary"
 
     def check_condition(self, limit: int) -> List[int]:
+        if not _env_bool("ORCHESTRATOR_ENABLE_SOURCE_SUMMARY_STAGE", default=False):
+            return []
         ids = []
         try:
             self.db_service.ensure_conn()
@@ -1198,7 +1136,7 @@ class AnalysisToSummaryPolicy(WorkflowPolicy):
 class SummaryToFactCheckPolicy(WorkflowPolicy):
     """
     Policy: Summarized -> Fact Checked
-    Condition: articles.analyzed = 1 AND articles.summary IS NOT NULL AND articles.fact_check_status IS NULL
+    Condition: articles.analyzed = 1 AND articles.fact_check_status IS NULL
     Action: Call 'fact_checker.verify_article' (requires fact_checker agent update)
     """
 
@@ -1217,7 +1155,6 @@ class SummaryToFactCheckPolicy(WorkflowPolicy):
             query = """
                 SELECT id FROM articles 
                 WHERE analyzed = 1 
-                  AND (summary IS NOT NULL AND summary != '')
                   AND fact_check_status IS NULL
                 ORDER BY created_at DESC 
                 LIMIT %s
@@ -1599,7 +1536,14 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                 )
                 
                 if isinstance(synthesis_result, dict) and synthesis_result.get("success"):
-                    body_text = synthesis_result.get("summary", "")
+                    body_text = str(
+                        synthesis_result.get("body")
+                        or synthesis_result.get("summary")
+                        or ""
+                    ).strip()
+                    if not body_text:
+                        logger.warning(f"Skipping empty synthesis output for cluster {cid}")
+                        continue
                     is_brief = len(texts) == 1
                     title_text = _derive_story_title(
                         cid,
@@ -1795,7 +1739,14 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                 )
                 
                 if isinstance(synthesis_result, dict) and synthesis_result.get("success"):
-                    body_text = synthesis_result.get("summary", "")
+                    body_text = str(
+                        synthesis_result.get("body")
+                        or synthesis_result.get("summary")
+                        or ""
+                    ).strip()
+                    if not body_text:
+                        logger.warning(f"Skipping empty synthesis output for heavy cluster {cid}")
+                        continue
                     title_text = _derive_story_title(
                         cid,
                         synthesis_result,

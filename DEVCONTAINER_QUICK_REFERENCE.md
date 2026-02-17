@@ -93,16 +93,16 @@ port = int(os.environ.get("HITL_SERVICE_PORT",
 # After fixes, test everything works:
 
 # 1. Rebuild container
-docker-compose down && docker-compose build && docker-compose up -d
+docker compose down && docker compose build && docker compose up -d
 
 # 2. Check initialization
-docker-compose logs app | grep SUCCESS
+docker compose logs app | grep SUCCESS
 
 # 3. Verify services
 python .devcontainer/diagnostic.py
 
 # 4. Verify env vars loaded
-docker-compose exec app bash -c "source /app/global.env && echo \$JOURNALIST_PORT"
+docker compose exec app bash -c "source /app/global.env && echo \$JOURNALIST_PORT"
 # Should output: 8017
 ```
 
@@ -122,7 +122,7 @@ docker-compose exec app bash -c "source /app/global.env && echo \$JOURNALIST_POR
 
 ## 🔍 What's Working (No Fixes Needed)
 
-✅ Container orchestration (docker-compose setup)  
+✅ Container orchestration (docker compose setup)  
 ✅ Port mapping and forwarding  
 ✅ Database initialization and migrations  
 ✅ Virtual environment creation (via UV)  
@@ -182,7 +182,7 @@ docker-compose exec app bash -c "source /app/global.env && echo \$JOURNALIST_POR
 ## 🆘 Quick Troubleshooting
 
 **Problem:** Port already in use  
-**Solution:** `docker-compose down && docker-compose up -d`
+**Solution:** `docker compose down && docker compose up -d`
 
 **Problem:** Connection refused to MariaDB  
 **Solution:** Wait 30 seconds for DB to initialize
@@ -191,10 +191,10 @@ docker-compose exec app bash -c "source /app/global.env && echo \$JOURNALIST_POR
 **Solution:** Check GPU memory (`nvidia-smi`), verify HF_TOKEN
 
 **Problem:** Migrations fail  
-**Solution:** Check MariaDB logs: `docker-compose logs mariadb`
+**Solution:** Check MariaDB logs: `docker compose logs mariadb`
 
 **Problem:** Services not starting  
-**Solution:** Check docker-compose ps: `docker-compose ps -a`
+**Solution:** Check docker compose ps: `docker compose ps -a`
 
 ---
 
@@ -217,7 +217,7 @@ docker-compose exec app bash -c "source /app/global.env && echo \$JOURNALIST_POR
 - [ ] global.env updated with agent ports
 - [ ] HITL naming improved (optional)
 - [ ] Container rebuilds without errors
-- [ ] All services show "healthy" in docker-compose ps
+- [ ] All services show "healthy" in docker compose ps
 - [ ] diagnostic.py shows all green checks
 - [ ] Environment variables load correctly
 - [ ] Shell prompt appears within 3 minutes

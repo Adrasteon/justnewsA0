@@ -25,7 +25,7 @@
 
 ```bash
 # Step 1: Check status
-docker-compose ps -a
+docker compose ps -a
 
 # Step 2: Get details
 python .devcontainer/diagnostic.py
@@ -40,7 +40,7 @@ python .devcontainer/diagnostic.py
 **If >= 15 minutes unresolved**:
 - Page on-call engineer
 - Open incident (see incident template)
-- Save logs: `docker-compose logs > /tmp/incident_logs.txt`
+- Save logs: `docker compose logs > /tmp/incident_logs.txt`
 
 ---
 
@@ -48,29 +48,29 @@ python .devcontainer/diagnostic.py
 
 ### Restart Single Service
 ```bash
-docker-compose restart chromadb    # Restart specific service
-docker-compose logs chromadb -f    # Watch restart
+docker compose restart chromadb    # Restart specific service
+docker compose logs chromadb -f    # Watch restart
 ```
 
 ### Graceful Restart All Services
 ```bash
-docker-compose stop vllm chromadb app mariadb
+docker compose stop vllm chromadb app mariadb
 sleep 10  # Wait for shutdown
-docker-compose start mariadb
+docker compose start mariadb
 sleep 30  # MariaDB initialization
-docker-compose start chromadb  
+docker compose start chromadb  
 sleep 10
-docker-compose start vllm
+docker compose start vllm
 sleep 120  # Wait for model load
-docker-compose start app
+docker compose start app
 # Verify: python .devcontainer/diagnostic.py
 ```
 
 ### View Logs
 ```bash
-docker-compose logs mariadb | grep -i error       # Specific service
-docker-compose logs -f vllm                        # Follow logs
-docker-compose logs >> /tmp/all_logs.txt           # Save to file
+docker compose logs mariadb | grep -i error       # Specific service
+docker compose logs -f vllm                        # Follow logs
+docker compose logs >> /tmp/all_logs.txt           # Save to file
 ```
 
 ### Check Resource Usage
@@ -110,7 +110,7 @@ curl -s http://vllm:8001/v1/models | jq '.data[0].id'
 
 ### Weekly Tasks (30 minutes)
 
-- [ ] Review error logs: `docker-compose logs --since 24h | grep -i error`
+- [ ] Review error logs: `docker compose logs --since 24h | grep -i error`
 - [ ] Check disk usage: `df -h` (alert if > 75%)
 - [ ] Verify backups completed (if configured)
 - [ ] Check for memory leaks (GPU usage trending upward)
@@ -160,7 +160,7 @@ Each service now has metadata labels. View with:
 
 ```bash
 # View labels for all services
-docker-compose ps --format 'table {{.Service}}\t{{.Labels}}'
+docker compose ps --format 'table {{.Service}}\t{{.Labels}}'
 
 # Or in raw docker-compose.yaml
 cat docker-compose.yaml | grep -A 20 "labels:"
@@ -208,14 +208,14 @@ Before rolling out changes:
 
 ```bash
 □ All containers running
-  docker-compose ps -a | grep "Up"
+  docker compose ps -a | grep "Up"
 
 □ All services healthy
   python .devcontainer/diagnostic.py
   # All should show ✓
 
 □ No errors in logs
-  docker-compose logs --since 1h | grep -ic error
+  docker compose logs --since 1h | grep -ic error
   # Should return: 0
 
 □ Database accessible
@@ -242,8 +242,8 @@ Before rolling out changes:
 
 1. **Gather information**:
    ```bash
-   docker-compose ps -a > /tmp/status.txt
-   docker-compose logs > /tmp/logs.txt
+  docker compose ps -a > /tmp/status.txt
+  docker compose logs > /tmp/logs.txt
    nvidia-smi > /tmp/gpu.txt
    ```
 

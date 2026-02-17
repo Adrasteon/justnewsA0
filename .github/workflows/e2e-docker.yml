@@ -33,13 +33,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Start docker-compose services
+      - name: Start docker compose services
         run: |
-          docker-compose -f scripts/dev/docker-compose.e2e.yml up -d
+          docker compose -f scripts/dev/docker-compose.e2e.yml up -d
 
       - name: Wait for DB and Redis
         run: |
-          docker-compose -f scripts/dev/docker-compose.e2e.yml ps
+          docker compose -f scripts/dev/docker-compose.e2e.yml ps
           sleep 5
 
       - name: Run quick smoke checks (redis + mariadb)
@@ -88,4 +88,4 @@ jobs:
 
       - name: Tear down
         if: always()
-        run: docker-compose -f scripts/dev/docker-compose.e2e.yml down -v
+        run: docker compose -f scripts/dev/docker-compose.e2e.yml down -v

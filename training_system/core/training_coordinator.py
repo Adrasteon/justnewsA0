@@ -12,6 +12,7 @@ Features:
 
 import importlib
 import json
+import os
 import threading
 import time
 from collections import deque
@@ -112,6 +113,9 @@ class OnTheFlyTrainingCoordinator:
         self.max_buffer_size = max_buffer_size
         self.performance_window = performance_window
         self.rollback_threshold = rollback_threshold
+        self.headline_update_threshold = int(
+            os.environ.get("HEADLINE_TRAINING_UPDATE_THRESHOLD", "12")
+        )
 
         # Training buffers for each agent
         self.training_buffers = {
@@ -144,8 +148,19 @@ class OnTheFlyTrainingCoordinator:
 
         logger.info("🚀 On-The-Fly Training Coordinator initialized")
         logger.info(f"   📊 Update threshold: {update_threshold} examples")
+        logger.info(
+            f"   📰 Headline update threshold: {self.headline_update_threshold} examples"
+        )
         logger.info(f"   🧠 Performance tracking: {performance_window} example window")
         logger.info(f"   ⚡ Rollback threshold: {rollback_threshold} accuracy drop")
+
+    def _headline_examples_ready(self, buffer: deque[TrainingExample]) -> bool:
+        if self.headline_update_threshold <= 0:
+            return False
+        headline_count = sum(
+            1 for ex in buffer if ex.task_type == "headline_generation"
+        )
+        return headline_count >= self.headline_update_threshold
 
     def _get_db_connection(self):
         """Get database connection for training data storage using connection pooling"""
@@ -191,6 +206,7 @@ class OnTheFlyTrainingCoordinator:
         # Add to appropriate buffer
         if agent_name in self.training_buffers:
             self.training_buffers[agent_name].append(example)
+            buffer = self.training_buffers[agent_name]
 
             # Store in database for persistence
             self._persist_training_example(example)
@@ -207,6 +223,12 @@ class OnTheFlyTrainingCoordinator:
                     "🚨 High-priority correction detected - triggering immediate update"
                 )
                 self._schedule_immediate_update(agent_name)
+            elif agent_name == "chief_editor" and task_type == "headline_generation":
+                if self._headline_examples_ready(buffer):
+                    logger.info(
+                        "📰 Headline training threshold reached - triggering immediate chief_editor update"
+                    )
+                    self._schedule_immediate_update(agent_name)
 
     def add_prediction_feedback(
         self,
@@ -262,7 +284,11 @@ class OnTheFlyTrainingCoordinator:
 
                 # Check each agent buffer for update readiness
                 for agent_name, buffer in self.training_buffers.items():
-                    if len(buffer) >= self.update_threshold:
+                    should_update = len(buffer) >= self.update_threshold
+                    if agent_name == "chief_editor" and self._headline_examples_ready(buffer):
+                        should_update = True
+
+                    if should_update:
                         logger.info(
                             f"🎯 Triggering scheduled update for {agent_name} "
                             f"({len(buffer)} examples ready)"

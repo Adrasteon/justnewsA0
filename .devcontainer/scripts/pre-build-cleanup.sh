@@ -29,6 +29,28 @@ log_error() {
     echo -e "${RED}[✗]${NC} $1"
 }
 
+prompt_docker_recovery_ack() {
+    local auto_wait="${PREBUILD_WAIT_ON_DOCKER_MISSING:-true}"
+
+    log_warning "Docker is currently unavailable in this execution context."
+    log_info "Fix or verify Docker state, then re-run this script."
+
+    if [ "$auto_wait" = "false" ]; then
+        log_info "PREBUILD_WAIT_ON_DOCKER_MISSING=false; skipping interactive pause."
+        return 0
+    fi
+
+    if [ -t 0 ]; then
+        echo ""
+        log_info "Press Enter once Docker is confirmed healthy to continue (script will then exit; re-run cleanup)."
+        read -r
+        return 0
+    fi
+
+    log_info "Non-interactive shell detected; cannot pause for keypress."
+    return 0
+}
+
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
@@ -364,6 +386,13 @@ verify_images() {
 # ============================================================================
 
 main() {
+    local found_containers=0
+    local found_volumes=0
+    local archived_any_data=0
+    local removed_any_containers=0
+    local removed_any_volumes=0
+    local preserved_any_volumes=0
+
     echo ""
     echo -e "${BLUE}========================================${NC}"
     echo -e "${BLUE}JustNews DevContainer Pre-Build Cleanup${NC}"
@@ -384,12 +413,14 @@ main() {
     
     # Step 1: Check Docker
     if ! check_docker; then
-        log_error "Docker check failed. Skipping cleanup."
+        log_error "Docker check failed. Cleanup not executed."
         log_info "You may need to:"
         log_info "  1. Install Docker"
         log_info "  2. Start Docker daemon"
         log_info "  3. Grant docker permissions to your user: sudo usermod -aG docker \$USER"
-        return 1
+        prompt_docker_recovery_ack
+        log_warning "Pre-build cleanup exited without changes. Re-run after Docker is functional."
+        return 0
     fi
     echo ""
     
@@ -397,11 +428,14 @@ main() {
     log_info "Scanning for existing containers and volumes..."
     local containers=($(find_containers))
     local volumes=($(find_volumes))
+    found_containers=${#containers[@]}
+    found_volumes=${#volumes[@]}
     
     if [ ${#containers[@]} -eq 0 ] && [ ${#volumes[@]} -eq 0 ]; then
         log_success "No existing containers or volumes found. Clean slate!"
         echo ""
         log_success "Pre-build cleanup complete (nothing to clean)"
+        log_info "Ready for devcontainer build (no prior resources detected)"
         return 0
     fi
     echo ""
@@ -427,6 +461,9 @@ main() {
     if [ ${#containers[@]} -gt 0 ]; then
         log_info "Step 1: Archiving data from existing containers..."
         archive_mariadb_data
+        if [ -d "$BACKUP_PATH" ] && [ -n "$(ls -A "$BACKUP_PATH" 2>/dev/null)" ]; then
+            archived_any_data=1
+        fi
         echo ""
     fi
     
@@ -434,6 +471,9 @@ main() {
     if [ ${#volumes[@]} -gt 0 ]; then
         log_info "Step 1b: Archiving ChromaDB embeddings..."
         archive_chromadb_data
+        if [ -d "$BACKUP_PATH" ] && [ -n "$(ls -A "$BACKUP_PATH" 2>/dev/null)" ]; then
+            archived_any_data=1
+        fi
         echo ""
     fi
     
@@ -443,6 +483,9 @@ main() {
     wait
     
     remove_containers "${containers[@]}"
+    if [ ${#containers[@]} -gt 0 ]; then
+        removed_any_containers=1
+    fi
     echo ""
     
     # Step 6: Remove volumes (IDEMPOTENT MODE - preserve by default)
@@ -452,12 +495,16 @@ main() {
         # FORCE CLEAN: User explicitly requested data destruction
         log_warning "  FORCE CLEAN: Removing all volumes (DATA WILL BE LOST)"
         remove_volumes "${volumes[@]}"
+        if [ ${#volumes[@]} -gt 0 ]; then
+            removed_any_volumes=1
+        fi
     else
         # IDEMPOTENT: Preserve existing volumes for data preservation
         log_info "  IDEMPOTENT MODE: Skipping volume removal to preserve data"
         log_info "  → Containers will be stopped but volumes retained"
         
         if [ ${#volumes[@]} -gt 0 ]; then
+            preserved_any_volumes=1
             log_success "  ✓ Data volumes preserved"
             log_info "  → To force a clean rebuild: .devcontainer/scripts/pre-build-cleanup.sh --force-clean"
         fi
@@ -499,12 +546,18 @@ main() {
     
     if [ "$FORCE_CLEAN_REBUILD" = true ]; then
         log_warning "FORCE CLEAN MODE: All volumes were removed (fresh start)"
-        log_info "Any archived data can be found at: $BACKUP_DIR"
+        if [ "$archived_any_data" -eq 1 ]; then
+            log_info "Any archived data can be found at: $BACKUP_DIR"
+        fi
     else
-        log_success "IDEMPOTENT MODE ACTIVE: Data volumes preserved"
-        log_info "Your workflow data will be available after container start"
-        log_info "To force a clean rebuild next time, run:"
-        log_info "  bash .devcontainer/scripts/pre-build-cleanup.sh --force-clean"
+        if [ "$preserved_any_volumes" -eq 1 ]; then
+            log_success "IDEMPOTENT MODE ACTIVE: Data volumes preserved"
+            log_info "Workflow data should remain available after container start"
+            log_info "To force a clean rebuild next time, run:"
+            log_info "  bash .devcontainer/scripts/pre-build-cleanup.sh --force-clean"
+        else
+            log_info "IDEMPOTENT MODE ACTIVE: No matching data volumes found to preserve"
+        fi
     fi
     
     if [ -d "$BACKUP_PATH" ] && [ -n "$(ls -A "$BACKUP_PATH" 2>/dev/null)" ]; then
@@ -514,8 +567,25 @@ main() {
         echo ""
     fi
     
-    log_info "Ready for new devcontainer build!"
-    log_info "Volumes will be mounted and your data will be available"
+    if [ "$removed_any_containers" -eq 1 ]; then
+        log_info "Ready for new devcontainer build (previous containers removed)"
+    else
+        log_info "Ready for new devcontainer build"
+    fi
+
+    if [ "$FORCE_CLEAN_REBUILD" = true ]; then
+        if [ "$removed_any_volumes" -eq 1 ]; then
+            log_warning "Next build will start with fresh volumes"
+        else
+            log_info "No matching volumes were removed in force-clean mode"
+        fi
+    else
+        if [ "$preserved_any_volumes" -eq 1 ]; then
+            log_info "Preserved volumes will be mounted on container start"
+        elif [ "$found_volumes" -eq 0 ]; then
+            log_info "No existing data volumes were present before build"
+        fi
+    fi
     echo ""
     
     return 0

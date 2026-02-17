@@ -345,8 +345,8 @@ python manage.py runserver 0.0.0.0:8001
 
 ### "Cannot connect to MariaDB"
 ```bash
-docker-compose -f .devcontainer/docker-compose.yaml ps mariadb
-docker-compose -f .devcontainer/docker-compose.yaml up -d
+docker compose -f .devcontainer/docker-compose.yaml ps mariadb
+docker compose -f .devcontainer/docker-compose.yaml up -d
 ```
 
 ### "Out of memory"

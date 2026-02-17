@@ -22,7 +22,7 @@
 | **Memory Usage** | < 60% | < 75% | > 85% | `free -h` |
 
 **Log Locations**:
-- Errors: `docker-compose logs mariadb | grep -i error`
+- Errors: `docker compose logs mariadb | grep -i error`
 - Slow queries: `/var/lib/mysql/hostname-slow.log` (if enabled)
 - General log: `/var/lib/mysql/hostname.log` (if enabled)
 
@@ -67,8 +67,8 @@ WHERE VARIABLE_NAME = 'Threads_connected';
 | **API Uptime** | 99.9% | > 99% | < 95% | Weekly calculation |
 
 **Log Locations**:
-- Container logs: `docker-compose logs chromadb -f`
-- Errors: `docker-compose logs chromadb | grep -i error`
+- Container logs: `docker compose logs chromadb -f`
+- Errors: `docker compose logs chromadb | grep -i error`
 
 **Health Checks**:
 
@@ -126,9 +126,9 @@ fi
 | **Error Rate** | 0% | < 1% | > 5% | Log analysis |
 
 **Log Locations**:
-- Container logs: `docker-compose logs vllm -f`
-- Model loading: `docker-compose logs vllm | grep -i "loaded\|loading"`
-- Errors: `docker-compose logs vllm | grep -i error`
+- Container logs: `docker compose logs vllm -f`
+- Model loading: `docker compose logs vllm | grep -i "loaded\|loading"`
+- Errors: `docker compose logs vllm | grep -i error`
 
 **Health Checks**:
 
@@ -234,8 +234,8 @@ nvidia-smi -pC 0,0,0  # Reset clocks to defaults
 | **Worker Count** | 2–4 | — | 0 (hung) | `ps aux \| grep uvicorn` |
 
 **Log Locations**:
-- Application logs: `docker-compose logs app -f`
-- Errors: `docker-compose logs app | grep -i error`
+- Application logs: `docker compose logs app -f`
+- Errors: `docker compose logs app | grep -i error`
 - Uvicorn logs: Included in app logs
 
 **Health Checks**:
@@ -327,22 +327,22 @@ SET GLOBAL long_query_time = 2;  -- Log queries taking > 2 seconds
 **vLLM**:
 ```bash
 # Logs are sent to stdout/stderr
-# Can filter in docker-compose logs
-docker-compose logs vllm | grep -E "INFO|ERROR"
+# Can filter in docker compose logs
+docker compose logs vllm | grep -E "INFO|ERROR"
 ```
 
 **App**:
 ```python
 # Django logging configured in settings
 # Logs sent to stdout + rotating file logs
-# Check: docker-compose logs app
+# Check: docker compose logs app
 ```
 
 ### Log Retention Policy
 
 | Log Type | Retention | Location |
 |----------|-----------|----------|
-| Application logs | 30 days | Docker logs (docker-compose logs) |
+| Application logs | 30 days | Docker logs (docker compose logs) |
 | Slow query logs | 7 days | MariaDB container `/var/log/mysql/` |
 | GPU monitoring | 7 days | `/tmp/gpu_monitoring_*.csv` |
 | Incident reports | 1 year | `/var/log/incidents/` |
@@ -472,8 +472,8 @@ rate(http_requests_total{status=~"5.."}[5m])
 
 **Something broken?**
 1. Run: `python .devcontainer/diagnostic.py`
-2. Check: `docker-compose ps -a`
-3. See: `docker-compose logs <service>`
+2. Check: `docker compose ps -a`
+3. See: `docker compose logs <service>`
 4. Fix: See SERVICE_OPERATIONS.md recovery section
 5. Escalate: If > 15 min unresolved, page on-call
 

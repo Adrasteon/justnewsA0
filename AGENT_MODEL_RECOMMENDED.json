@@ -34,7 +34,7 @@
     "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "vllm_default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
     "fallbacks": [],
-    "notes": "Uses ModelStore adapter qwen_chief_editor_v1 by default."
+    "notes": "Uses ModelStore adapters qwen_chief_editor_v1 (editorial decisions) and qwen2_headline_v1 (headline generation)."
   },
   "reasoning": {
     "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",

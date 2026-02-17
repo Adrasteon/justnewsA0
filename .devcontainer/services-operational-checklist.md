@@ -14,7 +14,7 @@ Use this checklist to systematically verify service operational status after dev
 
 **How**:
 ```bash
-docker-compose ps -a
+docker compose ps -a
 ```
 
 **Expected Output**:
@@ -29,9 +29,9 @@ vllm                Up
 **Resolution if failing**:
 | Issue | Resolution |
 |-------|-----------|
-| Containers don't exist | Run: `docker-compose up -d` |
-| Container exited | Run: `docker-compose restart <service>` |
-| All containers exited | Run: `docker-compose down && docker-compose up -d` |
+| Containers don't exist | Run: `docker compose up -d` |
+| Container exited | Run: `docker compose restart <service>` |
+| All containers exited | Run: `docker compose down && docker compose up -d` |
 
 ---
 
@@ -61,10 +61,10 @@ python .devcontainer/diagnostic.py
 
 | Service | Issue | Resolution |
 |---------|-------|-----------|
-| MariaDB | Connection refused | Wait 30s, then `docker-compose restart mariadb` |
-| ChromaDB | Connection refused | `docker-compose restart chromadb` |
+| MariaDB | Connection refused | Wait 30s, then `docker compose restart mariadb` |
+| ChromaDB | Connection refused | `docker compose restart chromadb` |
 | vLLM | Connection refused | Service may still loading model (2-5 min first run) |
-| vLLM | Still refused after 5 min | Check: `docker-compose logs vllm -n 50` |
+| vLLM | Still refused after 5 min | Check: `docker compose logs vllm -n 50` |
 
 ---
 
@@ -97,7 +97,7 @@ python manage.py showmigrations --list | head -20
 | Issue | Resolution |
 |-------|-----------|
 | Migrations pending `[ ]` | Run: `python manage.py migrate --fake-initial` |
-| Migration marked `?` | Check logs: `docker-compose logs mariadb -n 100` |
+| Migration marked `?` | Check logs: `docker compose logs mariadb -n 100` |
 | Can't import Django | Ensure venv activated: `source /deps/.venv/bin/activate` |
 
 ---
@@ -133,9 +133,9 @@ Results: 5/5 tests passed
 | Failure | Resolution |
 |---------|-----------|
 | Database test fails | See Step 3 above |
-| ChromaDB test fails | `docker-compose restart chromadb && sleep 5` |
+| ChromaDB test fails | `docker compose restart chromadb && sleep 5` |
 | vLLM test fails (first run) | Wait 2-5 min for model download, then retry |
-| vLLM test fails (repeated) | Check: `docker-compose logs vllm \| grep -i cuda` |
+| vLLM test fails (repeated) | Check: `docker compose logs vllm \| grep -i cuda` |
 
 ---
 
@@ -155,7 +155,7 @@ EOF
 # Expected: Prompt returns (query succeeded)
 
 # ChromaDB (HTTP)
-curl -f http://chromadb:3307/api/v1/heartbeat
+curl -f http://chromadb:8000/api/v2/heartbeat || curl -f http://chromadb:8000/api/v1/heartbeat
 # Expected: HTTP 200
 
 # vLLM (HTTP)
@@ -164,9 +164,29 @@ curl -f http://vllm:8001/v1/models | python -m json.tool | head -10
 ```
 
 **Resolution if any fail**:
-- ChromaDB 404: Check `.devcontainer/SERVICE_STARTUP.md` (may be API version issue)
+- ChromaDB 404: probe both `v2` and `v1` endpoints (API route shape may vary)
 - vLLM 502/503: Model still loading (wait) or OOM (check GPU: `nvidia-smi`)
 - Django fails: Check migrations were applied (Step 3)
+
+---
+
+### ✅ Step 5b: Pre-Build Cleanup Recovery Behavior
+
+**What**: Confirm cleanup script handles missing Docker safely in interactive and CI contexts.
+
+**How**:
+```bash
+# Interactive terminal behavior:
+bash .devcontainer/scripts/pre-build-cleanup.sh
+# If Docker is unavailable, script pauses for Enter and exits without changes.
+
+# CI/non-interactive behavior:
+PREBUILD_WAIT_ON_DOCKER_MISSING=false bash .devcontainer/scripts/pre-build-cleanup.sh
+```
+
+**Expected**:
+- No destructive changes when Docker is unavailable
+- Clear guidance to fix Docker and re-run cleanup
 
 ---
 
@@ -196,14 +216,14 @@ docker stats --no-stream
 **Resolution**:
 ```bash
 # Kill stuck container
-docker-compose kill <service>
+docker compose kill <service>
 
 # Restart everything
-docker-compose restart
+docker compose restart
 
 # Full reset if issues persist
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 sleep 60
 python .devcontainer/diagnostic.py
 ```
@@ -232,7 +252,7 @@ Loaded 1 model(s)
 - First run: `Connection refused` → Wait 2-5 min, retry
 
 **Invalid outputs**:
-- Different model name → `docker-compose logs vllm | grep model`
+- Different model name → `docker compose logs vllm | grep model`
 - Empty model list → Startup incomplete
 
 ---
@@ -248,7 +268,7 @@ Use this to get complete system overview:
 echo "=== JustNews System Status ===" 
 echo ""
 echo "1. Container Status:"
-docker-compose ps -a | tail -n +2
+docker compose ps -a | tail -n +2
 
 echo ""
 echo "2. Service Connectivity:"
@@ -279,7 +299,7 @@ Run: `bash .devcontainer/status-check.sh`
 ### Scenario: Fresh Start After Rebuild
 
 **Checklist**:
-1. ✅ All containers running? (`docker-compose ps`)
+1. ✅ All containers running? (`docker compose ps`)
 2. ⏳ Wait 30-60 seconds for initialization
 3. ✅ Run diagnostic: `python .devcontainer/diagnostic.py`
 4. ⏳ If vLLM shows refused, wait additional 2-5 min for model download
@@ -305,7 +325,7 @@ Run: `bash .devcontainer/status-check.sh`
 **Next steps**:
 ```bash
 # Check vLLM logs for progress
-docker-compose logs vllm -f --tail 30
+docker compose logs vllm -f --tail 30
 
 # Look for:
 # - Download progress (good)
@@ -324,9 +344,9 @@ python tests/integration/test_devcontainer.py
 **Diagnostic steps**:
 ```bash
 # 1. Check what's happening
-docker-compose logs app -n 100
-docker-compose logs mariadb -n 100
-docker-compose logs vllm -n 100
+docker compose logs app -n 100
+docker compose logs mariadb -n 100
+docker compose logs vllm -n 100
 
 # 2. Look for patterns:
 # - OOM: "Killed" or "out of memory"
@@ -334,13 +354,13 @@ docker-compose logs vllm -n 100
 # - Corruption: "Table corrupted" or "InnoDB recovery"
 
 # 3. If specific service crashing:
-docker-compose logs <service> -f --tail 50
+docker compose logs <service> -f --tail 50
 
 # 4. Hard reset if persistent
-docker-compose down
+docker compose down
 docker volume prune -f
 docker system prune -f
-docker-compose up -d
+docker compose up -d
 ```
 
 ---
@@ -350,7 +370,7 @@ docker-compose up -d
 ### ✅ Green Light (Production Ready)
 
 All of these must be true:
-- ✅ `docker-compose ps` shows all containers `Up`
+- ✅ `docker compose ps` shows all containers `Up`
 - ✅ `python .devcontainer/diagnostic.py` shows all `✓ connected`
 - ✅ `python tests/integration/test_devcontainer.py` shows `5/5 tests passed`
 - ✅ Database has 20+ migrations applied
@@ -396,7 +416,7 @@ while true; do
   echo ""
   
   # Status
-  docker-compose ps -a | tail -n +2 | awk '{print $1, $2}'
+  docker compose ps -a | tail -n +2 | awk '{print $1, $2}'
   
   # Quick health
   echo ""
@@ -433,14 +453,14 @@ docker stats --no-stream | grep -E "vllm|chromadb"
 **Issue**: "Can't query ChromaDB"
 ```bash
 # Verify it's the right endpoint:
-curl -v http://chromadb:3307/api/v1/docs
-# Should return HTML docs page
+curl -v http://chromadb:8000/api/v2/heartbeat || curl -v http://chromadb:8000/api/v1/heartbeat
+# Should return HTTP 200 on one of the two routes
 ```
 
 **Issue**: "vLLM keeps timing out"
 ```bash
 # Model download stuck or failed:
-docker-compose logs vllm | grep -i "error\|failed\|warning"
+docker compose logs vllm | grep -i "error\|failed\|warning"
 
 # Check network:
 curl -I https://huggingface.co
@@ -454,14 +474,14 @@ curl -I https://huggingface.co
 ```bash
 # Nuclear option: Full reset
 
-docker-compose down                    # Stop all services
+docker compose down                    # Stop all services
 docker volume prune -f                 # Remove unused volumes  
 docker system prune -f -a              # Clean up everything
 docker pull nvidia/cuda:12.4.1-devel-ubuntu22.04
 docker pull mariadb:latest
-docker pull chromadb/chroma:0.4.18
+docker pull chromadb/chroma:latest
 docker pull vllm/vllm-openai:latest    # Pre-pull images
-docker-compose up -d                   # Start fresh
+docker compose up -d                   # Start fresh
 sleep 120                              # Wait for init
 python .devcontainer/diagnostic.py     # Check status
 ```
@@ -474,7 +494,7 @@ Then reference `.devcontainer/SERVICE_STARTUP.md` for any remaining issues.
 
 **For approvers/leads**:
 
-- [ ] All services running (`docker-compose ps` shows all `Up`)
+- [ ] All services running (`docker compose ps` shows all `Up`)
 - [ ] Diagnostic passes (`.devcontainer/diagnostic.py` all `✓`)
 - [ ] Integration tests pass (5/5 in `test_devcontainer.py`)
 - [ ] No error messages in last 20 lines of any log

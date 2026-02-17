@@ -17,7 +17,7 @@
 #   VERBOSE=1              - Show verbose output
 #   DRY_RUN=1             - Show what would run without executing
 #   SKIP_HEALTH_CHECK=1   - Skip health verification
-#   USE_DOCKER=1          - Use Docker/docker-compose for database services
+#   USE_DOCKER=1          - Use Docker/Docker Compose for database services
 #   SERVICE_TIMEOUT=120   - Timeout in seconds for service readiness
 #   AGENT_START_DELAY=2   - Delay between agent starts (seconds)
 #
@@ -467,7 +467,7 @@ start_mariadb() {
   # Check if mysqld is available
   if ! check_command mysqld; then
     log_warn "mysqld not available locally. MariaDB may be running via Docker or remote."
-    log_info "If MariaDB is not accessible, use Docker: cd infrastructure/docker && docker-compose up -d mariadb"
+    log_info "If MariaDB is not accessible, use Docker: cd infrastructure/docker && docker compose up -d mariadb"
     return 0
   fi
 
@@ -890,7 +890,7 @@ print_status_summary() {
 print_docker_instructions() {
   log_info "To start database services using Docker Compose:"
   echo "  cd infrastructure/docker"
-  echo "  docker-compose up -d mariadb chromadb redis"
+  echo "  docker compose up -d mariadb chromadb redis"
   echo "  Then run this script with --skip-db"
 }
 

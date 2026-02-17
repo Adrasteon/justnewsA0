@@ -24,6 +24,7 @@ import time
 import argparse
 import socket
 import subprocess
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -54,6 +55,25 @@ class BaselineCapture:
         """Log message if verbose enabled"""
         if self.verbose:
             print(f"[{level}] {msg}")
+
+    def _compose_prefix(self) -> list[str] | None:
+        """Return compose command prefix, preferring Docker Compose v2."""
+        try:
+            result = subprocess.run(
+                ["docker", "compose", "version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                return ["docker", "compose"]
+        except Exception:
+            pass
+
+        if shutil.which("docker-compose"):
+            return ["docker-compose"]
+
+        return None
     
     def capture_environment(self):
         """Capture environment details"""
@@ -75,14 +95,17 @@ class BaselineCapture:
         
         # Get database version
         try:
-            result = subprocess.run(
-                ["docker-compose", "exec", "-T", "mariadb", 
-                 "mysql", "--version"],
-                capture_output=True, text=True, timeout=5,
-                cwd="/app"
-            )
-            if result.stdout:
-                self.results["environment"]["mariadb_version"] = result.stdout.strip().split()[5]
+            compose_prefix = self._compose_prefix()
+            if compose_prefix is None:
+                self.results["notes"].append("Could not get MariaDB version: Docker Compose not available")
+            else:
+                result = subprocess.run(
+                    [*compose_prefix, "exec", "-T", "mariadb", "mysql", "--version"],
+                    capture_output=True, text=True, timeout=5,
+                    cwd="/app"
+                )
+                if result.stdout:
+                    self.results["environment"]["mariadb_version"] = result.stdout.strip().split()[5]
         except Exception as e:
             self.results["notes"].append(f"Could not get MariaDB version: {e}")
         

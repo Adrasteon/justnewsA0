@@ -148,7 +148,7 @@ sleep 2
 ```bash
 # From host (Docker Desktop):
 cd /app/.devcontainer
-docker-compose restart mariadb chromadb vllm
+docker compose restart mariadb chromadb vllm
 
 # In devcontainer:
 pkill -f "uvicorn agents"
@@ -158,9 +158,9 @@ pkill -f "uvicorn agents"
 ### Option 3: Full Clean Rebuild (Destructive)
 ```bash
 # From host:
-docker-compose down
+docker compose down
 docker volume rm mariadb_data chromadb_data justnews_data
-docker-compose up -d
+docker compose up -d
 
 # In devcontainer:
 /app/start_agents_devcontainer.sh
@@ -285,7 +285,7 @@ The `start_all_services.sh` script is the canonical entry point. It orchestrates
 
 ### Database Connection Timeout
 **Symptom:** "Connection refused" in logs  
-**Solution:** Check MariaDB is running: `docker-compose ps`  
+**Solution:** Check MariaDB is running: `docker compose ps`  
 **Verify:** `mysql -h mariadb -u justnews -pdev_justnews_password -e "SELECT 1"`
 
 ---

@@ -92,10 +92,10 @@ From within dev container:
 
 | Issue | Quick Fix | Time to Resolution |
 |-------|-----------|-------------------|
-| MariaDB shows ✗ | `docker-compose restart mariadb` | 30 sec |
-| ChromaDB shows ✗ | `docker-compose restart chromadb` | 5-10 sec |
+| MariaDB shows ✗ | `docker compose restart mariadb` | 30 sec |
+| ChromaDB shows ✗ | `docker compose restart chromadb` | 5-10 sec |
 | vLLM shows ✗ (first run) | Wait 2-5 min for model download | 2-5 min |
-| vLLM shows ✗ (repeated) | `docker-compose logs vllm -n 50` | Variable |
+| vLLM shows ✗ (repeated) | `docker compose logs vllm -n 50` | Variable |
 | Tests failing 1/5 | `python .devcontainer/diagnostic.py` | 5 sec |
 | Tests failing 3/5+ | Review `.devcontainer/DEPENDENCIES.md` | 10-15 min |
 

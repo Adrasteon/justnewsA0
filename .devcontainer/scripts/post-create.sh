@@ -49,6 +49,13 @@ log_error() {
 
 # Track initialization status
 INIT_FAILURES=0
+MARIADB_SCHEMA_WAS_EXISTING=0
+MARIADB_SQL_MIGRATIONS_APPLIED=0
+CHROMADB_READY=0
+CHROMADB_HAS_COLLECTIONS=0
+CHROMADB_COLLECTION_COUNT=-1
+CHROMADB_STATUS_DETAIL="not-checked"
+VLLM_READY=0
 
 # Get configuration from global.env
 if [ -f /app/global.env ]; then
@@ -65,8 +72,8 @@ log_info "=========================================="
 log_info "JustNews Dev Container Initialization"
 log_info "=========================================="
 log_info ""
-log_success "Pre-build cleanup completed on host (containers/volumes cleaned)"
-log_info "Building fresh infrastructure with correct service names..."
+log_info "Initialization triggered from post-create hook"
+log_info "Applying idempotent checks and conditional setup actions..."
 log_info ""
 
 # Step 1: Wait for MariaDB to be fully ready and operational
@@ -205,6 +212,7 @@ if [ $? -eq 0 ]; then
     log_success "Database schema already initialized (schema_migrations table found)"
     log_info "Skipping migrations - existing data will be preserved"
     SCHEMA_EXISTS=1
+    MARIADB_SCHEMA_WAS_EXISTING=1
 else
     log_info "Fresh database detected - running SQL schema migrations..."
 fi
@@ -214,6 +222,7 @@ if [ $SCHEMA_EXISTS -eq 0 ]; then
     if [ -f /app/apply_migrations_script.py ]; then
         if python /app/apply_migrations_script.py 2>&1 | tee /tmp/sql_migrations.log; then
             log_success "SQL migrations completed (14 pipeline tables created: articles, sources, entities, etc.)"
+            MARIADB_SQL_MIGRATIONS_APPLIED=1
         else
             log_error "SQL migrations failed (check /tmp/sql_migrations.log)"
             INIT_FAILURES=$((INIT_FAILURES + 1))
@@ -246,8 +255,6 @@ CHROMADB_HOST="${CHROMADB_HOST:-chromadb}"
 CHROMADB_PORT="${CHROMADB_PORT:-8000}"
 CHROMADB_MAX_WAIT=30
 CHROMADB_WAIT=0
-CHROMADB_READY=0
-CHROMADB_HAS_COLLECTIONS=0
 
 while [ $CHROMADB_WAIT -lt $CHROMADB_MAX_WAIT ]; do
     # First check: port open
@@ -261,38 +268,143 @@ except:
     exit(1)
 EOF
     if [ $? -eq 0 ]; then
-        # Second check: API responsive (list collections) AND check if collections exist
-        python3 << EOF 2>/dev/null
-import sys
+        # Second check: API/client responsive and collection existence check
+        CHROMA_CHECK_RAW=$(python3 << EOF 2>/dev/null
+import json
+
+host = "$CHROMADB_HOST"
+port = $CHROMADB_PORT
+
+result = {
+    "ready": False,
+    "has_collections": False,
+    "collection_count": -1,
+    "detail": "unreachable"
+}
+
+def _emit():
+    print(json.dumps(result))
+
+# Preferred path: official client
+try:
+    import chromadb
+    client = chromadb.HttpClient(host=host, port=port)
+    collections = client.list_collections()
+    count = len(collections)
+    result["ready"] = True
+    result["collection_count"] = count
+    result["has_collections"] = count > 0
+    result["detail"] = "client-list-collections"
+    _emit()
+    raise SystemExit(0)
+except Exception:
+    pass
+
+# Fallback: HTTP API probes (accept v2 or v1 shapes)
 try:
     import requests
-    response = requests.get(
-        f"http://$CHROMADB_HOST:$CHROMADB_PORT/api/v2/collections",
-        timeout=2
-    )
-    if response.status_code in [200, 401, 403]:  # Accept various response codes - means service is alive
-        # Check if collections exist (response should have list)
-        try:
-            data = response.json()
-            if isinstance(data, list) and len(data) > 0:
-                sys.exit(0)  # Collections exist
-            else:
-                sys.exit(1)  # No collections yet
-        except:
-            sys.exit(1)  # Response not JSON, likely fresh instance
-    sys.exit(1)
-except:
-    sys.exit(1)
+except Exception:
+    result["detail"] = "requests-unavailable"
+    _emit()
+    raise SystemExit(0)
+
+for endpoint in [
+    f"http://{host}:{port}/api/v2/collections",
+    f"http://{host}:{port}/api/v1/collections",
+    f"http://{host}:{port}/api/v2/heartbeat",
+    f"http://{host}:{port}/api/v1/heartbeat",
+]:
+    try:
+        response = requests.get(endpoint, timeout=2)
+    except Exception:
+        continue
+
+    status = response.status_code
+    if status in (200, 401, 403):
+        result["ready"] = True
+        result["detail"] = f"http:{endpoint}"
+
+        if "collections" in endpoint:
+            try:
+                data = response.json()
+            except Exception:
+                data = None
+
+            count = -1
+            if isinstance(data, list):
+                count = len(data)
+            elif isinstance(data, dict):
+                if isinstance(data.get("collections"), list):
+                    count = len(data.get("collections"))
+                elif isinstance(data.get("data"), list):
+                    count = len(data.get("data"))
+
+            if count >= 0:
+                result["collection_count"] = count
+                result["has_collections"] = count > 0
+
+        break
+
+_emit()
 EOF
-        if [ $? -eq 0 ]; then
-            log_success "ChromaDB is fully operational at $CHROMADB_HOST:$CHROMADB_PORT (with existing collections)"
-            CHROMADB_READY=1
-            CHROMADB_HAS_COLLECTIONS=1
-            break
-        else
-            # Service responsive but no collections yet (fresh start)
-            log_success "ChromaDB is fully operational at $CHROMADB_HOST:$CHROMADB_PORT (after $CHROMADB_WAIT seconds)"
-            CHROMADB_READY=1
+)
+
+        CHROMADB_READY=$(python3 << EOF
+import json
+import sys
+raw = '''${CHROMA_CHECK_RAW}'''.strip()
+try:
+    data = json.loads(raw)
+    print(1 if data.get("ready") else 0)
+except Exception:
+    print(0)
+EOF
+)
+        CHROMADB_HAS_COLLECTIONS=$(python3 << EOF
+import json
+raw = '''${CHROMA_CHECK_RAW}'''.strip()
+try:
+    data = json.loads(raw)
+    print(1 if data.get("has_collections") else 0)
+except Exception:
+    print(0)
+EOF
+)
+        CHROMADB_COLLECTION_COUNT=$(python3 << EOF
+import json
+raw = '''${CHROMA_CHECK_RAW}'''.strip()
+try:
+    data = json.loads(raw)
+    print(int(data.get("collection_count", -1)))
+except Exception:
+    print(-1)
+EOF
+)
+        CHROMADB_STATUS_DETAIL=$(python3 << EOF
+import json
+raw = '''${CHROMA_CHECK_RAW}'''.strip()
+try:
+    data = json.loads(raw)
+    print(data.get("detail", "unknown"))
+except Exception:
+    print("parse-error")
+EOF
+)
+
+        if [ "$CHROMADB_READY" -eq 1 ]; then
+            if [ "$CHROMADB_HAS_COLLECTIONS" -eq 1 ]; then
+                if [ "$CHROMADB_COLLECTION_COUNT" -ge 0 ]; then
+                    log_success "ChromaDB is operational at $CHROMADB_HOST:$CHROMADB_PORT (existing collections detected: $CHROMADB_COLLECTION_COUNT)"
+                else
+                    log_success "ChromaDB is operational at $CHROMADB_HOST:$CHROMADB_PORT (existing collections detected)"
+                fi
+            else
+                if [ "$CHROMADB_COLLECTION_COUNT" -eq 0 ]; then
+                    log_success "ChromaDB is operational at $CHROMADB_HOST:$CHROMADB_PORT (no collections currently present)"
+                else
+                    log_success "ChromaDB is operational at $CHROMADB_HOST:$CHROMADB_PORT"
+                fi
+            fi
             break
         fi
     fi
@@ -308,9 +420,13 @@ if [ $CHROMADB_READY -eq 0 ]; then
     log_info "  → Continuing without immediate ChromaDB access (collections will auto-create on first use)"
 else
     if [ $CHROMADB_HAS_COLLECTIONS -eq 1 ]; then
-        log_info "  → Existing collections detected - data preserved"
+        log_info "  → Existing collections detected - startup did not recreate collections"
     else
-        log_info "  → Collection auto-creation will happen on first access"
+        if [ "$CHROMADB_COLLECTION_COUNT" -eq 0 ]; then
+            log_info "  → No collections detected; collection creation may occur later on first app write"
+        else
+            log_info "  → Collection presence could not be confirmed from API shape ($CHROMADB_STATUS_DETAIL)"
+        fi
     fi
 fi
 
@@ -322,7 +438,6 @@ VLLM_HOST="${VLLM_HOST:-vllm}"
 VLLM_PORT="${VLLM_PORT:-8001}"
 VLLM_MAX_WAIT=20
 VLLM_WAIT=0
-VLLM_READY=0
 
 while [ $VLLM_WAIT -lt $VLLM_MAX_WAIT ]; do
     python3 << EOF 2>/dev/null
@@ -374,9 +489,33 @@ if [ $INIT_FAILURES -eq 0 ]; then
     log_info "=========================================="
     log_info ""
     log_info "✓ Services initialized and ready:"
-    log_info "  • MariaDB: Ready (migrated or existing data preserved)"
-    log_info "  • ChromaDB: Ready (collections created on first access or preserved)"
-    log_info "  • vLLM: Accessible (model loading may continue in background)"
+    if [ "$MARIADB_SCHEMA_WAS_EXISTING" -eq 1 ]; then
+        log_info "  • MariaDB: Ready (existing schema detected; SQL migrations skipped)"
+    elif [ "$MARIADB_SQL_MIGRATIONS_APPLIED" -eq 1 ]; then
+        log_info "  • MariaDB: Ready (SQL migrations applied during this run)"
+    else
+        log_info "  • MariaDB: Ready (schema status indeterminate; see migration logs)"
+    fi
+
+    if [ "$CHROMADB_READY" -eq 1 ] && [ "$CHROMADB_HAS_COLLECTIONS" -eq 1 ]; then
+        if [ "$CHROMADB_COLLECTION_COUNT" -ge 0 ]; then
+            log_info "  • ChromaDB: Ready (existing collections detected: $CHROMADB_COLLECTION_COUNT)"
+        else
+            log_info "  • ChromaDB: Ready (existing collections detected)"
+        fi
+    elif [ "$CHROMADB_READY" -eq 1 ] && [ "$CHROMADB_COLLECTION_COUNT" -eq 0 ]; then
+        log_info "  • ChromaDB: Ready (currently no collections; no startup recreation performed)"
+    elif [ "$CHROMADB_READY" -eq 1 ]; then
+        log_info "  • ChromaDB: Ready (collection status uncertain: $CHROMADB_STATUS_DETAIL)"
+    else
+        log_info "  • ChromaDB: Not confirmed ready during startup window"
+    fi
+
+    if [ "$VLLM_READY" -eq 1 ]; then
+        log_info "  • vLLM: Accessible (model loading may continue in background)"
+    else
+        log_info "  • vLLM: Still initializing (not reachable within startup window)"
+    fi
     
     # Tool availability check
     log_info "  • Node.js: $(node -v 2>/dev/null || echo 'Not found')"
@@ -384,9 +523,17 @@ if [ $INIT_FAILURES -eq 0 ]; then
     log_info "  • DDGS (search): $(python3 -c "from ddgs import DDGS; print('Ready')" 2>/dev/null || echo 'Not found')"
     log_info ""
     log_info "✓ IDEMPOTENCE ACTIVE:"
-    log_info "  • Workflow data is preserved across rebuilds"
-    log_info "  • Existing database schema detected and preserved"
-    log_info "  • Embedding data preserved in ChromaDB"
+    log_info "  • Startup script performs checks before any migration actions"
+    if [ "$MARIADB_SCHEMA_WAS_EXISTING" -eq 1 ]; then
+        log_info "  • Existing database schema detected and preserved"
+    elif [ "$MARIADB_SQL_MIGRATIONS_APPLIED" -eq 1 ]; then
+        log_info "  • Fresh schema was initialized once in this run"
+    fi
+    if [ "$CHROMADB_READY" -eq 1 ] && [ "$CHROMADB_HAS_COLLECTIONS" -eq 1 ]; then
+        log_info "  • Existing ChromaDB collections were detected and left untouched"
+    elif [ "$CHROMADB_READY" -eq 1 ] && [ "$CHROMADB_COLLECTION_COUNT" -eq 0 ]; then
+        log_info "  • No ChromaDB collections were present; none were created by startup"
+    fi
     log_info "  • To force a clean rebuild, use: --force-clean flag"
     log_info ""
     log_info "Next verification steps:"
@@ -402,7 +549,7 @@ else
     log_warning "Dev Container Initialization Completed with $INIT_FAILURES warning(s)"
     log_info "=========================================="
     log_warning "Some services may not be fully ready. They may still be initializing."
-    log_info "You can manually verify service status with docker-compose ps"
+    log_info "You can manually verify service status with docker compose ps"
     log_info ""
     log_info "IDEMPOTENCE STATUS:"
     log_info "  • Attempting to preserve existing data"

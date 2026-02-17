@@ -7,7 +7,7 @@ The JustNews V2 Training System is an "On The Fly" active learning framework tha
 The system relies on a centralized collection mechanism (`training_system.collect_prediction`) integrated into every AI agent.
 
 ### Data Flow
-1. **Agent Execution**: An agent (e.g., Journalist, Analyst) performs a task using the Qwen-14B model via `MistralAdapter`.
+1. **Agent Execution**: An agent (e.g., Journalist, Analyst) performs a task using the Qwen 2.5 14B AWQ stack via ModelStore-aware adapters.
 2. **Data Collection**: The agent's tool/engine captures the `input_text`, `prediction` (output), `task_type`, and `confidence`.
 3. **Storage**: Data is stored in the `training_system` database (sqlite/postgres).
 4. **Active Learning**: The `TrainingCoordinator` identifies high-value examples (low confidence or corrected) for future fine-tuning.
@@ -18,7 +18,7 @@ All core agents are fully instrumented:
 
 | Agent | Task Types | capture Point |
 |---|---|---|
-| **Chief Editor** | `quality_assessment`, `categorization`, `headline_generation` | `agents/chief_editor/tools.py` |
+| **Chief Editor** | `quality_assessment`, `categorization`, `headline_generation` | `agents/chief_editor/tools.py` (`headline_generation` collected via `agents/common/headline_adapter.py`) |
 | **Journalist** | `generate_story_brief` (Content Extraction) | `agents/journalist/journalist_engine.py` |
 | **Analyst** | `entities`, `statistics`, `sentiment`, `bias` | `agents/analyst/tools.py` |
 | **Critic** | `synthesis_critique`, `neutrality`, `argument`, `fallacies` | `agents/critic/tools.py` |
@@ -45,6 +45,11 @@ To train adapters from this data:
 1. Run `python run_training_loop.py` (future implementation).
 2. The system filters for `user_corrected` or `confidence < 0.8` examples.
 3. LoRA adapters are updated per-agent.
+
+### Headline Loop Notes
+- `headline_generation` is treated as a first-class task in the Chief Editor training path.
+- `training_system/core/training_coordinator.py` supports a dedicated trigger threshold via `HEADLINE_TRAINING_UPDATE_THRESHOLD` (default `12`).
+- With `STRICT_MODEL_STORE=1`, missing headline adapter artifacts are treated as hard failures instead of silent fallbacks.
 
 ## Troubleshooting
 *   **Missing Data**: Check `logs/` for "Failed to collect training data" warnings.

@@ -110,7 +110,7 @@ Notes:
 
 ```bash
   # Option A: Docker
-docker-compose -f scripts/dev/docker-compose.e2e.yml up -d mariadb
+docker compose -f scripts/dev/docker-compose.e2e.yml up -d mariadb
 
   # Option B: Native (if not running)
 sudo ./infrastructure/systemd/setup_mariadb.sh --user justnews_user --password

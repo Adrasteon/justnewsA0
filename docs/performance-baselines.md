@@ -195,8 +195,8 @@ def get_cpu_percent():
 1. **Clean Environment**:
    ```bash
    # Remove old test data
-   docker-compose down -v
-   docker-compose up -d
+  docker compose down -v
+  docker compose up -d
    
    # Wait for service health
    python .devcontainer/diagnostic.py

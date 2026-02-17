@@ -81,6 +81,21 @@ log_info() {
     echo -e "${BLUE}ℹ $@${NC}" | tee -a "$LOG_FILE"
 }
 
+compose_cmd() {
+    if docker compose version >/dev/null 2>&1; then
+        docker compose "$@"
+        return $?
+    fi
+
+    if command -v docker-compose >/dev/null 2>&1; then
+        docker-compose "$@"
+        return $?
+    fi
+
+    echo -e "${RED}[ERROR] Docker Compose not found (need 'docker compose' plugin or docker-compose binary)${NC}" >&2
+    return 1
+}
+
 show_help() {
     head -25 "$0" | tail -20
 }
@@ -139,17 +154,17 @@ main() {
     echo -e "${BLUE}=== PHASE 1: VERIFY SERVICES ===${NC}"
     log_info "Checking Docker services..."
     
-    if docker-compose -f .devcontainer/docker-compose.yaml ps 2>/dev/null | grep -q "Running"; then
+    if compose_cmd -f .devcontainer/docker-compose.yaml ps 2>/dev/null | grep -q "Running"; then
         log_success "Docker services running"
     else
         log_warning "Starting Docker services..."
-        docker-compose -f .devcontainer/docker-compose.yaml up -d
+        compose_cmd -f .devcontainer/docker-compose.yaml up -d
         sleep 5
     fi
     
     # Test MariaDB
     log_info "Testing MariaDB connection..."
-    if docker-compose -f .devcontainer/docker-compose.yaml exec mariadb mysqladmin ping -u root -proot_password 2>/dev/null | grep -q "alive"; then
+    if compose_cmd -f .devcontainer/docker-compose.yaml exec mariadb mysqladmin ping -u root -proot_password 2>/dev/null | grep -q "alive"; then
         log_success "MariaDB responding"
     else
         log_error "MariaDB not responding"

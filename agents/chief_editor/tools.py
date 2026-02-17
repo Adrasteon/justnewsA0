@@ -26,10 +26,13 @@ import mysql.connector
 from typing import Any
 
 from common.observability import get_logger
+from agents.common.headline_adapter import HeadlineAdapter
 
 from .chief_editor_engine import ChiefEditorConfig, ChiefEditorEngine
 
 logger = get_logger(__name__)
+
+_HEADLINE_ADAPTER = HeadlineAdapter(name="chief_editor_title_llm")
 
 
 _PLACEHOLDER_SYNTH_TITLE = re.compile(
@@ -38,80 +41,28 @@ _PLACEHOLDER_SYNTH_TITLE = re.compile(
 )
 
 
-def _strip_generic_lede(text: str) -> str:
-    patterns = [
-        r"^the article (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
-        r"^this article (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
-        r"^the report (discusses|explores|examines|highlights|focuses on|covers|reports on)\s+",
-    ]
-    cleaned = text
-    for pattern in patterns:
-        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE)
-    return cleaned.strip()
-
-
-def _trim_trailing_stopwords(text: str) -> str:
-    stopwords = {
-        "a",
-        "an",
-        "the",
-        "and",
-        "or",
-        "but",
-        "of",
-        "to",
-        "in",
-        "on",
-        "for",
-        "with",
-        "from",
-        "by",
-        "at",
-    }
-    words = text.split()
-    while words and words[-1].lower().strip(".,;:!?") in stopwords:
-        words.pop()
-    return " ".join(words).strip()
-
-
-def _capitalize_headline(text: str) -> str:
-    if not text:
-        return ""
-    first_char = text[0]
-    if first_char.isalpha():
-        return first_char.upper() + text[1:]
-    return text
-
-
-def _headlineize(raw_text: str, max_words: int = 12, max_len: int = 88) -> str:
-    normalized = re.sub(r"\s+", " ", (raw_text or "").strip())
-    normalized = re.sub(r"^[\-–—:\s]+", "", normalized)
-    if not normalized:
-        return ""
-
-    normalized = _strip_generic_lede(normalized)
-    if not normalized:
-        return ""
-
-    clause = re.split(r"[;|]\s+|\s+[–—-]\s+", normalized, maxsplit=1)[0].strip()
-    clause = re.split(r"(?<=\w),\s+(?=[A-Z])", clause, maxsplit=1)[0].strip()
-
-    words = clause.split()
-    if len(words) > max_words:
-        clause = " ".join(words[:max_words]).rstrip(" ,.;:-")
-
-    clause = _trim_trailing_stopwords(clause)
-    clause = clause.rstrip(" ,.;:-")
-    if len(clause) > max_len:
-        clause = clause[:max_len].rstrip(" ,.;:-")
-        clause = _trim_trailing_stopwords(clause)
-    return _capitalize_headline(clause)
+def _generate_llm_title_candidates(summary: str, body: str) -> list[str]:
+    context = "\n".join(part for part in [summary.strip(), body.strip()[:1500]] if part).strip()
+    if not context:
+        return []
+    return _HEADLINE_ADAPTER.generate_candidates(context)
 
 
 def _derive_publication_title(raw_title: str, summary: str, body: str) -> str:
     title = (raw_title or "").strip()
     if title and not _PLACEHOLDER_SYNTH_TITLE.match(title):
-        return _headlineize(title)
+        seeded = HeadlineAdapter.headlineize(title)
+        if seeded and not HeadlineAdapter.is_sensational(seeded):
+            return seeded
+
+    llm_candidates = _generate_llm_title_candidates(summary, body)
+    headline = HeadlineAdapter.select_best_headline(
+        llm_candidates,
+        min_len=10,
+        disallowed_pattern=_PLACEHOLDER_SYNTH_TITLE,
+    )
+    if headline:
+        return headline
 
     for candidate in (summary, body):
         normalized = re.sub(r"\s+", " ", (candidate or "").strip())
@@ -120,9 +71,40 @@ def _derive_publication_title(raw_title: str, summary: str, body: str) -> str:
         sentence = re.split(r"(?<=[.!?])\s+", normalized, maxsplit=1)[0].strip()
         if len(sentence) < 12:
             continue
-        return _headlineize(sentence)
+        fallback = HeadlineAdapter.headlineize(sentence)
+        if fallback and not HeadlineAdapter.is_sensational(fallback):
+            return fallback
 
     return "Developing Story"
+
+
+def _derive_publication_summary(body: str, max_words: int = 42) -> str:
+    normalized = re.sub(r"\s+", " ", (body or "").strip())
+    if not normalized:
+        return ""
+
+    sentences = re.split(r"(?<=[.!?])\s+", normalized)
+    summary = " ".join(sentences[:2]).strip() or normalized
+    words = summary.split()
+    if len(words) > max_words:
+        summary = " ".join(words[:max_words]).rstrip(" ,;:-") + "…"
+    return summary
+
+
+def _resolve_publication_summary(body: str, source_summary: str, title: str) -> str:
+    summary = _derive_publication_summary(body)
+    if summary:
+        return summary
+
+    normalized_source = re.sub(r"\s+", " ", (source_summary or "").strip())
+    if normalized_source:
+        return normalized_source
+
+    normalized_title = re.sub(r"\s+", " ", (title or "").strip())
+    if normalized_title:
+        return normalized_title
+
+    return "Developing story updates are being verified."
 
 # Global engine instance
 _engine: ChiefEditorEngine | None = None
@@ -432,13 +414,49 @@ def publish_story(story_id: str) -> dict[str, Any]:
 
                 # 2. Extract and Transform
                 title = source.get('title') or "Untitled Story"
-                summary = source.get('summary') or ""
                 body = source.get('body') or ""
+                summary = _resolve_publication_summary(
+                    body=body,
+                    source_summary=source.get('summary') or "",
+                    title=title,
+                )
                 title = _derive_publication_title(title, summary, body)
 
-                # Create slug
-                slug_base = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower()).strip('-')
-                slug = f"{slug_base[:40]}-{story_id[:8]}" 
+                headline_input = "\n".join(
+                    part
+                    for part in [summary.strip(), body.strip()[:1500]]
+                    if isinstance(part, str) and part.strip()
+                ).strip()
+                if headline_input:
+                    HeadlineAdapter.collect_training_example(
+                        input_text=headline_input,
+                        prediction={
+                            "headline": title,
+                            "story_id": story_id,
+                            "source": "publish_story",
+                        },
+                        confidence=0.88,
+                        source_url="",
+                    )
+
+                # Create stable slug (reuse existing story slug when republishing)
+                story_suffix = story_id[:8]
+                cursor.execute(
+                    """
+                    SELECT slug
+                    FROM news_article
+                    WHERE slug LIKE %s
+                    ORDER BY updated_at DESC, id DESC
+                    LIMIT 1
+                    """,
+                    (f"%-{story_suffix}",),
+                )
+                existing_slug_row = cursor.fetchone()
+                if existing_slug_row and existing_slug_row.get("slug"):
+                    slug = str(existing_slug_row["slug"])
+                else:
+                    slug_base = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower()).strip('-')
+                    slug = f"{slug_base[:40]}-{story_suffix}"
 
                 evidence = source.get('input_articles') or "{}"
                 
@@ -470,8 +488,17 @@ def publish_story(story_id: str) -> dict[str, Any]:
 
                 # 4. Mark as Published
                 cursor.execute(
-                    "UPDATE synthesized_articles SET is_published = 1, published_at = %s WHERE story_id = %s AND is_published = 0",
-                    (now, story_id)
+                    """
+                    UPDATE synthesized_articles
+                    SET is_published = 1,
+                        published_at = %s,
+                        summary = CASE
+                            WHEN COALESCE(TRIM(summary), '') = '' THEN %s
+                            ELSE summary
+                        END
+                    WHERE story_id = %s AND is_published = 0
+                    """,
+                    (now, summary, story_id)
                 )
                 publish_marked = cursor.rowcount > 0
 

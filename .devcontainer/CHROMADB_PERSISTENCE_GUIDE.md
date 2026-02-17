@@ -109,7 +109,7 @@ curl http://localhost:3307/api/v2/collections
 | `IS_PERSISTENT` | `TRUE` | Enable persistence to disk |
 | `CHROMA_HOST` | `0.0.0.0` | Listen on all interfaces |
 | `CHROMA_PORT` | `8000` | Internal port |
-| `CHROMA_API_VERSION` | `v1` | API version to use |
+| `CHROMA_API_VERSION` | `v2` | Preferred API version (fallback to `v1`) |
 
 ### Related Settings
 
@@ -126,7 +126,7 @@ chromadb:
 # In global.env
 CHROMADB_HOST=chromadb
 CHROMADB_PORT=8000
-CHROMADB_API_VERSION=v1
+CHROMADB_API_VERSION=v2
 CHROMADB_TIMEOUT=30
 ```
 
@@ -157,6 +157,8 @@ docker volume rm chromadb_data
 
 # Safe alternative: Archive first
 bash .devcontainer/scripts/pre-build-cleanup.sh
+# CI/non-interactive environments (skip keypress pause when Docker is unavailable)
+PREBUILD_WAIT_ON_DOCKER_MISSING=false bash .devcontainer/scripts/pre-build-cleanup.sh
 # Then rebuild
 docker-compose up
 ```
@@ -167,6 +169,9 @@ docker-compose up
 ```bash
 # Your backup is automatically created
 bash .devcontainer/scripts/pre-build-cleanup.sh
+
+# Optional for CI/non-interactive shells
+PREBUILD_WAIT_ON_DOCKER_MISSING=false bash .devcontainer/scripts/pre-build-cleanup.sh
 
 # Start fresh with new containers
 docker-compose up -d
@@ -237,6 +242,17 @@ docker volume ls | grep chromadb
 
 # Check volume health
 docker run --rm -v chromadb_data:/data alpine ls -la /data
+```
+
+### Pre-Build Cleanup Pauses on Docker Missing
+
+**Issue:** cleanup script waits for Enter when Docker is unavailable in interactive shells.
+
+**Expected:** This is a recovery safeguard; no cleanup actions are executed until Docker is fixed and script is re-run.
+
+**Non-interactive/CI option:**
+```bash
+PREBUILD_WAIT_ON_DOCKER_MISSING=false bash .devcontainer/scripts/pre-build-cleanup.sh
 ```
 
 ## Performance Considerations

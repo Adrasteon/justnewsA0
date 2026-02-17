@@ -282,7 +282,7 @@ SERVICE_TIMEOUT=300 AGENT_START_DELAY=5 ./start_all_services.sh
 ```bash
 # Terminal 1: Start database services
 cd infrastructure/docker
-docker-compose up mariadb chromadb redis
+docker compose up mariadb chromadb redis
 
 # Terminal 2: Start agents only
 ./start_all_services.sh --skip-db

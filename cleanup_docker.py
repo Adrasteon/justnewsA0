@@ -122,7 +122,7 @@ def cleanup_containers():
     print("Cleanup Complete!")
     print("=" * 60 + "\n")
     print("Next steps:")
-    print("  1. Start containers with: docker-compose -f .devcontainer/docker-compose.yaml up -d")
+    print("  1. Start containers with: docker compose -f .devcontainer/docker-compose.yaml up -d")
     print("  2. Verify with: docker ps")
     print("  3. Run status check: python3 canonical_status_check.py\n")
     

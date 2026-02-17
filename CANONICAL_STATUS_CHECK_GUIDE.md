@@ -142,9 +142,9 @@ Failed checks (needs attention):
 ```
 Infrastructure down. Rebuild containers:
 ```bash
-docker-compose restart mariadb chromadb
+docker compose restart mariadb chromadb
 # or full rebuild
-docker-compose down && docker-compose up -d
+docker compose down && docker compose up -d
 ```
 
 ## Integration Points
@@ -262,7 +262,7 @@ curl -v http://chromadb:8000/api/v2/heartbeat
 Services are running but not ready. This is normal during startup:
 ```bash
 # Wait for service to be ready
-docker-compose logs -f mariadb
+docker compose logs -f mariadb
 # Once ready, re-run:
 python canonical_status_check.py
 ```
@@ -304,7 +304,7 @@ docker logs <service_name>
 docker restart <service_name>
 
 # Full system restart
-docker-compose down && docker-compose up -d
+docker compose down && docker compose up -d
 
 # Check detailed health
 docker ps --format "table {{.Names}}\t{{.Status}}"

@@ -26,7 +26,7 @@ This guide walks through deploying to the current dev container as if it were pr
 
 ```bash
 # Check current services
-docker-compose -f .devcontainer/docker-compose.yaml ps
+docker compose -f .devcontainer/docker-compose.yaml ps
 
 # Expected output:
 # NAME                    STATUS
@@ -55,7 +55,7 @@ export VAULT_SKIP_VERIFY=true  # For dev testing
 
 ```bash
 # Test MariaDB
-docker-compose -f .devcontainer/docker-compose.yaml exec mariadb \
+docker compose -f .devcontainer/docker-compose.yaml exec mariadb \
   mysqladmin ping -u root -proot_password
 # Expected: mysqld is alive
 
@@ -583,7 +583,7 @@ echo "✓ Restore successful"
 kill $(cat /tmp/gunicorn.pid 2>/dev/null) 2>/dev/null || true
 
 # Stop Docker services
-docker-compose -f .devcontainer/docker-compose.yaml ps
+docker compose -f .devcontainer/docker-compose.yaml ps
 ```
 
 ### Step 2: Document Findings

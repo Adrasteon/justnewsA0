@@ -271,7 +271,7 @@ Start databases via Docker, agents locally:
 ```bash
 # Terminal 1: Start databases
 cd infrastructure/docker
-docker-compose up -d mariadb chromadb redis
+docker compose up -d mariadb chromadb redis
 
 # Terminal 2: Start agents only
 ./start_all_services.sh --skip-db

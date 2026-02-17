@@ -52,7 +52,7 @@ EOF
 
 echo ""
 echo "=== Service Status from Host ==="
-echo "Run from host terminal: docker-compose ps"
+echo "Run from host terminal: docker compose ps"
 ```
 
 ---
@@ -85,15 +85,15 @@ echo "Run from host terminal: docker-compose ps"
 - **Recovery**:
   ```bash
   # From host:
-  docker-compose restart mariadb
-  docker-compose logs mariadb -n 50
+  docker compose restart mariadb
+  docker compose logs mariadb -n 50
   
   # Check volume exists:
   docker volume ls | grep mariadb_data
   ```
 
 **Healthy Indicators**:
-- ✅ `docker-compose ps` shows `healthy` or `up`
+- ✅ `docker compose ps` shows `healthy` or `up`
 - ✅ Python socket connection succeeds
 - ✅ Django can import settings: `python manage.py shell` without errors
 
@@ -102,55 +102,53 @@ echo "Run from host terminal: docker-compose ps"
 ### ChromaDB (Vector Database)
 
 **Port**: `3307` (external, maps to internal 8000)  
-**Connection String**: `chromadb:3307` (from dev container)  
-**Health Endpoint**: `http://chromadb:3307/api/v1/heartbeat`  
-**Version**: `0.4.18` (pinned for API stability)
+**Connection String**: `chromadb:8000` (from dev container)  
+**Health Endpoint**: `http://chromadb:8000/api/v2/heartbeat` (fallback: `/api/v1/heartbeat`)  
+**Version**: `latest` (API shape may vary between `v1` and `v2` routes)
 
 **Startup Behavior**:
 - Lightweight (~2-5 seconds on startup)
-- In-memory by default (`IS_PERSISTENT=FALSE` in docker-compose)
-- No initial data to load
+- Persistent mode enabled (`IS_PERSISTENT=TRUE` in docker-compose)
+- Existing collections may be detected on startup; startup script does not recreate collections
 
 **Troubleshooting**:
 
-**Issue**: HTTP 404 on `/api/version` or `/api/v1/heartbeat`
-- **Cause**: Container running `latest` image (has breaking API changes)
+**Issue**: HTTP 404 on `/api/v1/...` or `/api/v2/...`
+- **Cause**: Endpoint mismatch for the running Chroma API shape
 - **Solution**: 
   ```bash
-  # Verify in docker-compose.yaml:
-  grep "chromadb/chroma:" .devcontainer/docker-compose.yaml
-  # Should show: chromadb/chroma:0.4.18
-  
-  # If running latest, restart with corrected image:
-  docker-compose down chromadb
-  docker-compose up -d chromadb
+  # Test both heartbeat endpoints:
+  curl -f http://chromadb:8000/api/v2/heartbeat || curl -f http://chromadb:8000/api/v1/heartbeat
   ```
 
 **Issue**: Port 3307 refuses connections
 - **Cause**: Container not running or crashed during startup
 - **Recovery**:
   ```bash
-  docker-compose logs chromadb -n 100
-  docker-compose restart chromadb
+  docker compose logs chromadb -n 100
+  docker compose restart chromadb
   sleep 3
-  curl -f http://chromadb:3307/api/v1/heartbeat
+  curl -f http://chromadb:8000/api/v2/heartbeat || curl -f http://chromadb:8000/api/v1/heartbeat
   ```
 
-**Issue**: Embeddings not persisting between restarts
-- **Expected**: `IS_PERSISTENT=FALSE` means data is ephemeral
-- **Workaround**: Update docker-compose if persistence needed for your task:
-  ```yaml
-  chromadb:
-    environment:
-      - IS_PERSISTENT=TRUE
-    volumes:
-      - chromadb_data:/data
-  ```
+**Issue**: Collection count appears unchanged across rebuilds
+- **Expected**: Persistent volume mode keeps existing Chroma data unless a clean rebuild explicitly removes volumes.
 
 **Healthy Indicators**:
-- ✅ Health check passes: `curl -f http://chromadb:3307/api/v1/heartbeat`
-- ✅ Container shows "healthy" in docker-compose ps
+- ✅ Health check passes: `curl -f http://chromadb:8000/api/v2/heartbeat || curl -f http://chromadb:8000/api/v1/heartbeat`
+- ✅ Container shows "healthy" in docker compose ps
 - ✅ Can create collections and add embeddings via Python API
+
+---
+
+## Pre-Build Cleanup Recovery Mode
+
+`pre-build-cleanup.sh` now supports a developer recovery pause when Docker is unavailable.
+
+- In interactive terminals, if Docker is unavailable, the script pauses and waits for Enter.
+- Use this pause to fix Docker/daemon state.
+- After confirmation, the script exits without changes; re-run cleanup once Docker is healthy.
+- In non-interactive workflows, set `PREBUILD_WAIT_ON_DOCKER_MISSING=false` to skip pause behavior.
 
 ---
 
@@ -177,7 +175,7 @@ echo "Run from host terminal: docker-compose ps"
 - **Solution**: Wait 2-5 minutes for model to load
 - **Check progress**:
   ```bash
-  docker-compose logs vllm -f --tail 50
+  docker compose logs vllm -f --tail 50
   # Look for: "Loaded model" or "Listening on" messages
   ```
 
@@ -188,13 +186,13 @@ echo "Run from host terminal: docker-compose ps"
   3. CUDA not available in container
 - **Recovery**:
   ```bash
-  docker-compose logs vllm -n 100
+  docker compose logs vllm -n 100
   # Check for: CUDA errors, OOM, download failures
   
   # Restart with verbose logging:
-  docker-compose restart vllm
+  docker compose restart vllm
   sleep 5
-  docker-compose logs vllm -f
+  docker compose logs vllm -f
   ```
 
 **Issue**: Model download stuck or timing out
@@ -221,7 +219,7 @@ echo "Run from host terminal: docker-compose ps"
   ```
 
 **Healthy Indicators**:
-- ✅ `docker-compose ps` shows `up`, not exited
+- ✅ `docker compose ps` shows `up`, not exited
 - ✅ Container logs show "Loaded model" messages
 - ✅ `/v1/models` endpoint returns model list
 - ✅ `nvidia-smi` shows GPU memory allocated
@@ -290,7 +288,7 @@ for host, port, name, endpoint in services:
     print(f"{status} {name:15} port:{port:5} socket:{result.get('socket'):15} http:{http_status}")
 
 print("\n=== Docker Compose Status ===")
-print("From host, run: docker-compose ps")
+print("From host, run: docker compose ps")
 print("Expected: app, mariadb, chromadb, vllm all 'Up'")
 
 sys.exit(0 if all("connected" in r.get("socket", "") for r in results) else 1)
@@ -306,9 +304,9 @@ python .devcontainer/diagnostic.py
 ## Common Error Messages & Solutions
 
 ### "Connection refused"
-- **Check**: Service is running (`docker-compose ps`)
+- **Check**: Service is running (`docker compose ps`)
 - **Fix**: Wait for full startup (especially vLLM on first run)
-- **Fallback**: `docker-compose restart <service>`
+- **Fallback**: `docker compose restart <service>`
 
 ### "No such host"
 - **Check**: Container names in docker-compose.yaml
@@ -368,30 +366,30 @@ HF_TOKEN=<your-huggingface-token>
 
 ```bash
 # Status
-docker-compose ps -a
-docker-compose ps mariadb
+docker compose ps -a
+docker compose ps mariadb
 
 # Logs
-docker-compose logs mariadb -n 50
-docker-compose logs chromadb -f
-docker-compose logs vllm --tail 100
+docker compose logs mariadb -n 50
+docker compose logs chromadb -f
+docker compose logs vllm --tail 100
 
 # Restart specific service
-docker-compose restart mariadb
-docker-compose restart chromadb
-docker-compose restart vllm
+docker compose restart mariadb
+docker compose restart chromadb
+docker compose restart vllm
 
 # Clean up everything (DESTRUCTIVE)
-docker-compose down
+docker compose down
 docker volume rm mariadb_data chromadb_data
-docker-compose up -d
+docker compose up -d
 
 # Rebuild container images
-docker-compose build
+docker compose build
 
 # Shell into service
-docker-compose exec mariadb bash
-docker-compose exec vllm bash
+docker compose exec mariadb bash
+docker compose exec vllm bash
 ```
 
 ---
@@ -406,7 +404,7 @@ Escalate if:
 - Performance degradation on previously working system
 
 Provide:
-- Full `docker-compose logs -f` output (minimum 100 lines)
+- Full `docker compose logs -f` output (minimum 100 lines)
 - `nvidia-smi` output from host
 - Host OS and Docker version: `docker -v && docker stats --no-stream`
 - Dev container initialization log: contents of `/tmp/setup_complete_v*.log`

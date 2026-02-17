@@ -121,7 +121,7 @@ Results: 2/5 tests passed
 ✗ Critical services not responding. See troubleshooting guide.
 ```
 - Action: Check service status immediately
-- Command: `docker-compose ps -a` (are containers running?)
+- Command: `docker compose ps -a` (are containers running?)
 - Next: Review `.devcontainer/DEPENDENCIES.md` startup sequence
 
 ---
@@ -152,7 +152,7 @@ Results: 2/5 tests passed
 **Failure Scenarios**:
 | Error | Likely Cause | Resolution |
 |-------|--------------|-----------|
-| `Connection refused` | MariaDB not running | `docker-compose restart mariadb` |
+| `Connection refused` | MariaDB not running | `docker compose restart mariadb` |
 | `No tables found` | Migrations haven't run | Run `python manage.py migrate --fake-initial` |
 | `Django settings not configured` | Expected in non-Django context | Falls back to socket check |
 
@@ -184,9 +184,9 @@ Results: 2/5 tests passed
 **Failure Scenarios**:
 | Error | Likely Cause | Resolution |
 |-------|--------------|-----------|
-| `Connection refused` | Container not running | `docker-compose restart chromadb` |
+| `Connection refused` | Container not running | `docker compose restart chromadb` |
 | `404 Not Found` | Wrong version/API changed | Check docker-compose.yaml has `chromadb:0.4.18` |
-| `502 Bad Gateway` | Container crashed | Check logs: `docker-compose logs chromadb` |
+| `502 Bad Gateway` | Container crashed | Check logs: `docker compose logs chromadb` |
 
 ---
 
@@ -220,7 +220,7 @@ Results: 2/5 tests passed
 **Failure Scenarios**:
 | Error | Likely Cause | Resolution |
 |-------|--------------|-----------|
-| `Could not connect to Chroma server` | Service health degraded | Wait 5 sec, restart: `docker-compose restart chromadb` |
+| `Could not connect to Chroma server` | Service health degraded | Wait 5 sec, restart: `docker compose restart chromadb` |
 | `Embedding failed` | Model not loaded in ChromaDB | Check container logs for errors |
 | `Collection already exists` | First run after test cleanup | Expected on subsequent runs; collection created or reused |
 
@@ -252,7 +252,7 @@ Results: 2/5 tests passed
 **Failure Scenarios**:
 | Error | Likely Cause | Resolution |
 |-------|--------------|-----------|
-| `Connection refused` | Container not running or still initializing | Wait 5 min for model download, `docker-compose logs vllm` for progress |
+| `Connection refused` | Container not running or still initializing | Wait 5 min for model download, `docker compose logs vllm` for progress |
 | `Connection timeout` | Model downloading from HuggingFace (~15GB over internet) | First run takes 5-10 min; be patient |
 | `vLLM not responding (may still be loading)` | Model load in progress | Expected during first startup; wait ⏳ |
 
@@ -295,7 +295,7 @@ Results: 2/5 tests passed
 
 ### Pre-Test Checklist
 
-- [ ] Services are running: `docker-compose ps -a` shows all ✓
+- [ ] Services are running: `docker compose ps -a` shows all ✓
 - [ ] At least 5 min have passed since container start (model download)
 - [ ] No other tests are running (avoid resource contention)
 - [ ] Enough disk space for temporary test files (/tmp must have > 100MB free)
@@ -307,7 +307,7 @@ Results: 2/5 tests passed
 cd /app
 
 # Show service status first
-docker-compose ps -a
+docker compose ps -a
 
 # Run diagnostic to see what's working
 python .devcontainer/diagnostic.py
@@ -335,19 +335,19 @@ Results: X/5 tests passed
 
 1. **Identify failing test** from results (e.g., "Step 2: ChromaDB")
 2. **Look up in table above** for likely causes
-3. **Try resolution command** (e.g., `docker-compose restart chromadb`)
+3. **Try resolution command** (e.g., `docker compose restart chromadb`)
 4. **Re-run test** after 5 second wait: `python tests/integration/test_devcontainer.py`
 
 **If still failing**:
 ```bash
 # Check service logs
-docker-compose logs chromadb -n 50
+docker compose logs chromadb -n 50
 
 # Check service health
 python .devcontainer/diagnostic.py
 
 # Restart all services
-docker-compose restart
+docker compose restart
 
 # Wait 60 sec
 sleep 60
@@ -407,13 +407,13 @@ python tests/integration/test_devcontainer.py
 **Solution**:
 ```bash
 # Check current version
-docker-compose logs chromadb | grep "Chroma" | head -1
+docker compose logs chromadb | grep "Chroma" | head -1
 
 # Restart with correct version
-docker-compose restart chromadb
+docker compose restart chromadb
 
 # Verify version in logs
-docker-compose logs chromadb | grep -i version
+docker compose logs chromadb | grep -i version
 
 # Should show: "Running Chroma server: 0.4.18"
 ```
@@ -431,7 +431,7 @@ docker-compose logs chromadb | grep -i version
 
 ```bash
 # Show progress
-docker-compose logs vllm -f
+docker compose logs vllm -f
 
 # Wait for this message:
 # "Qwen/Qwen2.5-14B-Instruct-AWQ loaded successfully"
@@ -458,12 +458,12 @@ Expected wait time: **2-10 minutes** depending on internet speed (15GB download)
 **Solution**:
 ```bash
 # Check what's running
-docker-compose ps -a
+docker compose ps -a
 
 # If any say "Exit X" → crashed
 # Try full restart:
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
 
 # Wait for startup
 sleep 60

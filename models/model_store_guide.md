@@ -85,18 +85,13 @@ chmod -R g+rwX /opt/justnews/models ```
 Copies of the primary helpers are available in this repository under `models/`
 for quick reference:
 
-| Filename | Original Path | Summary | | --- | --- | --- | | `model_store.py` |
-`agents/common/model_store.py` | Core API for staging, finalizing, manifesting,
-and resolving model versions. | | `model_loader.py` |
-`agents/common/model_loader.py` | Safe wrappers around `transformers` and
-`sentence-transformers` that prefer `MODEL_STORE_ROOT` when set. | |
-`native_tensorrt_compiler.py` | `agents/analyst/native_tensorrt_compiler.py` |
-Publishing pipeline that stages TensorRT artifacts and pushes them into the
-store. | | `build_engine.py` | `tools/build_engine/build_engine.py` | CLI
-orchestrator for fetching HF models, creating ONNX/TRT engines, and finalizing
-them into the store. | | `create_toy_model_store.py` |
-`scripts/create_toy_model_store.py` | Utility for generating a miniature store
-layout for local testing and demos. |
+| Filename | Original Path | Summary |
+| --- | --- | --- |
+| `model_store.py` | `agents/common/model_store.py` | Core API for staging, finalizing, manifesting, and resolving model versions. |
+| `model_loader.py` | `agents/common/model_loader.py` | Safe wrappers around `transformers` and `sentence-transformers` that prefer `MODEL_STORE_ROOT` when set. |
+| `native_tensorrt_compiler.py` | `agents/analyst/native_tensorrt_compiler.py` | Publishing pipeline that stages TensorRT artifacts and pushes them into the store. |
+| `build_engine.py` | `tools/build_engine/build_engine.py` | CLI orchestrator for fetching HF models, creating ONNX/TRT engines, and finalizing them into the store. |
+| `create_toy_model_store.py` | `scripts/create_toy_model_store.py` | Utility for generating a miniature store layout for local testing and demos. |
 
 Additional integration points worth reviewing (not copied here):
 
@@ -105,6 +100,22 @@ Additional integration points worth reviewing (not copied here):
 - `agents/synthesizer/tools.py` – Prefers the store when retrieving synthesizer artifacts.
 
 - `deploy/systemd/examples/justnews.env.example` – Contains environment variable templates.
+
+## Headline Adapter Conventions
+
+The headline generation path is now a first-class ModelStore-backed adapter under the Chief Editor domain.
+
+- Canonical adapter name: `qwen2_headline_v1`
+- Canonical store path: `chief_editor/adapters/qwen2_headline_v1`
+- Agent map entries: `AGENT_MODEL_MAP.json` under both `agents.chief_editor` and `vllm_agents.chief_editor`
+- Runtime selector (optional override): `TITLE_HYBRID_ADAPTER_NAME` (fallback: `HEADLINE_ADAPTER_NAME`)
+
+Runtime behavior:
+
+- `agents/common/headline_adapter.py` resolves adapter metadata through
+  `agents/common/model_loader.py:get_agent_model_metadata(...)`.
+- When `STRICT_MODEL_STORE=1`, headline generation fails fast if the configured adapter path is missing.
+- In LoRA-enabled vLLM mode, the adapter name is used as the served model selector to conform to the adapter routing pattern.
 
 ## Deployment Touchpoints
 
@@ -129,28 +140,39 @@ Additional integration points worth reviewing (not copied here):
 ## Quick Start Snippets
 
 ```python
-from pathlib import Path from models.model_store import ModelStore
+from pathlib import Path
 
-store = ModelStore(Path('/opt/justnews/models')) with store.stage_new('scout', 'v2025-10-28') as tmp:
-# TODO: write weights/tokenizer files into tmp
-store.finalize('scout', 'v2025-10-28')
+from models.model_store import ModelStore
+
+store = ModelStore(Path("/opt/justnews/models"))
+with store.stage_new("scout", "v2025-10-28") as tmp:
+    # TODO: write weights/tokenizer files into tmp
+    pass
+store.finalize("scout", "v2025-10-28")
 
 ```
 
 ```python
 from models.model_loader import load_sentence_transformer
 
-model = load_sentence_transformer( 'sentence-transformers/all-MiniLM-L6-v2', agent='memory',
-cache_folder='/var/lib/justnews/cache' )
+model = load_sentence_transformer(
+    "sentence-transformers/all-MiniLM-L6-v2",
+    agent="memory",
+    cache_folder="/var/lib/justnews/cache",
+)
 
-```bash
+```
 
 ```bash
 
 ## Build and publish a TensorRT engine to the store
 
-python models/build_engine.py \ --agent analyst \ --model-id meta-llama/Meta-Llama-3-8B-Instruct \ --revision main \
---precision fp16 \ --output-version v2025-10-28
+python models/build_engine.py \
+  --agent analyst \
+  --model-id meta-llama/Meta-Llama-3-8B-Instruct \
+  --revision main \
+  --precision fp16 \
+  --output-version v2025-10-28
 
 ```
 

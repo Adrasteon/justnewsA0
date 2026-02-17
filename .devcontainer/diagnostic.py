@@ -132,18 +132,18 @@ def main():
     if not all_healthy:
         mariadb_result = next(r for r in results if r["service"] == "MariaDB")
         if mariadb_result["status"] == "unknown":
-            print("  1. MariaDB not responding → docker-compose restart mariadb")
+            print("  1. MariaDB not responding → docker compose restart mariadb")
         
         chromadb_result = next(r for r in results if r["service"] == "ChromaDB")
         if chromadb_result["status"] == "unknown":
-            print("  2. ChromaDB not responding → docker-compose restart chromadb")
+            print("  2. ChromaDB not responding → docker compose restart chromadb")
         
         vllm_result = next(r for r in results if r["service"] == "vLLM")
         if vllm_result["status"] == "unknown":
             print("  3. vLLM not responding:")
             print("     - First start: Wait 2-5 min for model download")
-            print("     - Check logs: docker-compose logs vllm -f")
-            print("     - If stuck: docker-compose restart vllm")
+            print("     - Check logs: docker compose logs vllm -f")
+            print("     - If stuck: docker compose restart vllm")
     
     print(f"\nExit code: {exit_code}")
     return exit_code

@@ -305,6 +305,7 @@ async def root():
         "capabilities": [
             "content_quality_assessment",
             "editorial_decision_making",
+            "headline_generation",
             "story_brief_generation",
             "publishing_coordination",
             "evidence_review_management",
@@ -830,6 +831,7 @@ async def capabilities_endpoint():
             "editorial_sentiment_analysis",
             "editorial_commentary_generation",
             "comprehensive_editorial_decisions",
+            "headline_generation",
             "story_brief_generation",
             "publishing_coordination",
             "evidence_review_management",

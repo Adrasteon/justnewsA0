@@ -22,6 +22,7 @@ Key Features:
 
 import asyncio
 import os
+import re
 import time
 from dataclasses import dataclass
 from datetime import timezone, datetime
@@ -793,7 +794,7 @@ class SynthesizerEngine:
             article_texts: List of new article contents.
             previous_context: Optional summary of previous coverage to maintain continuity.
 
-        Compatibility wrapper: returns dict {status, summary, key_points, article_count}
+        Compatibility wrapper: returns dict {status, body, summary, key_points, article_count}
         """
         if not self.is_initialized:
             raise RuntimeError("not initialized")
@@ -803,6 +804,7 @@ class SynthesizerEngine:
             if not article_texts:
                 return {
                     "status": "success",
+                    "body": "",
                     "summary": "",
                     "key_points": [],
                     "article_count": 0,
@@ -825,12 +827,18 @@ class SynthesizerEngine:
                     self._run_qwen_cluster_summary, texts, previous_context
                 )
                 if qwen_doc:
-                    summary = qwen_doc.get("summary") or " ".join(
-                        qwen_doc.get("key_points", [])[:2]
+                    body = (
+                        qwen_doc.get("body")
+                        or qwen_doc.get("draft_body")
+                        or qwen_doc.get("article_body")
+                        or qwen_doc.get("summary")
+                        or ""
                     )
+                    summary = qwen_doc.get("summary") or self._derive_summary_from_text(body)
                     key_points = qwen_doc.get("key_points", [])
                     return {
                         "status": "success",
+                        "body": body,
                         "summary": summary,
                         "key_points": key_points,
                         "article_count": len(article_texts),
@@ -879,9 +887,13 @@ class SynthesizerEngine:
                 else []
             )
 
+            body = refined
+            summary = self._derive_summary_from_text(body)
+
             return {
                 "status": "success",
-                "summary": refined,
+                "body": body,
+                "summary": summary,
                 "key_points": key_points,
                 "article_count": len(article_texts),
             }
@@ -894,7 +906,25 @@ class SynthesizerEngine:
                     for a in (article_texts or [])
                 ][:3]
             )
-            return {"status": "error", "summary": combined, "error": str(e)}
+            return {
+                "status": "error",
+                "body": combined,
+                "summary": self._derive_summary_from_text(combined),
+                "error": str(e),
+            }
+
+    def _derive_summary_from_text(self, text: str, max_words: int = 46) -> str:
+        normalized = " ".join((text or "").split()).strip()
+        if not normalized:
+            return ""
+        sentences = re.split(r"(?<=[.!?])\s+", normalized)
+        summary = " ".join(sentences[:2]).strip()
+        if not summary:
+            summary = normalized
+        words = summary.split()
+        if len(words) > max_words:
+            summary = " ".join(words[:max_words]).rstrip(" ,;:-") + "…"
+        return summary
 
     async def _summarize_text(self, text: str) -> SynthesisResult:
         """Summarize individual text using Qwen (primary) with fallbacks.

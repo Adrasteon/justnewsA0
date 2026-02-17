@@ -129,7 +129,7 @@ Run steps individually for detailed inspection:
 
 ```bash
 # Step 1: Start services (if not running)
-docker-compose -f .devcontainer/docker-compose.yaml up -d
+docker compose -f .devcontainer/docker-compose.yaml up -d
 
 # Step 2: Run migrations
 python manage.py migrate
@@ -186,13 +186,13 @@ top -b -n1  # Top processes
 ### Issue: "Cannot connect to MariaDB"
 ```bash
 # Check if container is running
-docker-compose -f .devcontainer/docker-compose.yaml ps mariadb
+docker compose -f .devcontainer/docker-compose.yaml ps mariadb
 
 # If not running, start services
-docker-compose -f .devcontainer/docker-compose.yaml up -d
+docker compose -f .devcontainer/docker-compose.yaml up -d
 
 # Test connection directly
-docker-compose -f .devcontainer/docker-compose.yaml exec mariadb mysqladmin ping -u root -proot_password
+docker compose -f .devcontainer/docker-compose.yaml exec mariadb mysqladmin ping -u root -proot_password
 ```
 
 ### Issue: "Port 8000 already in use"
@@ -240,7 +240,7 @@ curl -s http://localhost:8001/v1/models | jq .
 nvidia-smi
 
 # Restart vLLM if stuck
-docker-compose -f .devcontainer/docker-compose.yaml restart vllm
+docker compose -f .devcontainer/docker-compose.yaml restart vllm
 
 # Wait for reload
 sleep 10
@@ -294,7 +294,7 @@ After simulation, you'll have:
    kill <PID>
    
    # Optionally stop Docker services
-   docker-compose -f .devcontainer/docker-compose.yaml stop
+   docker compose -f .devcontainer/docker-compose.yaml stop
    ```
 
 ---

@@ -324,6 +324,7 @@ class TestSynthesizerEngineAggregateCluster:
         result = await synthesizer_engine.aggregate_cluster(articles)
 
         assert result["status"] == "success"
+        assert "body" in result
         assert "summary" in result
         assert "key_points" in result
         assert result["article_count"] == len(articles)
@@ -334,6 +335,7 @@ class TestSynthesizerEngineAggregateCluster:
         result = await synthesizer_engine.aggregate_cluster([])
 
         assert result["status"] == "success"
+        assert result["body"] == ""
         assert result["summary"] == ""
         assert result["key_points"] == []
         assert result["article_count"] == 0

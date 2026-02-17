@@ -130,3 +130,31 @@ def test_update_agent_model_performance_drop_triggers_rollback(monkeypatch):
     # buffer (rollback prevents clearing) and training should have finished.
     assert len(coord.training_buffers["fact_checker"]) >= 1
     assert coord.is_training is False
+
+
+def test_headline_examples_trigger_immediate_update(monkeypatch):
+    monkeypatch.setenv("HEADLINE_TRAINING_UPDATE_THRESHOLD", "2")
+    coord = make_coordinator(monkeypatch)
+
+    calls: list[str] = []
+    coord._schedule_immediate_update = lambda agent_name: calls.append(agent_name)
+
+    coord.add_training_example(
+        agent_name="chief_editor",
+        task_type="headline_generation",
+        input_text="headline context one",
+        expected_output={"headline": "First"},
+        uncertainty_score=0.4,
+        importance_score=0.7,
+    )
+    assert calls == []
+
+    coord.add_training_example(
+        agent_name="chief_editor",
+        task_type="headline_generation",
+        input_text="headline context two",
+        expected_output={"headline": "Second"},
+        uncertainty_score=0.4,
+        importance_score=0.7,
+    )
+    assert calls == ["chief_editor"]

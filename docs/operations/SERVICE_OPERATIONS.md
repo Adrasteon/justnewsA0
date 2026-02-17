@@ -16,16 +16,16 @@
 **Quick Commands**:
 ```bash
 # Check service status
-docker-compose ps -a
+docker compose ps -a
 
 # View service logs
-docker-compose logs <service> -f
+docker compose logs <service> -f
 
 # Restart all services
-docker-compose restart
+docker compose restart
 
 # Full restart (dangerous—breaks connections)
-docker-compose down && docker-compose up -d
+docker compose down && docker compose up -d
 ```
 
 ---
@@ -41,22 +41,22 @@ docker-compose down && docker-compose up -d
 # 2. Wait for in-flight requests to complete (check health status)
 # 3. Stop services in order
 
-docker-compose stop vllm      # Stop LLM server first (longest to restart)
-docker-compose stop chromadb  # Stop vector DB
-docker-compose stop app       # Stop web app
-docker-compose stop mariadb   # Stop database last
+docker compose stop vllm      # Stop LLM server first (longest to restart)
+docker compose stop chromadb  # Stop vector DB
+docker compose stop app       # Stop web app
+docker compose stop mariadb   # Stop database last
 
 # 4. Verify all stopped
-docker-compose ps -a
+docker compose ps -a
 # All should show Status: Exited
 
 # 5. Start services in order
-docker-compose start mariadb  # Start database first
+docker compose start mariadb  # Start database first
 sleep 30                       # Wait for MariaDB to initialize
-docker-compose start chromadb # Start vector DB
+docker compose start chromadb # Start vector DB
 sleep 10                       # Let ChromaDB initialize
-docker-compose start vllm      # Resume model loading (takes 2-5 min)
-docker-compose start app       # Start web app last
+docker compose start vllm      # Resume model loading (takes 2-5 min)
+docker compose start app       # Start web app last
 
 # 6. Verify all healthy
 python .devcontainer/diagnostic.py
@@ -72,7 +72,7 @@ python .devcontainer/diagnostic.py
 **Success Criteria**:
 - All containers show `Status: Up`
 - diagnostic.py shows all ✓ connected
-- No error logs in `docker-compose logs -f`
+- No error logs in `docker compose logs -f`
 
 ---
 
@@ -82,88 +82,76 @@ python .devcontainer/diagnostic.py
 
 ```bash
 # Kill and restart specific service
-docker-compose restart <service>
+docker compose restart <service>
 # Examples:
-# docker-compose restart vllm
-# docker-compose restart chromadb
-# docker-compose restart mariadb
-```
-
-**Expected Timeline**: 30-60 seconds per service
-
-**Service-Specific Restart**:
-
-**vLLM** (model server):
+# docker compose restart vllm
+# docker compose restart chromadb
+docker compose ps -a
+docker compose logs <service> -f
+docker compose restart
+docker compose down && docker compose up -d
 ```bash
-docker-compose restart vllm
+docker compose restart vllm
 # Logs: Watch for "Qwen/Qwen2.5-14B-Instruct-AWQ loaded successfully"
-docker-compose logs vllm -f
+docker compose logs vllm -f
 ```
 
-**ChromaDB** (vector database):
-```bash
-docker-compose restart chromadb
-# Logs: Watch for "Chroma server: ... Listening on ..."
-docker-compose logs chromadb -f
-```
+docker compose stop vllm      # Stop LLM server first (longest to restart)
+docker compose stop chromadb  # Stop vector DB
+docker compose stop app       # Stop web app
+docker compose stop mariadb   # Stop database last
+docker compose logs chromadb -f
+docker compose ps -a
 
 **MariaDB** (relational database):
-```bash
-docker-compose restart mariadb
+docker compose start mariadb  # Start database first
+docker compose restart mariadb
 # Logs: Watch for "mysqld: ready for connections"
-docker-compose logs mariadb -f
+docker compose logs mariadb -f
 ```
 
 **App** (web application):
-```bash
-docker-compose restart app
+docker compose restart <service>
+docker compose restart app
 # Logs: Watch for "Uvicorn running on" or Django startup
-docker-compose logs app -f
+docker compose logs app -f
 ```
 
 ---
 
 ### Full Service Reset (Nuclear Option)
-
+docker compose logs > /tmp/logs_backup_$(date +%s).txt
 **When to use**: Persistent corruption, failed restart, complete rebuild needed  
-**WARNING**: All connections will break, active jobs will fail
+docker compose down
 
 ```bash
 # 1. Notify users of maintenance window (required)
 # 2. Save current state if needed
-docker-compose logs > /tmp/logs_backup_$(date +%s).txt
+docker compose up -d
 
-# 3. Stop all services
-docker-compose down
+docker compose logs -f
+docker compose down
 
 # 4. Remove containers (but keep volumes for data persistence)
-# DO NOT run: docker-compose down -v
+# DO NOT run: docker compose down -v
 # (that would delete all data!)
 
 # 5. If you need to reset specific volumes (rare):
 docker volume rm <volume_name>
 # Example: docker volume rm app_mariadb_data
 # WARNING: This deletes all data in that volume!
-
+**Docker status** (`docker compose ps -a`):
 # 6. Start fresh
-docker-compose up -d
-
-# 7. Monitor startup
-docker-compose logs -f
-
-# 8. Wait for services to be ready
-sleep 120  # 2 minutes for all services to initialize
-
-# 9. Verify all healthy
+docker compose up -d
 python .devcontainer/diagnostic.py
 ```
 
 **Expected Timeline**: 3-7 minutes total
 
 **Recovery Checklist**:
-- [ ] All containers running (`docker-compose ps -a`)
+- [ ] All containers running (`docker compose ps -a`)
 - [ ] All services ✓ connected (diagnostic.py output)
-- [ ] No errors in logs (`docker-compose logs | grep -i error`)
+- [ ] No errors in logs (`docker compose logs | grep -i error`)
 - [ ] Database migrations applied (check logs for "Applied")
 - [ ] Users notified of recovery completion
 
@@ -177,17 +165,17 @@ python .devcontainer/diagnostic.py
 
 ```bash
 # 1. Check service status
-docker-compose ps mariadb
+docker compose ps mariadb
 # Should show: Status: Up
 
 # 2. Check logs for errors
-docker-compose logs mariadb | tail -50
+docker compose logs mariadb | tail -50
 
 # 3. Verify port is open
 python3 -c "import socket; sock = socket.create_connection(('mariadb', 3306), timeout=5); sock.close(); print('✓ Port open')"
 
 # 4. Check database connectivity
-docker-compose exec app python manage.py shell << 'EOF'
+docker compose exec app python manage.py shell << 'EOF'
 from django.db import connection
 with connection.cursor() as cursor:
     cursor.execute("SELECT 1")
@@ -195,7 +183,7 @@ with connection.cursor() as cursor:
 EOF
 
 # 5. If stuck, restart
-docker-compose restart mariadb
+docker compose restart mariadb
 sleep 30
 python .devcontainer/diagnostic.py
 ```
@@ -204,23 +192,23 @@ python .devcontainer/diagnostic.py
 
 | Issue | Symptom | Fix |
 |-------|---------|-----|
-| **Out of Memory** | Process killed, container exits | `docker-compose restart mariadb` |
+| **Out of Memory** | Process killed, container exits | `docker compose restart mariadb` |
 | **Connection Pool Exhausted** | "1040 Too many connections" | Check for zombie connections, restart app |
 | **Disk Full** | Inserts fail, grow operations slow | Check `/var/lib/mysql` space, cleanup old logs |
-| **Crash on Startup** | Immediately exits after restart | Check logs: `docker-compose logs mariadb -f` |
+| **Crash on Startup** | Immediately exits after restart | Check logs: `docker compose logs mariadb -f` |
 
 **Emergency Connection Drop Recovery**:
 ```bash
 # If app can't connect to MariaDB midway:
 
 # 1. Check MariaDB is still running
-docker-compose ps mariadb  # Must show "Up"
+docker compose ps mariadb  # Must show "Up"
 
 # 2. Restart just the app (reconnect)
-docker-compose restart app
+docker compose restart app
 
 # 3. Monitor recovery
-docker-compose logs app -f | grep -i "database\|connect"
+docker compose logs app -f | grep -i "database\|connect"
 ```
 
 ---
@@ -234,10 +222,10 @@ docker-compose logs app -f | grep -i "database\|connect"
 curl -s http://chromadb:3307/api/v1/heartbeat | python3 -m json.tool
 
 # 2. Check logs
-docker-compose logs chromadb | tail -30
+docker compose logs chromadb | tail -30
 
 # 3. If port unavailable, restart
-docker-compose restart chromadb
+docker compose restart chromadb
 
 # 4. Wait for startup
 sleep 10
@@ -251,15 +239,15 @@ curl -s http://chromadb:3307/api/v1/heartbeat
 
 | Issue | Symptom | Fix |
 |-------|---------|-----|
-| **API Version Mismatch** | 404 on all endpoints | Verify version: `docker-compose logs chromadb \| grep Chroma` Must be 0.4.18 |
+| **API Version Mismatch** | 404 on all endpoints | Verify version: `docker compose logs chromadb \| grep Chroma` |
 | **Database Locked** | Slow queries, timeouts | Let running operations complete (2-5 min), then restart if needed |
-| **Memory Leak** | Gradual slowdown, eventual crash | Restart: `docker-compose restart chromadb` (monitor weekly) |
+| **Memory Leak** | Gradual slowdown, eventual crash | Restart: `docker compose restart chromadb` (monitor weekly) |
 | **Collections Corrupted** | Errors on specific collections | Delete & recreate collection (data loss for that collection) |
 
 **Manual Collection Recovery** (if needed):
 ```bash
 # Connect to ChromaDB container
-docker-compose exec chromadb bash
+docker compose exec chromadb bash
 
 # Inside container, check collections
 chroma_cli --path /data list_collections
@@ -269,7 +257,7 @@ curl -s http://localhost:8000/api/v1/collections | python3 -m json.tool
 
 # If stuck, exit container and restart
 exit
-docker-compose restart chromadb
+docker compose restart chromadb
 ```
 
 ---
@@ -280,7 +268,7 @@ docker-compose restart chromadb
 
 ```bash
 # 1. Check if running
-docker-compose ps vllm  # Should show "Up"
+docker compose ps vllm  # Should show "Up"
 
 # 2. Check GPU memory
 nvidia-smi
@@ -291,15 +279,15 @@ curl -s http://vllm:8001/v1/models | python3 -m json.tool
 # Should show: "Qwen/Qwen2.5-14B-Instruct-AWQ" in models list
 
 # 4. If stuck on startup (loading)
-docker-compose logs vllm -f
+docker compose logs vllm -f
 # Watch for: "Qwen ... loaded successfully" (takes 2-5 min first time)
 # If > 10 min, interrupt and restart
 
 # 5. Hard restart (frees GPU memory)
-docker-compose stop vllm
+docker compose stop vllm
 sleep 5
 nvidia-smi  # Should show vllm container gone
-docker-compose start vllm
+docker compose start vllm
 sleep 60    # Wait for model reload
 nvidia-smi  # Should show vllm using GPU again
 ```
@@ -309,9 +297,9 @@ nvidia-smi  # Should show vllm using GPU again
 | Issue | Symptom | Fix |
 |-------|---------|-----|
 | **Out of GPU Memory** | CUDA out of memory, inference fails | Restart service (frees GPU), don't run concurrent requests |
-| **HuggingFace Network Timeout** | Model download fails, stuck for > 5 min | Restart: `docker-compose restart vllm` (retry download) |
+| **HuggingFace Network Timeout** | Model download fails, stuck for > 5 min | Restart: `docker compose restart vllm` (retry download) |
 | **Inference Response Timeout** | Requests hang > 60s | Model may be overloaded; throttle concurrent requests |
-| **Model Not Loaded** | `/v1/models` returns empty | Wait 2-5 min, check logs: `docker-compose logs vllm -f` |
+| **Model Not Loaded** | `/v1/models` returns empty | Wait 2-5 min, check logs: `docker compose logs vllm -f` |
 
 **Manual Inference Test** (verify working):
 ```bash
@@ -351,7 +339,7 @@ nvidia-smi
 nvidia-smi -l 1  # Sample every 1 second
 
 # 3. If vllm using > 23GB (DANGER near limit)
-docker-compose restart vllm
+docker compose restart vllm
 
 # 4. Verify recovery
 sleep 60
@@ -375,7 +363,7 @@ watch -n 5 nvidia-smi
 
 ### Service Status Meanings
 
-**Docker status** (`docker-compose ps -a`):
+**Docker status** (`docker compose ps -a`):
 
 ```
 Status: Up X minutes       → ✓ Service running, healthy
@@ -410,7 +398,7 @@ Action: Wait 30-60 seconds, retry diagnostics; services may be initializing
 ✗ ChromaDB     → refused
 ✗ vLLM         → refused
 ```
-Action: Check `docker-compose ps -a`, restart failed services
+Action: Check `docker compose ps -a`, restart failed services
 
 ### Log Interpretation
 
@@ -438,27 +426,27 @@ app:         "Uvicorn running on http://0.0.0.0:8000"
 
 ```
 ┌─ Service not responding?
-│  ├─ Check: docker-compose ps -a
-│  │  ├─ Status: Exited → Restart: docker-compose restart <service>
-│  │  ├─ Status: Up (unhealthy) → Check logs: docker-compose logs <service>
+│  ├─ Check: docker compose ps -a
+│  │  ├─ Status: Exited → Restart: docker compose restart <service>
+│  │  ├─ Status: Up (unhealthy) → Check logs: docker compose logs <service>
 │  │  └─ Status: Up → Check port open manually, see service section above
 │  │
 │  └─ After restart, still failing?
-│     ├─ Check logs for errors: docker-compose logs <service> | grep -i "error\|fatal"
+│     ├─ Check logs for errors: docker compose logs <service> | grep -i "error\|fatal"
 │     ├─ If "out of memory" → Increase container memory limit
 │     ├─ If network error → Check docker network: docker network inspect bridge
-│     └─ If unknown → Full restart: docker-compose down && docker-compose up -d
+│     └─ If unknown → Full restart: docker compose down && docker compose up -d
 
 ├─ Database ingestion slow?
 │  ├─ Check: SELECT COUNT(*) FROM articles; 
 │  ├─ Check MariaDB connections: SHOW PROCESSLIST;
 │  │  ├─ > 50 connections → Kill idle: KILL xxx;
 │  │  └─ < 50 → Database OK, upstream issue
-│  └─ Restart app: docker-compose restart app (reconnect to pool)
+│  └─ Restart app: docker compose restart app (reconnect to pool)
 
 ├─ Embeddings taking too long?
 │  ├─ Check ChromaDB: curl http://chromadb:3307/api/v1/heartbeat
-│  │  ├─ 404/timeout → Restart: docker-compose restart chromadb
+│  │  ├─ 404/timeout → Restart: docker compose restart chromadb
 │  │  ├─ 200 OK → Service fine, check network latency
 │  │  └─ Refused → Service down, restart container
 │  └─ Check collection size: May be slow with 100K+ embeddings
@@ -469,7 +457,7 @@ app:         "Uvicorn running on http://0.0.0.0:8000"
 │  │  ├─ Empty list → Model failed to load, check logs
 │  │  └─ Lists model → Service OK, check request payload
 │  ├─ Check GPU memory: nvidia-smi
-│  │  ├─ > 23GB → Restart: docker-compose restart vllm
+│  │  ├─ > 23GB → Restart: docker compose restart vllm
 │  │  └─ < 23GB → Service fine, may be overloaded
 │  └─ Too many concurrent requests → Queue or retry later
 
@@ -486,14 +474,14 @@ app:         "Uvicorn running on http://0.0.0.0:8000"
 
 **Before going live with changes**:
 
-- [ ] All containers running: `docker-compose ps -a` shows all "Up"
+- [ ] All containers running: `docker compose ps -a` shows all "Up"
 - [ ] All services healthy: `python .devcontainer/diagnostic.py` shows all ✓
-- [ ] Database accessible: `docker-compose exec app python manage.py shell` (test query)
-- [ ] No errors in logs: `docker-compose logs --tail=20` (last 50 lines clean)
+- [ ] Database accessible: `docker compose exec app python manage.py shell` (test query)
+- [ ] No errors in logs: `docker compose logs --tail=20` (last 50 lines clean)
 - [ ] Model loaded: `curl http://vllm:8001/v1/models` returns Qwen model
 - [ ] Test basic flow: Ingestion → Embedding → Query pipeline works
 - [ ] GPU memory normal: `nvidia-smi` shows vllm ~21GB (not overloaded)
-- [ ] Backup current state: `docker-compose logs > /tmp/backup_logs.txt`
+- [ ] Backup current state: `docker compose logs > /tmp/backup_logs.txt`
 
 **Go/No-Go Decision**:
 - ✅ All checks pass → GREEN: Ready for deployment
@@ -562,7 +550,7 @@ Owner (who handled):
 
 **Backup Strategy**:
 - Docker volumes persist even if container stops
-- Daily backup of MariaDB: `docker-compose exec mariadb mysqldump --all-databases > /backup/db_$(date +%Y-%m-%d).sql`
+- Daily backup of MariaDB: `docker compose exec mariadb mysqldump --all-databases > /backup/db_$(date +%Y-%m-%d).sql`
 - Weekly backup of ChromaDB vector store
 - Keep 30 days of backups minimum
 
