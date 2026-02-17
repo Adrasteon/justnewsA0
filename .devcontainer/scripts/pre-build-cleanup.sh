@@ -388,10 +388,12 @@ verify_images() {
 main() {
     local found_containers=0
     local found_volumes=0
+    local found_running_containers=0
     local archived_any_data=0
     local removed_any_containers=0
     local removed_any_volumes=0
     local preserved_any_volumes=0
+    local preserved_any_containers=0
 
     echo ""
     echo -e "${BLUE}========================================${NC}"
@@ -428,8 +430,15 @@ main() {
     log_info "Scanning for existing containers and volumes..."
     local containers=($(find_containers))
     local volumes=($(find_volumes))
+    local running_containers=()
+    for container in "${containers[@]}"; do
+        if docker ps --filter "name=^/${container}$" --format "{{.Names}}" 2>/dev/null | grep -q "^${container}$"; then
+            running_containers+=("$container")
+        fi
+    done
     found_containers=${#containers[@]}
     found_volumes=${#volumes[@]}
+    found_running_containers=${#running_containers[@]}
     
     if [ ${#containers[@]} -eq 0 ] && [ ${#volumes[@]} -eq 0 ]; then
         log_success "No existing containers or volumes found. Clean slate!"
@@ -457,36 +466,53 @@ main() {
         echo ""
     fi
     
-    # Step 4: Archive MariaDB data (non-destructive)
-    if [ ${#containers[@]} -gt 0 ]; then
-        log_info "Step 1: Archiving data from existing containers..."
-        archive_mariadb_data
-        if [ -d "$BACKUP_PATH" ] && [ -n "$(ls -A "$BACKUP_PATH" 2>/dev/null)" ]; then
-            archived_any_data=1
+    # Step 4/5: Cleanup behavior differs by mode
+    if [ "$FORCE_CLEAN_REBUILD" = true ]; then
+        # Step 4: Archive MariaDB data (non-destructive)
+        if [ ${#containers[@]} -gt 0 ]; then
+            log_info "Step 1: Archiving data from existing containers..."
+            archive_mariadb_data
+            if [ -d "$BACKUP_PATH" ] && [ -n "$(ls -A "$BACKUP_PATH" 2>/dev/null)" ]; then
+                archived_any_data=1
+            fi
+            echo ""
+        fi
+        
+        # Step 4b: Archive ChromaDB data (non-destructive)
+        if [ ${#volumes[@]} -gt 0 ]; then
+            log_info "Step 1b: Archiving ChromaDB embeddings..."
+            archive_chromadb_data
+            if [ -d "$BACKUP_PATH" ] && [ -n "$(ls -A "$BACKUP_PATH" 2>/dev/null)" ]; then
+                archived_any_data=1
+            fi
+            echo ""
+        fi
+
+        # Step 5: Stop and remove containers
+        log_info "Step 2: Removing containers..."
+        stop_containers "${containers[@]}"
+        wait
+
+        remove_containers "${containers[@]}"
+        if [ ${#containers[@]} -gt 0 ]; then
+            removed_any_containers=1
         fi
         echo ""
-    fi
-    
-    # Step 4b: Archive ChromaDB data (non-destructive)
-    if [ ${#volumes[@]} -gt 0 ]; then
-        log_info "Step 1b: Archiving ChromaDB embeddings..."
-        archive_chromadb_data
-        if [ -d "$BACKUP_PATH" ] && [ -n "$(ls -A "$BACKUP_PATH" 2>/dev/null)" ]; then
-            archived_any_data=1
+    else
+        # IDEMPOTENT MODE: do not disrupt currently running containers
+        if [ "$found_running_containers" -gt 0 ]; then
+            preserved_any_containers=1
+            log_success "Step 1: Preserving ${found_running_containers} running container(s) in idempotent mode"
+            log_info "  → No archive/stop/remove actions executed for running containers"
+            echo ""
         fi
-        echo ""
+
+        if [ "$found_containers" -gt "$found_running_containers" ]; then
+            log_info "Step 1b: Leaving non-running matched containers untouched in idempotent mode"
+            log_info "  → Use --force-clean to archive and remove stale containers"
+            echo ""
+        fi
     fi
-    
-    # Step 5: Stop and remove containers
-    log_info "Step 2: Removing containers..."
-    stop_containers "${containers[@]}"
-    wait
-    
-    remove_containers "${containers[@]}"
-    if [ ${#containers[@]} -gt 0 ]; then
-        removed_any_containers=1
-    fi
-    echo ""
     
     # Step 6: Remove volumes (IDEMPOTENT MODE - preserve by default)
     log_info "Step 3: Handling volumes (IDEMPOTENT MODE)..."
@@ -501,7 +527,7 @@ main() {
     else
         # IDEMPOTENT: Preserve existing volumes for data preservation
         log_info "  IDEMPOTENT MODE: Skipping volume removal to preserve data"
-        log_info "  → Containers will be stopped but volumes retained"
+        log_info "  → Containers are preserved; volumes are retained"
         
         if [ ${#volumes[@]} -gt 0 ]; then
             preserved_any_volumes=1
@@ -523,13 +549,11 @@ main() {
             log_warning "Some containers/volumes remain (FORCE CLEAN failed to remove some items)"
         fi
     else
-        if [ ${#remaining_containers[@]} -eq 0 ]; then
-            log_success "✓ All containers stopped and removed"
-            if [ ${#remaining_volumes[@]} -gt 0 ]; then
-                log_success "✓ Existing volumes preserved as requested (${#remaining_volumes[@]} volumes)"
-            fi
-        else
-            log_warning "Some containers remain (may be expected)"
+        if [ ${#remaining_containers[@]} -gt 0 ]; then
+            log_success "✓ Existing containers preserved in idempotent mode (${#remaining_containers[@]} matched)"
+        fi
+        if [ ${#remaining_volumes[@]} -gt 0 ]; then
+            log_success "✓ Existing volumes preserved as requested (${#remaining_volumes[@]} volumes)"
         fi
     fi
     echo ""
@@ -569,6 +593,8 @@ main() {
     
     if [ "$removed_any_containers" -eq 1 ]; then
         log_info "Ready for new devcontainer build (previous containers removed)"
+    elif [ "$preserved_any_containers" -eq 1 ]; then
+        log_info "Ready for new devcontainer build (running containers preserved)"
     else
         log_info "Ready for new devcontainer build"
     fi

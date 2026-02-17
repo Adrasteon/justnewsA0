@@ -55,6 +55,9 @@ CHROMADB_READY=0
 CHROMADB_HAS_COLLECTIONS=0
 CHROMADB_COLLECTION_COUNT=-1
 CHROMADB_STATUS_DETAIL="not-checked"
+CHROMADB_REQUIRED_COLLECTIONS_CREATED=0
+CHROMADB_REQUIRED_COLLECTIONS_CREATED_NAMES=""
+CHROMADB_REQUIRED_COLLECTIONS_STATUS="not-run"
 VLLM_READY=0
 
 # Get configuration from global.env
@@ -430,6 +433,127 @@ else
     fi
 fi
 
+# Step 3.1: Ensure required ChromaDB collections exist (idempotent)
+CHROMADB_REQUIRED_ARTICLES_COLLECTION="${CHROMADB_COLLECTION_NAME:-articles__BAAI_bge-large-en-v1_5__1024}"
+CHROMADB_REQUIRED_FACT_COLLECTION="${FACT_CHECK_CHROMADB_COLLECTION_NAME:-fact_checks_vector}"
+
+log_info ""
+log_info "Step 3.1: Ensuring required ChromaDB collections exist..."
+CHROMA_ENSURE_RAW=$(python3 << EOF 2>/dev/null
+import json
+
+host = "$CHROMADB_HOST"
+port = $CHROMADB_PORT
+required = [
+    "$CHROMADB_REQUIRED_ARTICLES_COLLECTION",
+    "$CHROMADB_REQUIRED_FACT_COLLECTION",
+]
+
+result = {
+    "ok": False,
+    "created": [],
+    "existing": [],
+    "post_count": -1,
+    "detail": "not-run",
+}
+
+try:
+    import chromadb
+    client = chromadb.HttpClient(host=host, port=port)
+
+    seen = set()
+    for name in required:
+        if not name or name in seen:
+            continue
+        seen.add(name)
+
+        try:
+            client.get_collection(name)
+            result["existing"].append(name)
+        except Exception:
+            client.get_or_create_collection(name=name)
+            result["created"].append(name)
+
+    result["post_count"] = len(client.list_collections())
+    result["ok"] = True
+    result["detail"] = "required-collections-ensured"
+except Exception as exc:
+    result["detail"] = f"ensure-failed: {exc}"
+
+print(json.dumps(result))
+EOF
+)
+
+CHROMADB_REQUIRED_COLLECTIONS_STATUS=$(python3 << EOF
+import json
+raw = '''${CHROMA_ENSURE_RAW}'''.strip()
+try:
+    data = json.loads(raw)
+    print("ok" if data.get("ok") else "failed")
+except Exception:
+    print("failed")
+EOF
+)
+CHROMADB_REQUIRED_COLLECTIONS_CREATED=$(python3 << EOF
+import json
+raw = '''${CHROMA_ENSURE_RAW}'''.strip()
+try:
+    data = json.loads(raw)
+    print(len(data.get("created", [])))
+except Exception:
+    print(0)
+EOF
+)
+CHROMADB_REQUIRED_COLLECTIONS_CREATED_NAMES=$(python3 << EOF
+import json
+raw = '''${CHROMA_ENSURE_RAW}'''.strip()
+try:
+    data = json.loads(raw)
+    print(", ".join(data.get("created", [])))
+except Exception:
+    print("")
+EOF
+)
+CHROMADB_COLLECTION_COUNT=$(python3 << EOF
+import json
+raw = '''${CHROMA_ENSURE_RAW}'''.strip()
+try:
+    data = json.loads(raw)
+    print(int(data.get("post_count", -1)))
+except Exception:
+    print(-1)
+EOF
+)
+
+if [ "$CHROMADB_COLLECTION_COUNT" -ge 0 ]; then
+    if [ "$CHROMADB_COLLECTION_COUNT" -gt 0 ]; then
+        CHROMADB_HAS_COLLECTIONS=1
+    else
+        CHROMADB_HAS_COLLECTIONS=0
+    fi
+fi
+
+if [ "$CHROMADB_REQUIRED_COLLECTIONS_STATUS" = "ok" ]; then
+    CHROMADB_READY=1
+    if [ "$CHROMADB_REQUIRED_COLLECTIONS_CREATED" -gt 0 ]; then
+        log_info "  → Created missing required collection(s): $CHROMADB_REQUIRED_COLLECTIONS_CREATED_NAMES"
+    else
+        log_info "  → Required collections already existed; no recreation needed"
+    fi
+else
+    CHROMADB_STATUS_DETAIL=$(python3 << EOF
+import json
+raw = '''${CHROMA_ENSURE_RAW}'''.strip()
+try:
+    data = json.loads(raw)
+    print(data.get("detail", "ensure-parse-error"))
+except Exception:
+    print("ensure-parse-error")
+EOF
+)
+    log_warning "Could not ensure required ChromaDB collections ($CHROMADB_STATUS_DETAIL)"
+fi
+
 # Step 4: Wait for vLLM to be accessible (with polling)
 # NOTE: vLLM model loading can take 2-5 minutes; this step is non-critical
 log_info ""
@@ -516,6 +640,16 @@ if [ $INIT_FAILURES -eq 0 ]; then
     else
         log_info "  • vLLM: Still initializing (not reachable within startup window)"
     fi
+
+    if [ "$CHROMADB_REQUIRED_COLLECTIONS_STATUS" = "ok" ]; then
+        if [ "$CHROMADB_REQUIRED_COLLECTIONS_CREATED" -gt 0 ]; then
+            log_info "  • ChromaDB required collections: Ensured (created missing: $CHROMADB_REQUIRED_COLLECTIONS_CREATED_NAMES)"
+        else
+            log_info "  • ChromaDB required collections: Already present"
+        fi
+    else
+        log_info "  • ChromaDB required collections: Verification failed ($CHROMADB_STATUS_DETAIL)"
+    fi
     
     # Tool availability check
     log_info "  • Node.js: $(node -v 2>/dev/null || echo 'Not found')"
@@ -529,7 +663,9 @@ if [ $INIT_FAILURES -eq 0 ]; then
     elif [ "$MARIADB_SQL_MIGRATIONS_APPLIED" -eq 1 ]; then
         log_info "  • Fresh schema was initialized once in this run"
     fi
-    if [ "$CHROMADB_READY" -eq 1 ] && [ "$CHROMADB_HAS_COLLECTIONS" -eq 1 ]; then
+    if [ "$CHROMADB_REQUIRED_COLLECTIONS_STATUS" = "ok" ] && [ "$CHROMADB_REQUIRED_COLLECTIONS_CREATED" -gt 0 ]; then
+        log_info "  • Missing required ChromaDB collections were created idempotently (get_or_create)"
+    elif [ "$CHROMADB_READY" -eq 1 ] && [ "$CHROMADB_HAS_COLLECTIONS" -eq 1 ]; then
         log_info "  • Existing ChromaDB collections were detected and left untouched"
     elif [ "$CHROMADB_READY" -eq 1 ] && [ "$CHROMADB_COLLECTION_COUNT" -eq 0 ]; then
         log_info "  • No ChromaDB collections were present; none were created by startup"
