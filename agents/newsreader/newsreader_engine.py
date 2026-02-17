@@ -225,7 +225,17 @@ class NewsReaderEngine:
             self._initialize_fallback_systems()
 
     def _load_llava_model(self):
-        """Load LLaVA model for vision-language processing."""
+        """Load LLaVA model for vision-language processing.
+        
+        STATUS: LLaVA model loading DISABLED to save GPU memory (~5-10GB).
+        Re-enable by setting NEWSREADER_ENABLE_VISION=1
+        """
+        if os.environ.get("NEWSREADER_ENABLE_VISION") != "1":
+            logger.info("🚫 LLaVA model loading disabled (set NEWSREADER_ENABLE_VISION=1 to enable)")
+            self.models["llava"] = None
+            self.processors["llava"] = None
+            return
+
         if self.models.get("llava") is not None:
             return
 

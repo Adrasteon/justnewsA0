@@ -1,6 +1,7 @@
 version: "3.8"
 services:
   app:
+    container_name: app
     build: .
     volumes:
       - ..:/app:cached
@@ -11,8 +12,49 @@ services:
     depends_on:
       - vllm
     command: sleep infinity
+    labels:
+      service: "app"
+      component: "web-application"
+      tier: "critical"
+      owner: "infrastructure"
+      gpu_required: "false"
+      memory_required: "2GB"
+      healthcheck: "curl http://localhost:8000/health"
+      restart_policy: "always"
+      dependencies: "mariadb,chromadb,vllm"
+
+  fact-checker:
+    container_name: fact-checker
+    build:
+      context: ../mcp_fact_checker_server
+    environment:
+      - FACT_CHECKER_API_KEY=dev_key_123
+      - VLLM_BASE_URL=http://vllm:8010/v1
+      - VLLM_FACT_CHECKER_MODEL=Qwen/Qwen2.5-14B-Instruct-AWQ
+      - LOG_LEVEL=INFO
+      - FACT_CHECKER_AGENT_PORT=8003
+      - PYTHONPATH=/app:/app/fact_checker_lib
+    volumes:
+      - ../mcp_fact_checker_server:/app
+      - ../database:/app/database
+      - ../common:/app/common
+      - ../global.env:/app/global.env
+      - ../config:/app/config
+      - justnews_deps:/deps
+    ports:
+      - "8003:8000"
+    # Use default CMD from Dockerfile (port 8000) to align with HEALTHCHECK
+    # command: uvicorn app.main:app --host 0.0.0.0 --port 8003
+    restart: unless-stopped
+    depends_on:
+      - vllm
+    labels:
+      service: "fact-checker"
+      component: "agent"
+      owner: "backend"
 
   mariadb:
+    container_name: mariadb
     image: mariadb:latest
     environment:
       MYSQL_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-dev_root_password}
@@ -23,22 +65,72 @@ services:
       - "3306:3306"
     volumes:
       - mariadb_data:/var/lib/mysql
+    labels:
+      service: "mariadb"
+      component: "database"
+      tier: "critical"
+      owner: "dba"
+      gpu_required: "false"
+      memory_required: "1GB"
+      disk_required: "10GB"
+      healthcheck: "mysql -u root -p$MYSQL_ROOT_PASSWORD -e 'SELECT 1'"
+      restart_policy: "always"
+      backup_required: "true"
+      backup_interval: "daily"
+      max_connections: "100"
 
   chromadb:
+    container_name: chromadb
     image: chromadb/chroma:latest
+    environment:
+      - IS_PERSISTENT=TRUE
+    volumes:
+      - chromadb_data:/chroma/data
     ports:
       - "3307:8000"
+    labels:
+      service: "chromadb"
+      component: "vector-database"
+      tier: "critical"
+      owner: "ml-ops"
+      gpu_required: "false"
+      memory_required: "4GB"
+      restart_policy: "always"
+      api_version: "latest"
+      monitor_collections: "true"
+      alert_on_disconnected: "true"
+      persistence: "true"
+      backup_required: "true"
 
   vllm:
+    container_name: vllm
     image: vllm/vllm-openai:latest
     gpus: all
     environment:
       - HF_TOKEN=${HF_TOKEN}
     volumes:
-      - ~/.cache/huggingface:/root/.cache/huggingface
-    command: --model Qwen/Qwen2.5-14B-Instruct-AWQ
+      - huggingface_cache:/root/.cache/huggingface
+    command: --model Qwen/Qwen2.5-14B-Instruct-AWQ --port 8010
     ports:
-      - "8001:8000"
+      - "8010:8010"
+    labels:
+      service: "vllm"
+      component: "llm-inference"
+      tier: "critical"
+      owner: "ml-ops"
+      gpu_required: "true"
+      gpu_memory_required: "24GB"
+      host_memory_required: "8GB"
+      model: "Qwen/Qwen2.5-14B-Instruct-AWQ"
+      model_size: "14B"
+      model_quantization: "AWQ"
+      model_download_size: "14GB"
+      model_load_time_seconds: "300"
+      healthcheck: "curl -f http://localhost:8000/v1/models"
+      restart_policy: "always"
+      startup_timeout_seconds: "600"
+      alert_on_slow_inference: "true"
+      max_concurrent_requests: "5"
 
 volumes:
   justnews_deps:
@@ -46,4 +138,8 @@ volumes:
   justnews_data:
     driver: local
   mariadb_data:
+    driver: local
+  chromadb_data:
+    driver: local
+  huggingface_cache:
     driver: local

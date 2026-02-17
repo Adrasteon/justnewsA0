@@ -69,7 +69,7 @@ def parse_markdown_table(file_path):
 
     for line in lines[start_idx:]:
         line = line.strip()
-        if not line or not line.startswith('|'):
+        if not line or not line.startswith('|') or 'Name | Domain' in line or ':---' in line:
             continue
             
         # Split by pipe
@@ -78,21 +78,21 @@ def parse_markdown_table(file_path):
         if len(parts) > 0 and parts[0] == '': parts.pop(0)
         if len(parts) > 0 and parts[-1] == '': parts.pop(-1)
         
-        # Expected: Name, Domain, URL, Country, Language, Description
-        if len(parts) >= 6:
+        # Expected: Name, Domain, URL, Country, Language, Type, Description
+        if len(parts) >= 7:
             sources.append({
                 'name': parts[0],
                 'domain': parts[1],
                 'url': parts[2],
                 'country': parts[3],
                 'language': parts[4],
-                'description': parts[5]
+                'description': parts[6] if len(parts) > 6 else parts[5]
             })
             
     return sources
 
 def populate_sources_from_markdown():
-    md_file = "top_100_sources.md"
+    md_file = "global_news_sources.md"
     print(f"Populating sources from {md_file}...")
     
     sources = parse_markdown_table(md_file)

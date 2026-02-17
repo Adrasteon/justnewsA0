@@ -47,7 +47,7 @@ spec:
           service:
             name: analytics-service
             port:
-              number: 8011
+              number: 8012
       - path: /
         pathType: Prefix
         backend:
@@ -80,7 +80,7 @@ spec:
     - protocol: TCP
       port: 8013  # Dashboard
     - protocol: TCP
-      port: 8011  # Analytics
+      port: 8012  # Analytics
 
 ---
 # Service for external access (LoadBalancer type for cloud providers)

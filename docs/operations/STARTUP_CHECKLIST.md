@@ -30,11 +30,15 @@ Follow this exact sequence for a safe, reproducible system startup (preferred op
 
 1. One-command canonical startup (recommended)
 
-- [ ] Run: `sudo ./infrastructure/systemd/canonical_system_startup.sh`
+- [ ] Run: `./start_all_services.sh`
 
-  - This performs env checks, optional MariaDB probe (skip with `SKIP_MARIADB_CHECK=true`), installs/refreshes service
-    templates and scripts, runs a reset & fresh start (gpu_orchestrator → mcp_bus → agents), provisions monitoring (if
-    missing), and performs a consolidated health check.
+  - This is the canonical startup script for JustNews. It performs the following:
+    - Loads environment checks
+    - Starts Database Services (MariaDB, ChromaDB, Redis)
+    - Runs Migration Scripts
+    - Starts All 16 Agents (mcp_bus, chief_editor, etc.)
+    - Verifies Health
+
 
 1. (Alternative) Manual orchestrator-first flow
 
@@ -106,7 +110,7 @@ Notes:
 
 ```bash
   # Option A: Docker
-docker-compose -f scripts/dev/docker-compose.e2e.yml up -d mariadb
+docker compose -f scripts/dev/docker-compose.e2e.yml up -d mariadb
 
   # Option B: Native (if not running)
 sudo ./infrastructure/systemd/setup_mariadb.sh --user justnews_user --password

@@ -6,6 +6,14 @@ A production-ready multi-agent news analysis system featuring GPU-accelerated pr
 
 **All detailed documentation has been moved to the `docs/` directory.**
 
+## 🔴 Live Launch SEO Actions (Do This When Going Public)
+
+Before pointing real traffic/crawlers to the production domain, complete:
+
+- [Live SEO Launch Checklist](docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md)
+
+This includes Search Console/Bing submission, live-domain sitemap/feed verification, recrawl requests, and post-launch crawl monitoring.
+
 - **Quick Start**: [docs/operations/STARTUP_CHECKLIST.md](docs/operations/STARTUP_CHECKLIST.md)
 - **Architecture**: [docs/architecture_overview.md](docs/architecture_overview.md)
 - **Workflow Orchestrator**: [docs/orchestrator/WORKFLOW_ORCHESTRATOR.md](docs/orchestrator/WORKFLOW_ORCHESTRATOR.md)
@@ -13,8 +21,23 @@ A production-ready multi-agent news analysis system featuring GPU-accelerated pr
 - **Diagnostic Tools**: [docs/tools/DIAGNOSTIC_SCRIPTS.md](docs/tools/DIAGNOSTIC_SCRIPTS.md)
 - **API Reference**: [docs/api/README.md](docs/api/README.md)
 - **Operations**: [docs/operations/README.md](docs/operations/README.md)
+- **Live SEO Launch Checklist**: [docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md](docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md)
 
 ## 🚀 Quick Start
+
+### Fastest Setup: VS Code Dev Container
+
+For the quickest, most reliable development environment setup:
+
+1. **Install** [VS Code](https://code.visualstudio.com/) and the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+2. **Open** the project in VS Code: `code .`
+3. **Reopen** in container: Press `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
+4. **Wait** for initialization (~2-5 min) → Setup runs automatically:
+   - Creates Python venv with UV package manager
+   - Installs 100+ dependencies from `requirements-bootstrap.txt`
+   - Waits for MariaDB, runs Django migrations
+   - Verifies all services ready
+5. **Done!** See [.devcontainer/README.md](.devcontainer/README.md) for details
 
 ### Prerequisites
 
@@ -23,32 +46,58 @@ A production-ready multi-agent news analysis system featuring GPU-accelerated pr
 - Chrome/Chromium (for Crawl4AI)
 - GPU with CUDA (recommended for local inference)
 
-### Installation
+### Quick Start Commands
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd JustNews
-   ```
+For the **fastest and most reliable startup**, use the canonical script:
 
-2. **Set up environment:**
-   ```bash
-   mamba env create -f environment.yml -n ${CANONICAL_ENV:-justnews-py312}
-   conda activate ${CANONICAL_ENV:-justnews-py312}
-   ```
+```bash
+# Start the full system (Databases + Agents)
+./start_all_services.sh
 
-3. **Initialize Database:**
-   ```bash
-   # Make sure your database credentials are set in .env
-   python manage.py migrate
-   ```
+# Stop the full system
+./stop_all_services.sh
+```
 
-4. **Start the System:**
-   See [docs/operations/STARTUP_CHECKLIST.md](docs/operations/STARTUP_CHECKLIST.md) for full startup instructions.
+For Dev Container setup (fastest): See section above.
 
-   ```bash
-   sudo infrastructure/systemd/canonical_system_startup.sh
-   ```
+### Running Tests
+
+Use the active Python environment directly:
+
+```bash
+# Generic
+python -m pytest -q
+
+# Devcontainer canonical UV env
+/app/.venv/bin/python -m pytest -q
+```
+
+Conda environments are still supported as a legacy fallback, but UV/venv is the primary development path.
+
+For **local manual setup**, see [docs/dev-setup.md](docs/dev-setup.md) for detailed options:
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd JustNews
+
+# Option 1: Using UV (Recommended for speed)
+pip install uv
+uv venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+uv pip install -r requirements-bootstrap.txt
+
+# Option 2: Using Conda/Mamba
+mamba env create -f environment.yml -n justnews-py312
+mamba activate justnews-py312
+
+# Initialize database
+source global.env  # Load configuration
+python manage.py migrate
+
+# Start the system
+sudo infrastructure/systemd/canonical_system_startup.sh
+```
 
 ## 🏗️ System Architecture
 
@@ -61,8 +110,9 @@ key components:
 
 ### Hardware & Inference Strategy
 - **Primary Intelligence**: Qwen 2.5 14B Instruct (AWQ/Int4) served via vLLM.
-- **Multi-modal Support**: Whisper (Audio) and Qwen-VL (Vision) loaded on-demand via a **Model Swapping** strategy to maximize VRAM availability for reasoning context.
-- **Hardware Requirement**: Single NVIDIA GPU with 24GB VRAM (e.g., RTX 3090/4090) is required for the full pipeline.
+- **Scalability**: Multi-worker uvicorn deployment with **lazy model loading** for core agents.
+- **Resource Management**: Agents run in "Safe Mode" by default to conserve RAM; high-density batch processing supports up to 30 concurrent tasks.
+- **Hardware Requirement**: Single NVIDIA GPU with 24GB VRAM (e.g., RTX 3090/4090) is optimized for this configuration.
 
 ## 🤝 Contributing
 

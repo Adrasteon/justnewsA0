@@ -12,11 +12,12 @@ Features:
 
 import importlib
 import json
+import os
 import threading
 import time
 from collections import deque
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from typing import Any
 
 import torch
@@ -52,7 +53,7 @@ except ImportError:
     # Fallback log_feedback function if observability not available
     def log_feedback(event: str, details: dict):
         with open("training_feedback.log", "a", encoding="utf-8") as f:
-            f.write(f"{datetime.now(UTC).isoformat()}\t{event}\t{details}\n")
+            f.write(f"{datetime.now(timezone.utc).isoformat()}\t{event}\t{details}\n")
 
 
 logger = get_logger(__name__)
@@ -112,6 +113,9 @@ class OnTheFlyTrainingCoordinator:
         self.max_buffer_size = max_buffer_size
         self.performance_window = performance_window
         self.rollback_threshold = rollback_threshold
+        self.headline_update_threshold = int(
+            os.environ.get("HEADLINE_TRAINING_UPDATE_THRESHOLD", "12")
+        )
 
         # Training buffers for each agent
         self.training_buffers = {
@@ -144,8 +148,19 @@ class OnTheFlyTrainingCoordinator:
 
         logger.info("🚀 On-The-Fly Training Coordinator initialized")
         logger.info(f"   📊 Update threshold: {update_threshold} examples")
+        logger.info(
+            f"   📰 Headline update threshold: {self.headline_update_threshold} examples"
+        )
         logger.info(f"   🧠 Performance tracking: {performance_window} example window")
         logger.info(f"   ⚡ Rollback threshold: {rollback_threshold} accuracy drop")
+
+    def _headline_examples_ready(self, buffer: deque[TrainingExample]) -> bool:
+        if self.headline_update_threshold <= 0:
+            return False
+        headline_count = sum(
+            1 for ex in buffer if ex.task_type == "headline_generation"
+        )
+        return headline_count >= self.headline_update_threshold
 
     def _get_db_connection(self):
         """Get database connection for training data storage using connection pooling"""
@@ -183,7 +198,7 @@ class OnTheFlyTrainingCoordinator:
             uncertainty_score=uncertainty_score,
             importance_score=importance_score,
             source_url=source_url,
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             user_feedback=user_feedback,
             correction_priority=correction_priority,
         )
@@ -191,6 +206,7 @@ class OnTheFlyTrainingCoordinator:
         # Add to appropriate buffer
         if agent_name in self.training_buffers:
             self.training_buffers[agent_name].append(example)
+            buffer = self.training_buffers[agent_name]
 
             # Store in database for persistence
             self._persist_training_example(example)
@@ -207,6 +223,12 @@ class OnTheFlyTrainingCoordinator:
                     "🚨 High-priority correction detected - triggering immediate update"
                 )
                 self._schedule_immediate_update(agent_name)
+            elif agent_name == "chief_editor" and task_type == "headline_generation":
+                if self._headline_examples_ready(buffer):
+                    logger.info(
+                        "📰 Headline training threshold reached - triggering immediate chief_editor update"
+                    )
+                    self._schedule_immediate_update(agent_name)
 
     def add_prediction_feedback(
         self,
@@ -262,7 +284,11 @@ class OnTheFlyTrainingCoordinator:
 
                 # Check each agent buffer for update readiness
                 for agent_name, buffer in self.training_buffers.items():
-                    if len(buffer) >= self.update_threshold:
+                    should_update = len(buffer) >= self.update_threshold
+                    if agent_name == "chief_editor" and self._headline_examples_ready(buffer):
+                        should_update = True
+
+                    if should_update:
                         logger.info(
                             f"🎯 Triggering scheduled update for {agent_name} "
                             f"({len(buffer)} examples ready)"
@@ -347,7 +373,7 @@ class OnTheFlyTrainingCoordinator:
                         accuracy_before=pre_update_performance,
                         accuracy_after=post_update_performance,
                         examples_trained=len(selected_examples),
-                        update_timestamp=datetime.now(UTC),
+                        update_timestamp=datetime.now(timezone.utc),
                     )
                     self.performance_history.append(performance_record)
 

@@ -402,7 +402,7 @@ post-create.sh provides clear visual feedback:
 ```
 [✓ SUCCESS] MariaDB is accessible at mariadb:3306
 [✓ SUCCESS] Django migrations completed
-[✓ SUCCESS] ChromaDB accessible at chromadb:3307
+[✓ SUCCESS] ChromaDB accessible at chromadb:8000 (v2 preferred, v1 fallback)
 [⚠ WARNING] vLLM not yet accessible (model loading in progress)
 ...
 [✓ SUCCESS] Dev Container Initialization Complete!
@@ -413,7 +413,7 @@ User can then proceed with manual verification:
 # Inside container shell
 python manage.py shell                    # Test Django
 curl http://vllm:8001/v1/models          # Test vLLM
-curl http://chromadb:3307/api/version    # Test ChromaDB
+curl http://chromadb:8000/api/v2/heartbeat || curl http://chromadb:8000/api/v1/heartbeat    # Test ChromaDB
 ```
 
 ### ⚠️ Startup Time Considerations

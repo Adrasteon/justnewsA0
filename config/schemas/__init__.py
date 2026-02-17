@@ -431,7 +431,7 @@ class AgentPorts(BaseModel):
     scout: PositiveInt = Field(default=8002, description="Scout agent port")
     analyst: PositiveInt = Field(default=8004, description="Analyst agent port")
     fact_checker: PositiveInt = Field(
-        default=8003, description="Fact checker agent port"
+        default=8018, description="Fact checker agent port"
     )
     synthesizer: PositiveInt = Field(default=8005, description="Synthesizer agent port")
     critic: PositiveInt = Field(default=8006, description="Critic agent port")

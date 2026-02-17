@@ -13,13 +13,874 @@ import os
 import json
 import uuid
 import time
+import hashlib
+import statistics
+import re
+from urllib.parse import urlparse
+from difflib import SequenceMatcher
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 
 from common.observability import get_logger
 from database.utils.migrated_database_utils import create_database_service
+from agents.common.headline_adapter import HeadlineAdapter
 
 logger = get_logger(__name__)
+
+_HEADLINE_ADAPTER = HeadlineAdapter(name="orchestrator_title_llm")
+
+
+def _generate_llm_title_candidates(synthesis_result: dict[str, Any] | None) -> list[str]:
+    result = synthesis_result if isinstance(synthesis_result, dict) else {}
+    summary = str(result.get("summary") or "").strip()
+    key_points = result.get("key_points")
+    key_points_text = ""
+    if isinstance(key_points, list):
+        key_points_text = "\n".join(f"- {str(item).strip()}" for item in key_points[:5] if str(item).strip())
+
+    body = str(result.get("body") or "").strip()
+    context = "\n".join(part for part in [summary, key_points_text, body[:1500]] if part).strip()
+    if not context:
+        return []
+    return _HEADLINE_ADAPTER.generate_candidates(context)
+
+
+def _derive_story_title(
+    cluster_id: str,
+    synthesis_result: dict[str, Any] | None,
+    *,
+    is_brief: bool = False,
+) -> str:
+    result = synthesis_result if isinstance(synthesis_result, dict) else {}
+
+    candidates: list[Any] = []
+    candidates.extend(_generate_llm_title_candidates(result))
+
+    qwen_payload = result.get("qwen")
+    if isinstance(qwen_payload, dict):
+        candidates.extend(
+            [
+                qwen_payload.get("headline"),
+                qwen_payload.get("title"),
+                qwen_payload.get("topic_title"),
+            ]
+        )
+
+    candidates.extend(
+        [
+            result.get("headline"),
+            result.get("title"),
+            result.get("topic_title"),
+            result.get("summary"),
+        ]
+    )
+
+    key_points = result.get("key_points")
+    if isinstance(key_points, list) and key_points:
+        candidates.append(key_points[0])
+
+    disallowed = re.compile(r"^\s*(\[brief\]\s*)?synthesis report\s*:", re.IGNORECASE)
+    headline = HeadlineAdapter.select_best_headline(
+        candidates,
+        min_len=10,
+        disallowed_pattern=disallowed,
+    )
+    if headline:
+        return headline
+
+    if is_brief:
+        return f"Brief Update: {cluster_id}"
+    return f"Developing Story: {cluster_id}"
+
+
+def _safe_json_list(raw_value: Any) -> list[int]:
+    if raw_value is None:
+        return []
+    try:
+        parsed = json.loads(raw_value) if isinstance(raw_value, str) else raw_value
+    except Exception:
+        return []
+    if not isinstance(parsed, list):
+        return []
+    out: list[int] = []
+    for item in parsed:
+        try:
+            out.append(int(item))
+        except Exception:
+            continue
+    return out
+
+
+def _normalize_text_for_diff(text: str | None) -> str:
+    if not text:
+        return ""
+    return " ".join(str(text).lower().split())
+
+
+def _text_similarity(left: str | None, right: str | None) -> float:
+    a = _normalize_text_for_diff(left)
+    b = _normalize_text_for_diff(right)
+    if not a and not b:
+        return 1.0
+    if not a or not b:
+        return 0.0
+    return SequenceMatcher(None, a, b).ratio()
+
+
+def _cluster_input_fingerprint(article_ids: list[int]) -> str:
+    normalized = sorted({int(x) for x in article_ids})
+    payload = ",".join(str(x) for x in normalized)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _load_json_dict(raw_value: Any) -> dict[str, Any]:
+    if isinstance(raw_value, dict):
+        return raw_value
+    if not raw_value:
+        return {}
+    try:
+        parsed = json.loads(raw_value)
+        if isinstance(parsed, dict):
+            return parsed
+    except Exception:
+        pass
+    return {}
+
+
+def _safe_float(raw_value: Any, default: float = 0.0) -> float:
+    try:
+        return float(raw_value)
+    except Exception:
+        return default
+
+
+def _safe_int(raw_value: Any, default: int = 0) -> int:
+    try:
+        return int(raw_value)
+    except Exception:
+        return default
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw_value = os.environ.get(name)
+    if raw_value is None:
+        return default
+    return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _safe_datetime(raw_value: Any) -> datetime | None:
+    if raw_value is None:
+        return None
+
+
+def _infer_urgency_class(title_text: str | None, body_text: str | None) -> str:
+    combined = _normalize_text_for_diff(f"{title_text or ''} {body_text or ''}")
+    if not combined:
+        return "active"
+
+    breaking_keywords = {
+        "breaking",
+        "urgent",
+        "alert",
+        "developing",
+        "explosion",
+        "evacuation",
+        "earthquake",
+        "attack",
+        "ceasefire",
+        "election",
+        "vote",
+    }
+    background_keywords = {
+        "analysis",
+        "opinion",
+        "feature",
+        "long read",
+        "explainer",
+        "retrospective",
+        "background",
+    }
+
+    if any(keyword in combined for keyword in breaking_keywords):
+        return "breaking"
+    if any(keyword in combined for keyword in background_keywords):
+        return "background"
+    return "active"
+
+
+def _resolve_living_story_calibration(urgency_class: str) -> dict[str, float]:
+    profile = str(os.environ.get("LIVING_STORY_CALIBRATION_PROFILE", "balanced")).strip().lower()
+    if profile not in {"balanced", "conservative", "aggressive", "breaking"}:
+        profile = "balanced"
+
+    profile_defaults = {
+        "balanced": {
+            "major_delta": 0.12,
+            "minor_delta": 0.03,
+            "min_new_articles": 2,
+            "composite_threshold": 0.35,
+            "weight_text": 0.45,
+            "weight_source": 0.20,
+            "weight_recency": 0.15,
+            "weight_fact": 0.15,
+            "weight_new": 0.05,
+        },
+        "conservative": {
+            "major_delta": 0.16,
+            "minor_delta": 0.05,
+            "min_new_articles": 3,
+            "composite_threshold": 0.45,
+            "weight_text": 0.55,
+            "weight_source": 0.15,
+            "weight_recency": 0.10,
+            "weight_fact": 0.15,
+            "weight_new": 0.05,
+        },
+        "aggressive": {
+            "major_delta": 0.08,
+            "minor_delta": 0.02,
+            "min_new_articles": 1,
+            "composite_threshold": 0.28,
+            "weight_text": 0.35,
+            "weight_source": 0.20,
+            "weight_recency": 0.20,
+            "weight_fact": 0.15,
+            "weight_new": 0.10,
+        },
+        "breaking": {
+            "major_delta": 0.06,
+            "minor_delta": 0.015,
+            "min_new_articles": 1,
+            "composite_threshold": 0.22,
+            "weight_text": 0.25,
+            "weight_source": 0.20,
+            "weight_recency": 0.30,
+            "weight_fact": 0.15,
+            "weight_new": 0.10,
+        },
+    }
+
+    defaults = dict(profile_defaults[profile])
+    major_delta = _safe_float(os.environ.get("LIVING_STORY_MAJOR_TEXT_DELTA"), defaults["major_delta"])
+    minor_delta = _safe_float(os.environ.get("LIVING_STORY_MINOR_TEXT_DELTA"), defaults["minor_delta"])
+    min_new_articles = _safe_int(os.environ.get("LIVING_STORY_MIN_NEW_ARTICLES"), int(defaults["min_new_articles"]))
+    composite_threshold = _safe_float(os.environ.get("LIVING_STORY_COMPOSITE_THRESHOLD"), defaults["composite_threshold"])
+
+    weight_text = _safe_float(os.environ.get("LIVING_STORY_WEIGHT_TEXT"), defaults["weight_text"])
+    weight_source = _safe_float(os.environ.get("LIVING_STORY_WEIGHT_SOURCE"), defaults["weight_source"])
+    weight_recency = _safe_float(os.environ.get("LIVING_STORY_WEIGHT_RECENCY"), defaults["weight_recency"])
+    weight_fact = _safe_float(os.environ.get("LIVING_STORY_WEIGHT_FACT"), defaults["weight_fact"])
+    weight_new = _safe_float(os.environ.get("LIVING_STORY_WEIGHT_NEW_ARTICLES"), defaults["weight_new"])
+
+    recency_multiplier_defaults = {
+        "breaking": 1.35,
+        "active": 1.0,
+        "background": 0.80,
+    }
+    threshold_multiplier_defaults = {
+        "breaking": 0.85,
+        "active": 1.0,
+        "background": 1.10,
+    }
+    recency_multiplier = _safe_float(
+        os.environ.get(f"LIVING_STORY_RECENCY_MULTIPLIER_{urgency_class.upper()}"),
+        recency_multiplier_defaults.get(urgency_class, 1.0),
+    )
+    threshold_multiplier = _safe_float(
+        os.environ.get(f"LIVING_STORY_THRESHOLD_MULTIPLIER_{urgency_class.upper()}"),
+        threshold_multiplier_defaults.get(urgency_class, 1.0),
+    )
+
+    weight_recency *= max(recency_multiplier, 0.0)
+    total_weight = max(weight_text + weight_source + weight_recency + weight_fact + weight_new, 1e-6)
+    weight_text /= total_weight
+    weight_source /= total_weight
+    weight_recency /= total_weight
+    weight_fact /= total_weight
+    weight_new /= total_weight
+
+    return {
+        "profile": profile,
+        "major_delta": major_delta,
+        "minor_delta": minor_delta,
+        "min_new_articles": float(max(min_new_articles, 1)),
+        "composite_threshold": max(composite_threshold * max(threshold_multiplier, 0.1), 0.01),
+        "weight_text": weight_text,
+        "weight_source": weight_source,
+        "weight_recency": weight_recency,
+        "weight_fact": weight_fact,
+        "weight_new": weight_new,
+        "recency_multiplier": recency_multiplier,
+        "threshold_multiplier": threshold_multiplier,
+    }
+
+
+def _govern_override(override: dict[str, Any]) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    require_owner = _env_bool("LIVING_STORY_OVERRIDE_REQUIRE_OWNER", default=True)
+    require_approval = _env_bool("LIVING_STORY_OVERRIDE_REQUIRE_APPROVAL", default=False)
+    max_ttl_hours = _safe_int(os.environ.get("LIVING_STORY_OVERRIDE_MAX_TTL_HOURS"), 168)
+
+    owner = str(override.get("owner", "")).strip()
+    approved_by = str(override.get("approved_by", "")).strip()
+    expires_at = _safe_datetime(override.get("expires_at")) if override.get("expires_at") else None
+    now_utc = datetime.utcnow()
+
+    if require_owner and not owner:
+        return None, {"reason": "missing_owner", "required": "owner"}
+    if require_approval and not approved_by:
+        return None, {"reason": "missing_approval", "required": "approved_by"}
+    if expires_at is not None and expires_at < now_utc:
+        return None, {"reason": "override_expired", "expires_at": override.get("expires_at")}
+
+    if max_ttl_hours > 0 and expires_at is not None:
+        ttl_hours = (expires_at - now_utc).total_seconds() / 3600.0
+        if ttl_hours > max_ttl_hours:
+            return None, {
+                "reason": "override_ttl_exceeds_limit",
+                "ttl_hours": round(ttl_hours, 2),
+                "max_ttl_hours": max_ttl_hours,
+            }
+
+    governed = dict(override)
+    governed["owner"] = owner
+    governed["approved_by"] = approved_by
+    if expires_at is not None:
+        governed["expires_at"] = expires_at.isoformat() + "Z"
+    governed["governed_at"] = datetime.utcnow().isoformat() + "Z"
+    governed["governance"] = {
+        "require_owner": require_owner,
+        "require_approval": require_approval,
+        "max_ttl_hours": max_ttl_hours,
+    }
+    return governed, None
+    if isinstance(raw_value, datetime):
+        return raw_value
+    try:
+        raw_text = str(raw_value).replace("Z", "+00:00")
+        return datetime.fromisoformat(raw_text)
+    except Exception:
+        return None
+
+
+def _extract_domain(raw_url: Any) -> str:
+    if not raw_url:
+        return ""
+    try:
+        parsed = urlparse(str(raw_url))
+        return (parsed.netloc or "").lower()
+    except Exception:
+        return ""
+
+
+def _load_operator_override_map() -> dict[str, Any]:
+    raw_json = os.environ.get("LIVING_STORY_OPERATOR_OVERRIDES_JSON", "").strip()
+    if not raw_json:
+        return {}
+    try:
+        parsed = json.loads(raw_json)
+        if isinstance(parsed, dict):
+            return parsed
+    except Exception:
+        pass
+    return {}
+
+
+def _resolve_operator_override(
+    cluster_id: str,
+    story_id: str | None,
+    living_story_meta: dict[str, Any],
+) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+    valid_actions = {"force_update", "force_hold", "force_republish"}
+
+    inline_override = living_story_meta.get("operator_override")
+    if isinstance(inline_override, dict):
+        action = str(inline_override.get("action", "")).strip().lower()
+        if action in valid_actions:
+            candidate = {
+                "action": action,
+                "reason": str(inline_override.get("reason", "manual override")).strip(),
+                "source": "synth_metadata",
+                "owner": inline_override.get("owner"),
+                "approved_by": inline_override.get("approved_by"),
+                "expires_at": inline_override.get("expires_at"),
+            }
+            return _govern_override(candidate)
+
+    override_map = _load_operator_override_map()
+    candidates = [cluster_id]
+    if story_id:
+        candidates.append(story_id)
+
+    for candidate in candidates:
+        raw_entry = override_map.get(candidate)
+        if not raw_entry:
+            continue
+        if isinstance(raw_entry, str):
+            action = raw_entry.strip().lower()
+            if action in valid_actions:
+                return _govern_override({
+                    "action": action,
+                    "reason": "env override",
+                    "source": "env_json",
+                })
+        elif isinstance(raw_entry, dict):
+            action = str(raw_entry.get("action", "")).strip().lower()
+            if action in valid_actions:
+                candidate = {
+                    "action": action,
+                    "reason": str(raw_entry.get("reason", "env override")).strip(),
+                    "source": "env_json",
+                    "owner": raw_entry.get("owner"),
+                    "approved_by": raw_entry.get("approved_by"),
+                    "expires_at": raw_entry.get("expires_at"),
+                }
+                return _govern_override(candidate)
+
+    return None, None
+
+
+def _compute_story_diff(
+    prev_title: str | None,
+    next_title: str | None,
+    prev_body: str | None,
+    next_body: str | None,
+    prev_ids: list[int],
+    next_ids: list[int],
+) -> dict[str, Any]:
+    prev_title_norm = _normalize_text_for_diff(prev_title)
+    next_title_norm = _normalize_text_for_diff(next_title)
+    title_similarity = _text_similarity(prev_title_norm, next_title_norm)
+    body_similarity = _text_similarity(prev_body, next_body)
+
+    prev_set = set(prev_ids)
+    next_set = set(next_ids)
+    added = sorted(next_set - prev_set)
+    removed = sorted(prev_set - next_set)
+
+    return {
+        "title_similarity": round(title_similarity, 4),
+        "title_delta": round(1.0 - title_similarity, 4),
+        "body_similarity": round(body_similarity, 4),
+        "body_delta": round(1.0 - body_similarity, 4),
+        "previous_body_length": len(prev_body or ""),
+        "new_body_length": len(next_body or ""),
+        "body_length_delta": len(next_body or "") - len(prev_body or ""),
+        "sources_added": added,
+        "sources_removed": removed,
+        "source_delta_count": len(added) + len(removed),
+    }
+
+
+def _fetch_article_context_metrics(db_service, article_ids: list[int]) -> dict[str, Any]:
+    if not article_ids:
+        return {
+            "source_diversity_score": 0.0,
+            "source_count": 0,
+            "fact_quality_score": 0.5,
+            "recency_score": 0.0,
+        }
+
+    db_service.ensure_conn()
+    cursor = db_service.mb_conn.cursor()
+    format_strings = ",".join(["%s"] * len(article_ids))
+    cursor.execute(
+        f"""
+        SELECT source_id, source_url, created_at, factual_accuracy_score, fact_check_status
+        FROM articles
+        WHERE id IN ({format_strings})
+        """,
+        tuple(article_ids),
+    )
+    rows = cursor.fetchall()
+    cursor.close()
+
+    unique_sources = set()
+    created_values = []
+    fact_scores = []
+
+    fact_status_map = {
+        "proven": 1.0,
+        "plausible": 0.8,
+        "verified": 0.8,
+        "unverified": 0.5,
+        "pending": 0.5,
+        "improbable": 0.2,
+        "disproven": 0.0,
+        "false": 0.0,
+    }
+
+    for source_id, source_url, created_at, factual_accuracy_score, fact_check_status in rows:
+        if source_id is not None:
+            unique_sources.add(f"sid:{source_id}")
+        else:
+            domain = _extract_domain(source_url)
+            if domain:
+                unique_sources.add(f"domain:{domain}")
+
+        if created_at:
+            created_values.append(created_at)
+
+        status_key = str(fact_check_status or "").strip().lower()
+        mapped_score = fact_status_map.get(status_key, 0.5)
+        factual_score = _safe_float(factual_accuracy_score, mapped_score)
+        fact_scores.append((mapped_score + factual_score) / 2.0)
+
+    source_count = len(unique_sources)
+    source_diversity_score = min(source_count / 3.0, 1.0)
+
+    if created_values:
+        newest = max(created_values)
+        age_seconds = max((datetime.now() - newest).total_seconds(), 0.0)
+        age_hours = age_seconds / 3600.0
+        recency_score = 1.0 / (1.0 + (age_hours / 24.0))
+    else:
+        recency_score = 0.0
+
+    fact_quality_score = sum(fact_scores) / len(fact_scores) if fact_scores else 0.5
+
+    return {
+        "source_diversity_score": round(source_diversity_score, 4),
+        "source_count": source_count,
+        "fact_quality_score": round(fact_quality_score, 4),
+        "recency_score": round(recency_score, 4),
+    }
+
+
+def _update_decision_telemetry(
+    telemetry: dict[str, Any],
+    action_label: str,
+    score_value: float,
+) -> dict[str, Any]:
+    updated = dict(telemetry or {})
+    decision_counts = dict(updated.get("decision_counts") or {})
+    decision_counts[action_label] = int(decision_counts.get(action_label, 0)) + 1
+    updated["decision_counts"] = decision_counts
+
+    score_window = int(os.environ.get("LIVING_STORY_SCORE_WINDOW", "50"))
+    scores_recent = list(updated.get("meaningful_scores_recent") or [])
+    scores_recent.append(round(score_value, 4))
+    updated["meaningful_scores_recent"] = scores_recent[-score_window:]
+
+    if updated["meaningful_scores_recent"]:
+        scores = updated["meaningful_scores_recent"]
+        updated["mean_meaningful_score"] = round(sum(scores) / len(scores), 4)
+        updated["median_meaningful_score"] = round(statistics.median(scores), 4)
+
+    return updated
+
+
+def record_living_story_publish_telemetry(db_service, story_id: str) -> None:
+    db_service.ensure_conn()
+    cursor = db_service.mb_conn.cursor()
+    cursor.execute(
+        """
+        SELECT synth_metadata, updated_at
+        FROM synthesized_articles
+        WHERE story_id = %s
+        LIMIT 1
+        """,
+        (story_id,),
+    )
+    row = cursor.fetchone()
+    if not row:
+        cursor.close()
+        return
+
+    raw_meta, updated_at = row
+    metadata = _load_json_dict(raw_meta)
+    living_story = metadata.get("living_story") if isinstance(metadata.get("living_story"), dict) else {}
+    telemetry = living_story.get("telemetry") if isinstance(living_story.get("telemetry"), dict) else {}
+
+    updated_dt = _safe_datetime(updated_at)
+    if updated_dt is None:
+        cursor.close()
+        return
+
+    now_dt = datetime.now()
+    latency_sec = max((now_dt - updated_dt).total_seconds(), 0.0)
+
+    latency_window = int(os.environ.get("LIVING_STORY_PUBLISH_LATENCY_WINDOW", "30"))
+    recent_latencies = list(telemetry.get("publish_latency_recent_seconds") or [])
+    recent_latencies.append(round(latency_sec, 2))
+    recent_latencies = recent_latencies[-latency_window:]
+
+    telemetry["publish_latency_recent_seconds"] = recent_latencies
+    telemetry["last_publish_latency_seconds"] = round(latency_sec, 2)
+    telemetry["mean_publish_latency_seconds"] = round(sum(recent_latencies) / len(recent_latencies), 2)
+    telemetry["median_publish_latency_seconds"] = round(statistics.median(recent_latencies), 2)
+    telemetry["last_published_at"] = now_dt.isoformat() + "Z"
+
+    living_story["telemetry"] = telemetry
+    metadata["living_story"] = living_story
+
+    cursor.execute(
+        """
+        UPDATE synthesized_articles
+        SET synth_metadata = %s
+        WHERE story_id = %s
+        """,
+        (json.dumps(metadata), story_id),
+    )
+    db_service.mb_conn.commit()
+    cursor.close()
+
+
+def upsert_living_story_record(
+    db_service,
+    cluster_id: str,
+    article_ids: list[int],
+    title_text: str,
+    body_text: str,
+) -> dict[str, Any]:
+    normalized_ids = sorted({int(x) for x in article_ids})
+    input_arts_json = json.dumps(normalized_ids)
+    fingerprint = _cluster_input_fingerprint(normalized_ids)
+    now_iso = datetime.utcnow().isoformat() + "Z"
+    urgency_class = _infer_urgency_class(title_text, body_text)
+    calibration = _resolve_living_story_calibration(urgency_class)
+
+    major_delta = _safe_float(calibration.get("major_delta"), 0.12)
+    minor_delta = _safe_float(calibration.get("minor_delta"), 0.03)
+    min_new_articles = max(_safe_int(calibration.get("min_new_articles"), 2), 1)
+    composite_threshold = _safe_float(calibration.get("composite_threshold"), 0.35)
+    weight_text = _safe_float(calibration.get("weight_text"), 0.45)
+    weight_source = _safe_float(calibration.get("weight_source"), 0.20)
+    weight_recency = _safe_float(calibration.get("weight_recency"), 0.15)
+    weight_fact = _safe_float(calibration.get("weight_fact"), 0.15)
+    weight_new = _safe_float(calibration.get("weight_new"), 0.05)
+
+    db_service.ensure_conn()
+    cursor = db_service.mb_conn.cursor()
+    cursor.execute(
+        """
+        SELECT story_id, title, body, input_articles, synth_metadata, is_published
+        FROM synthesized_articles
+        WHERE cluster_id = %s
+        ORDER BY created_at DESC, id DESC
+        LIMIT 1
+        """,
+        (cluster_id,),
+    )
+    existing = cursor.fetchone()
+
+    if not existing:
+        story_id = f"STORY-{uuid.uuid4().hex[:8]}"
+        synth_metadata = {
+            "living_story": {
+                "revision": 1,
+                "input_fingerprint": fingerprint,
+                "last_meaningful_score": 1.0,
+                "last_new_articles": len(normalized_ids),
+                "last_update_action": "created",
+                "updated_at": now_iso,
+                "telemetry": {
+                    "decision_counts": {"created": 1},
+                    "meaningful_scores_recent": [1.0],
+                    "mean_meaningful_score": 1.0,
+                    "median_meaningful_score": 1.0,
+                },
+                "last_diff": {
+                    "title_similarity": 0.0,
+                    "title_delta": 1.0,
+                    "body_similarity": 0.0,
+                    "body_delta": 1.0,
+                    "previous_body_length": 0,
+                    "new_body_length": len(body_text or ""),
+                    "body_length_delta": len(body_text or ""),
+                    "sources_added": normalized_ids,
+                    "sources_removed": [],
+                    "source_delta_count": len(normalized_ids),
+                },
+                "explainability": {
+                    "decision": "created",
+                    "reasons": ["first_story_for_cluster"],
+                    "urgency_class": urgency_class,
+                    "calibration_profile": calibration.get("profile", "balanced"),
+                },
+            }
+        }
+        cursor.execute(
+            """
+            INSERT INTO synthesized_articles
+            (story_id, cluster_id, input_articles, title, body, created_at, updated_at, is_published, critique_status, synth_metadata)
+            VALUES (%s, %s, %s, %s, %s, NOW(), NOW(), 0, 'pending', %s)
+            """,
+            (story_id, cluster_id, input_arts_json, title_text, body_text, json.dumps(synth_metadata)),
+        )
+        return {
+            "story_id": story_id,
+            "action": "created",
+            "meaningful": True,
+            "new_article_count": len(normalized_ids),
+            "text_delta": 1.0,
+            "composite_score": 1.0,
+        }
+
+    story_id, prev_title, prev_body, prev_input_articles, prev_meta_raw, _is_published = existing
+    prev_ids = _safe_json_list(prev_input_articles)
+    prev_ids_set = set(prev_ids)
+    new_ids_set = set(normalized_ids)
+    new_article_count = len(new_ids_set - prev_ids_set)
+    similarity = _text_similarity(prev_body, body_text)
+    text_delta = 1.0 - similarity
+
+    context_metrics = _fetch_article_context_metrics(db_service, normalized_ids)
+    source_diversity_score = _safe_float(context_metrics.get("source_diversity_score"), 0.0)
+    recency_score = _safe_float(context_metrics.get("recency_score"), 0.0)
+    fact_quality_score = _safe_float(context_metrics.get("fact_quality_score"), 0.5)
+    new_article_score = min((new_article_count / max(min_new_articles, 1)), 1.0)
+
+    composite_score = (
+        (text_delta * weight_text)
+        + (source_diversity_score * weight_source)
+        + (recency_score * weight_recency)
+        + (fact_quality_score * weight_fact)
+        + (new_article_score * weight_new)
+    )
+
+    reasons = []
+    if text_delta >= major_delta:
+        reasons.append("major_text_delta")
+    if new_article_count > 0 and text_delta >= minor_delta:
+        reasons.append("minor_delta_with_new_articles")
+    if new_article_count >= min_new_articles:
+        reasons.append("new_articles_threshold")
+    if composite_score >= composite_threshold:
+        reasons.append("composite_threshold")
+
+    meaningful = (
+        text_delta >= major_delta
+        or (new_article_count > 0 and text_delta >= minor_delta)
+        or new_article_count >= min_new_articles
+        or composite_score >= composite_threshold
+    )
+
+    previous_meta = _load_json_dict(prev_meta_raw)
+    living_story_meta = previous_meta.get("living_story", {}) if isinstance(previous_meta.get("living_story"), dict) else {}
+    override, override_rejected = _resolve_operator_override(
+        cluster_id=cluster_id,
+        story_id=story_id,
+        living_story_meta=living_story_meta,
+    )
+
+    final_action = "updated" if meaningful else "tracked_noop"
+    if override:
+        override_action = override.get("action")
+        if override_action == "force_hold":
+            meaningful = False
+            final_action = "forced_hold"
+            reasons.append("operator_force_hold")
+        elif override_action == "force_update":
+            meaningful = True
+            final_action = "forced_update"
+            reasons.append("operator_force_update")
+        elif override_action == "force_republish":
+            meaningful = True
+            final_action = "forced_republish"
+            reasons.append("operator_force_republish")
+
+    previous_revision = int(living_story_meta.get("revision", 1)) if living_story_meta else 1
+    revision = previous_revision + 1 if meaningful else previous_revision
+
+    diff_summary = _compute_story_diff(
+        prev_title=prev_title,
+        next_title=title_text,
+        prev_body=prev_body,
+        next_body=body_text,
+        prev_ids=prev_ids,
+        next_ids=normalized_ids,
+    )
+
+    telemetry_prev = living_story_meta.get("telemetry") if isinstance(living_story_meta.get("telemetry"), dict) else {}
+    telemetry_next = _update_decision_telemetry(
+        telemetry=telemetry_prev,
+        action_label=final_action,
+        score_value=text_delta,
+    )
+
+    next_meta = previous_meta.copy()
+    next_meta["living_story"] = {
+        "revision": revision,
+        "input_fingerprint": fingerprint,
+        "last_meaningful_score": round(text_delta, 4),
+        "last_composite_score": round(composite_score, 4),
+        "last_new_articles": new_article_count,
+        "last_update_action": final_action,
+        "updated_at": now_iso,
+        "telemetry": telemetry_next,
+        "last_diff": diff_summary,
+        "explainability": {
+            "decision": final_action,
+            "reasons": sorted(set(reasons)) if reasons else ["no_meaningful_change"],
+            "urgency_class": urgency_class,
+            "calibration_profile": calibration.get("profile", "balanced"),
+            "scores": {
+                "text_delta": round(text_delta, 4),
+                "composite_score": round(composite_score, 4),
+                "source_diversity_score": round(source_diversity_score, 4),
+                "recency_score": round(recency_score, 4),
+                "fact_quality_score": round(fact_quality_score, 4),
+                "new_article_score": round(new_article_score, 4),
+            },
+            "weights": {
+                "text": weight_text,
+                "source_diversity": weight_source,
+                "recency": weight_recency,
+                "fact_quality": weight_fact,
+                "new_articles": weight_new,
+                "recency_multiplier": _safe_float(calibration.get("recency_multiplier"), 1.0),
+                "threshold_multiplier": _safe_float(calibration.get("threshold_multiplier"), 1.0),
+            },
+            "thresholds": {
+                "major_delta": major_delta,
+                "minor_delta": minor_delta,
+                "min_new_articles": min_new_articles,
+                "composite_threshold": composite_threshold,
+            },
+            "source_count": int(context_metrics.get("source_count", 0)),
+            "override": override,
+            "override_rejected": override_rejected,
+        },
+    }
+
+    if meaningful:
+        cursor.execute(
+            """
+            UPDATE synthesized_articles
+            SET title = %s,
+                body = %s,
+                input_articles = %s,
+                synth_metadata = %s,
+                updated_at = NOW(),
+                is_published = 0,
+                critique_status = 'pending',
+                critique_text = NULL
+            WHERE story_id = %s
+            """,
+            (title_text, body_text, input_arts_json, json.dumps(next_meta), story_id),
+        )
+    else:
+        cursor.execute(
+            """
+            UPDATE synthesized_articles
+            SET input_articles = %s,
+                synth_metadata = %s,
+                updated_at = NOW()
+            WHERE story_id = %s
+            """,
+            (input_arts_json, json.dumps(next_meta), story_id),
+        )
+
+    return {
+        "story_id": story_id,
+        "action": final_action,
+        "meaningful": meaningful,
+        "new_article_count": new_article_count,
+        "text_delta": round(text_delta, 4),
+        "composite_score": round(composite_score, 4),
+        "override": override,
+        "override_rejected": override_rejected,
+    }
 
 class WorkflowPolicy(ABC):
     """Abstract base class for a workflow policy."""
@@ -221,6 +1082,8 @@ class AnalysisToSummaryPolicy(WorkflowPolicy):
         return "analysis_to_summary"
 
     def check_condition(self, limit: int) -> List[int]:
+        if not _env_bool("ORCHESTRATOR_ENABLE_SOURCE_SUMMARY_STAGE", default=False):
+            return []
         ids = []
         try:
             self.db_service.ensure_conn()
@@ -273,7 +1136,7 @@ class AnalysisToSummaryPolicy(WorkflowPolicy):
 class SummaryToFactCheckPolicy(WorkflowPolicy):
     """
     Policy: Summarized -> Fact Checked
-    Condition: articles.analyzed = 1 AND articles.summary IS NOT NULL AND articles.fact_check_status IS NULL
+    Condition: articles.analyzed = 1 AND articles.fact_check_status IS NULL
     Action: Call 'fact_checker.verify_article' (requires fact_checker agent update)
     """
 
@@ -292,7 +1155,6 @@ class SummaryToFactCheckPolicy(WorkflowPolicy):
             query = """
                 SELECT id FROM articles 
                 WHERE analyzed = 1 
-                  AND (summary IS NOT NULL AND summary != '')
                   AND fact_check_status IS NULL
                 ORDER BY created_at DESC 
                 LIMIT %s
@@ -358,7 +1220,8 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
             query = """
                 SELECT id FROM articles 
                 WHERE fact_check_status IS NOT NULL 
-                  AND (input_cluster_ids IS NULL OR input_cluster_ids = '[]' OR input_cluster_ids = '')
+                      AND embedded = 1
+                      AND (input_cluster_ids IS NULL OR input_cluster_ids = '[]' OR input_cluster_ids = '')
                 ORDER BY created_at DESC
                 LIMIT %s
             """
@@ -548,16 +1411,18 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                 except:
                     continue
             
-            # Filter: 
+            # Filter:
             # 1. Count >= 2
             # 2. Maturity: Last article > 20 mins ago
-            # 3. Stale Snapshot: Count == 1 AND Age > 18 hours -> Synthesize as Brief
+            # 3. Optional singleton processing via env flag
+            # 4. Stale Snapshot fallback: Count == 1 AND Age > 18 hours -> Synthesize as Brief
             valid_counts = {}
             now = datetime.now()
             # Use 20 minutes maturity window for active clusters
             maturity_window = timedelta(minutes=20)
             # Use 18 hours for stale singletons (Briefs)
             stale_window = timedelta(hours=18)
+            process_singletons = _env_bool("PROCESS_SINGLETON_CLUSTERS", default=False)
             
             for cid, count in counts.items():
                 last_ts = latest_activity.get(cid)
@@ -569,12 +1434,20 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                          if age > maturity_window:
                              valid_counts[cid] = count
                     elif count == 1:
+                         if process_singletons:
+                             valid_counts[cid] = count
+                             continue
                          # Stale Brief Rule
                          if age > stale_window:
                              valid_counts[cid] = count
             
-            # Pick the largest clusters first
-            sorted_clusters = sorted(valid_counts.items(), key=lambda x: x[1], reverse=True)
+            # Prioritize freshest clusters first, then larger clusters.
+            # This prevents newer pipeline output from being starved behind older backlog.
+            sorted_clusters = sorted(
+                valid_counts.items(),
+                key=lambda x: (latest_activity.get(x[0], datetime.min), x[1]),
+                reverse=True,
+            )
             cluster_ids = [c[0] for c in sorted_clusters[:limit]]
             
         except Exception as e:
@@ -663,37 +1536,54 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                 )
                 
                 if isinstance(synthesis_result, dict) and synthesis_result.get("success"):
-                    body_text = synthesis_result.get("summary", "")
-                    # Mark if it is a brief in the title (optional, can also be a column if schema supports)
-                    is_brief = (len(texts) == 1)
-                    title_prefix = "[Brief] " if is_brief else ""
-                    title_text = f"{title_prefix}Synthesis Report: {cid}" 
+                    body_text = str(
+                        synthesis_result.get("body")
+                        or synthesis_result.get("summary")
+                        or ""
+                    ).strip()
+                    if not body_text:
+                        logger.warning(f"Skipping empty synthesis output for cluster {cid}")
+                        continue
+                    is_brief = len(texts) == 1
+                    title_text = _derive_story_title(
+                        cid,
+                        synthesis_result,
+                        is_brief=is_brief,
+                    )
                     
-                    # 3. Save to synthesized_articles
+                    # 3. Upsert canonical living story per cluster
                     self.db_service.ensure_conn()
                     cursor = self.db_service.mb_conn.cursor()
-                    
-                    # Columns: id, story_id, cluster_id, input_articles, title, body, created_at, is_published
-                    new_id = int(time.time() * 1000) # Simple numeric ID gen or use auto-increment if schema allows
-                    story_id = f"STORY-{uuid.uuid4().hex[:8]}"
-                    input_arts_json = json.dumps(article_ids)
-                    
-                    insert_query = """
-                        INSERT INTO synthesized_articles 
-                        (story_id, cluster_id, input_articles, title, body, created_at, is_published)
-                        VALUES (%s, %s, %s, %s, %s, NOW(), 0)
-                    """
-                    cursor.execute(insert_query, (story_id, cid, input_arts_json, title_text, body_text))
-                    
-                    # 4. Mark articles as synthesized
+                    upsert_result = upsert_living_story_record(
+                        db_service=self.db_service,
+                        cluster_id=cid,
+                        article_ids=article_ids,
+                        title_text=title_text,
+                        body_text=body_text,
+                    )
+
+                    # 4. Mark articles as synthesized (always, even when update is not meaningful)
                     format_strings = ','.join(['%s'] * len(article_ids))
                     update_query = f"UPDATE articles SET is_synthesized = 1 WHERE id IN ({format_strings})"
                     cursor.execute(update_query, tuple(article_ids))
                     
                     self.db_service.mb_conn.commit()
                     cursor.close()
-                    
-                    logger.info(f"✅ Created story {story_id} from cluster {cid}.")
+
+                    if upsert_result.get("action") == "tracked_noop":
+                        logger.info(
+                            f"ℹ️ Cluster {cid} produced no meaningful story delta "
+                            f"(text_delta={upsert_result.get('text_delta')}, composite_score={upsert_result.get('composite_score')}, "
+                            f"new_articles={upsert_result.get('new_article_count')}). "
+                            f"Tracked inputs without republish for story {upsert_result.get('story_id')}."
+                        )
+                    else:
+                        logger.info(
+                            f"✅ Upserted living story {upsert_result.get('story_id')} from cluster {cid} "
+                            f"(action={upsert_result.get('action')}, text_delta={upsert_result.get('text_delta')}, "
+                            f"composite_score={upsert_result.get('composite_score')}, "
+                            f"new_articles={upsert_result.get('new_article_count')})."
+                        )
                 else:
                     err = synthesis_result.get('error') if isinstance(synthesis_result, dict) else str(synthesis_result)
                     logger.error(f"Synthesis failed for cluster {cid}: {err}")
@@ -849,33 +1739,53 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                 )
                 
                 if isinstance(synthesis_result, dict) and synthesis_result.get("success"):
-                    body_text = synthesis_result.get("summary", "")
-                    title_text = f"Synthesis Report: {cid}" 
+                    body_text = str(
+                        synthesis_result.get("body")
+                        or synthesis_result.get("summary")
+                        or ""
+                    ).strip()
+                    if not body_text:
+                        logger.warning(f"Skipping empty synthesis output for heavy cluster {cid}")
+                        continue
+                    title_text = _derive_story_title(
+                        cid,
+                        synthesis_result,
+                        is_brief=len(texts) == 1,
+                    )
                     
-                    # 3. Save to synthesized_articles
+                    # 3. Upsert canonical living story per cluster
                     self.db_service.ensure_conn()
                     cursor = self.db_service.mb_conn.cursor()
-                    
-                    new_id = int(time.time() * 1000)
-                    story_id = f"STORY-{uuid.uuid4().hex[:8]}"
-                    input_arts_json = json.dumps(article_ids)
-                    
-                    insert_query = """
-                        INSERT INTO synthesized_articles 
-                        (story_id, cluster_id, input_articles, title, body, created_at, is_published)
-                        VALUES (%s, %s, %s, %s, %s, NOW(), 0)
-                    """
-                    cursor.execute(insert_query, (story_id, cid, input_arts_json, title_text, body_text))
-                    
-                    # 4. Mark articles as synthesized
+                    upsert_result = upsert_living_story_record(
+                        db_service=self.db_service,
+                        cluster_id=cid,
+                        article_ids=article_ids,
+                        title_text=title_text,
+                        body_text=body_text,
+                    )
+
+                    # 4. Mark articles as synthesized (always, even when update is not meaningful)
                     format_strings = ','.join(['%s'] * len(article_ids))
                     update_query = f"UPDATE articles SET is_synthesized = 1 WHERE id IN ({format_strings})"
                     cursor.execute(update_query, tuple(article_ids))
                     
                     self.db_service.mb_conn.commit()
                     cursor.close()
-                    
-                    logger.info(f"✅ Successfully created story {story_id} from heavy cluster {cid}.")
+
+                    if upsert_result.get("action") == "tracked_noop":
+                        logger.info(
+                            f"ℹ️ Heavy cluster {cid} produced no meaningful story delta "
+                            f"(text_delta={upsert_result.get('text_delta')}, composite_score={upsert_result.get('composite_score')}, "
+                            f"new_articles={upsert_result.get('new_article_count')}). "
+                            f"Tracked inputs without republish for story {upsert_result.get('story_id')}."
+                        )
+                    else:
+                        logger.info(
+                            f"✅ Successfully upserted living story {upsert_result.get('story_id')} from heavy cluster {cid} "
+                            f"(action={upsert_result.get('action')}, text_delta={upsert_result.get('text_delta')}, "
+                            f"composite_score={upsert_result.get('composite_score')}, "
+                            f"new_articles={upsert_result.get('new_article_count')})."
+                        )
                     
                     # 5. Remove from heavy_clusters.log
                     self._remove_from_log(cid)
@@ -1062,16 +1972,10 @@ class SynthesisToPublishingPolicy(WorkflowPolicy):
                 # 2. Update DB on Success
                 # We accept 'published' or 'published_locally'
                 if isinstance(result, dict) and "published" in result.get("status", ""):
-                    self.db_service.ensure_conn()
-                    cursor = self.db_service.mb_conn.cursor()
-                    
-                    cursor.execute(
-                        "UPDATE synthesized_articles SET is_published = 1 WHERE story_id = %s",
-                        (story_id,)
-                    )
-                    
-                    self.db_service.mb_conn.commit()
-                    cursor.close()
+                    try:
+                        record_living_story_publish_telemetry(self.db_service, story_id)
+                    except Exception as telemetry_error:
+                        logger.warning(f"Failed to record publish telemetry for {story_id}: {telemetry_error}")
                     logger.info(f"✅ Published story {story_id}")
                 else:
                     err = result.get('error') if isinstance(result, dict) else str(result)

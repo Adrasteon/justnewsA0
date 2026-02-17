@@ -3,6 +3,72 @@ last_updated: 2025-09-12 last_updated: 2025-11-01 ---
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-02-16 - **PUBLISHER UX + SEO DISCOVERABILITY OVERHAUL**
+
+### 📰 **Website Publishing Experience Upgrade**
+
+- **✅** Rebuilt publisher page templates for a premium, airy reading experience across home, archive, category, and article views.
+- **✅** Improved click-through UX with full-card story interaction patterns, clearer hierarchy, and stronger scanability.
+- **✅** Added analysis-rich article surfaces: trust bands, read-time, evidence links, narrative signals, publish metadata, and related coverage.
+- **✅** Added robust publisher styling system in `static/css/style.css` for cards, rails, chips, trust states, and responsive behavior.
+
+### 🔎 **Technical SEO & Crawlability Enhancements**
+
+- **✅** Added canonical/robots/OpenGraph/Twitter metadata architecture with page-specific overrides and duplicate-tag elimination.
+- **✅** Added article `NewsArticle` JSON-LD and section/homepage structured data (`CollectionPage`, `WebSite`, `Organization`).
+- **✅** Added crawler endpoints:
+  - `/robots.txt`
+  - `/sitemap.xml` (sitemap index)
+  - `/sitemap-static.xml`
+  - `/sitemap-articles-<page>.xml` (paged article sitemaps for scale)
+  - `/feed.xml` (RSS)
+- **✅** Added dynamic sitemap freshness/priority tuning and page-level splitting to improve crawl budget behavior at scale.
+- **✅** Added production go-live checklist and operator reminders:
+  - `docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md`
+  - Startup script banner reminders in `start_all_services.sh`.
+
+### 🛠️ **Stability Fixes Supporting Publisher Reliability**
+
+- **✅** Fixed invalid Django timezone configuration in `justnews_publisher/settings.py` (`TIME_ZONE="UTC"`) to prevent article page 500s during template datetime rendering.
+
+## [Unreleased] - 2026-02-10 - **GPU OPTIMIZATION & WORKFLOW SCALING**
+
+### 🚀 **Performance & Scalability Overhaul**
+
+- **✅** Implemented **Lazy Loading** for core agents (`critic`, `synthesizer`, `fact_checker`) to bypass loading heavy local models (BERTopic, T5, Qwen2-VL) by default, saving ~15GB+ of system RAM across workers.
+- **✅** Scaled workflow throughput by implementing **Multi-Worker Uvicorn Deployment** in `start_agents_devcontainer.sh`.
+- **✅** Configured **Fact Checker** and **Synthesizer** to run with **2 workers each**, doubling their concurrent processing capacity.
+- **✅** Optimized `system_config.json`: increased `max_concurrent_tasks` (5 → 30) and `max_memory_percent` (90% → 96%) to support high-density batch processing.
+- **✅** Fixed critical SQL column mismatch: Added `critique_text` to `synthesized_articles` table (Migration 017).
+- **✅** Resolved agent connectivity issues: Fixed `Chief Editor` host configuration (switched from `localhost` to `mariadb` network name) and refined environment variable injection in the startup script.
+- **✅** Verified full pipeline flow: articles now successfully transition from Analysis → Synthesis → Critique → Publication at scale.
+
+## [Unreleased] - 2026-02-08 - **DEV CONTAINER RELIABILITY & SETUP IMPROVEMENTS**
+
+### 🐳 **Dev Container Setup Enhancements - PRODUCTION READY**
+
+- **✅** Fixed CRLF line ending issues in `global.env` that broke Django settings imports
+- **✅** Upgraded dependency management to use **UV package manager** (`uv venv`, `uv pip install`)
+- **✅** Switched from deprecated `requirements.txt` to **`requirements-bootstrap.txt`** for reliable pip installs
+- **✅** Replaced unreliable shell `nc` commands with Python socket-based connectivity checks (MariaDB, ChromaDB, vLLM)
+- **✅** Improved environment variable loading: changed from grep/export to `source /app/global.env`
+- **✅** Added `--fake-initial` flag to Django migrations for pre-existing database schemas
+- **✅** Extended MariaDB wait timeout from 30 to 60 seconds for slower container startups
+- **✅** Separated dependency installation (`create_deps_venv.sh`) from post-create initialization (`post-create.sh`)
+- **✅** Enhanced initialization reporting with detailed success/warning messages and recovery hints
+- **✅** Pinned **ChromaDB to v0.4.18** for API stability (latest image has breaking changes)
+- **✅** Added ChromaDB health check endpoint: `/api/v1/heartbeat`
+- **✅** Verified vLLM fully operational: Qwen 2.5 14B model loaded and inference ready
+- **✅** Updated dev container documentation with comprehensive troubleshooting and service status
+- **✅** Updated `docs/dev-setup.md` with UV-based installation and post-create initialization details
+
+**Result:** Dev container initializes reliably with all services operational:
+- ✅ MariaDB: Connected, database initialized, migrations applied
+- ✅ vLLM: Model fully loaded, API responding on port 8001
+- ✅ ChromaDB: Stable v0.4.18 with health checks enabled
+
+Status: **DEV CONTAINER PRODUCTION READY ✅**
+
 ## [Unreleased] - 2026-01-28 - **QWEN 2.5 STANDARDIZATION**
 
 ### 🔄 **Model Standardization: Qwen 2.5 14B AWQ**

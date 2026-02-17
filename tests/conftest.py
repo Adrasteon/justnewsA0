@@ -105,26 +105,75 @@ def _detect_phase_from_path(interpreter_path: str) -> int | None:
     return None
 
 
-# Enforce usage of the project's conda environment for local runs
+def _is_supported_uv_env(interpreter_path: str) -> bool:
+    """Return True when running in the project's supported UV/venv interpreters."""
+    if not interpreter_path:
+        return False
+    executable_paths = {
+        os.path.abspath(interpreter_path),
+        os.path.realpath(interpreter_path),
+    }
+
+    supported_prefixes = {
+        os.path.abspath("/app/.venv/bin/") ,
+        os.path.abspath("/deps/.venv/bin/"),
+        os.path.realpath("/app/.venv/bin/"),
+        os.path.realpath("/deps/.venv/bin/"),
+    }
+    if any(
+        executable.startswith(prefix)
+        for executable in executable_paths
+        for prefix in supported_prefixes
+    ):
+        return True
+
+    # Fallback: treat an active venv rooted in this repository as supported.
+    virtual_env = os.environ.get("VIRTUAL_ENV")
+    if virtual_env:
+        venv_path = os.path.realpath(virtual_env)
+        if normalized.startswith(os.path.join(venv_path, "bin") + os.sep):
+            try:
+                repo_root = project_root.resolve()
+                return repo_root in Path(venv_path).resolve().parents or Path(venv_path).resolve() == repo_root / ".venv"
+            except Exception:
+                return False
+
+    return False
+
+
+# Enforce usage of the project's canonical test environments for local runs
 # - In CI we allow broader environments (CI=true will skip the check)
 # - Developers can temporarily bypass with ALLOW_ANY_PYTEST_ENV=1
 if (
     os.environ.get("CI", "").lower() not in ("1", "true")
     and os.environ.get("ALLOW_ANY_PYTEST_ENV", "") != "1"
 ):
-    # Detect phase from current interpreter path (supports both unified and phased envs)
-    detected_phase = _detect_phase_from_path(sys.executable)
-    
+    # Accept UV/venv-based interpreters used in devcontainer workflows.
+    if _is_supported_uv_env(sys.executable):
+        detected_phase = 1
+    else:
+        detected_phase = None
+
+    # Detect phase from current interpreter path (supports both unified and phased conda envs)
     if detected_phase is None:
-        # Not running in a JustNews conda environment at all
+        detected_phase = _detect_phase_from_path(sys.executable)
+
+    if detected_phase is None:
+        # Not running in a supported JustNews UV/venv or conda environment.
         msg = """
-Tests should be run inside a JustNews conda environment for consistent results.
+Tests should be run inside a supported JustNews Python environment for consistent results.
 
 Supported environments:
+  - UV/venv: /app/.venv or /deps/.venv
   - justnews-py312 (unified)
   - justnews-py312-phase1, -phase2, -phase3, -phase4 (phased)
 
 To setup:
+    # UV (preferred)
+    uv venv .venv && source .venv/bin/activate
+    uv pip install -r requirements-bootstrap.txt
+
+    # Or conda legacy setup
   bash scripts/dev/setup_dev_environment.sh --create-all-phases
   bash scripts/dev/select_phase_env.sh --phase 1
   source ./global.env
@@ -438,7 +487,7 @@ def create_mock_requests() -> types.ModuleType:
                 200,
                 {
                     "analyst": "http://localhost:8004",
-                    "fact_checker": "http://localhost:8003",
+                    "fact_checker": "http://localhost:8018",
                     "synthesizer": "http://localhost:8005",
                     # "scout": "http://localhost:8002", (Deprecated)
                     "critic": "http://localhost:8006",

@@ -41,8 +41,8 @@ def get_logger(name: str) -> logging.Logger:
     if not has_file:
         file_handler = RotatingFileHandler(
             log_file_path,
-            maxBytes=10 * 1024 * 1024,  # 10 MB
-            backupCount=5,
+            maxBytes=int(os.environ.get('LOG_MAX_BYTES', 512000)),  # 10 MB
+            backupCount=int(os.environ.get('LOG_BACKUP_COUNT', 3)),
             encoding="utf-8",
         )
         formatter = logging.Formatter(

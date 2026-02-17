@@ -161,12 +161,13 @@ async def register_with_mcp_bus():
 
     try:
         mcp_bus_url = os.getenv("MCP_BUS_URL", "http://localhost:8000")
+        newsreader_port = os.getenv("NEWSREADER_PORT", "8009")
         client = MCPBusClient(mcp_bus_url)
 
         # Correctly call the synchronous register_agent method
         client.register_agent(
             agent_name="newsreader",
-            agent_address="http://localhost:8002",
+            agent_address=f"http://localhost:{newsreader_port}",
             tools=["url_processing", "content_extraction", "visual_analysis"]
         )
         logger.info("✅ Registered with MCP Bus")

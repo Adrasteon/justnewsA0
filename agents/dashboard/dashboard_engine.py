@@ -219,7 +219,7 @@ class EnhancedGPUMonitor:
                 # Get per-agent allocation details
                 agent_ports = {
                     "scout": 8002,
-                    "fact_checker": 8003,
+                    "fact_checker": 8018,
                     "analyst": 8004,
                     "synthesizer": 8005,
                     "critic": 8006,
@@ -312,7 +312,7 @@ class EnhancedGPUMonitor:
         try:
             agent_ports = {
                 "scout": 8002,
-                "fact_checker": 8003,
+                "fact_checker": 8018,
                 "analyst": 8004,
                 "synthesizer": 8005,
                 "critic": 8006,

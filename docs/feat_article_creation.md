@@ -381,7 +381,7 @@ Responsibilities:
 
 - Generates comprehensive analysis for article clusters
 
-- Calls `comprehensive_fact_check()` for each article (mandatory by default)
+- Calls analyst audit-based per-article fact-checking (`agents/analyst/audit.py`) for each article (mandatory by default)
 
 - Aggregates cluster-level fact-check summary
 
@@ -401,7 +401,7 @@ Responsibilities:
 
 **Fact-Check Integration**:
 
-- `_run_per_article_fact_check()`: Calls fact-checker's`comprehensive_fact_check()` with graceful fallback
+- `_run_per_article_fact_check()`: Uses `audit_text()` against the active fact-check service (`FACT_CHECKER_URL`, default `localhost:8018`) with graceful fallback
 
 - Status mapping: `≥0.8=passed`,`0.6-0.79=needs_review`,`<0.6=failed`
 
@@ -884,7 +884,7 @@ Script for debugging:
 
 - Extended schemas with `ClaimVerdict`,`SourceFactCheck` dataclasses
 
-- Integrated `comprehensive_fact_check()`calls in`generate_analysis_report()`
+- Integrated analyst audit-based per-article fact-check calls in `generate_analysis_report()`
 
 - Implemented per-article fact-checking with status mapping (passed/needs_review/failed)
 

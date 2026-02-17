@@ -47,7 +47,7 @@ AGENTS = [
     {"name": "MCP Bus", "port": 8000, "endpoint": "/health"},
     {"name": "Chief Editor", "port": 8001, "endpoint": "/health"},
     {"name": "Scout (Deprecated)", "port": 8002, "endpoint": "/health", "deprecated": True},
-    {"name": "Fact Checker (Verification)", "port": 8003, "endpoint": "/health"},
+    {"name": "Fact Checker (Verification)", "port": 8018, "endpoint": "/health"},
     {"name": "Analyst (Content Analysis)", "port": 8004, "endpoint": "/health"},
     {"name": "Synthesizer (Cluster Aggregation)", "port": 8005, "endpoint": "/health"},
     {"name": "Critic Agent", "port": 8006, "endpoint": "/health"},
@@ -55,12 +55,12 @@ AGENTS = [
     {"name": "Reasoning Agent", "port": 8008, "endpoint": "/health"},
     {"name": "Newsreader (Ingestion & Crawling)", "port": 8009, "endpoint": "/health"},
     {"name": "vLLM Service", "port": 8010, "endpoint": "/health"},
-    {"name": "Analytics", "port": 8011, "endpoint": "/health"},
-    {"name": "Archive", "port": 8012, "endpoint": "/health"},
+    {"name": "Analytics", "port": 8012, "endpoint": "/health"},
+    {"name": "Archive", "port": 8020, "endpoint": "/health"},
     {"name": "GPU Orchestrator", "port": 8014, "endpoint": "/health"},
     {"name": "Crawler", "port": 8015, "endpoint": "/health"},
     {"name": "Journalist (Publishing)", "port": 8017, "endpoint": "/health"},
-    {"name": "Workflow Orch (Job Scheduling)", "port": 8020, "endpoint": "/health"},
+    {"name": "Workflow Orch (Job Scheduling)", "port": 8023, "endpoint": "/health"},
 ]
 
 class StatusDashboard(tk.Tk):

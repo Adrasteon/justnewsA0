@@ -9,7 +9,7 @@ import json
 import logging
 import secrets
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from typing import Any
 
 import aiofiles
@@ -220,7 +220,7 @@ class EncryptionService:
         """
         try:
             key_id = f"key_{secrets.token_urlsafe(8)}"
-            created_at = datetime.now(UTC)
+            created_at = datetime.now(timezone.utc)
             expires_at = created_at + timedelta(
                 days=self.encryption_config.key_rotation_days
             )
@@ -321,7 +321,7 @@ class EncryptionService:
 
             # Mark old key as inactive
             old_key["is_active"] = False
-            old_key["rotated_at"] = datetime.now(UTC).isoformat()
+            old_key["rotated_at"] = datetime.now(timezone.utc).isoformat()
             old_key["rotated_to"] = new_key_id
 
             await self._save_keys()
@@ -475,7 +475,7 @@ class EncryptionService:
             List of active key information
         """
         active_keys = []
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         for key_data in self._keys.values():
             if key_data.get("is_active", True):
@@ -512,7 +512,7 @@ class EncryptionService:
             if not k.get("is_active", True)
             or (
                 k.get("expires_at")
-                and datetime.fromisoformat(k["expires_at"]) < datetime.now(UTC)
+                and datetime.fromisoformat(k["expires_at"]) < datetime.now(timezone.utc)
             )
         )
 
@@ -536,7 +536,7 @@ class EncryptionService:
             ):
                 expires_at = key_data.get("expires_at")
                 if expires_at and datetime.fromisoformat(expires_at) > datetime.now(
-                    UTC
+                    timezone.utc
                 ):
                     return key_data["id"]
 
@@ -591,7 +591,7 @@ class EncryptionService:
     async def _initialize_key_rotation(self) -> None:
         """Initialize automatic key rotation"""
         # Check for expired keys and rotate them
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         for key_id, key_data in list(self._keys.items()):
             if not key_data.get("is_active", True):

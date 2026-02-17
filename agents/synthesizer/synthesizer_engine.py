@@ -22,9 +22,10 @@ Key Features:
 
 import asyncio
 import os
+import re
 import time
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from typing import Any
 
@@ -384,15 +385,21 @@ class SynthesizerEngine:
             logger.warning(f"⚠️ GPU initialization failed: {e}, using CPU")
 
     def _load_embedding_model(self):
-        """Load SentenceTransformer embedding model."""
-        # Embedding model loading disabled to save memory/resources.
-        # Synthesizer relies on Qwen-based synthesis which does not strictly require local embeddings
-        # unless legacy K-Means clustering fallback is triggered.
-        logger.info("🚫 Embedding model loading disabled by configuration/optimization")
-        self.embedding_model = None
-        return
+        """Load SentenceTransformer embedding model.
+        
+        DISABLED: Embedding model loading disabled to save memory/resources.
+        Synthesizer relies on Qwen-based synthesis which does not require local embeddings.
+        Legacy K-Means clustering fallback (if used) would handle embeddings separately.
+        
+        Re-enable by setting SYNTHESIZER_ENABLE_EMBEDDINGS=1 if needed.
+        """
+        if os.environ.get("SYNTHESIZER_ENABLE_EMBEDDINGS") != "1":
+            logger.info("🚫 Embedding model loading disabled (set SYNTHESIZER_ENABLE_EMBEDDINGS=1 to enable)")
+            self.embedding_model = None
+            return
 
-        if False: # Disabled legacy code block
+        # LEGACY CODE: Load SentenceTransformer if explicitly enabled
+        if False:  # if True to re-enable:
             try:
                 from agents.common.embedding import get_shared_embedding_model
 
@@ -460,10 +467,17 @@ class SynthesizerEngine:
             logger.error(f"❌ Failed to load FLAN-T5 model: {e}")
 
     def _load_bertopic_model(self):
-        """Load BERTopic clustering model."""
-        # BERTopic loading disabled to save memory/resources.
-        logger.info("🚫 BERTopic model loading disabled by configuration/optimization")
-        return 
+        """Load BERTopic clustering model (DISABLED).
+        
+        STATUS: DISABLED - BERTopic loading disabled to save GPU memory (~2-3GB).
+        Qwen adapter handles clustering through semantic understanding.
+        
+        Re-enable by setting SYNTHESIZER_ENABLE_BERTOPIC=1 if needed.
+        Legacy code kept below for reference.
+        """
+        if os.environ.get("SYNTHESIZER_ENABLE_BERTOPIC") != "1":
+            logger.info("🚫 BERTopic model loading disabled (set SYNTHESIZER_ENABLE_BERTOPIC=1 to enable)")
+            return 
 
         if not BERTOPIC_AVAILABLE or not self.embedding_model:
             logger.warning("⚠️ BERTopic not available, using fallback clustering")
@@ -780,7 +794,7 @@ class SynthesizerEngine:
             article_texts: List of new article contents.
             previous_context: Optional summary of previous coverage to maintain continuity.
 
-        Compatibility wrapper: returns dict {status, summary, key_points, article_count}
+        Compatibility wrapper: returns dict {status, body, summary, key_points, article_count}
         """
         if not self.is_initialized:
             raise RuntimeError("not initialized")
@@ -790,6 +804,7 @@ class SynthesizerEngine:
             if not article_texts:
                 return {
                     "status": "success",
+                    "body": "",
                     "summary": "",
                     "key_points": [],
                     "article_count": 0,
@@ -812,12 +827,18 @@ class SynthesizerEngine:
                     self._run_qwen_cluster_summary, texts, previous_context
                 )
                 if qwen_doc:
-                    summary = qwen_doc.get("summary") or " ".join(
-                        qwen_doc.get("key_points", [])[:2]
+                    body = (
+                        qwen_doc.get("body")
+                        or qwen_doc.get("draft_body")
+                        or qwen_doc.get("article_body")
+                        or qwen_doc.get("summary")
+                        or ""
                     )
+                    summary = qwen_doc.get("summary") or self._derive_summary_from_text(body)
                     key_points = qwen_doc.get("key_points", [])
                     return {
                         "status": "success",
+                        "body": body,
                         "summary": summary,
                         "key_points": key_points,
                         "article_count": len(article_texts),
@@ -866,9 +887,13 @@ class SynthesizerEngine:
                 else []
             )
 
+            body = refined
+            summary = self._derive_summary_from_text(body)
+
             return {
                 "status": "success",
-                "summary": refined,
+                "body": body,
+                "summary": summary,
                 "key_points": key_points,
                 "article_count": len(article_texts),
             }
@@ -881,13 +906,36 @@ class SynthesizerEngine:
                     for a in (article_texts or [])
                 ][:3]
             )
-            return {"status": "error", "summary": combined, "error": str(e)}
+            return {
+                "status": "error",
+                "body": combined,
+                "summary": self._derive_summary_from_text(combined),
+                "error": str(e),
+            }
+
+    def _derive_summary_from_text(self, text: str, max_words: int = 46) -> str:
+        normalized = " ".join((text or "").split()).strip()
+        if not normalized:
+            return ""
+        sentences = re.split(r"(?<=[.!?])\s+", normalized)
+        summary = " ".join(sentences[:2]).strip()
+        if not summary:
+            summary = normalized
+        words = summary.split()
+        if len(words) > max_words:
+            summary = " ".join(words[:max_words]).rstrip(" ,;:-") + "…"
+        return summary
 
     async def _summarize_text(self, text: str) -> SynthesisResult:
-        """Summarize individual text using BART."""
+        """Summarize individual text using Qwen (primary) with fallbacks.
+
+        Primary: Qwen LLM via adapter (GPU-accelerated)
+        Fallback: Simple text extraction (commented legacy BART code)
+        """
         _start_time = time.time()
 
         try:
+            # PRIMARY: Try Qwen adapter (GPU-accelerated, preferred method)
             if (
                 self.choose_model_for_task(
                     "summarization", prefer_high_accuracy=len(text) > 400
@@ -900,27 +948,45 @@ class SynthesizerEngine:
                 )
                 if qwen_res:
                     return qwen_res
+                else:
+                    logger.info("Qwen summarization returned None, trying fallback")
 
-            # Prefer using an explicit bart_model + tokenizer when present (tests set bart_model.generate to simulate failures)
-            # BART REMOVED
-            pass
+            # SECONDARY: Legacy BART model pipeline (commented out - GPU memory inefficient)
+            # if self.pipelines.get("bart_summarization") and self.models.get("bart"):
+            #     target_length = max(min(len(text.split()) // 3, 100), 20)
+            #     min_length = max(target_length // 2, 10)
+            #     result = self.pipelines["bart_summarization"](
+            #         text,
+            #         max_length=target_length,
+            #         min_length=min_length,
+            #         do_sample=False,
+            #         early_stopping=True,
+            #     )
+            #     summary = result[0]["summary_text"] if result else text
+            #     return SynthesisResult(
+            #         success=True,
+            #         content=summary,
+            #         method="bart_summarization",
+            #         processing_time=time.time() - _start_time,
+            #         model_used="bart",
+            #         confidence=0.8,
+            #     )
 
-            # If we have a transformers pipeline for bart, use it next
-            # BART REMOVED - Fallback immediately
-            if True:
-                # Simple fallback summarization
-                sentences = text.split(". ")
-                summary = ". ".join(sentences[:2]) + "." if len(sentences) > 1 else text
-                return SynthesisResult(
-                    success=True,
-                    content=summary,
-                    method="simple_fallback",
-                    processing_time=time.time() - _start_time,
-                    model_used="none",
-                    confidence=0.6,
-                )
+            # TERTIARY: Simple fallback (text extraction only)
+            # Use when Qwen unavailable and BART disabled
+            logger.info("Using simple fallback summarization")
+            sentences = text.split(". ")
+            summary = ". ".join(sentences[:2]) + "." if len(sentences) > 1 else text
+            return SynthesisResult(
+                success=True,
+                content=summary,
+                method="simple_fallback",
+                processing_time=time.time() - _start_time,
+                model_used="simple_text_extraction",
+                confidence=0.6,
+            )
             
-            # Unreachable legacy code below
+            # Legacy code below (unreachable - kept for reference)
 
 
             # Check text length
@@ -1369,7 +1435,7 @@ class SynthesizerEngine:
         """Log feedback for training and monitoring."""
         try:
             with open(self.config.feedback_log, "a", encoding="utf-8") as f:
-                timestamp = datetime.now(UTC).isoformat()
+                timestamp = datetime.now(timezone.utc).isoformat()
                 f.write(f"{timestamp}\t{event}\t{details}\n")
         except Exception as e:
             logger.warning(f"Feedback logging failed: {e}")

@@ -1,0 +1,1644 @@
+-rw-r--r-- 1 root root 179133 Feb 14 16:51 logs/mcp_bus.log
+LOG CONTENT:
+nohup: ignoring input
+2026-02-14 16:30:11 - monitoring.core.trace_processor - INFO - TraceProcessor initialized
+2026-02-14 16:30:11 - common.observability - INFO - Initialized Monitoring Core for mcp_bus
+2026-02-14 16:30:14 - common.otel - INFO - OpenTelemetry tracing enabled (endpoint=127.0.0.1:4317, service=mcp_bus)
+2026-02-14 16:30:14 - common.otel - INFO - OpenTelemetry tracing enabled (endpoint=127.0.0.1:4317, service=mcp_bus)
+2026-02-14 16:30:16 - common.metrics - INFO - GPUtil not available; GPU metrics disabled
+2026-02-14 16:30:16 - common.metrics - INFO - Initialized metrics for agent: mcp_bus (display: communication-bus)
+2026-02-14 16:30:16 - monitoring.core.metrics_collector - INFO - Initialized enhanced metrics collector for agent: mcp_bus
+2026-02-14 16:30:16 - common.metrics - INFO - GPUtil not available; GPU metrics disabled
+2026-02-14 16:30:16 - common.metrics - INFO - Initialized metrics for agent: mcp_bus (display: communication-bus)
+INFO:     Started server process [71291]
+INFO:     Waiting for application startup.
+2026-02-14 16:30:16 - agents.mcp_bus.main - INFO - 🚀 Starting MCP Bus Agent...
+2026-02-14 16:30:16 - agents.mcp_bus.main - INFO - 🚀 Starting MCP Bus Agent...
+2026-02-14 16:30:16 - agents.mcp_bus.main - INFO - 🔍 Starting agent discovery...
+2026-02-14 16:30:16 - agents.mcp_bus.main - INFO - 🔍 Starting agent discovery...
+2026-02-14 16:30:16 - httpx - INFO - HTTP Request: GET http://localhost:8001/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:16 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief-editor at http://localhost:8001
+2026-02-14 16:30:16 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief-editor at http://localhost:8001
+2026-02-14 16:30:16 - agents.mcp_bus.tools - INFO - Agent chief-editor registered successfully at http://localhost:8001
+2026-02-14 16:30:16 - agents.mcp_bus.tools - INFO - Agent chief-editor registered successfully at http://localhost:8001
+2026-02-14 16:30:16 - agents.mcp_bus.main - INFO - ✅ Discovered and registered chief-editor at http://localhost:8001
+2026-02-14 16:30:16 - agents.mcp_bus.main - INFO - ✅ Discovered and registered chief-editor at http://localhost:8001
+2026-02-14 16:30:18 - agents.mcp_bus.main - DEBUG - Agent discovery check for fact-checker on port 8018: 
+2026-02-14 16:30:18 - agents.mcp_bus.main - DEBUG - Agent discovery check for fact-checker on port 8018: 
+2026-02-14 16:30:18 - httpx - INFO - HTTP Request: GET http://localhost:8004/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered analyst at http://localhost:8004
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered analyst at http://localhost:8004
+2026-02-14 16:30:18 - httpx - INFO - HTTP Request: GET http://localhost:8005/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered synthesizer at http://localhost:8005
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered synthesizer at http://localhost:8005
+2026-02-14 16:30:18 - httpx - INFO - HTTP Request: GET http://localhost:8006/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered critic at http://localhost:8006
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered critic at http://localhost:8006
+2026-02-14 16:30:18 - httpx - INFO - HTTP Request: GET http://localhost:8007/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered memory at http://localhost:8007
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered memory at http://localhost:8007
+2026-02-14 16:30:18 - httpx - INFO - HTTP Request: GET http://localhost:8008/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered reasoning at http://localhost:8008
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered reasoning at http://localhost:8008
+2026-02-14 16:30:18 - httpx - INFO - HTTP Request: GET http://localhost:8009/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered newsreader at http://localhost:8009
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered newsreader at http://localhost:8009
+2026-02-14 16:30:18 - httpx - INFO - HTTP Request: GET http://localhost:8012/health "HTTP/1.1 404 Not Found"
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8012
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8012
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8012
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8012
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered archive at http://localhost:8012
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered archive at http://localhost:8012
+2026-02-14 16:30:18 - httpx - INFO - HTTP Request: GET http://localhost:8013/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: dashboard at http://localhost:8013
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: dashboard at http://localhost:8013
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent dashboard registered successfully at http://localhost:8013
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent dashboard registered successfully at http://localhost:8013
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered dashboard at http://localhost:8013
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered dashboard at http://localhost:8013
+2026-02-14 16:30:18 - httpx - INFO - HTTP Request: GET http://localhost:8014/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu-orchestrator at http://localhost:8014
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu-orchestrator at http://localhost:8014
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent gpu-orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent gpu-orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered gpu-orchestrator at http://localhost:8014
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered gpu-orchestrator at http://localhost:8014
+2026-02-14 16:30:18 - httpx - INFO - HTTP Request: GET http://localhost:8016/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler-control at http://localhost:8016
+2026-02-14 16:30:18 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler-control at http://localhost:8016
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent crawler-control registered successfully at http://localhost:8016
+2026-02-14 16:30:18 - agents.mcp_bus.tools - INFO - Agent crawler-control registered successfully at http://localhost:8016
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered crawler-control at http://localhost:8016
+2026-02-14 16:30:18 - agents.mcp_bus.main - INFO - ✅ Discovered and registered crawler-control at http://localhost:8016
+2026-02-14 16:30:24 - agents.mcp_bus.main - DEBUG - Agent discovery check for auth-service on port 8018: 
+2026-02-14 16:30:24 - agents.mcp_bus.main - DEBUG - Agent discovery check for auth-service on port 8018: 
+2026-02-14 16:30:24 - httpx - INFO - HTTP Request: GET http://localhost:8020/health "HTTP/1.1 200 OK"
+2026-02-14 16:30:24 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow-orchestrator at http://localhost:8020
+2026-02-14 16:30:24 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow-orchestrator at http://localhost:8020
+2026-02-14 16:30:24 - agents.mcp_bus.tools - INFO - Agent workflow-orchestrator registered successfully at http://localhost:8020
+2026-02-14 16:30:24 - agents.mcp_bus.tools - INFO - Agent workflow-orchestrator registered successfully at http://localhost:8020
+2026-02-14 16:30:24 - agents.mcp_bus.main - INFO - ✅ Discovered and registered workflow-orchestrator at http://localhost:8020
+2026-02-14 16:30:24 - agents.mcp_bus.main - INFO - ✅ Discovered and registered workflow-orchestrator at http://localhost:8020
+2026-02-14 16:30:24 - agents.mcp_bus.main - INFO - ✅ Agent discovery complete: 12 agent(s) registered
+2026-02-14 16:30:24 - agents.mcp_bus.main - INFO - ✅ Agent discovery complete: 12 agent(s) registered
+2026-02-14 16:30:24 - agents.mcp_bus.mcp_bus_engine - INFO - Successfully notified GPU Orchestrator that MCP Bus is ready
+2026-02-14 16:30:24 - agents.mcp_bus.mcp_bus_engine - INFO - Successfully notified GPU Orchestrator that MCP Bus is ready
+2026-02-14 16:30:24 - agents.mcp_bus.tools - INFO - GPU Orchestrator notification successful
+2026-02-14 16:30:24 - agents.mcp_bus.tools - INFO - GPU Orchestrator notification successful
+2026-02-14 16:30:24 - agents.mcp_bus.main - INFO - ✅ GPU Orchestrator notification successful
+2026-02-14 16:30:24 - agents.mcp_bus.main - INFO - ✅ GPU Orchestrator notification successful
+2026-02-14 16:30:24 - agents.mcp_bus.main - INFO - ✅ MCP Bus Agent started successfully
+2026-02-14 16:30:24 - agents.mcp_bus.main - INFO - ✅ MCP Bus Agent started successfully
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59128 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59142 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59146 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59158 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59160 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59168 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59178 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59190 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59200 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59204 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59220 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:26 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:27 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:27 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:27 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:27 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59228 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:27 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:27 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:27 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:27 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:27 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:27 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:59238 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45824 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45830 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45836 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45846 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45856 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45862 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45870 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45880 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45890 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:28 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45892 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:29 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:29 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:29 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:29 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:29 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:29 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45902 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:30 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:30 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:30 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:30 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:30 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:30 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45904 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45914 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45926 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45934 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45936 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45952 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45966 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45980 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45990 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:45998 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46000 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46012 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:30:32 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:30:32 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:30:32 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:30:32 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+INFO:     127.0.0.1:46020 - "POST /register HTTP/1.1" 200 OK
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:30:32 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:30:32 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:30:32 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:30:32 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:30:32 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:30:32 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:30:32 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:30:32 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:30:32 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+INFO:     127.0.0.1:46032 - "POST /register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46034 - "POST /register HTTP/1.1" 200 OK
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46048 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46060 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46064 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46066 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46080 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:32 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46086 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46088 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46098 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46114 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46118 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:30:33 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:30:38 - agents.mcp_bus.tools - DEBUG - Tool call successful: analyst.analyze_article
+2026-02-14 16:30:38 - agents.mcp_bus.tools - DEBUG - Tool call successful: analyst.analyze_article
+2026-02-14 16:30:38 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: analyst.analyze_article
+2026-02-14 16:30:38 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: analyst.analyze_article
+INFO:     127.0.0.1:46128 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:38 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:30:38 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:30:44 - agents.mcp_bus.tools - DEBUG - Tool call successful: analyst.analyze_article
+2026-02-14 16:30:44 - agents.mcp_bus.tools - DEBUG - Tool call successful: analyst.analyze_article
+2026-02-14 16:30:44 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: analyst.analyze_article
+2026-02-14 16:30:44 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: analyst.analyze_article
+2026-02-14 16:30:44 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:30:44 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:30:49 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 1 failed for analyst: 500 Server Error: Internal Server Error for url: http://localhost:8004/analyze_article
+2026-02-14 16:30:49 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 1 failed for analyst: 500 Server Error: Internal Server Error for url: http://localhost:8004/analyze_article
+2026-02-14 16:30:58 - agents.mcp_bus.tools - DEBUG - Tool call successful: analyst.analyze_article
+2026-02-14 16:30:58 - agents.mcp_bus.tools - DEBUG - Tool call successful: analyst.analyze_article
+2026-02-14 16:30:58 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: analyst.analyze_article
+2026-02-14 16:30:58 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: analyst.analyze_article
+INFO:     127.0.0.1:46152 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:30:58 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:30:58 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:31:03 - agents.mcp_bus.tools - DEBUG - Tool call successful: analyst.analyze_article
+2026-02-14 16:31:03 - agents.mcp_bus.tools - DEBUG - Tool call successful: analyst.analyze_article
+2026-02-14 16:31:03 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: analyst.analyze_article
+2026-02-14 16:31:03 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: analyst.analyze_article
+INFO:     127.0.0.1:46146 - "POST /call HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46134 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:31:03 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:31:03 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:31:08 - agents.mcp_bus.tools - DEBUG - Tool call successful: analyst.analyze_article
+2026-02-14 16:31:08 - agents.mcp_bus.tools - DEBUG - Tool call successful: analyst.analyze_article
+2026-02-14 16:31:08 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: analyst.analyze_article
+2026-02-14 16:31:08 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: analyst.analyze_article
+2026-02-14 16:31:08 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:31:08 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:31:08 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:31:08 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:31:08 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:31:08 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:46160 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+INFO:     127.0.0.1:46162 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+INFO:     127.0.0.1:40476 - "POST /register HTTP/1.1" 200 OK
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:31:08 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:31:08 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:31:08 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+INFO:     127.0.0.1:40492 - "POST /register HTTP/1.1" 200 OK
+2026-02-14 16:31:08 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: synthesizer.summarize_article
+2026-02-14 16:31:08 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: synthesizer.summarize_article
+2026-02-14 16:31:14 - agents.mcp_bus.tools - DEBUG - Tool call successful: synthesizer.summarize_article
+2026-02-14 16:31:14 - agents.mcp_bus.tools - DEBUG - Tool call successful: synthesizer.summarize_article
+2026-02-14 16:31:14 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: synthesizer.summarize_article
+2026-02-14 16:31:14 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: synthesizer.summarize_article
+INFO:     127.0.0.1:40502 - "POST /register HTTP/1.1" 200 OK
+2026-02-14 16:31:14 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: synthesizer.summarize_article
+2026-02-14 16:31:14 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: synthesizer.summarize_article
+2026-02-14 16:31:18 - agents.mcp_bus.tools - DEBUG - Tool call successful: synthesizer.summarize_article
+2026-02-14 16:31:18 - agents.mcp_bus.tools - DEBUG - Tool call successful: synthesizer.summarize_article
+2026-02-14 16:31:18 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: synthesizer.summarize_article
+2026-02-14 16:31:18 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: synthesizer.summarize_article
+INFO:     127.0.0.1:40504 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:31:18 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: synthesizer.summarize_article
+2026-02-14 16:31:18 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: synthesizer.summarize_article
+2026-02-14 16:31:23 - agents.mcp_bus.tools - DEBUG - Tool call successful: synthesizer.summarize_article
+2026-02-14 16:31:23 - agents.mcp_bus.tools - DEBUG - Tool call successful: synthesizer.summarize_article
+2026-02-14 16:31:23 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: synthesizer.summarize_article
+2026-02-14 16:31:23 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: synthesizer.summarize_article
+INFO:     127.0.0.1:40516 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:31:23 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: synthesizer.summarize_article
+2026-02-14 16:31:23 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: synthesizer.summarize_article
+2026-02-14 16:31:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: synthesizer.summarize_article
+2026-02-14 16:31:31 - agents.mcp_bus.tools - DEBUG - Tool call successful: synthesizer.summarize_article
+2026-02-14 16:31:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: synthesizer.summarize_article
+2026-02-14 16:31:31 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: synthesizer.summarize_article
+INFO:     127.0.0.1:40530 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:31:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: synthesizer.summarize_article
+2026-02-14 16:31:31 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: synthesizer.summarize_article
+2026-02-14 16:31:35 - agents.mcp_bus.tools - DEBUG - Tool call successful: synthesizer.summarize_article
+2026-02-14 16:31:35 - agents.mcp_bus.tools - DEBUG - Tool call successful: synthesizer.summarize_article
+2026-02-14 16:31:35 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: synthesizer.summarize_article
+2026-02-14 16:31:35 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: synthesizer.summarize_article
+INFO:     127.0.0.1:40538 - "POST /call HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40550 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:31:35 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:31:35 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:31:35 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:31:35 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:31:35 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:31:35 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+INFO:     127.0.0.1:40558 - "POST /call HTTP/1.1" 200 OK
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:31:35 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:31:35 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:31:35 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:31:35 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+INFO:     127.0.0.1:58414 - "POST /register HTTP/1.1" 200 OK
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+INFO:     127.0.0.1:58422 - "POST /register HTTP/1.1" 200 OK
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:31:35 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:31:35 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:31:35 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:31:35 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+INFO:     127.0.0.1:58432 - "POST /register HTTP/1.1" 200 OK
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:31:35 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:31:35 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:31:35 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:31:35 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:31:35 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+INFO:     127.0.0.1:58448 - "POST /register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58454 - "POST /register HTTP/1.1" 200 OK
+2026-02-14 16:31:35 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: fact_checker.verify_article
+2026-02-14 16:31:35 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: fact_checker.verify_article
+2026-02-14 16:33:49 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 1 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:33:49 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 1 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:36:02 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 2 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:36:02 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 2 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:38:16 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 3 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:38:16 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 3 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:38:16 - agents.mcp_bus.tools - ERROR - Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:38:16 - agents.mcp_bus.tools - ERROR - Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:38:16 - agents.mcp_bus.main - ERROR - ❌ Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:38:16 - agents.mcp_bus.main - ERROR - ❌ Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:38:16 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: fact_checker.verify_article
+2026-02-14 16:38:16 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: fact_checker.verify_article
+2026-02-14 16:40:29 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 1 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:40:29 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 1 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:42:43 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 2 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:42:43 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 2 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:44:56 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 3 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:44:56 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 3 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:44:56 - agents.mcp_bus.tools - ERROR - Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:44:56 - agents.mcp_bus.tools - ERROR - Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:44:56 - agents.mcp_bus.main - ERROR - ❌ Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:44:56 - agents.mcp_bus.main - ERROR - ❌ Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:44:56 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: fact_checker.verify_article
+2026-02-14 16:44:56 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: fact_checker.verify_article
+2026-02-14 16:47:09 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 1 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:47:09 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 1 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:49:23 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 2 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:49:23 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 2 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 3 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - WARNING - Tool call attempt 3 failed for fact_checker: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - WARNING - Circuit breaker opened for fact_checker for 10s after 3 failures
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - WARNING - Circuit breaker opened for fact_checker for 10s after 3 failures
+2026-02-14 16:51:37 - agents.mcp_bus.tools - ERROR - Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:51:37 - agents.mcp_bus.tools - ERROR - Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:51:37 - agents.mcp_bus.main - ERROR - ❌ Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:51:37 - agents.mcp_bus.main - ERROR - ❌ Tool call connection error: Tool call failed after 3 attempts: HTTPConnectionPool(host='localhost', port=8018): Read timed out. (read timeout=120.0)
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: fact_checker.verify_article
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: fact_checker.verify_article
+2026-02-14 16:51:37 - agents.mcp_bus.tools - WARNING - Tool call validation error: Circuit breaker open for agent fact_checker
+2026-02-14 16:51:37 - agents.mcp_bus.tools - WARNING - Tool call validation error: Circuit breaker open for agent fact_checker
+2026-02-14 16:51:37 - agents.mcp_bus.main - WARNING - ❌ Tool call validation error: Circuit breaker open for agent fact_checker
+2026-02-14 16:51:37 - agents.mcp_bus.main - WARNING - ❌ Tool call validation error: Circuit breaker open for agent fact_checker
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: fact_checker.verify_article
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: fact_checker.verify_article
+2026-02-14 16:51:37 - agents.mcp_bus.tools - WARNING - Tool call validation error: Circuit breaker open for agent fact_checker
+2026-02-14 16:51:37 - agents.mcp_bus.tools - WARNING - Tool call validation error: Circuit breaker open for agent fact_checker
+2026-02-14 16:51:37 - agents.mcp_bus.main - WARNING - ❌ Tool call validation error: Circuit breaker open for agent fact_checker
+2026-02-14 16:51:37 - agents.mcp_bus.main - WARNING - ❌ Tool call validation error: Circuit breaker open for agent fact_checker
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:37 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:39 - common.metrics - INFO - GPUtil not available; GPU metrics disabled
+2026-02-14 16:51:39 - common.metrics - INFO - Initialized metrics for agent: mcp_bus (display: communication-bus)
+2026-02-14 16:51:39 - agents.mcp_bus.tools - DEBUG - Health check completed: degraded
+2026-02-14 16:51:39 - agents.mcp_bus.tools - DEBUG - Health check completed: degraded
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:51:39 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:51:39 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:51:39 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:51:39 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:51:39 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:39 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:39 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:39 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:41 - common.metrics - INFO - GPUtil not available; GPU metrics disabled
+2026-02-14 16:51:41 - common.metrics - INFO - Initialized metrics for agent: mcp_bus (display: communication-bus)
+2026-02-14 16:51:41 - agents.mcp_bus.tools - DEBUG - Health check completed: degraded
+2026-02-14 16:51:41 - agents.mcp_bus.tools - DEBUG - Health check completed: degraded
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+INFO:     127.0.0.1:55512 - "GET /health HTTP/1.1" 200 OK
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:51:41 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:51:41 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:51:41 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:51:41 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:51:41 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:41 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:51:41 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: memory.ingest_article
+2026-02-14 16:51:41 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:51:41 - agents.mcp_bus.tools - DEBUG - Tool call successful: memory.ingest_article
+2026-02-14 16:51:42 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:51:42 - agents.mcp_bus.main - DEBUG - ✅ Tool call completed: memory.ingest_article
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: critic at http://localhost:8006
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: critic at http://localhost:8006
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent critic registered successfully at http://localhost:8006
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent critic registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: crawler at http://localhost:8022
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: crawler at http://localhost:8022
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent crawler registered successfully at http://localhost:8022
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent crawler registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: synthesizer at http://localhost:8005
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: synthesizer at http://localhost:8005
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent synthesizer registered successfully at http://localhost:8005
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent synthesizer registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: chief_editor at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: chief_editor at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent chief_editor registered successfully at http://localhost:8001
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent chief_editor registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: fact_checker at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: fact_checker at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent fact_checker registered successfully at http://localhost:8018
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent fact_checker registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: analyst at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: analyst at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent analyst registered successfully at http://localhost:8004
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent analyst registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: memory at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: memory at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent memory registered successfully at http://localhost:8007
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent memory registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: archive at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: archive at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent archive registered successfully at http://localhost:8020
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent archive registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: gpu_orchestrator at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent gpu_orchestrator registered successfully at http://localhost:8014
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent gpu_orchestrator registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: reasoning at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: reasoning at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent reasoning registered successfully at http://localhost:8008
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent reasoning registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: workflow_orchestrator at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent workflow_orchestrator registered successfully at http://localhost:8023
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent workflow_orchestrator registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - 📨 Agent registration request: newsreader at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.mcp_bus_engine - INFO - Registering agent: newsreader at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.tools - INFO - Agent newsreader registered successfully at http://localhost:8009
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - INFO - ✅ Agent newsreader registered successfully
+2026-02-14 16:51:42 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article
+2026-02-14 16:51:42 - agents.mcp_bus.main - DEBUG - 📨 Tool call request: analyst.analyze_article

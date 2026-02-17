@@ -312,7 +312,7 @@ check_environment_files() {
 check_ports() {
     local ports=(
         8000 8001 8002 8003 8004 8005
-        8006 8007 8008 8009 8010 8011
+        8006 8007 8008 8009 8010
         8012 8013 8014 8015 8016
     )
 
@@ -360,7 +360,7 @@ stop_occupied_services() {
         ["8007"]="memory"
         ["8008"]="reasoning"
         ["8009"]="newsreader"
-        ["8011"]="dashboard"
+        ["8013"]="dashboard"
     )
 
     for port in "${ports[@]}"; do

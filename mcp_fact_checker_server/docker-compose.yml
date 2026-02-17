@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  fact_checker:
+    build: .
+    ports:
+      - "8003:8000"
+    environment:
+      - FACT_CHECKER_API_KEY=dev_key_123
+      - VLLM_BASE_URL=http://gpu-orchestrator:8000/v1
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

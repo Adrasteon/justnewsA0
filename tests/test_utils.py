@@ -117,7 +117,7 @@ class MockFactory:
             def __init__(self):
                 self.agents = agents or {
                     "analyst": "http://localhost:8004",
-                    "fact_checker": "http://localhost:8003",
+                    "fact_checker": "http://localhost:8018",
                     "synthesizer": "http://localhost:8005",
                 }
                 self.calls = []
@@ -178,25 +178,27 @@ class MockFactory:
                         },
                         "processing_time": 0.12,
                     }
-                elif agent == "fact_checker" and tool == "verify_facts":
+                elif agent == "fact_checker" and tool in ("verify_facts", "fact_check"):
                     return {
                         "status": "success",
                         "data": {
-                            "verdict": "verified",
+                            "verdict": "Likely True",
                             "confidence": 0.92,
                             "sources_checked": 3,
-                            "result": "mock_fact_checker_verify_facts_result",
+                            "result": "mock_fact_checker_fact_check_result",
                         },
                         "processing_time": 0.15,
                     }
-                elif agent == "fact_checker" and tool == "assess_credibility":
+                elif agent == "fact_checker" and tool in ("assess_credibility", "verify_claim"):
                     return {
                         "status": "success",
                         "data": {
+                            "verdict": "Likely True",
+                            "confidence": 0.85,
                             "credibility_score": 0.85,
                             "rating": "high",
                             "factors": ["reputable_source", "fact_checking_history"],
-                            "result": "mock_fact_checker_assess_credibility_result",
+                            "result": "mock_fact_checker_verify_claim_result",
                         },
                         "processing_time": 0.08,
                     }

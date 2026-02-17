@@ -33,9 +33,9 @@ Each agent is a microservice with specific responsibilities:
 
 - **Chief Editor (Port 8001)**: Workflow orchestration and system coordination
 
-- **Scout (Port 8004)**: Content discovery and web crawling
+- **Scout (Port 8002, deprecated)**: Legacy content discovery service (do not use)
 
-- **Fact Checker (Port 8003)**: Source verification and fact-checking
+- **Fact Checker Shim (Port 8018)**: Active fact-check endpoint; forwards to external backend (`FACT_CHECKER_EXTERNAL_URL`, currently `http://localhost:8003`)
 
 - **Analyst (Port 8004)**: GPU-accelerated sentiment and bias analysis
 

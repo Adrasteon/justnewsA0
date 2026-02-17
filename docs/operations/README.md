@@ -2,6 +2,10 @@
 
 ## Quick Links
 
+**🔴 Live Server Go-Live (SEO/Crawler Priority):**
+
+- [Live SEO Launch Checklist](./LIVE_SEO_LAUNCH_CHECKLIST.md) — Required actions before and during production launch to maximize crawl frequency and ranking readiness
+
 **Getting Started**:
 
 - [Setup Guide](./SETUP_GUIDE.md) — Complete end-to-end installation (Python, Vault, MariaDB, ChromaDB, systemd)
@@ -10,7 +14,15 @@
 
 - [Troubleshooting](./TROUBLESHOOTING.md) — Diagnostics and recovery procedures
 
+- [Living Story Runbook](./LIVING_STORY_RUNBOOK.md) — Canonical story philosophy, meaningful-change thresholds, and day-2 operations
+
+- `scripts/ops/living_story_dashboard_report.py` — Generates JSON/Markdown operator telemetry reports for living-story decisions and latency trends
+
+- [Fact Checker Troubleshooting](./FACT_CHECKER_TROUBLESHOOTING.md) — Devcontainer/backend routing, auth, and circuit-breaker recovery
+
 - [MCP Bus Health & Diagnostics](./MCP_BUS_HEALTH.md) — Details on `/health`and`/ready`, testing, and developer guidance
+
+- [Crawler Maturity Checklist](./CRAWLER_MATURITY_CHECKLIST.md) — Phased roadmap and acceptance criteria to move toward enterprise-grade crawling
 
 **Infrastructure**:
 

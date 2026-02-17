@@ -5,6 +5,7 @@ Unified production crawling agent with MCP integration.
 # main.py for Crawler Agent
 
 import asyncio
+import concurrent.futures
 import os
 import uuid
 from contextlib import asynccontextmanager
@@ -52,6 +53,7 @@ crawl_jobs: dict[str, Any] = {}
 
 # Map job_id -> asyncio.Task for running background crawl jobs so they can be cancelled
 crawl_task_map: dict[str, asyncio.Task] = {}
+cancel_requested_jobs: set[str] = set()
 
 # Environment variables
 CRAWLER_AGENT_PORT = int(os.environ.get("CRAWLER_AGENT_PORT", 8015))
@@ -99,6 +101,7 @@ async def run_crawl_background(
 ):
     """Background task to execute a crawl job."""
     try:
+        cancel_requested_jobs.discard(job_id)
         crawl_jobs[job_id]["status"] = "running"
         logger.info(f"Starting background crawl task {job_id} for domains: {domains}")
         async with CrawlerEngine() as crawler:
@@ -109,9 +112,17 @@ async def run_crawl_background(
                 concurrent,
                 profile_overrides=profile_overrides,
             )
+        if job_id in cancel_requested_jobs:
+            crawl_jobs[job_id] = {"status": "cancelled"}
+            try:
+                set_error(job_id, "cancelled by user")
+            except Exception:
+                pass
+            return
         # Store result in job status
         try:
             set_result(job_id, result)
+            crawl_jobs[job_id] = {"status": "completed"}
         except Exception:
             # best-effort fallback to memory for visibility
             crawl_jobs[job_id] = {"status": "completed", "result": result}
@@ -119,6 +130,13 @@ async def run_crawl_background(
             f"Background crawl {job_id} complete. Articles: {len(result.get('articles', []))}"
         )
     except Exception as e:
+        if job_id in cancel_requested_jobs:
+            crawl_jobs[job_id] = {"status": "cancelled"}
+            try:
+                set_error(job_id, "cancelled by user")
+            except Exception:
+                pass
+            return
         try:
             set_error(job_id, str(e))
         except Exception:
@@ -127,6 +145,34 @@ async def run_crawl_background(
         import traceback
 
         logger.error(f"Traceback: {traceback.format_exc()}")
+
+
+def run_crawl_background_thread(
+    job_id: str,
+    domains: list[str],
+    max_articles: int,
+    concurrent: int,
+    profile_overrides: dict[str, dict[str, Any]] | None,
+):
+    """Run crawl in a dedicated thread event loop to keep API handlers responsive."""
+    asyncio.run(
+        run_crawl_background(
+            job_id, domains, max_articles, concurrent, profile_overrides
+        )
+    )
+
+
+def get_job_fast(job_id: str, timeout_seconds: float = 0.35):
+    """Best-effort persisted job lookup with timeout to avoid API hangs."""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(get_job, job_id)
+        try:
+            return future.result(timeout=timeout_seconds)
+        except concurrent.futures.TimeoutError:
+            logger.warning("Timed out loading persisted job status for %s", job_id)
+            return None
+        except Exception:
+            return None
 
 
 @asynccontextmanager
@@ -146,6 +192,8 @@ async def lifespan(app: FastAPI):
                 "unified_production_crawl",
                 "get_crawler_info",
                 "get_performance_metrics",
+                "get_jobs",
+                "get_job_status",
             ],
         )
         logger.info("Registered tools with MCP Bus.")
@@ -220,7 +268,8 @@ async def unified_production_crawl_endpoint(
 
     # Enqueue background task by creating an asyncio.Task so it can be cancelled later
     task = asyncio.create_task(
-        run_crawl_background(
+        asyncio.to_thread(
+            run_crawl_background_thread,
             job_id, domains, max_articles, concurrent, profile_overrides
         )
     )
@@ -252,6 +301,7 @@ async def stop_job(job_id: str):
     # Try to cancel a running task
     if job_id in crawl_task_map:
         task = crawl_task_map[job_id]
+        cancel_requested_jobs.add(job_id)
         logger.info(f"Cancelling running crawl job {job_id}")
         task.cancel()
         try:
@@ -303,16 +353,21 @@ async def stop_job(job_id: str):
 @app.get("/job_status/{job_id}")
 def job_status(job_id: str, token_ok: None = Depends(require_api_token)):
     """Retrieve status and result (if completed) for a crawl job."""
+    cached = crawl_jobs.get(job_id)
+    if isinstance(cached, dict):
+        cached_status = str(cached.get("status", "")).strip().lower()
+        cached_has_result = cached.get("result") is not None
+        if cached_status in {"running", "pending"} or cached_has_result:
+            return cached
+
     # Prefer persisted job view
-    try:
-        job = get_job(job_id)
-        if job is not None:
-            return job
-    except Exception:
-        pass
-    if job_id not in crawl_jobs:
+    job = get_job_fast(job_id)
+    if job is not None:
+        return job
+
+    if cached is None:
         raise HTTPException(status_code=404, detail=f"Job not found: {job_id}")
-    return crawl_jobs[job_id]
+    return cached
 
 
 @app.get("/jobs")
@@ -371,6 +426,40 @@ def get_crawler_info_endpoint(call: ToolCall):
     except Exception as e:
         logger.error(f"An error occurred in get_crawler_info: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/get_jobs")
+def get_jobs_tool(call: ToolCall, token_ok: None = Depends(require_api_token)):
+    """Tool wrapper for list_jobs"""
+    return list_jobs()
+
+
+@app.post("/get_job_status")
+def get_job_status_tool(call: ToolCall, token_ok: None = Depends(require_api_token)):
+    """Tool wrapper for job_status. returns 200 even if not found to avoid bus circuit breaker."""
+    job_id = call.args[0] if call.args else call.kwargs.get("job_id")
+    include_results = call.kwargs.get("include_results", False)
+    if not job_id:
+        return {"status": "error", "message": "Missing job_id"}
+    try:
+        status = job_status(job_id)
+        if not include_results and "result" in status:
+            # Create a shallow copy and remove big results
+            status = dict(status)
+            if isinstance(status["result"], dict) and "articles" in status["result"]:
+                # Keep article count but remove full list
+                status["result"] = dict(status["result"])
+                status["result"]["article_count"] = len(status["result"]["articles"])
+                status["result"]["articles"] = [] # Clear the list
+            else:
+                status["result"] = "omitted (use include_results=true to fetch)"
+        return status
+    except HTTPException as e:
+        if e.status_code == 404:
+            return {"status": "unknown", "job_id": job_id}
+        raise e
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 @app.post("/get_performance_metrics")

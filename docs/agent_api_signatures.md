@@ -69,6 +69,24 @@ reference when implementing tests, forwarders, or new integrations.
 
 - `url`,`cleaned_html`/`markdown`or`html`,`metadata`,`links`(internal/external),`score`
 
+3.1) Crawler Control advanced crawl contract (`localhost:8016`)
+
+- `POST /api/crawl/start`
+
+- Supports standard crawl controls plus optional `crawl4ai` object that is translated into per-domain `profile_overrides`.
+
+- Key advanced fields in `crawl4ai`:
+
+  - `crawl_depth` (max link-hop depth), `max_pages`, `follow_internal_links`, `follow_external`
+
+  - `run_config`, `browser_config`, `link_preview`, `adaptive`, `extra`, `start_urls`
+
+- Programmatic route: `POST /start_crawl` accepts equivalent options via `kwargs.crawl4ai` / `kwargs.profile_overrides`.
+
+- Discovery route: `GET /api/crawl/options` returns supported option keys and example payload.
+
+- See detailed guidance: `docs/agents/crawler_control_options.md`
+
 4) Archive / Storage agent
 
 - `archive.queue_article`

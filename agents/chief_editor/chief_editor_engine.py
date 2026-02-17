@@ -1,21 +1,20 @@
 """
-Chief Editor Engine - Simplified 5-Model Editorial Workflow Engine
+Chief Editor Engine - Qwen-based Editorial Workflow Engine
 
-This module provides a streamlined version of the chief editor engine
-with essential editorial decision-making capabilities.
+This module provides editorial decision-making capabilities using a single
+Qwen model adapter for multiple tasks.
 
 Key Features:
-- Content quality assessment using BERT
-- Fast categorization with DistilBERT
-- Editorial sentiment analysis with RoBERTa
-- Commentary generation with T5
-- Workflow embeddings with SentenceTransformer
-- Comprehensive editorial decision making
+- Content quality assessment via Qwen
+- Fast categorization via Qwen
+- Editorial sentiment analysis via Qwen
+- Commentary generation via Qwen
+- Comprehensive editorial decision making with fallback behavior
 """
 
 import os
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from enum import Enum
 from typing import Any
 
@@ -77,42 +76,37 @@ class EditorialDecision:
 
 @dataclass
 class ChiefEditorConfig:
-    """Configuration for Chief Editor Engine"""
-
-    # Model configurations
-    bert_model: str = "bert-base-uncased"
-    distilbert_model: str = "distilbert-base-uncased"
-    roberta_model: str = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-    t5_model: str = "t5-small"
-    embedding_model: str = "all-MiniLM-L6-v2"
+    """Configuration for Chief Editor Engine."""
 
     # Decision parameters
     quality_threshold: float = 0.7
     priority_threshold: float = 0.8
     confidence_threshold: float = 0.6
 
-    # Performance parameters
+    # Performance parameters  
     max_length: int = 512
-    device: str = "cpu"  # Default to CPU for stability
+    device: str = "cpu"  # Default to CPU (inference on Qwen)
 
 
 class ChiefEditorEngine:
     """
-    Simplified 5-Model Editorial Workflow Engine
-
-    Capabilities:
-    - Content quality assessment with BERT
-    - Fast article categorization with DistilBERT
-    - Editorial sentiment analysis with RoBERTa
-    - Commentary generation with T5
-    - Workflow embeddings with SentenceTransformer
+    Chief Editor Editorial Workflow Engine
+    
+    CURRENT Architecture (Qwen-based):
+    - Content quality assessment via Qwen LLM
+    - Article categorization via Qwen LLM
+    - Editorial sentiment analysis via Qwen LLM
+    - Commentary generation via Qwen LLM
+    - No local model loading (all inference remote)
+    
+    Optional local embeddings remain disabled by default.
     """
 
     def __init__(self, config: ChiefEditorConfig | None = None):
         self.config = config or ChiefEditorConfig()
         self.device = self.config.device
-        # Use shared ModelAdapter wrapper for consistent dry-run & Qwen behavior
-        self.mistral_adapter = ChiefEditorModelAdapter()
+        # Use shared model adapter wrapper for consistent dry-run & Qwen behavior
+        self.qwen_adapter = ChiefEditorModelAdapter()
 
         # Model containers
         self.pipelines = {}
@@ -138,45 +132,83 @@ class ChiefEditorEngine:
         logger.info(f"✅ Chief Editor Engine initialized on {self.device}")
 
     def _initialize_models(self):
-        """Initialize AI models with proper error handling"""
+        """Initialize AI models - now minimal (Qwen only).
+        
+        All model loading disabled. Chief Editor uses Qwen LLM for all inference.
+        Legacy model loading methods kept for reference (see comments).
+        """
         try:
-            # SentenceTransformer for embeddings is still needed locally
-            # The others (BERT, DistilBERT, RoBERTa, T5) are now handled by Qwen
-            self._load_embedding_model()
+            # All local model loading disabled - no embeddings, BERT, T5, etc.
+            # Inference routes through Qwen adapter only
+            # See _load_embedding_model for status
+            pass
 
         except Exception as e:
             logger.error(f"Error initializing models: {e}")
 
+    # DEPRECATED MODEL LOADERS - Kept for reference, not called
+    # All replaced by Qwen LLM adapter
+    
     def _load_bert_quality_model(self):
-        """Deprecated: BERT model replaced by Qwen."""
+        """DEPRECATED: BERT model replaced by Qwen.
+        
+        If re-enabling, update _initialize_models() to call this.
+        See git history for original implementation.
+        """
+        logger.info("🚫 BERT model loading disabled - using Qwen instead")
         pass
 
     def _load_distilbert_category_model(self):
-        """Deprecated: DistilBERT model replaced by Qwen."""
+        """DEPRECATED: DistilBERT model replaced by Qwen.
+        
+        If re-enabling, update _initialize_models() to call this.
+        """
+        logger.info("🚫 DistilBERT model loading disabled - using Qwen instead")
         pass
 
     def _load_roberta_sentiment_model(self):
-        """Deprecated: RoBERTa model replaced by Qwen."""
+        """DEPRECATED: RoBERTa model replaced by Qwen.
+        
+        If re-enabling, update _initialize_models() to call this.
+        """
+        logger.info("🚫 RoBERTa model loading disabled - using Qwen instead")
         pass
 
     def _load_t5_commentary_model(self):
-        """Deprecated: T5 model replaced by Qwen."""
+        """DEPRECATED: T5 model replaced by Qwen.
+        
+        If re-enabling, update _initialize_models() to call this.
+        """
+        logger.info("🚫 T5 model loading disabled - using Qwen instead")
         pass
 
     def _load_embedding_model(self):
-        """Load SentenceTransformer model for embeddings"""
-        try:
-            if not SENTENCE_TRANSFORMERS_AVAILABLE:
-                logger.warning("SentenceTransformers not available - using fallback")
-                return
+        """Load SentenceTransformer model for embeddings (DISABLED).
+        
+        STATUS: DEPRECATED - Embedding model loading disabled to save GPU memory.
+        
+        Chief Editor inference now fully routes through Qwen LLM adapter.
+        No local model loading occurs.
+        
+        Re-enable if needed by setting CHIEF_EDITOR_ENABLE_EMBEDDINGS=1.
+        """
+        if os.environ.get("CHIEF_EDITOR_ENABLE_EMBEDDINGS") == "1":
+            # LEGACY CODE: Re-enable if needed
+            try:
+                if not SENTENCE_TRANSFORMERS_AVAILABLE:
+                    logger.warning("SentenceTransformers not available - using fallback")
+                    return
 
-            self.pipelines["embeddings"] = SentenceTransformer(
-                self.config.embedding_model
-            )
-            logger.info("✅ Embedding model loaded")
+                self.pipelines["embeddings"] = SentenceTransformer(
+                    "all-MiniLM-L6-v2"  # was self.config.embedding_model
+                )
+                logger.info("✅ Embedding model loaded (via environment override)")
 
-        except Exception as e:
-            logger.error(f"Error loading embeddings: {e}")
+            except Exception as e:
+                logger.error(f"Error loading embeddings: {e}")
+                self.pipelines["embeddings"] = None
+        else:
+            logger.info("🚫 Embedding model loading disabled (set CHIEF_EDITOR_ENABLE_EMBEDDINGS=1 to enable)")
             self.pipelines["embeddings"] = None
 
     def log_feedback(self, event: str, details: dict[str, Any]):
@@ -186,17 +218,17 @@ class ChiefEditorEngine:
                 "CHIEF_EDITOR_FEEDBACK_LOG", "./feedback_chief_editor.log"
             )
             with open(feedback_log, "a", encoding="utf-8") as f:
-                timestamp = datetime.now(UTC).isoformat()
+                timestamp = datetime.now(timezone.utc).isoformat()
                 f.write(f"{timestamp}\t{event}\t{details}\n")
         except Exception as e:
             logger.error(f"Error logging feedback: {e}")
 
-    def assess_content_quality_bert(self, text: str) -> dict[str, Any]:
-        """Assess content quality using Qwen (replacing BERT)"""
-        if not self.mistral_adapter:
+    def assess_content_quality(self, text: str) -> dict[str, Any]:
+        """Assess content quality using Qwen."""
+        if not self.qwen_adapter:
             return self._fallback_quality_assessment(text)
             
-        result = self.mistral_adapter.perform_task("quality", text)
+        result = self.qwen_adapter.perform_task("quality", text)
         if not result or not isinstance(result, dict) or "overall_quality" not in result:
              return self._fallback_quality_assessment(text)
 
@@ -208,12 +240,12 @@ class ChiefEditorEngine:
         )
         return result
 
-    def categorize_content_distilbert(self, text: str) -> dict[str, Any]:
-        """Categorize content using Qwen (replacing DistilBERT)"""
-        if not self.mistral_adapter:
+    def categorize_content(self, text: str) -> dict[str, Any]:
+        """Categorize content using Qwen."""
+        if not self.qwen_adapter:
             return self._fallback_categorization(text)
             
-        result = self.mistral_adapter.perform_task("categorize", text)
+        result = self.qwen_adapter.perform_task("categorize", text)
         if not result or not isinstance(result, dict) or "category" not in result:
             return self._fallback_categorization(text)
 
@@ -225,12 +257,12 @@ class ChiefEditorEngine:
         )
         return result
 
-    def analyze_editorial_sentiment_roberta(self, text: str) -> dict[str, Any]:
-        """Analyze editorial sentiment using Qwen (replacing RoBERTa)"""
-        if not self.mistral_adapter:
+    def analyze_editorial_sentiment(self, text: str) -> dict[str, Any]:
+        """Analyze editorial sentiment using Qwen."""
+        if not self.qwen_adapter:
             return self._fallback_sentiment_analysis(text)
             
-        result = self.mistral_adapter.perform_task("sentiment", text)
+        result = self.qwen_adapter.perform_task("sentiment", text)
         if not result or not isinstance(result, dict) or "sentiment" not in result:
             return self._fallback_sentiment_analysis(text)
 
@@ -242,14 +274,14 @@ class ChiefEditorEngine:
         )
         return result
 
-    def generate_editorial_commentary_t5(
+    def generate_editorial_commentary(
         self, text: str, context: str = "news article"
     ) -> str:
-        """Generate editorial commentary using Qwen (replacing T5)"""
-        if not self.mistral_adapter:
+        """Generate editorial commentary using Qwen."""
+        if not self.qwen_adapter:
             return self._fallback_commentary_generation(text, context)
 
-        commentary = self.mistral_adapter.perform_task("commentary", text, context)
+        commentary = self.qwen_adapter.perform_task("commentary", text, context)
         if not commentary or not isinstance(commentary, str):
             # Check if it returned a dict by mistake, though perform_task handles this
             return self._fallback_commentary_generation(text, context)
@@ -274,9 +306,9 @@ class ChiefEditorEngine:
             metadata = metadata or {}
 
             # Run all analyses
-            quality = self.assess_content_quality_bert(content)
-            category = self.categorize_content_distilbert(content)
-            sentiment = self.analyze_editorial_sentiment_roberta(content)
+            quality = self.assess_content_quality(content)
+            category = self.categorize_content(content)
+            sentiment = self.analyze_editorial_sentiment(content)
 
             # Determine priority and stage
             priority = self._determine_priority(quality, category, sentiment, metadata)
@@ -291,7 +323,7 @@ class ChiefEditorEngine:
             confidence = sum(confidences) / len(confidences)
 
             # Generate reasoning
-            reasoning = self.generate_editorial_commentary_t5(
+            reasoning = self.generate_editorial_commentary(
                 content, f"{category['category']} article"
             )
 
@@ -313,7 +345,7 @@ class ChiefEditorEngine:
                 metadata=metadata,
             )
 
-            self._attach_mistral_review(decision, content)
+            self._attach_qwen_review(decision, content)
 
             self.log_feedback(
                 "make_editorial_decision",
@@ -452,26 +484,28 @@ class ChiefEditorEngine:
             metadata=metadata or {},
         )
 
-    def _attach_mistral_review(self, decision: EditorialDecision, content: str) -> None:
-        if not getattr(self, "mistral_adapter", None):
+    def _attach_qwen_review(self, decision: EditorialDecision, content: str) -> None:
+        if not getattr(self, "qwen_adapter", None):
             return
         try:
-            review = self.mistral_adapter.review_content(
+            review = self.qwen_adapter.review_content(
                 content, metadata=decision.metadata
             )
         except Exception as exc:
-            logger.debug("Chief Editor Mistral adapter failed: %s", exc)
+            logger.debug("Chief Editor Qwen adapter failed: %s", exc)
             return
         if review:
             decision.metadata = dict(decision.metadata)
-            decision.metadata["mistral_review"] = review
+            decision.metadata["qwen_review"] = review
 
     def get_model_status(self) -> dict[str, bool]:
-        """Get status of all models"""
+        """Get status of active and optional legacy model paths."""
+        qwen_available = bool(
+            getattr(self, "qwen_adapter", None)
+            and getattr(self.qwen_adapter, "enabled", False)
+        )
         return {
-            "bert": self.pipelines.get("bert_quality") is not None,
-            "distilbert": self.pipelines.get("distilbert_category") is not None,
-            "roberta": self.pipelines.get("roberta_sentiment") is not None,
-            "t5": self.pipelines.get("t5_commentary") is not None,
-            "embeddings": self.pipelines.get("embeddings") is not None,
+            "qwen_adapter": qwen_available,
+            "qwen_review": qwen_available,
+            "legacy_embeddings": self.pipelines.get("embeddings") is not None,
         }

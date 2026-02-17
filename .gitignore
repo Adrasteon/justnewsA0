@@ -120,3 +120,4 @@ run/
 *.gz
 model_store/
 db.sqlite3
+fact_checker_deprecation_archive/

@@ -35,7 +35,7 @@ except (
 ):  # pragma: no cover - exercised implicitly when NVML bindings are absent
     pynvml = None  # type: ignore
     _HAS_PYNVML = False
-from datetime import UTC
+from datetime import timezone
 
 from fastapi import HTTPException
 from prometheus_client import Counter, Gauge, Histogram
@@ -1290,8 +1290,8 @@ class GPUOrchestratorEngine:
             # Compute created_at / expires_at in Python for DB portability (works on MySQL & SQLite)
             from datetime import datetime, timedelta
 
-            created_at = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
-            expires_at = (datetime.now(UTC) + timedelta(seconds=ttl)).strftime(
+            created_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            expires_at = (datetime.now(timezone.utc) + timedelta(seconds=ttl)).strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
             cursor.execute(

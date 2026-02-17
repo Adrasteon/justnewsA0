@@ -159,8 +159,8 @@ Planned).
 - Intent: downstream processing — fact validation, summarization/synthesis, editorial suggestion, article drafting.
 
 - Status: Several agents implemented; many functions have tests and tools but full integration and operational tuning
-  remain ongoing. Fact Checker (and the adjacent Critic workflows) now share the Qwen 2.5 14B base via adapters so
-  accuracy-critical reviews stay aligned with the broader rollout.
+  remain ongoing. Fact Checker, Critic, and Chief Editor use the shared Qwen 2.5 14B adapter path for
+  accuracy-critical reasoning and editorial decisions.
 
 ## Functional workflow patterns
 
@@ -192,8 +192,9 @@ Planned).
 1. Downstream Processing
 
 - Agents like `fact_checker`,`synthesizer`and`chief_editor` run asynchronously on ingested articles, producing derived
-  artifacts (checks, summaries, editor suggestions). Fact Checker and Critic now lean on the shared Qwen adapter
-  stack for long-form reasoning while retaining lightweight retrieval models for evidence gathering.
+  artifacts (checks, summaries, editor suggestions). Chief Editor is Qwen-only for quality/categorization/sentiment/
+  commentary tasks; Fact Checker and Critic also lean on the shared Qwen adapter stack for long-form reasoning while
+  retaining lightweight retrieval models for evidence gathering.
 
 1. Metrics & Observability
 

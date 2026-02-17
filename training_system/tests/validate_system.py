@@ -192,35 +192,14 @@ def test_online_training_system():
         # Test 6: Agent-Specific Integration
         print("🔗 Testing Agent-Specific Integration...")
 
-        # Test Fact Checker V2 integration
+        # Test active fact-check integration surface (analyst audit pathway)
         try:
-            from agents.fact_checker.tools import correct_fact_verification
-            from agents.fact_checker.tools import (
-                get_online_training_status as get_fact_checker_status,
-            )
+            from agents.analyst.audit import normalize_verdict
 
-            fact_status = get_fact_checker_status()
+            print("   ✅ Fact-check integration: analyst audit path available")
             print(
-                f"   ✅ Fact Checker V2: Training Enabled = {fact_status.get('online_training_enabled', False)}"
+                f"      🔎 Verdict normalization sample: 'proven' -> '{normalize_verdict('proven')}'"
             )
-            print(
-                f"      📊 Buffer Size: {fact_status.get('fact_checker_buffer_size', 0)}"
-            )
-            print(
-                f"      🎯 Update Threshold: {fact_status.get('update_threshold', 30)}"
-            )
-
-            # Test correction function
-            correction_result = correct_fact_verification(
-                claim="The Earth is flat",
-                context="Scientific consensus disagrees",
-                incorrect_classification="factual",
-                correct_classification="questionable",
-                priority=3,  # Critical
-            )
-
-            status = "✅" if correction_result.get("correction_submitted") else "❌"
-            print(f"   {status} Fact verification correction submitted")
 
         except ImportError as e:
             print(f"   ⚠️ Fact Checker integration test skipped: {e}")

@@ -20,7 +20,7 @@ from __future__ import annotations
 import argparse
 import os
 import sys
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 
 
@@ -101,7 +101,7 @@ def main() -> None:
         )
 
     agent = args.agent.strip()
-    version = args.version or f"v{datetime.now(UTC):%Y%m%d-%H%M}"
+    version = args.version or f"v{datetime.now(timezone.utc):%Y%m%d-%H%M}"
     token = args.token or os.environ.get("HF_TOKEN") or os.environ.get("HF_HUB_TOKEN")
 
     store = ModelStore(Path(model_store_root))

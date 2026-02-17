@@ -20,7 +20,7 @@ import statistics
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from enum import Enum
 from typing import Any
 
@@ -51,7 +51,7 @@ class AnomalyAlert:
     affected_services: list[str]
     evidence: dict[str, Any]
     recommendations: list[str]
-    detected_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    detected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     resolved_at: datetime | None = None
     status: str = "active"  # "active", "resolved", "acknowledged"
 
@@ -68,7 +68,7 @@ class TrendAnalysis:
     confidence: float
     data_points: list[tuple[datetime, float]]
     forecast: list[tuple[datetime, float]] | None = None
-    analysis_date: datetime = field(default_factory=lambda: datetime.now(UTC))
+    analysis_date: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -81,7 +81,7 @@ class ServiceHealthScore:
     error_score: float
     throughput_score: float
     dependency_score: float
-    last_updated: datetime = field(default_factory=lambda: datetime.now(UTC))
+    last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     contributing_factors: dict[str, float] = field(default_factory=dict)
 
 
@@ -167,7 +167,7 @@ class TraceAnalyzer:
         self.recent_traces.append(trace_data)
 
         # Keep only traces within analysis window
-        cutoff_time = datetime.now(UTC) - timedelta(minutes=self.analysis_window_minutes)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(minutes=self.analysis_window_minutes)
         self.recent_traces = [
             trace
             for trace in self.recent_traces
@@ -590,7 +590,7 @@ class TraceAnalyzer:
             time_window = "medium"
 
         window_duration = self.trend_windows[time_window]
-        cutoff_time = datetime.now(UTC) - window_duration
+        cutoff_time = datetime.now(timezone.utc) - window_duration
 
         # Collect data points
         trend_data = defaultdict(list)
@@ -686,7 +686,7 @@ class TraceAnalyzer:
     def resolve_anomaly(self, anomaly_id: str):
         """Mark an anomaly as resolved"""
         if anomaly_id in self.anomaly_alerts:
-            self.anomaly_alerts[anomaly_id].resolved_at = datetime.now(UTC)
+            self.anomaly_alerts[anomaly_id].resolved_at = datetime.now(timezone.utc)
             self.anomaly_alerts[anomaly_id].status = "resolved"
             logger.info(f"Resolved anomaly: {anomaly_id}")
 

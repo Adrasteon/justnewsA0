@@ -312,6 +312,7 @@ async def aggregate_cluster_tool(
             # Compatibility for when engine returns a dict
             response = {
                 "success": result.get("status") == "success",
+                "body": result.get("body") or result.get("summary", ""),
                 "summary": result.get("summary", ""),
                 "key_points": result.get("key_points", []),
                 "articles_processed": result.get("article_count", len(article_texts)),
@@ -319,8 +320,12 @@ async def aggregate_cluster_tool(
                 "error": result.get("error")
             }
         else:
+            metadata_summary = ""
+            if getattr(result, "metadata", None) and isinstance(result.metadata, dict):
+                metadata_summary = str(result.metadata.get("summary") or "")
             response = {
                 "success": result.success,
+                "body": result.content,
                 "summary": result.content,
                 "method": result.method,
                 "model_used": result.model_used,
@@ -328,6 +333,8 @@ async def aggregate_cluster_tool(
                 "articles_processed": len(article_texts),
                 "processing_time": processing_time,
             }
+            if metadata_summary:
+                response["summary"] = metadata_summary
 
             # Add key points if available
             if result.metadata and "key_points" in result.metadata:
@@ -363,6 +370,7 @@ async def aggregate_cluster_tool(
         combined = " ".join(article_texts[:3]) if article_texts else ""
         return {
             "success": False,
+            "body": combined,
             "summary": combined,
             "method": "error_fallback",
             "articles_processed": len(article_texts),

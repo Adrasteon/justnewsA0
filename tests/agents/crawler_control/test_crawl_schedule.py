@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 
 from agents.crawler_control.crawl_schedule import (
@@ -53,7 +53,7 @@ def test_load_crawl_schedule_filters_and_sorts(tmp_path: Path) -> None:
     _write_schedule(schedule_path)
 
     schedule = load_crawl_schedule(schedule_path)
-    reference = datetime(2024, 4, 1, 10, 0, tzinfo=UTC)
+    reference = datetime(2024, 4, 1, 10, 0, tzinfo=timezone.utc)
     due_runs = schedule.due_runs(reference)
 
     assert [run.name for run in due_runs] == ["high-priority", "secondary"]

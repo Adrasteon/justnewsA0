@@ -138,21 +138,65 @@ HITL_FORWARD_TOOL=queue_article
 ## MCP Bus (central message broker)
 
 MCP_BUS_HOST=localhost
-MCP_BUS_PORT=8017
+MCP_BUS_PORT=8000
+MCP_BUS_MISSING_AGENT_POLL_INTERVAL_SEC=30
 
 ## Unified Crawler
 
 UNIFIED_CRAWLER_ENABLE_HTTP_FETCH=true
+UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR=3
+UNIFIED_CRAWLER_MAX_REQUEST_CAP=150
 
 ## Analytics Dashboard
 
-ANALYTICS_PORT=8011
+ANALYTICS_AGENT_PORT=8012
+
+## Fact Checker Shim
+
+FACT_CHECKER_AGENT_PORT=8018
+FACT_CHECKER_EXTERNAL_URL=http://fact-checker:8000
+FACT_CHECKER_API_KEY=dev_key_123
 
 ## Transparency/Evidence Service
 
 EVIDENCE_AUDIT_BASE_URL=http://localhost:8013/transparency
 
 ```
+
+#### Chief Editor (Qwen Runtime)
+
+```bash
+
+## Shared vLLM endpoint/model used by Chief Editor adapter
+
+VLLM_BASE_URL=http://127.0.0.1:8010/v1
+VLLM_MODEL=Qwen/Qwen2.5-14B-Instruct-AWQ
+VLLM_API_KEY=unused
+
+## Chief Editor runtime toggle (Qwen-only path)
+
+CHIEF_EDITOR_DISABLE_QWEN=0
+
+```
+
+Notes:
+
+- Chief Editor uses the Qwen adapter path for quality, categorization, sentiment, and commentary.
+- Legacy `CHIEF_EDITOR_DISABLE_MISTRAL` compatibility behavior is removed; use `CHIEF_EDITOR_DISABLE_QWEN` only.
+
+Crawler dedupe replacement tuning notes:
+
+- `UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR`
+	- Multiplies candidate fetch size per batch to compensate when ingest dedupe skips candidates.
+	- Higher values improve chance of hitting requested **new-article** targets but increase crawl cost.
+- `UNIFIED_CRAWLER_MAX_REQUEST_CAP`
+	- Hard cap for per-batch candidate request size.
+	- Protects against runaway fetches on high-duplication domains.
+
+Recommended starting point (development):
+
+- `UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR=3`
+- `UNIFIED_CRAWLER_MAX_REQUEST_CAP=150`
 
 #### Telemetry & Monitoring
 

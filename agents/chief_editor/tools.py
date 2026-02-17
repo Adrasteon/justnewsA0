@@ -5,10 +5,10 @@ This module provides utility functions for editorial workflow orchestration,
 content analysis, and multi-agent coordination.
 
 Key Functions:
-- assess_content_quality: BERT-based quality assessment
-- categorize_content: DistilBERT-based categorization
-- analyze_editorial_sentiment: RoBERTa-based sentiment analysis
-- generate_editorial_commentary: T5-based commentary generation
+- assess_content_quality: Qwen-based quality assessment
+- categorize_content: Qwen-based categorization
+- analyze_editorial_sentiment: Qwen-based sentiment analysis
+- generate_editorial_commentary: Qwen-based commentary generation
 - make_editorial_decision: Comprehensive editorial decision making
 - request_story_brief: Story brief generation
 - publish_story: Publishing coordination
@@ -26,10 +26,85 @@ import mysql.connector
 from typing import Any
 
 from common.observability import get_logger
+from agents.common.headline_adapter import HeadlineAdapter
 
 from .chief_editor_engine import ChiefEditorConfig, ChiefEditorEngine
 
 logger = get_logger(__name__)
+
+_HEADLINE_ADAPTER = HeadlineAdapter(name="chief_editor_title_llm")
+
+
+_PLACEHOLDER_SYNTH_TITLE = re.compile(
+    r"^\s*(\[brief\]\s*)?synthesis\s+report\s*:\s*cl-[a-f0-9]+\s*$",
+    re.IGNORECASE,
+)
+
+
+def _generate_llm_title_candidates(summary: str, body: str) -> list[str]:
+    context = "\n".join(part for part in [summary.strip(), body.strip()[:1500]] if part).strip()
+    if not context:
+        return []
+    return _HEADLINE_ADAPTER.generate_candidates(context)
+
+
+def _derive_publication_title(raw_title: str, summary: str, body: str) -> str:
+    title = (raw_title or "").strip()
+    if title and not _PLACEHOLDER_SYNTH_TITLE.match(title):
+        seeded = HeadlineAdapter.headlineize(title)
+        if seeded and not HeadlineAdapter.is_sensational(seeded):
+            return seeded
+
+    llm_candidates = _generate_llm_title_candidates(summary, body)
+    headline = HeadlineAdapter.select_best_headline(
+        llm_candidates,
+        min_len=10,
+        disallowed_pattern=_PLACEHOLDER_SYNTH_TITLE,
+    )
+    if headline:
+        return headline
+
+    for candidate in (summary, body):
+        normalized = re.sub(r"\s+", " ", (candidate or "").strip())
+        if not normalized:
+            continue
+        sentence = re.split(r"(?<=[.!?])\s+", normalized, maxsplit=1)[0].strip()
+        if len(sentence) < 12:
+            continue
+        fallback = HeadlineAdapter.headlineize(sentence)
+        if fallback and not HeadlineAdapter.is_sensational(fallback):
+            return fallback
+
+    return "Developing Story"
+
+
+def _derive_publication_summary(body: str, max_words: int = 42) -> str:
+    normalized = re.sub(r"\s+", " ", (body or "").strip())
+    if not normalized:
+        return ""
+
+    sentences = re.split(r"(?<=[.!?])\s+", normalized)
+    summary = " ".join(sentences[:2]).strip() or normalized
+    words = summary.split()
+    if len(words) > max_words:
+        summary = " ".join(words[:max_words]).rstrip(" ,;:-") + "…"
+    return summary
+
+
+def _resolve_publication_summary(body: str, source_summary: str, title: str) -> str:
+    summary = _derive_publication_summary(body)
+    if summary:
+        return summary
+
+    normalized_source = re.sub(r"\s+", " ", (source_summary or "").strip())
+    if normalized_source:
+        return normalized_source
+
+    normalized_title = re.sub(r"\s+", " ", (title or "").strip())
+    if normalized_title:
+        return normalized_title
+
+    return "Developing story updates are being verified."
 
 # Global engine instance
 _engine: ChiefEditorEngine | None = None
@@ -66,14 +141,14 @@ async def process_editorial_request(
         )
 
         if operation_type == "quality":
-            result = engine.assess_content_quality_bert(content)
+            result = engine.assess_content_quality(content)
         elif operation_type == "categorize":
-            result = engine.categorize_content_distilbert(content)
+            result = engine.categorize_content(content)
         elif operation_type == "sentiment":
-            result = engine.analyze_editorial_sentiment_roberta(content)
+            result = engine.analyze_editorial_sentiment(content)
         elif operation_type == "commentary":
             context = kwargs.get("context", "news article")
-            result = engine.generate_editorial_commentary_t5(content, context)
+            result = engine.generate_editorial_commentary(content, context)
         elif operation_type == "decision":
             metadata = kwargs.get("metadata")
             result = engine.make_editorial_decision(content, metadata)
@@ -92,7 +167,7 @@ def assess_content_quality(
     content: str, metadata: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """
-    Assess content quality using BERT-based analysis.
+    Assess content quality using Qwen-based analysis.
 
     This function evaluates the overall quality of news content using
     advanced NLP models to determine publication readiness.
@@ -112,14 +187,14 @@ def assess_content_quality(
         }
 
     engine = get_chief_editor_engine()
-    return engine.assess_content_quality_bert(content)
+    return engine.assess_content_quality(content)
 
 
 def categorize_content(
     content: str, metadata: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """
-    Categorize content using DistilBERT-based classification.
+    Categorize content using Qwen-based classification.
 
     This function automatically categorizes news content into appropriate
     editorial categories for workflow routing.
@@ -139,14 +214,14 @@ def categorize_content(
         }
 
     engine = get_chief_editor_engine()
-    return engine.categorize_content_distilbert(content)
+    return engine.categorize_content(content)
 
 
 def analyze_editorial_sentiment(
     content: str, metadata: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """
-    Analyze editorial sentiment using RoBERTa-based analysis.
+    Analyze editorial sentiment using Qwen-based analysis.
 
     This function determines the editorial tone and sentiment of content
     to inform publication decisions.
@@ -166,14 +241,14 @@ def analyze_editorial_sentiment(
         }
 
     engine = get_chief_editor_engine()
-    return engine.analyze_editorial_sentiment_roberta(content)
+    return engine.analyze_editorial_sentiment(content)
 
 
 def generate_editorial_commentary(
     content: str, context: str = "news article"
 ) -> dict[str, Any]:
     """
-    Generate editorial commentary using T5-based generation.
+    Generate editorial commentary using Qwen-based generation.
 
     This function creates editorial notes and commentary for content
     to guide the editorial workflow.
@@ -189,13 +264,13 @@ def generate_editorial_commentary(
         return {"commentary": "", "error": "Empty content provided"}
 
     engine = get_chief_editor_engine()
-    commentary = engine.generate_editorial_commentary_t5(content, context)
+    commentary = engine.generate_editorial_commentary(content, context)
 
     return {
         "commentary": commentary,
         "context": context,
         "content_length": len(content),
-        "model": "t5",
+        "model": "qwen-14b",
     }
 
 
@@ -203,7 +278,7 @@ def make_editorial_decision(
     content: str, metadata: dict[str, Any] | None = None
 ) -> dict[str, Any]:
     """
-    Make comprehensive editorial decision using all 5 AI models.
+    Make comprehensive editorial decision using Qwen-based multi-task analysis.
 
     This function provides a complete editorial assessment including
     quality, categorization, sentiment, and workflow recommendations.
@@ -255,14 +330,10 @@ def request_story_brief(topic: str, scope: str) -> dict[str, Any]:
         # Use the engine for brief generation if available, otherwise fallback
         engine = get_chief_editor_engine()
 
-        # Generate brief using T5 if available, otherwise use template
-        if hasattr(engine, "generate_editorial_commentary_t5"):
-            brief_content = engine.generate_editorial_commentary_t5(
-                f"Generate a story brief for topic: {topic} with scope: {scope}",
-                "story brief",
-            )
-        else:
-            brief_content = f"Story brief for topic '{topic}' within scope '{scope}'."
+        brief_content = engine.generate_editorial_commentary(
+            f"Generate a story brief for topic: {topic} with scope: {scope}",
+            "story brief",
+        )
 
         brief = {
             "topic": topic,
@@ -323,8 +394,8 @@ def publish_story(story_id: str) -> dict[str, Any]:
         # Connect to JustNews MariaDB to publish the article
         db_config = {
             'user': os.environ.get("MARIADB_USER", "justnews"),
-            'password': os.environ.get("MARIADB_PASSWORD", "justnews_password"),
-            'host': os.environ.get("MARIADB_HOST", "127.0.0.1"),
+            'password': os.environ.get("MARIADB_PASSWORD", "dev_justnews_password"),
+            'host': os.environ.get("MARIADB_HOST", "mariadb"),
             'port': int(os.environ.get("MARIADB_PORT", 3306)),
             'database': os.environ.get("MARIADB_DB", "justnews"),
             'autocommit': True,
@@ -343,12 +414,50 @@ def publish_story(story_id: str) -> dict[str, Any]:
 
                 # 2. Extract and Transform
                 title = source.get('title') or "Untitled Story"
-                # Create slug
-                slug_base = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower()).strip('-')
-                slug = f"{slug_base[:40]}-{story_id[:8]}" 
-                
-                summary = source.get('summary') or ""
                 body = source.get('body') or ""
+                summary = _resolve_publication_summary(
+                    body=body,
+                    source_summary=source.get('summary') or "",
+                    title=title,
+                )
+                title = _derive_publication_title(title, summary, body)
+
+                headline_input = "\n".join(
+                    part
+                    for part in [summary.strip(), body.strip()[:1500]]
+                    if isinstance(part, str) and part.strip()
+                ).strip()
+                if headline_input:
+                    HeadlineAdapter.collect_training_example(
+                        input_text=headline_input,
+                        prediction={
+                            "headline": title,
+                            "story_id": story_id,
+                            "source": "publish_story",
+                        },
+                        confidence=0.88,
+                        source_url="",
+                    )
+
+                # Create stable slug (reuse existing story slug when republishing)
+                story_suffix = story_id[:8]
+                cursor.execute(
+                    """
+                    SELECT slug
+                    FROM news_article
+                    WHERE slug LIKE %s
+                    ORDER BY updated_at DESC, id DESC
+                    LIMIT 1
+                    """,
+                    (f"%-{story_suffix}",),
+                )
+                existing_slug_row = cursor.fetchone()
+                if existing_slug_row and existing_slug_row.get("slug"):
+                    slug = str(existing_slug_row["slug"])
+                else:
+                    slug_base = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower()).strip('-')
+                    slug = f"{slug_base[:40]}-{story_suffix}"
+
                 evidence = source.get('input_articles') or "{}"
                 
                 category = "General"
@@ -379,15 +488,25 @@ def publish_story(story_id: str) -> dict[str, Any]:
 
                 # 4. Mark as Published
                 cursor.execute(
-                    "UPDATE synthesized_articles SET is_published = 1, published_at = %s WHERE story_id = %s",
-                    (now, story_id)
+                    """
+                    UPDATE synthesized_articles
+                    SET is_published = 1,
+                        published_at = %s,
+                        summary = CASE
+                            WHEN COALESCE(TRIM(summary), '') = '' THEN %s
+                            ELSE summary
+                        END
+                    WHERE story_id = %s AND is_published = 0
+                    """,
+                    (now, summary, story_id)
                 )
+                publish_marked = cursor.rowcount > 0
 
-        status = "published"
+        status = "published" if publish_marked else "published_already"
         result = {
             "status": status,
             "story_id": story_id,
-            "message": "Story published to website successfully",
+            "message": "Story published to website successfully" if publish_marked else "Story already published; publication refreshed successfully",
             "published_at": time.time(),
             "timestamp": time.time(),
             "model": "rule_based"
@@ -505,12 +624,11 @@ async def health_check() -> dict[str, Any]:
                 f"Component {comp} is unhealthy" for comp in unhealthy_components
             ]
 
-        # Check model availability
-        loaded_models = sum(1 for status in model_status.values() if status is True)
-        if loaded_models < 3:  # Require at least 3 of 5 models
+        # Check primary model availability
+        if not model_status.get("qwen_adapter", False):
             health_status["overall_status"] = "degraded"
             health_status["issues"] = health_status.get("issues", []) + [
-                f"Only {loaded_models}/5 AI models loaded"
+                "Qwen adapter is disabled or unavailable"
             ]
 
         logger.info(f"🏥 Chief Editor health check: {health_status['overall_status']}")

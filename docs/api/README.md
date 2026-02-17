@@ -15,7 +15,7 @@ principles with JSON request/response formats.
 
 - **Scout**: Port 8004 - Content discovery and web crawling
 
-- **Fact Checker**: Port 8003 - Source verification and fact-checking
+- **Fact Checker Shim**: Port 8018 - Active source verification endpoint (forwards to external backend via `FACT_CHECKER_EXTERNAL_URL`, currently `http://localhost:8003`)
 
 - **Analyst**: Port 8004 - GPU-accelerated sentiment and bias analysis
 

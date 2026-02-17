@@ -1,6 +1,7 @@
 -- Migration: 009_create_sources_table.sql
 -- Description: Create sources table for managing news sources
 -- Created: 2026-01-26
+-- NOTE: last_crawl_at column is added by migration 015_add_last_crawl_at_to_sources.sql
 
 CREATE TABLE IF NOT EXISTS sources (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -1,0 +1,24 @@
+Help on function text in module duckduckgo_search.duckduckgo_search:
+
+tteexxtt(self, keywords: 'str', region: 'str | None' = None, safesearch: 'str' = 'moderate', timelimit: 'str | None' = None, backend: 'str' = 'auto', max_results: 'int | None' = None) -> 'list[dict[str, str]]'
+    DuckDuckGo text search. Query params: https://duckduckgo.com/params.
+    
+    Args:
+        keywords: keywords for query.
+        region: us-en, uk-en, ru-ru, etc. Defaults to None.
+        safesearch: on, moderate, off. Defaults to "moderate".
+        timelimit: d, w, m, y. Defaults to None.
+        backend: auto, html, lite. Defaults to auto.
+            auto - try all backends in random order,
+            html - collect data from https://html.duckduckgo.com,
+            lite - collect data from https://lite.duckduckgo.com,
+            bing - collect data from https://www.bing.com.
+        max_results: max number of results. If None, returns results only from the first response. Defaults to None.
+    
+    Returns:
+        List of dictionaries with search results, or None if there was an error.
+    
+    Raises:
+        DuckDuckGoSearchException: Base exception for duckduckgo_search errors.
+        RatelimitException: Inherits from DuckDuckGoSearchException, raised for exceeding API request rate limits.
+        TimeoutException: Inherits from DuckDuckGoSearchException, raised for API request timeouts.

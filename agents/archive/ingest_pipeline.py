@@ -9,7 +9,7 @@ immediately persistable via the archive agent's MCP tool surface.
 from __future__ import annotations
 
 import os
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from time import perf_counter
 from typing import Any
 from urllib.parse import urlparse
@@ -25,10 +25,10 @@ logger = get_logger(__name__)
 
 def _iso_timestamp(value: str | None, *, default_now: bool = True) -> str | None:
     if not value:
-        return datetime.now(UTC).isoformat() if default_now else None
+        return datetime.now(timezone.utc).isoformat() if default_now else None
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        return parsed.astimezone(UTC).isoformat()
+        return parsed.astimezone(timezone.utc).isoformat()
     except Exception:
         return value
 

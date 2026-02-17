@@ -918,7 +918,7 @@ main() {
     if command -v curl >/dev/null 2>&1; then
       if curl -fsS "http://${chroma_host}:${chroma_port}/api/v2/auth/identity" >/dev/null 2>&1; then
         log_info "Chroma identity endpoint OK: ${chroma_host}:${chroma_port}"
-      elif curl -fsS "http://${chroma_host}:${chroma_port}/api/v1/health" >/dev/null 2>&1 || curl -fsS "http://${chroma_host}:${chroma_port}/" >/dev/null 2>&1; then
+      elif curl -fsS "http://${chroma_host}:${chroma_port}/api/v2/heartbeat" >/dev/null 2>&1 || curl -fsS "http://${chroma_host}:${chroma_port}/" >/dev/null 2>&1; then
         log_info "Chroma reachable via alternate endpoint: ${chroma_host}:${chroma_port}"
       else
         log_warn "HTTP probes failed for Chroma at ${chroma_host}:${chroma_port}; falling back to Python diagnostic helper"

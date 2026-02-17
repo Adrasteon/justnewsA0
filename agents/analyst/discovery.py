@@ -97,7 +97,7 @@ def run_discovery_cycle():
             centroid_list = centroid.tolist()
             
             # Create Story
-            story_id = str(uuid.uuid4())
+            story_id = uuid.uuid4().hex
             title = f"Emerging Story - {len(cluster_articles)} sources" # Placeholder title
             
             try:
@@ -114,7 +114,7 @@ def run_discovery_cycle():
                 )
                 
                 # Insert StoryUpdate
-                update_id = str(uuid.uuid4())
+                update_id = uuid.uuid4().hex
                 article_ids = [a['id'] for a in cluster_articles]
                 cur.execute(
                     """
@@ -127,7 +127,13 @@ def run_discovery_cycle():
                 # Update Active Chroma Collection
                 if getattr(db, "chroma_client", None):
                     try:
-                        coll = db.chroma_client.get_collection("active_living_stories")
+                        try:
+                            coll = db.chroma_client.get_collection("active_living_stories")
+                        except Exception:
+                            coll = db.chroma_client.get_or_create_collection(
+                                name="active_living_stories",
+                                metadata={"hnsw:space": "cosine"},
+                            )
                         coll.add(
                             ids=[story_id],
                             embeddings=[centroid_list],

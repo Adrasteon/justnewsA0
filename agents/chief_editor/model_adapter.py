@@ -19,7 +19,8 @@ SYSTEM_PROMPT = (
 
 class ChiefEditorModelAdapter:
     def __init__(self) -> None:
-        self.enabled = os.environ.get("CHIEF_EDITOR_DISABLE_MISTRAL", "0").lower() not in {"1", "true"}
+        disable_qwen = os.environ.get("CHIEF_EDITOR_DISABLE_QWEN", "0")
+        self.enabled = str(disable_qwen).lower() not in {"1", "true"}
         
         self.adapter = OpenAIAdapter(
             name="chief_editor_qwen",
@@ -106,6 +107,4 @@ class ChiefEditorModelAdapter:
         except Exception:
             return None
 
-# Alias for compat
-ChiefEditorMistralAdapter = ChiefEditorModelAdapter
 

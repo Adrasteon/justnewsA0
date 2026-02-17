@@ -1,0 +1,351 @@
+================================================================================
+CANONICAL JUSTNEWS SERVICE STARTUP & SHUTDOWN SCRIPTS
+================================================================================
+
+VERSION: 1.0
+DATE: 2026-02-09
+AUTHOR: GitHub Copilot
+
+================================================================================
+DELIVERABLES
+================================================================================
+
+ start_all_services.sh (21 KB)
+  - Canonical comprehensive startup script
+  - Starts: databases (Redis, ChromaDB, MariaDB) → migrations → 16 agents
+  - Features: health checks, proper ordering, graceful error handling
+  - Supports: dry-run, selective startup, timestamps, colored logging
+
+ stop_all_services.sh (9.8 KB)
+  - Canonical comprehensive shutdown script  
+  - Stops: 16 agents → database services (reverse order)
+  - Features: graceful shutdown via /shutdown endpoint, force fallback
+  - Supports: force mode, selective shutdown, verbose logging
+
+ START_STOP_SERVICES.md (15 KB, 617 lines)
+  - Comprehensive documentation with examples
+  - Use cases, troubleshooting, integration patterns
+  - Environment variables, systemd integration examples
+  - Best practices and performance tuning
+
+ START_STOP_QUICK_REFERENCE.md
+  - Quick reference card for common operations
+  - TL;DR commands, service endpoints table
+  - Quick fixes for common problems
+  - CI/CD integration examples
+
+ SERVICES_SCRIPTS_SUMMARY.txt (this file)
+  - Overview of what was created
+
+================================================================================
+KEY FEATURES
+================================================================================
+
+CANONICAL SOURCES OF TRUTH:
+ infrastructure/agents_manifest.sh - Single authoritative agents list
+ global.env - Environment configuration (loaded automatically)
+ Database configuration from environment variables
+
+STARTUP PROCESS (ORDERED):
+1. Load global.env environment
+2. Start Redis (port 6379)
+3. Start ChromaDB (port 3307)
+4. Start MariaDB (port 3306)
+5. Wait for database readiness
+6. Run migrations (Django + app)
+7. Start 16 agents in sequence:
+   - MCP Bus (8000) - FIRST
+   - Chief Editor (8001)
+   - ... [13 more agents]
+   - Workflow Orchestrator (8023) - LAST
+8. Verify all services healthy
+
+SHUTDOWN PROCESS (REVERSE ORDER):
+1. Stop all 16 agents (reverse order)
+2. Stop MariaDB
+3. Stop ChromaDB
+4. Stop Redis
+
+GRACEFUL SHUTDOWN:
+ Attempts HTTP POST to /shutdown endpoint first
+ Waits 10 seconds for graceful termination
+ Falls back to SIGTERM then SIGKILL if needed
+
+================================================================================
+QUICK START
+================================================================================
+
+Start Everything:
+  ./start_all_services.sh
+
+With Verbose Output:
+  VERBOSE=1 ./start_all_services.sh
+
+Dry Run (See What Would Execute):
+  ./start_all_services.sh --dry-run
+
+Agents Only (Databases Already Running):
+  ./start_all_services.sh --skip-db
+
+Specific Agents Only:
+  ./start_all_services.sh --agents mcp_bus,crawler,memory
+
+Stop Everything:
+  ./stop_all_services.sh
+
+Force Stop (No Graceful Shutdown):
+  ./stop_all_services.sh --force
+
+================================================================================
+CANONICAL AGENT LIST (16 AGENTS)
+================================================================================
+
+mcp_bus              port 8000  Message broker - MUST START FIRST
+chief_editor         port 8001  Main editorial orchestration
+fact_checker         port 8003  Fact validation
+analyst              port 8004  Data analysis
+synthesizer          port 8005  Content synthesis
+critic               port 8006  Quality review
+memory               port 8007  Data persistence & retrieval
+reasoning            port 8008  Logical reasoning
+newsreader           port 8009  News feed processing
+analytics            port 8012  Analytics dashboard
+dashboard            port 8013  Web dashboard UI
+gpu_orchestrator     port 8014  GPU resource management
+crawler_control      port 8016  Crawler UI control
+archive              port 8020  Article archival
+crawler              port 8022  Web crawler engine
+workflow_orchestrator port 8023  Workflow coordination
+
+================================================================================
+LOG FILES
+================================================================================
+
+All logs written to: /tmp/justnews_services_logs/
+
+Watch all logs:
+  tail -f /tmp/justnews_services_logs/*.log
+
+Watch specific service:
+  tail -f /tmp/justnews_services_logs/memory.log
+
+Check for errors:
+  grep ERROR /tmp/justnews_services_logs/*.log
+
+================================================================================
+COMMON COMMANDS
+================================================================================
+
+Health Check MCP Bus:
+  curl http://localhost:8000/health
+
+Check All Service Ports:
+  for port in 8000 8001 8003 8004 8005 8006 8007 8008 8009 8012 8013 8014 8016 8020 8022 8023 3306 3307 6379; do
+    nc -z localhost $port 2>/dev/null && echo "✓ Port $port" || echo "✗ Port $port"
+  done
+
+List Running JustNews Services:
+  ps aux | grep "agents\."
+
+Find What's Using Port 8000:
+  lsof -i :8000
+
+Kill Process on Port 8000:
+  fuser -k 8000/tcp
+
+Force Kill All Services:
+  ./stop_all_services.sh --force
+
+================================================================================
+ENVIRONMENT VARIABLES
+================================================================================
+
+STARTUP CONTROL:
+  VERBOSE=1              Show debug logging
+  DRY_RUN=1             Show what would run without executing
+  SKIP_DB=1             Skip database startup
+  SKIP_MIGRATIONS=1     Skip migrations
+  SKIP_HEALTH_CHECK=1   Skip health verification
+  SERVICE_TIMEOUT=120   Service readiness timeout (seconds)
+  AGENT_START_DELAY=2   Delay between agent starts (seconds)
+
+SHUTDOWN CONTROL:
+  FORCE=1               Force kill without graceful shutdown
+  GRACEFUL_TIMEOUT=10   Timeout for graceful shutdown (seconds)
+  KILL_TIMEOUT=3        Timeout for kill signal (seconds)
+
+DATABASE CONFIGURATION (from global.env):
+  MARIADB_HOST=localhost
+  MARIADB_PORT=3306
+  MARIADB_USER=justnews
+  MARIADB_PASSWORD=dev_justnews_password
+  MARIADB_DB=justnews
+  CHROMADB_HOST=localhost
+  CHROMADB_PORT=3307
+  REDIS_HOST=localhost
+  REDIS_PORT=6379
+
+================================================================================
+STARTUP TIME ESTIMATES
+================================================================================
+
+Full Startup (databases + migrations + all 16 agents):
+  Typical: 2-3 minutes
+  Fast: 1-2 minutes (skip migrations & health checks)
+  Slow: 5+ minutes (long timeouts, reliability mode)
+
+Agents Only (--skip-db):
+  Typical: 30-60 seconds
+
+Breakdown:
+  Redis:          5-10 seconds
+  ChromaDB:       10-15 seconds
+  MariaDB:        15-30 seconds
+  Migrations:     10-30 seconds
+  All 16 Agents:  60-120 seconds
+
+================================================================================
+INTEGRATION EXAMPLES
+================================================================================
+
+DOCKER COMPOSE + SCRIPT:
+  Terminal 1:
+    cd infrastructure/docker
+    docker-compose up mariadb chromadb redis
+  
+  Terminal 2:
+    ./start_all_services.sh --skip-db
+
+SYSTEMD SERVICE:
+  Place systemd unit in /etc/systemd/system/
+  sudo systemctl start justnews
+  sudo systemctl status justnews
+  sudo journalctl -u justnews -f
+
+CI/CD PIPELINE:
+  ./start_all_services.sh >/dev/null 2>&1 &
+  sleep 120
+  pytest tests/
+  ./stop_all_services.sh --force
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+PORT ALREADY IN USE:
+  # Find process
+  lsof -i :8000
+  # Kill it
+  fuser -k 8000/tcp
+  # Try again
+  ./start_all_services.sh
+
+SERVICE NOT STARTING:
+  # View logs
+  tail -50 /tmp/justnews_services_logs/SERVICE_NAME.log
+  # Try specific agent
+  ./start_all_services.sh --agents SERVICE_NAME
+  # Check port
+  nc -z localhost 8001 && echo "In use" || echo "Free"
+
+EVERYTHING STUCK:
+  # Force stop
+  ./stop_all_services.sh --force
+  # Clean ports
+  fuser -k 3306/tcp 3307/tcp 6379/tcp 8000-8023/tcp 2>/dev/null || true
+  # Restart
+  ./start_all_services.sh
+
+DATABASE ISSUES:
+  # Check MariaDB
+  mysql -u root -p -e "SELECT version();"
+  # Check ChromaDB
+  curl http://localhost:3307/api/v2/heartbeat
+  # Check Redis
+  redis-cli ping
+
+================================================================================
+FILES CREATED
+================================================================================
+
+/app/start_all_services.sh
+  └─ 21 KB, executable
+  └─ Comprehensive startup script with 400+ lines
+
+/app/stop_all_services.sh
+  └─ 9.8 KB, executable
+  └─ Comprehensive shutdown script with 250+ lines
+
+/app/START_STOP_SERVICES.md
+  └─ 15 KB, 617 lines
+  └─ Full documentation with examples and troubleshooting
+
+/app/START_STOP_QUICK_REFERENCE.md
+  └─ Quick reference card
+  └─ Common commands and scenarios
+
+/app/SERVICES_SCRIPTS_SUMMARY.txt
+  └─ This summary file
+
+================================================================================
+CANONICAL SOURCES USED
+================================================================================
+
+infrastructure/agents_manifest.sh
+  └─ Authoritative list of all 16 agents
+  └─ Agent names, Python modules, ports
+  └─ Single source of truth for agent configuration
+
+global.env
+  └─ Environment configuration
+  └─ Database credentials and service ports
+  └─ Loaded automatically by scripts
+
+global.env.sample
+  └─ Template for environment configuration
+
+start_dev_system.py
+  └─ Reference for Python-based startup patterns
+  └─ Existing agent startup implementation
+
+infrastructure/docker/docker-compose.yml
+  └─ Service definitions and dependencies
+  └─ Health checks and environment variables
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Try a dry run to see the startup sequence:
+   ./start_all_services.sh --dry-run
+
+2. Read the full documentation:
+   less START_STOP_SERVICES.md
+
+3. Check the quick reference:
+   less START_STOP_QUICK_REFERENCE.md
+
+4. Start the services:
+   ./start_all_services.sh
+
+5. Watch the logs:
+   tail -f /tmp/justnews_services_logs/*.log
+
+6. Verify health:
+   curl http://localhost:8000/health
+
+================================================================================
+SUPPORT
+================================================================================
+
+For detailed documentation: see START_STOP_SERVICES.md
+For quick reference: see START_STOP_QUICK_REFERENCE.md
+For scripts: see start_all_services.sh and stop_all_services.sh
+
+Questions?
+  - Check logs: /tmp/justnews_services_logs/
+  - Use verbose mode: VERBOSE=1 ./start_all_services.sh
+  - Dry run first: ./start_all_services.sh --dry-run
+  - Use help: ./start_all_services.sh --help
+
+================================================================================

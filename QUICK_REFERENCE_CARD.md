@@ -35,7 +35,7 @@ source global.env && echo "✅ $MARIADB_HOST"
 
 ## Docker (simplest)
 
-docker-compose -f scripts/dev/docker-compose.e2e.yml up -d mariadb
+docker compose -f scripts/dev/docker-compose.e2e.yml up -d mariadb
 
 ## Or verify if running:
 

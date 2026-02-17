@@ -24,7 +24,7 @@ import os
 import subprocess
 import sys
 import time
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from typing import Any
 
@@ -47,7 +47,7 @@ def run_cycle_inprocess(safe_mode: bool) -> dict[str, Any]:
     app = _load_app()
     record: dict[str, Any] = {
         "safe_mode": safe_mode,
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "mode": "inprocess",
     }
     with TestClient(app) as client:

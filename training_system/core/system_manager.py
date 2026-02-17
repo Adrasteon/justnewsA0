@@ -17,7 +17,7 @@ Features:
 """
 
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from typing import Any
 
 from common.observability import get_logger
@@ -122,6 +122,7 @@ class SystemWideTrainingManager:
                     "performance_monitoring",
                 ],
                 "tasks": [
+                    "headline_generation",
                     "workflow_routing",
                     "quality_assurance",
                     "deadline_management",
@@ -238,7 +239,7 @@ class SystemWideTrainingManager:
                 "priority": priority,
                 "explanation": explanation,
                 "immediate_update": priority >= 2,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
             logger.info(
@@ -265,7 +266,7 @@ class SystemWideTrainingManager:
                     "online_training_active": base_status.get("is_training", False),
                     "total_training_examples": base_status.get("total_examples", 0),
                     "agents_managed": len(self.agent_configs),
-                    "last_update": datetime.now(UTC).isoformat(),
+                    "last_update": datetime.now(timezone.utc).isoformat(),
                 },
                 "agent_status": {},
                 "model_performance": base_status.get("recent_performance", []),
@@ -323,7 +324,7 @@ class SystemWideTrainingManager:
             result = {
                 "update_triggered": success,
                 "agent_name": agent_name,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "forced": True,
             }
 
@@ -434,7 +435,7 @@ class SystemWideTrainingManager:
             # For now, return summary information
 
             export_summary = {
-                "export_timestamp": datetime.now(UTC).isoformat(),
+                "export_timestamp": datetime.now(timezone.utc).isoformat(),
                 "filters": {"agent_name": agent_name, "task_type": task_type},
                 "data_available": True,
                 "note": "Training data export functionality would be implemented here",
@@ -448,7 +449,7 @@ class SystemWideTrainingManager:
 
         except Exception as e:
             logger.error(f"Failed to export training data: {e}")
-            return {"export_timestamp": datetime.now(UTC).isoformat(), "error": str(e)}
+            return {"export_timestamp": datetime.now(timezone.utc).isoformat(), "error": str(e)}
 
     def process_hitl_label(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Convert a HITL label payload into a training example and enqueue it."""

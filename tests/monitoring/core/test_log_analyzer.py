@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -32,7 +32,7 @@ def sample_log_entry():
         timestamp=None
     ):
         if timestamp is None:
-            timestamp = datetime.now(UTC)
+            timestamp = datetime.now(timezone.utc)
 
         return LogEntry(
             timestamp=timestamp,

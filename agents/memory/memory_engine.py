@@ -124,7 +124,8 @@ class MemoryEngine:
                   return {"error": "Chroma collection not available"}
              
              meta = {}
-             if article['metadata']:
+             # Use safe get
+             if article.get('metadata'):
                  if isinstance(article['metadata'], str):
                      try:
                         meta = json.loads(article['metadata'])
@@ -133,6 +134,9 @@ class MemoryEngine:
                  elif isinstance(article['metadata'], dict):
                      meta = article['metadata']
              
+             if not meta:
+                 meta = {"source": "unknown"}
+
              # Ensure metadata is flat/safe for Chroma
              safe_meta = {}
              for k, v in meta.items():
@@ -141,22 +145,53 @@ class MemoryEngine:
                  else:
                      safe_meta[k] = str(v)
              
-             collection.upsert(
-                 ids=[str(article_id)],
-                 embeddings=[embedding],
-                 metadatas=[safe_meta],
-                 documents=[article['content']]
-             )
+             if not safe_meta:
+                 safe_meta = {"source": "unknown"}
+             
+             # Perform vector store operation first - failure here must abort the DB update
+             try:
+                 if collection is None:
+                     raise RuntimeError("ChromaDB collection is not available")
+                     
+                 collection.upsert(
+                     ids=[str(article_id)],
+                     embeddings=[embedding],
+                     metadatas=[safe_meta],
+                     documents=[article['content']]
+                 )
+                 logger.info(f"Successfully upserted embedding to ChromaDB for article {article_id}")
+             except Exception as chroma_error:
+                 logger.error(f"ChromaDB write failed for article {article_id}: {chroma_error}")
+                 return {"status": "error", "message": f"ChromaDB write failure: {str(chroma_error)}"}
 
-             # Update embedded flag
+             # ONLY after successful ChromaDB write do we update the MariaDB flag
              cursor, conn = self._acquire_cursor()
-             # Handling potential missing column if migration failed silently (though we verified it)
-             cursor.execute("UPDATE articles SET embedded=1 WHERE id=%s", (article_id,))
-             if conn: 
-                conn.commit()
-                conn.close()
-             elif self.db_service and hasattr(self.db_service, 'mb_conn'):
-                self.db_service.mb_conn.commit()
+             
+             try:
+                 # Update embedded flag
+                 cursor.execute("UPDATE articles SET embedded=1 WHERE id=%s", (article_id,))
+                 
+                 # Record embedding in embeddings_document table
+                 try:
+                     import json as json_module
+                     meta_json = json_module.dumps(safe_meta) if safe_meta else '{}'
+                     cursor.execute(
+                         "INSERT INTO embeddings_document (embeddings_collection_id, document_id, content, content_hash, embedding_status, metadata) VALUES (1, %s, %s, %s, 'active', %s)",
+                         (str(article_id), article['title'][:255] if article.get('title') else '', 
+                         article.get('url_hash', ''), meta_json)
+                     )
+                 except Exception as emb_error:
+                     logger.debug(f"Note: Could not record embedding metadata: {emb_error}")
+                 
+                 if conn: 
+                    conn.commit()
+                    logger.debug(f"Committed MariaDB transaction for article {article_id} (embedded=1)")
+                 elif self.db_service and hasattr(self.db_service, 'mb_conn'):
+                    self.db_service.mb_conn.commit()
+                    logger.debug(f"Committed MariaDB shared transaction for article {article_id} (embedded=1)")
+             finally:
+                 if conn:
+                     conn.close()
              
              return {"status": "success", "article_id": article_id}
 

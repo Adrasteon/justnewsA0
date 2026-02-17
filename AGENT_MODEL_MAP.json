@@ -90,6 +90,13 @@
         "adapter_name": "mistral_chief_editor_v1",
         "adapter_model_store_path": "chief_editor/adapters/mistral_chief_editor_v1",
         "variant_preference": "bnb-int8"
+      },
+      {
+        "base_ref": "qwen2-14b-awq",
+        "adapter_name": "qwen2_headline_v1",
+        "adapter_model_store_path": "chief_editor/adapters/qwen2_headline_v1",
+        "variant_preference": "awq",
+        "inference_mode": "vllm"
       }
     ],
     "reasoning": [
@@ -160,6 +167,13 @@
         "base_ref": "qwen2-14b-awq",
         "adapter_name": "qwen2_chief_editor_v1",
         "adapter_model_store_path": "chief_editor/adapters/qwen2_chief_editor_v1",
+        "variant_preference": "awq",
+        "inference_mode": "vllm"
+      },
+      {
+        "base_ref": "qwen2-14b-awq",
+        "adapter_name": "qwen2_headline_v1",
+        "adapter_model_store_path": "chief_editor/adapters/qwen2_headline_v1",
         "variant_preference": "awq",
         "inference_mode": "vllm"
       }

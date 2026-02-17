@@ -243,7 +243,7 @@ class TestMCPBusIntegration:
 
         # Step 2: Fact checking
         fact_result = await mock_bus.call_agent(
-            "fact_checker", "verify_facts", content=article_content
+            "fact_checker", "fact_check", fact=article_content
         )
         CustomAssertions.assert_mcp_response_valid(fact_result)
 
@@ -389,7 +389,7 @@ def parametrize_mcp_scenarios():
         "agent,tool,expected_success",
         [
             ("analyst", "analyze_sentiment", True),
-            ("fact_checker", "verify_facts", True),
+            ("fact_checker", "fact_check", True),
             ("synthesizer", "synthesize_summary", True),
             ("invalid_agent", "invalid_tool", False),
         ],

@@ -12,6 +12,46 @@
             ]
         }
     },
-    "forwardPorts": [3306, 3307, 8001, 8100],
-    "postCreateCommand": "/usr/local/bin/create_deps_venv.sh"
+    "forwardPorts": [
+        3306,
+        3307,
+        8000,
+        8001,
+        8003,
+        8004,
+        8005,
+        8006,
+        8007,
+        8008,
+        8009,
+        8010,
+        8012,
+        8013,
+        8014,
+        8016,
+        8017,
+        8018,
+        8019,
+        8020,
+        8022,
+        8023,
+        8100,
+        3000,
+        3100,
+        3308,
+        4317,
+        8200,
+        9090,
+        9093,
+        9100,
+        9411
+    ],
+    "initializeCommand": "bash .devcontainer/scripts/pre-build-cleanup.sh || bash /app/.devcontainer/scripts/pre-build-cleanup.sh || true",
+    "postCreateCommand": "/usr/local/bin/create_deps_venv.sh",
+    "remoteUser": "root",
+    "remoteEnv": {
+        "DOCKER_BUILDKIT": "1",
+        "COMPOSE_DOCKER_CLI_BUILD": "1"
+    },
+    "runArgs": ["--memory=22gb", "--memory-swap=22gb"]
 }

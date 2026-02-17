@@ -1,10 +1,46 @@
 Devcontainer GPU / Volumes guide
 -------------------------------
 
+---
+
+## 🔴 CRITICAL: Data Preservation on Rebuild (v2.0 - IDEMPOTENT)
+
+**YOUR WORKFLOW DATA IS NOW PRESERVED WHEN YOU REBUILD!**
+
+### ✅ What Changed:
+- **Before**: All data deleted on rebuild ❌
+- **Now**: Data volumes preserved automatically ✅
+
+### 📌 When You Rebuild:
+```bash
+# Normal rebuild (PRESERVES data)
+VSCode: Cmd/Ctrl + Shift + P → "Remote-Containers: Rebuild and Reopen"
+# All articles, embeddings, analysis kept!
+
+# Force clean rebuild (if needed)
+bash .devcontainer/scripts/pre-build-cleanup.sh --force-clean
+# Then rebuild normally
+```
+
+### 🛡️ What's Preserved:
+- ✅ All articles ingested with crawlers
+- ✅ All embeddings in ChromaDB
+- ✅ All entity extraction analysis
+- ✅ All sentiment/bias analyses
+- ✅ Living stories and updates
+- ✅ Task metadata and status
+- ✅ Vector database collections
+
+### 📖 Full Details:
+See: [`DEVCONTAINER_IDEMPOTENCE_GUARANTEE.md`](../DEVCONTAINER_IDEMPOTENCE_GUARANTEE.md)
+
+---
+
 Quick summary
 - Code volume: host repo is mounted at `/app` (bind-mount)
 - Dependency volume: isolated named volume mounted at `/deps` (created by Compose)
 - Data volume: persistent named volume mounted at `/data`
+- **Database volumes**: Preserved across rebuilds (mariadb_data, chromadb_data)
 
 Host requirements
 - Docker Engine or Docker Desktop with WSL2 backend (Windows).
@@ -16,8 +52,11 @@ CUDA image choice
 - Ensure your host GPU driver is compatible with CUDA 12.2.x. If not, choose a different matching CUDA base image.
 
 How dependency venvs are created
-- On `postCreateCommand`, the container runs `/usr/local/bin/create_deps_venv.sh` which will create a venv at `/deps/.venv` using `uv` (if available) or falling back to `python -m venv` and installing `requirements.txt`.
+- On `postCreateCommand`, the container runs `/usr/local/bin/create_deps_venv.sh` which will create a venv at `/deps/.venv` using **UV package manager** (`uv venv` + `uv pip install`).
+- Dependencies are installed from `requirements-bootstrap.txt` (a curated, production-ready requirements file derived from `environment.yml`).
+- If UV is not available, the script falls back to `python3 -m venv` + pip installation.
 - The venv is isolated in the `justnews_deps` volume and not stored in the project code volume.
+- **Note:** `requirements.txt` is deprecated and contains mostly historical comments; use `requirements-bootstrap.txt` or `environment.yml` instead.
 
 GPU Support (Default)
 - GPU is **enabled by default** in this devcontainer configuration.
@@ -37,64 +76,120 @@ Or set `FORCE_CPU=1`. Use CPU-only mode **only for testing/debugging** on system
 Rebuild / open devcontainer
 - In VS Code: Command Palette → Remote-Containers: Rebuild and Reopen in Container.
 - You may need to install NVIDIA/WSL GPU support on Windows before GPU access is available.
+- **Note**: Your workflow data will be preserved! See "Data Preservation" section above.
 
 Automatic Initialization on First Start
-- When the container is created, `postCreateCommand` automatically:
-  1. Creates the Python virtualenv at `/deps/.venv`
-  2. Installs dependencies from `requirements.txt` via `uv` (or pip fallback)
-  3. **NEW:** Waits for MariaDB to be ready
-  4. **NEW:** Runs Django migrations automatically
-  5. **NEW:** Verifies service connectivity
-  6. **NEW:** Collects static files
+- When the container is created, `postCreateCommand` automatically runs two scripts:
 
-- If initialization succeeds, you'll see: `[✓ SUCCESS] Dev Container Initialization Complete!`
+  **1. `/usr/local/bin/create_deps_venv.sh`** — Dependency Installation
+  - Creates Python virtualenv at `/deps/.venv` using UV
+  - Installs 100+ packages from `requirements-bootstrap.txt`
+  - Includes: FastAPI, Django, PyTorch, Transformers, Pandas, SQLAlchemy, etc.
+
+  
+  **2. `/usr/local/bin/post-create.sh`** — Post-Create Initialization
+  - Loads environment from `global.env` (with proper line endings)
+  - Waits up to 60 seconds for MariaDB to be ready (using Python socket checks)
+  - Runs Django migrations with `--fake-initial` flag (handles pre-existing schema)
+  - Verifies ChromaDB and vLLM connectivity (with INFO/WARNING output that is condition-driven)
+  - Reports idempotence status from observed runtime state (existing schema vs fresh migration path, collection detection state)
+  - Collects Django static files
+
+- **Success Indicator:** If initialization completes, you'll see:
+  ```
+  [✓ SUCCESS] Dev Container Initialization Complete!
+  ✓ Static files collected
+  ```
+- **Warning Level:** If MariaDB/services aren't ready during init, you'll see warnings (they may still be loading).
+- **Troubleshooting:** Check `/tmp/setup_complete_v*.log` for detailed initialization output.
+
+Pre-build Cleanup Behavior (Docker Availability)
+- `.devcontainer/scripts/pre-build-cleanup.sh` now handles missing Docker in an idempotent and developer-friendly way.
+- If Docker is unavailable in an interactive terminal, the script pauses and waits for Enter so you can fix Docker state first.
+- After keypress, it exits without making changes and asks you to re-run cleanup.
+- For CI/non-interactive runs, set `PREBUILD_WAIT_ON_DOCKER_MISSING=false` to skip the pause.
 
 First-Time Usage Checklist (After Container Starts)
 
 Run the following commands inside the container terminal to verify everything is working:
 
 ```bash
-# 1. Load environment and verify database connectivity
+# 0. Activate the virtual environment
+source /deps/.venv/bin/activate
+
+# 1. Verify environment configuration is loaded
 source global.env
-python -c "from database.utils import create_database_service; db = create_database_service(); print('✓ Database connected successfully')"
+echo "✓ MARIADB_HOST=$MARIADB_HOST, MARIADB_DB=$MARIADB_DB"
 
-# 2. Verify vLLM is accessible (may take 1-2 minutes to load model)
-curl -s http://vllm:8001/v1/models | jq .
+# 2. Verify all key dependencies
+python -c "import fastapi, django, torch, pandas; print('✓ All core packages imported')"
 
-# 3. Verify ChromaDB is accessible
-curl -s http://chromadb:3307/api/version
+# 3. Check database connectivity
+/deps/.venv/bin/python -c "
+import os
+os.environ.update({'MARIADB_HOST': 'mariadb', 'MARIADB_DB': 'justnews', 'MARIADB_USER': 'justnews', 'MARIADB_PASSWORD': 'dev_justnews_password'})
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'justnews_publisher.settings')
+django.setup()
+from django.db import connection
+with connection.cursor() as cursor:
+    cursor.execute('SELECT 1')
+print('✓ Database connected successfully')
+"
 
-# 4. Run a quick sanity test
-python pytest tests/smoke_live.py -v --tb=short -k "test_import" 2>/dev/null || echo "✓ Basic imports working"
+# 4. Verify vLLM is accessible (may take 1-2 minutes to load model)
+curl -s http://vllm:8001/v1/models | python -m json.tool | head -10 && echo "✓ vLLM accessible"
 
-# 5. Check Django admin is ready
-python manage.py showmigrations --list | head -5
+# 5. Verify ChromaDB is accessible (supports current API variants)
+curl -s http://chromadb:8000/api/v2/heartbeat || curl -s http://chromadb:8000/api/v1/heartbeat
+
+# 6. Check Django migrations
+/deps/.venv/bin/python manage.py showmigrations --list 2>/dev/null | head -10 && echo "✓ Django migrations available"
 ```
 
 Troubleshooting First-Run Issues
 
-**MariaDB connection refused:**
+**MariaDB connection refused even after 60 seconds:**
 ```bash
-# Wait a bit longer and retry
-sleep 10
-python manage.py dbshell
+# MariaDB container may still be initializing
+sleep 20
+source global.env
+/deps/.venv/bin/python manage.py dbshell
 ```
+
+**Django migration errors ("Table already exists"):**
+- This is expected if database schema already exists
+- The init script uses `--fake-initial` to handle this gracefully
+- If migrations fail, check: `/tmp/migrate.log`
+- Manual recovery: `/deps/.venv/bin/python manage.py migrate --run-syncdb`
+
+**Module not found (e.g., "No module named 'justnews_publisher'"):**
+- Ensure `/app` is in PYTHONPATH
+- Activate venv: `source /deps/.venv/bin/activate`
+- Check: `python -c "import sys; print(sys.path)"`
 
 **vLLM model not downloading:**
 ```bash
 # Verify HF_TOKEN is set and valid
 echo $HF_TOKEN
-# Check vLLM logs
-docker compose logs vllm -n 50
+# Check vLLM logs (model may take 1-2 min to load)
+docker compose logs vllm -n 100
 ```
 
-**Django migrations already applied error:**
-- This is safe; just means migrations ran successfully in background
-- Continue with development
+**ChromaDB not responding:**
+- Verify health endpoint: `curl -s http://chromadb:8000/api/v2/heartbeat || curl -s http://chromadb:8000/api/v1/heartbeat`
+- Check logs: `docker compose logs chromadb -n 100`
+- If you see endpoint-specific 404s, test both `v1` and `v2` API paths.
+
+**Line ending issues (CRLF vs LF):**
+- The init script now handles this automatically
+- If you edit `global.env` on Windows, it may introduce CRLF line endings
+- Fix: `sed -i 's/\r$//' /app/global.env`
 
 **Port conflicts:**
 - Verify ports 3306, 3307, 8001, 8100 are available on host
 - Check: `docker compose ps`
+- Kill conflicting processes or adjust port mappings in `docker-compose.yaml`
 
 ---
 
@@ -125,12 +220,12 @@ python manage.py runserver 0.0.0.0:8100
 
 ### Port Information
 
-| Component | Port | Notes |
-|-----------|------|-------|
-| **Django Publisher** | **8100** | Development server (localhost only) |
-| MariaDB | 3306 | Database backend |
-| ChromaDB | 3307 | Vector embeddings |
-| vLLM | 8001 | LLM inference service |
+| Component | Port | Status | Notes |
+|-----------|------|--------|-------|
+| **Django Publisher** | **8100** | ✓ Development | Development server (localhost only) |
+| MariaDB | 3306 | ✓ Production | Database backend (20+ GB support) |
+| ChromaDB | 3307 | ✓ Stable | Host-mapped to container `8000` |
+| vLLM | 8001 | ✓ Production-Ready | LLM inference (Qwen 2.5 14B) |
 
 ### Database Initialization
 
@@ -174,12 +269,45 @@ curl -X POST http://localhost:8100/api/publish/ \
 4. Manage articles, publishing audit logs, and site configuration
 
 
-Troubleshooting
+Environment Variables & Configuration
+
+- **global.env**: Main configuration file (loaded by post-create script)
+  - Ensure Unix line endings (LF), not Windows (CRLF)
+  - Contains: `MARIADB_HOST`, `MARIADB_DB`, `MARIADB_USER`, `MARIADB_PASSWORD`, etc.
+  - Example: See `global.env.sample` for template
+
+- **requirements-bootstrap.txt**: Python dependencies (primary source, derived from `environment.yml`)
+  - Updated via UV during venv creation
+  - Contains all production and development packages
+  - Do NOT use deprecated `requirements.txt`
+
+- **environment.yml**: Conda specification (reference; conda not used in devcontainer)
+  - Defines complete Python 3.10 environment
+  - Used to generate `requirements-bootstrap.txt`
+
+Debugging & Logging
+
+- **Setup logs**: Check `/tmp/setup_complete_v*.log` for initialization details
+- **Django migrations**: Check `/tmp/migrate.log` for schema errors
+- **Service logs**: Use `docker compose logs <service>` to view container output
+  - Example: `docker compose logs mariadb -n 50`
+
+GPU Support
+
 - If GPUs are not visible inside the container, confirm `nvidia-smi` works on the host and that Docker has GPU access. On Linux run:
 
 ```bash
 docker run --gpus all --rm nvidia/cuda:12.2.1-base-ubuntu22.04 nvidia-smi
 ```
 
-Contact
-- If you want me to pin a different CUDA version or to make `/deps` tmpfs instead of a named volume, tell me which preference to use.
+Key Improvements (Feb 2026)
+
+- ✓ Fixed CRLF line ending issues in global.env
+- ✓ Upgraded to UV for faster, more reliable dependency installation
+- ✓ Switched from deprecated `requirements.txt` to `requirements-bootstrap.txt`
+- ✓ Replaced shell `nc` checks with Python socket connections (more reliable)
+- ✓ Improved environment variable handling with `source` instead of grep/export
+- ✓ Added `--fake-initial` migration flag for pre-existing schemas
+- ✓ Extended MariaDB wait timeout to 60 seconds
+- ✓ Separated dependency installation from Django initialization
+- ✓ Added detailed initialization success/warning reporting

@@ -1,0 +1,19 @@
+Fri Feb 13 23:47:46 UTC 2026
+Connecting to MariaDB directly (bypassing heavy service)...
+Using root user for schema migration...
+Target DB: justnews on mariadb:3306
+Connected.
+Applying Factual Audit schema extensions...
+Adding 'factual_accuracy_score' column using FLOAT...
+Skipped: factual_accuracy_score already exists.
+Adding 'fact_check_details' column using JSON...
+Skipped: fact_check_details already exists.
+Schema update complete.
+Done with update
+Verifying schema...
+Traceback (most recent call last):
+  File "/app/verify_factual_schema.py", line 53, in <module>
+    verify_schema()
+  File "/app/verify_factual_schema.py", line 11, in verify_schema
+    load_dotenv("/app/global.env")
+NameError: name 'load_dotenv' is not defined

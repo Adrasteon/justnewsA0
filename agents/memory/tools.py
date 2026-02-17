@@ -18,7 +18,7 @@ Architecture:
 
 import json
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -58,7 +58,7 @@ def log_feedback(event: str, details: dict):
     """Logs feedback to a file."""
     try:
         with open(FEEDBACK_LOG, "a", encoding="utf-8") as f:
-            f.write(f"{datetime.now(UTC).isoformat()}\t{event}\t{details}\n")
+            f.write(f"{datetime.now(timezone.utc).isoformat()}\t{event}\t{details}\n")
     except Exception as e:
         logger.error(f"Error logging feedback: {e}")
 
@@ -364,7 +364,7 @@ def save_article(
         publication_dt = _parse_publication_date(metadata.get("publication_date"))
         collection_dt = _parse_publication_date(metadata.get("collection_timestamp"))
         if collection_dt is None:
-            collection_dt = datetime.now(UTC)
+            collection_dt = datetime.now(timezone.utc)
 
         review_reasons_json = json.dumps(metadata.get("review_reasons") or [])
 
@@ -432,11 +432,12 @@ def save_article(
                 publication_date,
                 metadata,
                 collection_timestamp,
+                embedded,
                 created_at,
                 updated_at
             )
             VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW()
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 1, NOW(), NOW()
             )
             """
 
@@ -479,6 +480,9 @@ def save_article(
             }
 
         # Add embedding to ChromaDB
+        # MODIFICATION: We now treat ChromaDB failure as a significant event. 
+        # Although we don't have an 'embedded' flag here yet, we ensure the error is fatal if 
+        # CHROMADB_REQUIRE_CANONICAL is set or if we want strict consistency.
         try:
             if getattr(db_service, "collection", None):
                 embedding_list = list(map(float, embedding))
@@ -497,8 +501,18 @@ def save_article(
                     "Skipping embedding add to ChromaDB as no collection is configured"
                 )
         except Exception as chroma_error:
-            logger.warning(f"Failed to add embedding to ChromaDB: {chroma_error}")
-            # Don't fail the whole operation if ChromaDB fails
+            logger.error(f"FATAL ChromaDB error for article {next_id}: {chroma_error}")
+            # If Chroma fails, we should NOT proceed with potential living story updates or return success
+            # especially if we need the vector store to be canonical.
+            if os.environ.get("CHROMADB_REQUIRE_CANONICAL", "1") == "1":
+                 if created_local_db_service:
+                     db_service.close()
+                 return {
+                     "error": f"chromadb_write_failed: {str(chroma_error)}",
+                     "processing_time": perf_counter() - start_time,
+                 }
+            else:
+                 logger.warning("Continuing save_article despite ChromaDB failure (REQUIRE_CANONICAL disabled)")
 
         # --- Living Stories: Assign-or-Buffer Logic ---
         try:
@@ -515,8 +529,14 @@ def save_article(
                 try:
                     ls_collection = db_service.chroma_client.get_collection("active_living_stories")
                 except Exception:
-                    # Collection might not exist if setup script wasn't run or failed
-                    pass
+                    try:
+                        ls_collection = db_service.chroma_client.get_or_create_collection(
+                            name="active_living_stories",
+                            metadata={"hnsw:space": "cosine"},
+                        )
+                    except Exception:
+                        # Collection might not exist if setup script wasn't run or failed
+                        pass
                 
                 match_found = False
                 

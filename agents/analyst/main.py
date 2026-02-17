@@ -506,7 +506,7 @@ def log_feedback_endpoint(call: ToolCall):
 
 
 @app.post("/analyze_article")
-def analyze_article_endpoint(call: ToolCall):
+async def analyze_article_endpoint(call: ToolCall):
     """Analyze an article and update its analyzed status."""
     try:
         logger.debug("Received analyze_article request with payload: %s", call.kwargs)
@@ -516,28 +516,12 @@ def analyze_article_endpoint(call: ToolCall):
             article_id = call.kwargs["article_id"]
             logger.debug("Processing article_id: %s", article_id)
 
-            # Fetch article from database
-            article = fetch_article_from_db(article_id)
-            logger.debug("Fetched article: %s", article)
-
-            if not article:
-                logger.error("Article not found for article_id: %s", article_id)
-                raise HTTPException(status_code=404, detail="Article not found")
-
-            if article.get("analyzed", False):
-                logger.info("Article %s already analyzed. Skipping.", article_id)
-                return {"status": "skipped", "message": "Article already analyzed"}
-
-            # Perform analysis
-            logger.debug("Performing analysis on article content.")
-            analysis_result = perform_analysis(article["content"])
-            logger.debug("Analysis result: %s", analysis_result)
-
-            # Update article as analyzed
-            logger.debug("Updating article %s as analyzed.", article_id)
-            update_article_status(article_id, analyzed=True)
-
-            logger.info("Successfully analyzed and updated article %s.", article_id)
+            # Delegate to tools implementation which now includes Factual Audit
+            analysis_result = await analyze_article(article_id)
+            
+            if analysis_result.get("status") == "error":
+                raise HTTPException(status_code=500, detail=analysis_result.get("error"))
+            
             return {"status": "success", "analysis_result": analysis_result}
 
         else:

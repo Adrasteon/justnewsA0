@@ -624,6 +624,61 @@ class TestCrawlerEngine:
             assert result["site_duplicate_breakdown"]["testsite.com"] == 1
 
     @pytest.mark.asyncio
+    async def test_crawl_multiple_sites_replaces_duplicates_to_hit_target(
+        self, crawler_engine, mock_site_config
+    ):
+        """When early candidates dedupe, crawler should consume replacements to reach target where possible."""
+        site_configs = [mock_site_config]
+        mock_articles = [
+            {
+                "title": "Duplicate Candidate",
+                "url": "https://testsite.com/article-dup",
+                "content": "Content dup",
+            },
+            {
+                "title": "Replacement Candidate",
+                "url": "https://testsite.com/article-new",
+                "content": "Content new",
+            },
+        ]
+
+        with (
+            patch.object(crawler_engine, "crawl_site", return_value=mock_articles),
+            patch.object(crawler_engine, "_cleanup_orphaned_processes"),
+            patch.object(crawler_engine, "_submit_hitl_candidates", return_value=None),
+            patch.object(crawler_engine, "_ingest_articles") as mock_ingest,
+        ):
+            mock_ingest.side_effect = [
+                {
+                    "new_articles": 0,
+                    "duplicates": 1,
+                    "errors": 0,
+                    "details": [
+                        {
+                            "url": "https://testsite.com/article-dup",
+                            "status": "duplicate",
+                        }
+                    ],
+                },
+                {
+                    "new_articles": 1,
+                    "duplicates": 0,
+                    "errors": 0,
+                    "details": [
+                        {"url": "https://testsite.com/article-new", "status": "new"}
+                    ],
+                },
+            ]
+
+            result = await crawler_engine.crawl_multiple_sites(
+                site_configs, max_articles_per_site=1
+            )
+
+            assert result["total_articles"] == 1
+            assert result["duplicates_skipped"] == 1
+            assert mock_ingest.call_count == 2
+
+    @pytest.mark.asyncio
     async def test_ingest_articles_success(self, crawler_engine):
         """Test successful article ingestion via MCP bus"""
         articles = [

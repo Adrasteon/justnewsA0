@@ -43,10 +43,10 @@ class OrchestratorEngine:
             "polling_interval_seconds": 10,
             "max_concurrent_tasks": 5,
             "resource_limits": {
-                "max_cpu_percent": 80,
-                "max_memory_percent": 85,
-                "max_gpu_utilization": 90,
-                "max_gpu_memory_percent": 90
+                "max_cpu_percent": 95,
+                "max_memory_percent": 98,
+                "max_gpu_utilization": 95,
+                "max_gpu_memory_percent": 95
             }
         }
         

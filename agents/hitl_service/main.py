@@ -26,9 +26,7 @@ def main() -> None:
     """Run the HITL FastAPI application via uvicorn."""
     host = os.environ.get("HITL_SERVICE_HOST", "0.0.0.0")
     try:
-        port = int(
-            os.environ.get("HITL_SERVICE_PORT", os.environ.get("HITL_PORT", "8019"))
-        )
+        port = int(os.environ.get("HITL_SERVICE_PORT", "8019"))
     except ValueError as exc:  # pragma: no cover - configuration error path
         raise RuntimeError("HITL_SERVICE_PORT must be an integer") from exc
 

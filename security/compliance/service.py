@@ -9,7 +9,7 @@ import json
 import logging
 import secrets
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from enum import Enum
 from typing import Any
 
@@ -204,8 +204,8 @@ class ComplianceService:
         """
         try:
             audit_event = AuditEvent(
-                id=f"audit_{datetime.now(UTC).timestamp()}_{secrets.token_hex(4)}",
-                timestamp=datetime.now(UTC),
+                id=f"audit_{datetime.now(timezone.utc).timestamp()}_{secrets.token_hex(4)}",
+                timestamp=datetime.now(timezone.utc),
                 user_id=user_id,
                 action=event_type,
                 resource=details.get("resource", "unknown"),
@@ -251,7 +251,7 @@ class ComplianceService:
         """
         try:
             consent_id = (
-                f"consent_{datetime.now(UTC).timestamp()}_{secrets.token_hex(4)}"
+                f"consent_{datetime.now(timezone.utc).timestamp()}_{secrets.token_hex(4)}"
             )
 
             consent = ConsentRecord(
@@ -265,9 +265,9 @@ class ComplianceService:
             )
 
             if status == ConsentStatus.GRANTED:
-                consent.granted_at = datetime.now(UTC)
+                consent.granted_at = datetime.now(timezone.utc)
             elif status == ConsentStatus.WITHDRAWN:
-                consent.withdrawn_at = datetime.now(UTC)
+                consent.withdrawn_at = datetime.now(timezone.utc)
 
             if user_id not in self._consent_records:
                 self._consent_records[user_id] = []
@@ -342,14 +342,14 @@ class ComplianceService:
             Request ID
         """
         try:
-            request_id = f"dsr_{datetime.now(UTC).timestamp()}_{secrets.token_hex(4)}"
+            request_id = f"dsr_{datetime.now(timezone.utc).timestamp()}_{secrets.token_hex(4)}"
 
             request = DataSubjectRequest(
                 id=request_id,
                 user_id=user_id,
                 request_type=request_type,
                 status="pending",
-                requested_at=datetime.now(UTC),
+                requested_at=datetime.now(timezone.utc),
                 details=details or {},
             )
 
@@ -400,10 +400,10 @@ class ComplianceService:
                 request.status = "in_progress"
             elif action == "complete":
                 request.status = "completed"
-                request.completed_at = datetime.now(UTC)
+                request.completed_at = datetime.now(timezone.utc)
             elif action == "reject":
                 request.status = "rejected"
-                request.completed_at = datetime.now(UTC)
+                request.completed_at = datetime.now(timezone.utc)
 
             # Log processing event
             await self.log_event(
@@ -434,7 +434,7 @@ class ComplianceService:
             # For now, return compliance-related data
             export_data = {
                 "user_id": user_id,
-                "export_timestamp": datetime.now(UTC).isoformat(),
+                "export_timestamp": datetime.now(timezone.utc).isoformat(),
                 "consent_records": [
                     {
                         "id": c.id,
@@ -542,9 +542,9 @@ class ComplianceService:
         """
         try:
             if date_from is None:
-                date_from = datetime.now(UTC) - timedelta(days=30)
+                date_from = datetime.now(timezone.utc) - timedelta(days=30)
             if date_to is None:
-                date_to = datetime.now(UTC)
+                date_to = datetime.now(timezone.utc)
 
             # Filter events by date and standard
             relevant_events = [
@@ -667,7 +667,7 @@ class ComplianceService:
             try:
                 await asyncio.sleep(86400)  # Run daily
 
-                cutoff_date = datetime.now(UTC) - timedelta(
+                cutoff_date = datetime.now(timezone.utc) - timedelta(
                     days=self.compliance_config.audit_retention_days
                 )
 
@@ -691,7 +691,7 @@ class ComplianceService:
             try:
                 await asyncio.sleep(86400)  # Run daily
 
-                cutoff_date = datetime.now(UTC) - timedelta(
+                cutoff_date = datetime.now(timezone.utc) - timedelta(
                     days=self.compliance_config.consent_retention_days
                 )
 

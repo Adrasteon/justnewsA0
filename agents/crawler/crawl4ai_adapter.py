@@ -95,6 +95,7 @@ class CrawlContext:
     max_articles: int
     follow_internal_links: bool
     page_budget: int
+    crawl_depth: int | None = None
     # If True the crawler is allowed to follow links outside the configured
     # site domain(s). When False we explicitly prevent following links whose
     # network location (netloc) does not match the site's domain or its
@@ -703,6 +704,13 @@ async def crawl_site_with_crawl4ai(
             ).lower() in ("1", "true", "yes")
     page_budget = int(profile.get("max_pages") or article_limit or len(unique_urls))
     page_budget = max(page_budget, len(unique_urls))
+    configured_depth = (profile.get("extra") or {}).get("crawl_depth")
+    crawl_depth: int | None = None
+    if configured_depth is not None:
+        try:
+            crawl_depth = max(0, int(configured_depth))
+        except (TypeError, ValueError):
+            crawl_depth = None
     seed_urls = set(unique_urls)
     extra_config = profile.get("extra") or {}
     skip_seed_articles = bool(extra_config.get("skip_seed_articles"))
@@ -713,6 +721,7 @@ async def crawl_site_with_crawl4ai(
         max_articles=article_limit,
         follow_internal_links=follow_internal_links,
         page_budget=page_budget,
+        crawl_depth=crawl_depth,
         follow_external=bool(follow_external),
     )
 
@@ -720,7 +729,7 @@ async def crawl_site_with_crawl4ai(
     articles: list[dict[str, Any]] = []
     seed_buffer: list[dict[str, Any]] = []
     visited: set[str] = set()
-    queue: list[str] = list(unique_urls)
+    queue: list[tuple[str, int]] = [(url, 0) for url in unique_urls]
     pages_fetched = 0
 
     adaptive_config = getattr(run_config, "adaptive_config", None)
@@ -795,7 +804,7 @@ async def crawl_site_with_crawl4ai(
         and pages_fetched < context.page_budget
         and len(articles) < context.max_articles
     ):
-        current_url = queue.pop(0)
+        current_url, current_depth = queue.pop(0)
         if not current_url or current_url in visited:
             continue
         visited.add(current_url)
@@ -816,6 +825,10 @@ async def crawl_site_with_crawl4ai(
             links_followed=max(0, len(visited) - len(unique_urls)),
         )
         if article:
+            crawl_meta = article.setdefault("extraction_metadata", {}).setdefault(
+                "crawl4ai", {}
+            )
+            crawl_meta["crawl_depth"] = current_depth
             if skip_seed_articles and current_url in seed_urls:
                 seed_buffer.append(article)
             else:
@@ -828,14 +841,17 @@ async def crawl_site_with_crawl4ai(
             and len(articles) < context.max_articles
             and getattr(result, "links", None)
         ):
+            if context.crawl_depth is not None and current_depth >= context.crawl_depth:
+                continue
             remaining_pages = context.page_budget - pages_fetched
             candidates = result.links.get("internal", []) if result.links else []
             next_urls = _select_link_candidates(
                 candidates, context, visited, remaining_pages
             )
             for url in next_urls:
-                if url not in queue and url not in visited:
-                    queue.append(url)
+                queued_urls = {queued for queued, _depth in queue}
+                if url not in queued_urls and url not in visited:
+                    queue.append((url, current_depth + 1))
 
     if (
         skip_seed_articles
