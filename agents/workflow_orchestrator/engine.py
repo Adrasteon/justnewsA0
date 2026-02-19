@@ -8,9 +8,11 @@ import asyncio
 import json
 import os
 import time
-from typing import List
+from datetime import datetime, timezone
+from typing import Any, List
 
 from common.observability import get_logger
+from .runtime_config import extract_owner_overrides
 from .policies import (
     WorkflowPolicy,
     IngestionToAnalysisPolicy,
@@ -27,11 +29,76 @@ from .resources import ResourceMonitor
 
 logger = get_logger(__name__)
 
+
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
 class OrchestratorEngine:
     def __init__(self):
         self.running = False
         self.resource_monitor = ResourceMonitor()
         self.policies: List[WorkflowPolicy] = []
+        self.runtime_store = None
+        self.runtime_config_version = 0
+        self.last_runtime_sync_at: str | None = None
+        self.last_runtime_apply_status: dict[str, Any] = {"status": "not_initialized"}
+        self.autonomic_mode = str(os.environ.get("AUTONOMIC_MODE", "disabled")).strip().lower()
+        if self.autonomic_mode not in {"disabled", "shadow", "active"}:
+            self.autonomic_mode = "disabled"
+        self.autonomic_decisions_enabled = _env_bool(
+            "AUTONOMIC_DECISIONS_ENABLED", default=False
+        )
+        self.autonomic_cooldown_seconds = max(
+            1, int(os.environ.get("AUTONOMIC_DECISION_COOLDOWN_SECONDS", "60"))
+        )
+        self.autonomic_budget_window_seconds = max(
+            30, int(os.environ.get("AUTONOMIC_DECISION_BUDGET_WINDOW_SECONDS", "300"))
+        )
+        self.autonomic_max_actions_per_window = max(
+            1, int(os.environ.get("AUTONOMIC_MAX_ACTIONS_PER_WINDOW", "4"))
+        )
+        self.autonomic_allowed_keys = {
+            "orchestrator.polling_interval_seconds",
+            "orchestrator.max_concurrent_tasks",
+        }
+        denylist_raw = os.environ.get(
+            "AUTONOMIC_DENYLIST_KEYS",
+            "analyst.workers,analyst.model.name,mcp_bus.call.max_retries,mcp_bus.call.read_timeout_sec,fact_checker.search.max_queries,fact_checker.search.deep_crawl_timeout_sec",
+        )
+        self.autonomic_denylist_keys = {
+            item.strip() for item in denylist_raw.split(",") if item.strip()
+        }
+        self._autonomic_recent_action_epochs: list[float] = []
+        self._autonomic_last_action_epoch: float | None = None
+        self._autonomic_last_decision: dict[str, Any] | None = None
+        self._autonomic_decision_history: list[dict[str, Any]] = []
+        stall_threshold_seconds = int(
+            os.environ.get("AUTONOMIC_STALL_THRESHOLD_SECONDS", "300")
+        )
+        self.telemetry: dict[str, Any] = {
+            "tick": {
+                "count": 0,
+                "error_count": 0,
+                "last_started_at": None,
+                "last_completed_at": None,
+                "last_duration_ms": 0.0,
+                "last_error": None,
+            },
+            "policies": {},
+            "progress": {
+                "last_progress_at": None,
+                "stall_threshold_seconds": max(stall_threshold_seconds, 30),
+            },
+        }
+        self._last_resource_stats = None
+        self._last_resource_healthy = True
         self._load_config()
         self._init_policies()
 
@@ -72,7 +139,304 @@ class OrchestratorEngine:
         self.policies.append(SynthesisToCritiquePolicy(self.mcp_bus_url))
         self.policies.append(SynthesisToPublishingPolicy(self.mcp_bus_url))
         self.policies.append(HeavyClusterRetryPolicy(self.mcp_bus_url))
+        for policy in self.policies:
+            self._ensure_policy_telemetry(policy.name())
         logger.info(f"Initialized {len(self.policies)} policies.")
+
+    def _ensure_policy_telemetry(self, policy_name: str) -> dict[str, Any]:
+        policy_map = self.telemetry.setdefault("policies", {})
+        policy_map.setdefault(
+            policy_name,
+            {
+                "check_count": 0,
+                "execute_count": 0,
+                "success_count": 0,
+                "error_count": 0,
+                "total_items_seen": 0,
+                "last_queue_depth": 0,
+                "last_checked_at": None,
+                "last_check_ms": 0.0,
+                "last_execute_ms": 0.0,
+                "last_success_at": None,
+                "last_success_at_epoch": None,
+                "last_error": None,
+                "last_error_at": None,
+            },
+        )
+        return policy_map[policy_name]
+
+    def attach_runtime_store(self, runtime_store: Any) -> None:
+        self.runtime_store = runtime_store
+        self._sync_runtime_config(force=True)
+
+    def _sync_runtime_config(self, force: bool = False) -> None:
+        if self.runtime_store is None:
+            return
+
+        try:
+            state = self.runtime_store.get_state()
+            version = int(state.get("version", 0))
+            if not force and version <= int(self.runtime_config_version):
+                return
+
+            owner_overrides = extract_owner_overrides(
+                state.get("overrides", {}), "workflow_orchestrator"
+            )
+            apply_result = self.apply_runtime_overrides(owner_overrides)
+            self.runtime_config_version = version
+            self.last_runtime_sync_at = _utc_now()
+            self.last_runtime_apply_status = {
+                "status": "ok",
+                "version": version,
+                "owner": "workflow_orchestrator",
+                "applied_keys": sorted(apply_result.get("applied", {}).keys()),
+                "ignored_keys": sorted(apply_result.get("ignored", {}).keys()),
+                "synced_at": self.last_runtime_sync_at,
+            }
+        except Exception as exc:
+            self.last_runtime_sync_at = _utc_now()
+            self.last_runtime_apply_status = {
+                "status": "error",
+                "version": self.runtime_config_version,
+                "owner": "workflow_orchestrator",
+                "error": str(exc),
+                "synced_at": self.last_runtime_sync_at,
+            }
+            logger.warning("Runtime config sync failed: %s", exc)
+
+    def apply_runtime_overrides(self, overrides: dict[str, Any]) -> dict[str, Any]:
+        """Apply runtime override keys owned by workflow orchestrator."""
+        applied: dict[str, Any] = {}
+        ignored: dict[str, Any] = {}
+
+        for key, value in overrides.items():
+            if not key.startswith("orchestrator."):
+                ignored[key] = value
+                continue
+
+            suffix = key.split("orchestrator.", 1)[1]
+            if not suffix:
+                ignored[key] = value
+                continue
+
+            path_parts = suffix.split(".")
+            target = self.config
+            try:
+                for part in path_parts[:-1]:
+                    existing = target.get(part)
+                    if not isinstance(existing, dict):
+                        target[part] = {}
+                    target = target[part]
+                target[path_parts[-1]] = value
+                applied[key] = value
+            except Exception:
+                ignored[key] = value
+
+        if applied:
+            logger.info(
+                "Applied runtime overrides to orchestrator: %s",
+                ", ".join(sorted(applied.keys())),
+            )
+
+        return {"applied": applied, "ignored": ignored}
+
+    def _compute_autonomic_action(self) -> dict[str, Any]:
+        now_epoch = time.time()
+        reason = "no_action"
+        proposed_patch: dict[str, Any] = {}
+
+        current_poll = int(self.config.get("polling_interval_seconds", 10))
+        current_tasks = int(self.config.get("max_concurrent_tasks", 5))
+        resource_limits = self.config.get("resource_limits", {})
+        resource_stats = self._last_resource_stats or self.resource_monitor.get_stats()
+
+        cpu_percent = float(resource_stats.cpu_percent)
+        memory_percent = float(resource_stats.memory_percent)
+        gpu_util = (
+            float(resource_stats.gpu_utilization)
+            if resource_stats.gpu_utilization is not None
+            else None
+        )
+
+        cpu_limit = float(resource_limits.get("max_cpu_percent", 95))
+        mem_limit = float(resource_limits.get("max_memory_percent", 98))
+        gpu_limit = float(resource_limits.get("max_gpu_utilization", 95))
+
+        pressure_detected = (
+            cpu_percent >= (cpu_limit - 2)
+            or memory_percent >= (mem_limit - 2)
+            or (gpu_util is not None and gpu_util >= (gpu_limit - 2))
+        )
+
+        progress_info = self.telemetry.get("progress", {})
+        last_progress_at = progress_info.get("last_progress_at")
+        stall_threshold = int(progress_info.get("stall_threshold_seconds", 300))
+        seconds_since_last_progress = None
+        if last_progress_at:
+            try:
+                parsed = datetime.fromisoformat(last_progress_at.replace("Z", "+00:00"))
+                seconds_since_last_progress = max(
+                    0.0,
+                    now_epoch - parsed.astimezone(timezone.utc).timestamp(),
+                )
+            except Exception:
+                seconds_since_last_progress = None
+
+        stalled = bool(
+            seconds_since_last_progress is not None
+            and seconds_since_last_progress > stall_threshold
+        )
+
+        if pressure_detected:
+            reason = "resource_pressure"
+            proposed_patch["orchestrator.max_concurrent_tasks"] = max(1, current_tasks - 1)
+            proposed_patch["orchestrator.polling_interval_seconds"] = min(30, current_poll + 1)
+        elif stalled and self._last_resource_healthy:
+            reason = "downstream_stall_recovery"
+            proposed_patch["orchestrator.polling_interval_seconds"] = max(1, current_poll - 1)
+            proposed_patch["orchestrator.max_concurrent_tasks"] = min(30, current_tasks + 1)
+        else:
+            reason = "stable_no_change"
+
+        return {
+            "reason": reason,
+            "proposed_patch": proposed_patch,
+            "inputs": {
+                "current_polling_interval_seconds": current_poll,
+                "current_max_concurrent_tasks": current_tasks,
+                "cpu_percent": cpu_percent,
+                "memory_percent": memory_percent,
+                "gpu_utilization": gpu_util,
+                "resource_healthy": self._last_resource_healthy,
+                "seconds_since_last_progress": round(seconds_since_last_progress, 3)
+                if seconds_since_last_progress is not None
+                else None,
+                "stall_threshold_seconds": stall_threshold,
+                "stalled": stalled,
+            },
+        }
+
+    def _run_autonomic_decision_cycle(self) -> None:
+        now_epoch = time.time()
+        decision = {
+            "timestamp": _utc_now(),
+            "mode": self.autonomic_mode,
+            "enabled": self.autonomic_decisions_enabled,
+            "reason": None,
+            "proposed_patch": {},
+            "guardrails": {},
+            "result": {"status": "noop"},
+        }
+
+        if not self.autonomic_decisions_enabled:
+            decision["reason"] = "feature_flag_disabled"
+            decision["result"] = {"status": "skipped"}
+            self._record_autonomic_decision(decision)
+            return
+
+        if self.autonomic_mode == "disabled":
+            decision["reason"] = "mode_disabled"
+            decision["result"] = {"status": "skipped"}
+            self._record_autonomic_decision(decision)
+            return
+
+        action = self._compute_autonomic_action()
+        decision["reason"] = action.get("reason")
+        decision["proposed_patch"] = dict(action.get("proposed_patch", {}))
+        decision["inputs"] = action.get("inputs", {})
+
+        if not decision["proposed_patch"]:
+            decision["result"] = {"status": "noop", "message": "no bounded action"}
+            self._record_autonomic_decision(decision)
+            return
+
+        window_start = now_epoch - self.autonomic_budget_window_seconds
+        self._autonomic_recent_action_epochs = [
+            ts for ts in self._autonomic_recent_action_epochs if ts >= window_start
+        ]
+
+        cooldown_ok = (
+            self._autonomic_last_action_epoch is None
+            or (now_epoch - self._autonomic_last_action_epoch) >= self.autonomic_cooldown_seconds
+        )
+        budget_ok = (
+            len(self._autonomic_recent_action_epochs) < self.autonomic_max_actions_per_window
+        )
+
+        unknown_or_blocked_keys = [
+            key
+            for key in decision["proposed_patch"].keys()
+            if key not in self.autonomic_allowed_keys or key in self.autonomic_denylist_keys
+        ]
+        denylist_ok = len(unknown_or_blocked_keys) == 0
+
+        decision["guardrails"] = {
+            "cooldown_seconds": self.autonomic_cooldown_seconds,
+            "cooldown_ok": cooldown_ok,
+            "budget_window_seconds": self.autonomic_budget_window_seconds,
+            "max_actions_per_window": self.autonomic_max_actions_per_window,
+            "actions_in_window": len(self._autonomic_recent_action_epochs),
+            "budget_ok": budget_ok,
+            "denylist_ok": denylist_ok,
+            "blocked_keys": unknown_or_blocked_keys,
+            "allowed_keys": sorted(self.autonomic_allowed_keys),
+        }
+
+        if not (cooldown_ok and budget_ok and denylist_ok):
+            decision["result"] = {
+                "status": "blocked",
+                "message": "guardrail block",
+            }
+            self._record_autonomic_decision(decision)
+            return
+
+        if self.autonomic_mode == "shadow":
+            decision["result"] = {
+                "status": "shadow",
+                "message": "decision recorded without apply",
+            }
+            self._record_autonomic_decision(decision)
+            return
+
+        if self.runtime_store is None:
+            decision["result"] = {
+                "status": "blocked",
+                "message": "runtime_store_unavailable",
+            }
+            self._record_autonomic_decision(decision)
+            return
+
+        apply_result = self.runtime_store.apply_patch(
+            decision["proposed_patch"],
+            reason=f"autonomic:{decision['reason']}",
+            actor="autonomic_controller",
+        )
+        if apply_result.get("status") == "ok":
+            self._autonomic_last_action_epoch = now_epoch
+            self._autonomic_recent_action_epochs.append(now_epoch)
+            self._sync_runtime_config(force=True)
+
+        decision["result"] = {
+            "status": apply_result.get("status"),
+            "apply_result": apply_result,
+        }
+        self._record_autonomic_decision(decision)
+
+    def _record_autonomic_decision(self, decision: dict[str, Any]) -> None:
+        self._autonomic_last_decision = decision
+        self._autonomic_decision_history.append(decision)
+        if len(self._autonomic_decision_history) > 50:
+            self._autonomic_decision_history = self._autonomic_decision_history[-50:]
+
+        self.telemetry.setdefault("autonomic", {})
+        self.telemetry["autonomic"].update(
+            {
+                "decisions_total": self.telemetry.get("autonomic", {}).get("decisions_total", 0)
+                + 1,
+                "last_decision": decision,
+                "history_tail": self._autonomic_decision_history[-10:],
+            }
+        )
 
     async def start(self):
         """Start the orchestration loop."""
@@ -88,10 +452,18 @@ class OrchestratorEngine:
     async def _run_loop(self):
         while self.running:
             start_time = time.time()
+            self.telemetry["tick"]["count"] += 1
+            self.telemetry["tick"]["last_started_at"] = _utc_now()
             try:
                 await self._process_tick()
             except Exception as e:
+                self.telemetry["tick"]["error_count"] += 1
+                self.telemetry["tick"]["last_error"] = str(e)
                 logger.error(f"Error in orchestration loop: {e}", exc_info=True)
+            finally:
+                elapsed_ms = max(0.0, (time.time() - start_time) * 1000.0)
+                self.telemetry["tick"]["last_duration_ms"] = round(elapsed_ms, 3)
+                self.telemetry["tick"]["last_completed_at"] = _utc_now()
             
             # Sleep remainder of interval
             elapsed = time.time() - start_time
@@ -99,25 +471,135 @@ class OrchestratorEngine:
             await asyncio.sleep(sleep_time)
 
     async def _process_tick(self):
+        self._sync_runtime_config()
+
         # 1. Check Resources
         thresholds = self.config["resource_limits"]
-        if not self.resource_monitor.check_health(thresholds):
+        self._last_resource_stats = self.resource_monitor.get_stats()
+        self._last_resource_healthy = self.resource_monitor.check_health(thresholds)
+        if not self._last_resource_healthy:
             logger.info("Resources saturated. Skipping tick.")
+            self._run_autonomic_decision_cycle()
             return
 
         # 2. Iterate Policies
         max_tasks = self.config["max_concurrent_tasks"]
         
         for policy in self.policies:
+            policy_name = policy.name()
+            policy_telemetry = self._ensure_policy_telemetry(policy_name)
+            check_started = time.time()
             # We treat max_tasks as a per-policy limit for simplicity v1
             try:
                 items = policy.check_condition(limit=max_tasks)
+                policy_telemetry["check_count"] += 1
+                policy_telemetry["last_checked_at"] = _utc_now()
+                policy_telemetry["last_check_ms"] = round(
+                    (time.time() - check_started) * 1000.0, 3
+                )
+                policy_telemetry["last_queue_depth"] = len(items)
+                policy_telemetry["total_items_seen"] += len(items)
                 if items:
-                    logger.info(f"Policy '{policy.name()}' matched {len(items)} items.")
+                    logger.info(f"Policy '{policy_name}' matched {len(items)} items.")
+                    execute_started = time.time()
                     await policy.execute(items)
+                    policy_telemetry["execute_count"] += 1
+                    policy_telemetry["success_count"] += 1
+                    policy_telemetry["last_execute_ms"] = round(
+                        (time.time() - execute_started) * 1000.0, 3
+                    )
+                    policy_telemetry["last_success_at"] = _utc_now()
+                    policy_telemetry["last_success_at_epoch"] = time.time()
+                    self.telemetry["progress"]["last_progress_at"] = (
+                        policy_telemetry["last_success_at"]
+                    )
                 else:
                     # Debug log only to avoid spam
                     # logger.debug(f"Policy '{policy.name()}' matched 0 items.")
                     pass
             except Exception as e:
-                logger.error(f"Policy '{policy.name()}' failure: {e}")
+                policy_telemetry["error_count"] += 1
+                policy_telemetry["last_error"] = str(e)
+                policy_telemetry["last_error_at"] = _utc_now()
+                logger.error(f"Policy '{policy_name}' failure: {e}")
+
+        self._run_autonomic_decision_cycle()
+
+    def get_status_snapshot(self) -> dict[str, Any]:
+        now_epoch = time.time()
+        stall_threshold = int(
+            self.telemetry.get("progress", {}).get("stall_threshold_seconds", 300)
+        )
+        last_progress_at = self.telemetry.get("progress", {}).get("last_progress_at")
+        seconds_since_last_progress = None
+        if last_progress_at:
+            try:
+                parsed = datetime.fromisoformat(last_progress_at.replace("Z", "+00:00"))
+                seconds_since_last_progress = max(
+                    0.0,
+                    now_epoch
+                    - parsed.astimezone(timezone.utc).timestamp(),
+                )
+            except Exception:
+                seconds_since_last_progress = None
+
+        is_stalled = bool(
+            seconds_since_last_progress is not None
+            and seconds_since_last_progress > stall_threshold
+        )
+
+        stalled_policies: list[str] = []
+        for policy_name, policy_data in self.telemetry.get("policies", {}).items():
+            queue_depth = int(policy_data.get("last_queue_depth", 0) or 0)
+            if queue_depth <= 0:
+                continue
+            last_success_epoch = policy_data.get("last_success_at_epoch")
+            if last_success_epoch is None:
+                stalled_policies.append(policy_name)
+                continue
+            if (now_epoch - float(last_success_epoch)) > stall_threshold:
+                stalled_policies.append(policy_name)
+
+        resource_stats = self._last_resource_stats or self.resource_monitor.get_stats()
+        resource_signals = {
+            "healthy": self._last_resource_healthy,
+            "thresholds": self.config.get("resource_limits", {}),
+            "stats": {
+                "cpu_percent": resource_stats.cpu_percent,
+                "memory_percent": resource_stats.memory_percent,
+                "gpu_utilization": resource_stats.gpu_utilization,
+                "gpu_memory_percent": resource_stats.gpu_memory_percent,
+            },
+        }
+
+        return {
+            "autonomic": {
+                "mode": self.autonomic_mode,
+                "decisions_enabled": self.autonomic_decisions_enabled,
+                "runtime_config_version": self.runtime_config_version,
+                "last_runtime_sync_at": self.last_runtime_sync_at,
+                "last_runtime_apply_status": self.last_runtime_apply_status,
+                "last_decision": self._autonomic_last_decision,
+                "decision_history_tail": self._autonomic_decision_history[-10:],
+                "guardrails": {
+                    "cooldown_seconds": self.autonomic_cooldown_seconds,
+                    "budget_window_seconds": self.autonomic_budget_window_seconds,
+                    "max_actions_per_window": self.autonomic_max_actions_per_window,
+                    "allowed_keys": sorted(self.autonomic_allowed_keys),
+                    "denylist_keys": sorted(self.autonomic_denylist_keys),
+                },
+            },
+            "telemetry": self.telemetry,
+            "signals": {
+                "resource": resource_signals,
+                "downstream_stall": {
+                    "stall_threshold_seconds": stall_threshold,
+                    "seconds_since_last_progress": round(seconds_since_last_progress, 3)
+                    if seconds_since_last_progress is not None
+                    else None,
+                    "is_stalled": is_stalled,
+                    "stalled_policies": stalled_policies,
+                    "last_progress_at": last_progress_at,
+                },
+            },
+        }

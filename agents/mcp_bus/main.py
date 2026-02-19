@@ -137,7 +137,7 @@ class StatsResponse(BaseModel):
 
 # Agent discovery configuration - Ref: /app/docs/canonical_port_mapping.md
 KNOWN_AGENTS = {
-    # Core Agents (8001-8020)
+    # Core Agents (8001-8023)
     "chief-editor": {"port": 8001, "env_var": "CHIEF_EDITOR_AGENT_PORT"},
     "scout": {"port": 8002, "env_var": "SCOUT_AGENT_PORT"},
     "fact-checker": {"port": 8018, "env_var": "FACT_CHECKER_AGENT_PORT"},
@@ -157,7 +157,7 @@ KNOWN_AGENTS = {
     "journalist": {"port": 8017, "env_var": "JOURNALIST_PORT"},
     "auth-service": {"port": 8018, "env_var": "AUTH_SERVICE_PORT"},
     "hitl-service": {"port": 8019, "env_var": "HITL_SERVICE_PORT"},
-    "workflow-orchestrator": {"port": 8020, "env_var": "WORKFLOW_ORCHESTRATOR_PORT"},
+    "workflow-orchestrator": {"port": 8023, "env_var": "WORKFLOW_ORCHESTRATOR_PORT"},
 }
 
 

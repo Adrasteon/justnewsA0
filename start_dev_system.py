@@ -70,12 +70,12 @@ AGENT_CONFIG = {
         "env": {"CRAWLER_HOST": "0.0.0.0", "CRAWLER_AGENT_PORT": "8009"},
     },
     "workflow_orchestrator": {
-        "port": 8020,
+        "port": 8023,
         "path": "agents/workflow_orchestrator/main.py",
         "module": "agents.workflow_orchestrator.main",
         "app_var": "app",
         "host": "0.0.0.0",
-        "env": {"WORKFLOW_HOST": "0.0.0.0", "WORKFLOW_PORT": "8020"},
+        "env": {"WORKFLOW_HOST": "0.0.0.0", "WORKFLOW_ORCHESTRATOR_PORT": "8023"},
     },
     "crawler_control": {
         "port": 8016,

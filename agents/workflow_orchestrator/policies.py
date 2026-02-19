@@ -18,7 +18,7 @@ import statistics
 import re
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 
 from common.observability import get_logger
@@ -170,6 +170,20 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 def _safe_datetime(raw_value: Any) -> datetime | None:
     if raw_value is None:
+        return None
+
+    if isinstance(raw_value, datetime):
+        if raw_value.tzinfo is not None:
+            return raw_value.astimezone(timezone.utc).replace(tzinfo=None)
+        return raw_value
+
+    try:
+        raw_text = str(raw_value).strip().replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(raw_text)
+        if parsed.tzinfo is not None:
+            return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+        return parsed
+    except Exception:
         return None
 
 
@@ -353,13 +367,6 @@ def _govern_override(override: dict[str, Any]) -> tuple[dict[str, Any] | None, d
         "max_ttl_hours": max_ttl_hours,
     }
     return governed, None
-    if isinstance(raw_value, datetime):
-        return raw_value
-    try:
-        raw_text = str(raw_value).replace("Z", "+00:00")
-        return datetime.fromisoformat(raw_text)
-    except Exception:
-        return None
 
 
 def _extract_domain(raw_url: Any) -> str:
@@ -1194,8 +1201,9 @@ class AnalysisToFactCheckPolicy(WorkflowPolicy):
         logger.info(f"Fact check batch complete. Success: {success_count}/{len(items)}")
 
 
-    # Backward-compatible alias for legacy imports
-    SummaryToFactCheckPolicy = AnalysisToFactCheckPolicy
+
+# Backward-compatible alias for legacy imports
+SummaryToFactCheckPolicy = AnalysisToFactCheckPolicy
 
 
 

@@ -1,0 +1,16 @@
+{
+  "audit_log": [],
+  "overrides": {},
+  "timeline": [
+    {
+      "actor": "system",
+      "operation": "init",
+      "overrides": {},
+      "reason": "initial_state",
+      "timestamp": "2026-02-19T16:12:02.850381Z",
+      "version": 0
+    }
+  ],
+  "updated_at": "2026-02-19T16:12:02.850381Z",
+  "version": 0
+}

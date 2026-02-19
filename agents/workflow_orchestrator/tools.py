@@ -13,6 +13,7 @@ logger = get_logger(__name__)
 def get_orchestrator_status(engine) -> Dict[str, Any]:
     """Get the current status of the orchestrator."""
     stats = engine.resource_monitor.get_stats()
+    snapshot = engine.get_status_snapshot()
     return {
         "running": engine.running,
         "active_policies": [p.name() for p in engine.policies],
@@ -21,7 +22,11 @@ def get_orchestrator_status(engine) -> Dict[str, Any]:
             "memory": stats.memory_percent,
             "gpu_util": stats.gpu_utilization,
         },
-        "config": engine.config
+        "config": engine.config,
+        "runtime_config_version": snapshot.get("autonomic", {}).get("runtime_config_version"),
+        "autonomic": snapshot.get("autonomic", {}),
+        "telemetry": snapshot.get("telemetry", {}),
+        "signals": snapshot.get("signals", {}),
     }
 
 def force_run_policy(engine, policy_name: str) -> Dict[str, Any]:
