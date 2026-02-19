@@ -32,6 +32,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
+from starlette.concurrency import run_in_threadpool
 
 from common.metrics import JustNewsMetrics
 from common.observability import bootstrap_observability, get_logger
@@ -368,7 +369,7 @@ async def register_agent_endpoint(agent: AgentRegistration):
     try:
         logger.info(f"📨 Agent registration request: {agent.name} at {agent.address}")
 
-        result = register_agent_tool(agent.name, agent.address)
+        result = await run_in_threadpool(register_agent_tool, agent.name, agent.address)
 
         logger.info(f"✅ Agent {agent.name} registered successfully")
         return result
@@ -394,7 +395,13 @@ async def call_tool_endpoint(call: ToolCallRequest):
     try:
         logger.debug(f"📨 Tool call request: {call.agent}.{call.tool}")
 
-        result = call_agent_tool(call.agent, call.tool, call.args, call.kwargs)
+        result = await run_in_threadpool(
+            call_agent_tool,
+            call.agent,
+            call.tool,
+            call.args,
+            call.kwargs,
+        )
 
         response = ToolCallResponse(
             status=result.get("status", "unknown"),
@@ -430,7 +437,7 @@ async def get_agents_endpoint():
     Returns a mapping of agent names to their addresses.
     """
     try:
-        agents = get_registered_agents()
+        agents = await run_in_threadpool(get_registered_agents)
         logger.debug(f"📋 Retrieved {len(agents)} registered agents")
         return agents
     except Exception as e:
@@ -444,7 +451,7 @@ async def get_agents_endpoint():
 async def health_endpoint():
     """Health check endpoint for monitoring and load balancers."""
     try:
-        health_result = health_check()
+        health_result = await run_in_threadpool(health_check)
         return HealthResponse(**health_result)
     except Exception as e:
         logger.error(f"❌ Health check error: {e}")
@@ -463,7 +470,7 @@ async def ready_endpoint():
 async def stats_endpoint():
     """Get MCP Bus statistics and performance metrics."""
     try:
-        stats = get_bus_stats()
+        stats = await run_in_threadpool(get_bus_stats)
         uptime = time.time() - startup_time
 
         response = StatsResponse(
@@ -491,7 +498,7 @@ async def stats_endpoint():
 async def circuit_breaker_status_endpoint():
     """Get the current circuit breaker status for all agents."""
     try:
-        status = get_circuit_breaker_status()
+        status = await run_in_threadpool(get_circuit_breaker_status)
         logger.debug(f"🔌 Circuit breaker status retrieved for {len(status)} agents")
         return status
     except Exception as e:
