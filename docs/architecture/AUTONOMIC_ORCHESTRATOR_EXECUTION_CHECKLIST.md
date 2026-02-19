@@ -95,9 +95,9 @@ Evidence:
 
 ## Global Exit Gates
 
-- [ ] No critical unresolved risks in risk register
+- [x] No critical unresolved risks in risk register (docs/operations/AUTONOMIC_ORCHESTRATOR_CLOSEOUT_2026-02-19.md)
 - [x] All runbook procedures validated by simulation or live drill
-- [ ] Final architecture and implementation docs synchronized
+- [x] Final architecture and implementation docs synchronized (docs/operations/AUTONOMIC_ORCHESTRATOR_CLOSEOUT_2026-02-19.md)
 
 Related docs:
 - docs/architecture/AUTONOMIC_ORCHESTRATOR_ARCHITECTURE.md

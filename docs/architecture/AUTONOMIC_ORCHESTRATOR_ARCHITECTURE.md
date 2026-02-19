@@ -1,7 +1,7 @@
 # Autonomic Orchestrator Architecture
 
 Date: 2026-02-19  
-Status: Proposed (Execution-Ready)
+Status: Implemented and Validated
 
 ## Related Docs
 
@@ -134,11 +134,11 @@ Rollback triggers:
 - Shadow: decisions computed and logged, no live actions
 - Active: bounded live actions enabled
 
-## 10. Known Drift to Resolve Before Active Mode
+## 10. Resolved Drift Before Active Mode
 
-- Standardize workflow_orchestrator port references to 8023
-- Ensure policy naming consistency for analysis_to_fact_check references
-- Correct override-expiry reliability path in policy helper logic
+- Standardized workflow_orchestrator port references to 8023
+- Enforced policy naming consistency for analysis_to_fact_check references
+- Corrected override-expiry reliability path in policy helper logic
 
 ## 11. Traceability
 
