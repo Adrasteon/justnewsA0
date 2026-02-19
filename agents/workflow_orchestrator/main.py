@@ -13,6 +13,12 @@ from common.observability import bootstrap_observability, get_logger
 from agents.common.mcp_bus_client import MCPBusClient
 from database.utils.migrated_database_utils import create_database_service, get_db_config
 from .engine import OrchestratorEngine
+from .runtime_config import (
+    RUNTIME_KEY_REGISTRY,
+    RuntimeConfigStore,
+    TIER_KEY_PREFIXES,
+    extract_owner_overrides,
+)
 from .tools import get_orchestrator_status, force_run_policy
 
 # Initialize Logging
@@ -20,7 +26,7 @@ bootstrap_observability("workflow_orchestrator")
 logger = get_logger(__name__)
 
 # Constants
-PORT = int(os.environ.get("WORKFLOW_ORCHESTRATOR_PORT", 8020))
+PORT = int(os.environ.get("WORKFLOW_ORCHESTRATOR_PORT", 8023))
 HOST = os.environ.get("HOST", "0.0.0.0")
 PUBLIC_HOST = os.environ.get("PUBLIC_HOST", "localhost")
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
@@ -37,11 +43,15 @@ except Exception as e:
 
 # Global Engine
 engine = OrchestratorEngine()
+runtime_store = RuntimeConfigStore()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup and Shutdown logic."""
     logger.info("🎼 Workflow Orchestrator Agent Starting...")
+
+    # Bind runtime store so engine can poll config version and apply owner overrides each tick
+    engine.attach_runtime_store(runtime_store)
     
     # Start Engine
     await engine.start()
@@ -70,6 +80,35 @@ class ToolCall(BaseModel):
     args: list[Any]
     kwargs: dict[str, Any]
 
+
+class RuntimeConfigValidateRequest(BaseModel):
+    patch: dict[str, Any]
+
+
+class RuntimeConfigApplyRequest(BaseModel):
+    patch: dict[str, Any]
+    reason: str
+    actor: str | None = "operator"
+
+
+class RuntimeConfigRollbackRequest(BaseModel):
+    target_version: int
+    reason: str
+    actor: str | None = "operator"
+
+
+class RuntimeActuationRequest(BaseModel):
+    tier: str
+    patch: dict[str, Any]
+    reason: str
+    actor: str | None = "operator"
+
+
+class RuntimeActuationRollbackRequest(BaseModel):
+    apply_version: int
+    reason: str
+    actor: str | None = "operator"
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "engine_running": engine.running}
@@ -77,6 +116,137 @@ async def health_check():
 @app.get("/status")
 async def status_endpoint():
     return get_orchestrator_status(engine)
+
+
+@app.get("/runtime-config")
+async def runtime_config_get():
+    state = runtime_store.get_state()
+    owner_overrides = extract_owner_overrides(
+        state.get("overrides", {}), "workflow_orchestrator"
+    )
+    available_versions = [
+        int(entry.get("version", 0)) for entry in state.get("timeline", [])
+    ]
+    return {
+        "status": "ok",
+        "config_version": state.get("version", 0),
+        "updated_at": state.get("updated_at"),
+        "registry": RUNTIME_KEY_REGISTRY,
+        "tier_key_prefixes": TIER_KEY_PREFIXES,
+        "runtime_overrides": state.get("overrides", {}),
+        "owner_overrides": owner_overrides,
+        "effective_owner_config": engine.config,
+        "available_versions": sorted(set(available_versions)),
+        "audit_log_tail": state.get("audit_log", [])[-20:],
+    }
+
+
+@app.post("/runtime-config/validate")
+async def runtime_config_validate(request: RuntimeConfigValidateRequest):
+    result = runtime_store.validate_patch(request.patch)
+    return {
+        "status": "ok" if result.ok else "error",
+        "ok": result.ok,
+        "normalized": result.normalized,
+        "errors": result.errors,
+        "warnings": result.warnings,
+        "blocked_non_hot": result.blocked_non_hot,
+        "impacted_services": result.impacted_services,
+    }
+
+
+@app.patch("/runtime-config")
+async def runtime_config_apply(request: RuntimeConfigApplyRequest):
+    reason = str(request.reason or "").strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="reason is required")
+
+    response = runtime_store.apply_patch(
+        request.patch,
+        reason=reason,
+        actor=str(request.actor or "operator"),
+    )
+    if response.get("status") != "ok":
+        raise HTTPException(status_code=400, detail=response)
+
+    owner_overrides = extract_owner_overrides(
+        runtime_store.get_state().get("overrides", {}), "workflow_orchestrator"
+    )
+    apply_result = engine.apply_runtime_overrides(owner_overrides)
+
+    response["owner_apply_result"] = apply_result
+    response["owner"] = "workflow_orchestrator"
+    return response
+
+
+@app.post("/runtime-config/rollback")
+async def runtime_config_rollback(request: RuntimeConfigRollbackRequest):
+    reason = str(request.reason or "").strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="reason is required")
+
+    response = runtime_store.rollback(
+        request.target_version,
+        reason=reason,
+        actor=str(request.actor or "operator"),
+    )
+    if response.get("status") != "ok":
+        raise HTTPException(status_code=400, detail=response)
+
+    owner_overrides = extract_owner_overrides(
+        runtime_store.get_state().get("overrides", {}), "workflow_orchestrator"
+    )
+    apply_result = engine.apply_runtime_overrides(owner_overrides)
+    response["owner_apply_result"] = apply_result
+    response["owner"] = "workflow_orchestrator"
+    return response
+
+
+@app.post("/runtime-config/actuate")
+async def runtime_config_actuate(request: RuntimeActuationRequest):
+    reason = str(request.reason or "").strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="reason is required")
+
+    response = runtime_store.apply_tier_patch(
+        request.tier,
+        request.patch,
+        reason=reason,
+        actor=str(request.actor or "operator"),
+    )
+    if response.get("status") != "ok":
+        raise HTTPException(status_code=400, detail=response)
+
+    owner_overrides = extract_owner_overrides(
+        runtime_store.get_state().get("overrides", {}), "workflow_orchestrator"
+    )
+    apply_result = engine.apply_runtime_overrides(owner_overrides)
+    response["owner_apply_result"] = apply_result
+    response["owner"] = "workflow_orchestrator"
+    return response
+
+
+@app.post("/runtime-config/actuate/rollback")
+async def runtime_config_actuation_rollback(request: RuntimeActuationRollbackRequest):
+    reason = str(request.reason or "").strip()
+    if not reason:
+        raise HTTPException(status_code=400, detail="reason is required")
+
+    response = runtime_store.rollback_apply_version(
+        request.apply_version,
+        reason=reason,
+        actor=str(request.actor or "operator"),
+    )
+    if response.get("status") != "ok":
+        raise HTTPException(status_code=400, detail=response)
+
+    owner_overrides = extract_owner_overrides(
+        runtime_store.get_state().get("overrides", {}), "workflow_orchestrator"
+    )
+    apply_result = engine.apply_runtime_overrides(owner_overrides)
+    response["owner_apply_result"] = apply_result
+    response["owner"] = "workflow_orchestrator"
+    return response
 
 # MCP Tool Endpoints
 

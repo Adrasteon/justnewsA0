@@ -27,49 +27,49 @@ Evidence:
 
 ## Phase 2 — Runtime Control Plane Prerequisites
 
-- [ ] Runtime config schema finalized (types, bounds, mutability)
-- [ ] Validate endpoint implemented and tested
-- [ ] Apply endpoint implemented with atomic version increments
-- [ ] Rollback endpoint implemented (target version restore)
-- [ ] Audit trail recorded for apply and rollback events
+- [x] Runtime config schema finalized (types, bounds, mutability)
+- [x] Validate endpoint implemented and tested
+- [x] Apply endpoint implemented with atomic version increments
+- [x] Rollback endpoint implemented (target version restore)
+- [x] Audit trail recorded for apply and rollback events
 
 Evidence:
-- [ ] Invalid update rejection proof
-- [ ] Rollback simulation proof
+- [x] Invalid update rejection proof
+- [x] Rollback simulation proof
 
 ## Phase 3 — Orchestrator Sensing Integration
 
-- [ ] Config version polling/apply loop added to orchestrator
-- [ ] Per-policy telemetry capture added (success/fail/latency)
-- [ ] Resource and downstream-stall signals integrated
-- [ ] Status endpoints return applied version and autonomic state
+- [x] Config version polling/apply loop added to orchestrator
+- [x] Per-policy telemetry capture added (success/fail/latency)
+- [x] Resource and downstream-stall signals integrated
+- [x] Status endpoints return applied version and autonomic state
 
 Evidence:
-- [ ] Status endpoint output captured
-- [ ] Telemetry dashboard screenshot/report linked
+- [x] Status endpoint output captured
+- [x] Telemetry dashboard screenshot/report linked
 
 ## Phase 4 — Decision Engine (Safe-First)
 
-- [ ] Deterministic rule-based controller implemented
-- [ ] Cooldowns and change-budget guardrails enforced
-- [ ] Unsafe key denylist enforced
-- [ ] Decision explainability payload emitted for each action
-- [ ] Autonomic feature flag and mode toggles added (disabled/shadow/active)
+- [x] Deterministic rule-based controller implemented
+- [x] Cooldowns and change-budget guardrails enforced
+- [x] Unsafe key denylist enforced
+- [x] Decision explainability payload emitted for each action
+- [x] Autonomic feature flag and mode toggles added (disabled/shadow/active)
 
 Evidence:
-- [ ] Decision logs with explainability fields
-- [ ] Guardrail test results linked
+- [x] Decision logs with explainability fields
+- [x] Guardrail test results linked
 
 ## Phase 5 — Actuation and Reversibility
 
-- [ ] Tier-1 actions wired (orchestrator knobs)
-- [ ] Tier-2 actions wired (MCP knobs)
-- [ ] Tier-3 actions wired (fact checker knobs)
-- [ ] Reversal path verified for all supported actions
+- [x] Tier-1 actions wired (orchestrator knobs)
+- [x] Tier-2 actions wired (MCP knobs)
+- [x] Tier-3 actions wired (fact checker knobs)
+- [x] Reversal path verified for all supported actions
 
 Evidence:
-- [ ] Action apply + rollback matrix completed
-- [ ] Propagation latency measurements captured
+- [x] Action apply + rollback matrix completed
+- [x] Propagation latency measurements captured
 
 ## Phase 6 — Learning and Hardening
 
