@@ -119,7 +119,7 @@ Use this section to track execution status during implementation.
 | 4 Decision Engine |  | 2026-02-19 | 2026-02-19 | Completed | docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE4_VERIFICATION_2026-02-19.md |
 | 5 Actuation |  | 2026-02-19 | 2026-02-19 | Completed | docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE5_VERIFICATION_2026-02-19.md |
 | 6 Learning/Hardening |  | 2026-02-19 | 2026-02-19 | Completed | docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE6_AUTOROLLBACK_DRILL_2026-02-19.md |
-| 7 Rollout |  | 2026-02-19 |  | In Progress | docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE7_FULL_ROLLOUT_GATE_2026-02-19.md |
+| 7 Rollout |  | 2026-02-19 | 2026-02-19 | Completed | docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE7_INCIDENT_SIMULATION_2026-02-19.md |
 
 ## Risk Register
 
@@ -145,3 +145,4 @@ Use this section to track execution status during implementation.
 - 2026-02-19: Phase 7 started and dev rollout gate passed in active mode with no tick-error regression, no stalls, and healthy service readiness.
 - 2026-02-19: Phase 7 canary subset rollout gate passed under constrained action budgets with no error/stall regression.
 - 2026-02-19: Phase 7 full rollout approval gate passed with active bandit+auto-rollback controls and no tick-error/stall regression.
+- 2026-02-19: Phase 7 incident simulation completed per runbook (error-rate spike trigger, mode demotion, rollback, stabilization verification), closing rollout exit criteria.

@@ -87,16 +87,16 @@ Evidence:
 - [x] Dev environment rollout complete
 - [x] Canary subset rollout complete
 - [x] Full rollout approval gate passed
-- [ ] Incident simulation executed with operator runbook
+- [x] Incident simulation executed with operator runbook
 
 Evidence:
 - [x] Rollout gate review notes linked (docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE7_DEV_ROLLOUT_GATE_2026-02-19.md; docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE7_CANARY_ROLLOUT_GATE_2026-02-19.md; docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE7_FULL_ROLLOUT_GATE_2026-02-19.md)
-- [ ] Incident simulation report linked
+- [x] Incident simulation report linked (docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE7_INCIDENT_SIMULATION_2026-02-19.md)
 
 ## Global Exit Gates
 
 - [ ] No critical unresolved risks in risk register
-- [ ] All runbook procedures validated by simulation or live drill
+- [x] All runbook procedures validated by simulation or live drill
 - [ ] Final architecture and implementation docs synchronized
 
 Related docs:
