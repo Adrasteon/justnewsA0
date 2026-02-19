@@ -118,6 +118,11 @@ async def status_endpoint():
     return get_orchestrator_status(engine)
 
 
+@app.get("/autonomic/status")
+async def autonomic_status_endpoint():
+    return get_orchestrator_status(engine)
+
+
 @app.get("/runtime-config")
 async def runtime_config_get():
     state = runtime_store.get_state()
