@@ -59,7 +59,11 @@ ruff
 hdbscan>=0.8.33
 umap-learn>=0.5.5
 bertopic>=0.16.0
+# Browser automation runtime (Python package)
 playwright
+# NOTE: Browser binaries are NOT installed by pip.
+# After install, run:
+#   python -m playwright install --with-deps chromium
 duckduckgo-search>=5.0
 ddgs>=9.10.0
 faster-whisper>=1.0

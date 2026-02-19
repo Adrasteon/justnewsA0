@@ -79,6 +79,26 @@ log_info "Initialization triggered from post-create hook"
 log_info "Applying idempotent checks and conditional setup actions..."
 log_info ""
 
+# Step 0: Verify Docker connectivity for docker-outside-of-docker setup (non-blocking)
+log_info "Step 0: Checking Docker connectivity..."
+if command -v docker >/dev/null 2>&1; then
+    if [ -S /var/run/docker.sock ]; then
+        DOCKER_SERVER_VERSION="$(docker info --format '{{.ServerVersion}}' 2>/dev/null || true)"
+        if [ -n "$DOCKER_SERVER_VERSION" ]; then
+            log_success "Docker connectivity OK (server: $DOCKER_SERVER_VERSION)"
+        else
+            log_warning "Docker socket is mounted, but daemon is not reachable right now"
+            log_info "  → Verify host Docker is running and permissions allow socket access"
+        fi
+    else
+        log_warning "Docker CLI found, but /var/run/docker.sock is not mounted"
+        log_info "  → Rebuild devcontainer with DOOD socket mount enabled"
+    fi
+else
+    log_warning "Docker CLI is not installed in this container image"
+    log_info "  → Rebuild devcontainer to apply Docker CLI package installation"
+fi
+
 # Step 1: Wait for MariaDB to be fully ready and operational
 log_info "Step 1: Waiting for MariaDB to be fully ready..."
 MARIADB_HOST="${MARIADB_HOST:-mariadb}"

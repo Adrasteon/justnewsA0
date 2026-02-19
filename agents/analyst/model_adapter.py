@@ -68,6 +68,9 @@ class AnalystModelAdapter:
         start = time.perf_counter()
         
         try:
+            # Ensure the adapter is loaded before first use
+            if hasattr(self.adapter, "load"):
+                self.adapter.load()
             self.adapter.ensure_loaded()
             result = self.adapter.infer(user_block)
             doc = self._parse_response(result.get("text", ""))

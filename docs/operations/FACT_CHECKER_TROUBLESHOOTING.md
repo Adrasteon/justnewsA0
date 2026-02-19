@@ -47,7 +47,7 @@ Backend responded with `401 Unauthorized` until key was provided.
 
 ### 4) `verify_article` failed due to articles schema mismatch (`url` vs `source_url`)
 
-Workflow policy `summary_to_fact_check` calls `fact_checker.verify_article` with `article_id`.
+Workflow policy `analysis_to_fact_check` calls `fact_checker.verify_article` with `article_id`.
 In this environment, `articles` stores source links in `source_url` (not `url`).
 
 - Failure mode:

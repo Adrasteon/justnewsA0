@@ -153,9 +153,18 @@ def save_config(updated_config: dict[str, Any]) -> None:
 
     if "dashboard_port" in updated_config:
         try:
+            new_dashboard_port = int(updated_config["dashboard_port"])
+            current_dashboard_port = manager.get("agents.ports.dashboard")
+            if current_dashboard_port is not None and int(current_dashboard_port) == new_dashboard_port:
+                logger.debug(
+                    "Skipping dashboard config persistence; dashboard port unchanged (%s).",
+                    new_dashboard_port,
+                )
+                return
+
             manager.set(
                 "agents.ports.dashboard",
-                int(updated_config["dashboard_port"]),
+                new_dashboard_port,
                 persist=True,
             )
             logger.info("Persisted dashboard port override to unified configuration.")

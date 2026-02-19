@@ -33,6 +33,137 @@ _engine: AnalystEngine | None = None
 # Exposed hook for tests: tests may monkeypatch ClusterFetcher at module level
 ClusterFetcher = None
 
+TRANSIENT_MYSQL_ERROR_CODES = {2006, 2013, 2055}
+
+
+def _is_transient_mysql_error(exc: Exception) -> bool:
+    errno = getattr(exc, "errno", None)
+    if errno in TRANSIENT_MYSQL_ERROR_CODES:
+        return True
+
+    message = str(exc).lower()
+    return (
+        "lost connection to mysql server" in message
+        or "server has gone away" in message
+        or "read timeout" in message
+    )
+
+
+def _acquire_cursor(
+    db: Any, *, dictionary: bool = False, buffered: bool = True
+) -> tuple[Any, Any, bool]:
+    get_safe_cursor = getattr(db, "get_safe_cursor", None)
+    if callable(get_safe_cursor):
+        cursor, conn = get_safe_cursor(
+            per_call=True, dictionary=dictionary, buffered=buffered
+        )
+    else:
+        get_connection = getattr(db, "get_connection", None)
+        if callable(get_connection):
+            conn = get_connection()
+        else:
+            conn = getattr(db, "mb_conn", None)
+        if conn is None:
+            raise RuntimeError("Database connection is unavailable")
+        try:
+            cursor = conn.cursor(dictionary=dictionary, buffered=buffered)
+        except TypeError:
+            try:
+                cursor = conn.cursor(dictionary=dictionary)
+            except TypeError:
+                cursor = conn.cursor()
+
+    shared_conn = conn is getattr(db, "mb_conn", None)
+    return cursor, conn, shared_conn
+
+
+def _close_cursor_conn(cursor: Any, conn: Any, shared_conn: bool) -> None:
+    if cursor is not None:
+        try:
+            cursor.close()
+        except Exception:
+            pass
+
+    if not shared_conn and conn is not None:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+
+def _fetch_article_row_with_retry(db: Any, article_id: int, max_retries: int = 2) -> dict[str, Any] | None:
+    attempt = 0
+    while True:
+        cursor = None
+        conn = None
+        shared_conn = True
+        try:
+            cursor, conn, shared_conn = _acquire_cursor(db, dictionary=True, buffered=True)
+            cursor.execute(
+                """
+                SELECT id, content, structured_metadata, analyzed, factual_accuracy_score, fact_check_details
+                FROM articles
+                WHERE id = %s
+                """,
+                (article_id,),
+            )
+            row = cursor.fetchone()
+            return row
+        except Exception as exc:
+            if _is_transient_mysql_error(exc) and attempt < max_retries:
+                attempt += 1
+                backoff = 0.2 * attempt
+                logger.warning(
+                    "Transient DB read error for article %s (attempt %s/%s): %s",
+                    article_id,
+                    attempt,
+                    max_retries,
+                    exc,
+                )
+                time.sleep(backoff)
+                continue
+            raise
+        finally:
+            _close_cursor_conn(cursor, conn, shared_conn)
+
+
+def _execute_update_with_retry(
+    db: Any, query: str, params: tuple[Any, ...], article_id: int, max_retries: int = 2
+) -> None:
+    attempt = 0
+    while True:
+        cursor = None
+        conn = None
+        shared_conn = True
+        try:
+            cursor, conn, shared_conn = _acquire_cursor(db, dictionary=False, buffered=True)
+            cursor.execute(query, params)
+            if conn is not None:
+                conn.commit()
+            return
+        except Exception as exc:
+            try:
+                if conn is not None:
+                    conn.rollback()
+            except Exception:
+                pass
+
+            if _is_transient_mysql_error(exc) and attempt < max_retries:
+                attempt += 1
+                backoff = 0.2 * attempt
+                logger.warning(
+                    "Transient DB write error for article %s (attempt %s/%s): %s",
+                    article_id,
+                    attempt,
+                    max_retries,
+                    exc,
+                )
+                time.sleep(backoff)
+                continue
+            raise
+        finally:
+            _close_cursor_conn(cursor, conn, shared_conn)
+
 
 def get_analyst_engine() -> AnalystEngine:
     """Get or create the global analyst engine instance."""
@@ -599,27 +730,36 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
     logger.info(f"Starting analysis for article {article_id}")
     try:
         db = create_database_service()
-        # Ensure connection (might be sync or async depending on implementation, usually sync here)
-        db.ensure_conn() 
-        cursor = db.mb_conn.cursor() 
-        
-        # Fetch article content and structured_metadata explicitly to avoid index drift
-        cursor.execute("SELECT content, structured_metadata FROM articles WHERE id = %s", (article_id,))
-        row = cursor.fetchone()
-        
+        ensure_conn = getattr(db, "ensure_conn", None)
+        if callable(ensure_conn):
+            ensure_conn()
+
+        row = _fetch_article_row_with_retry(db, article_id)
+
         if not row:
-            cursor.close()
             return {"status": "error", "error": f"Article {article_id} not found"}
-            
-        content = row[0]
-        structured_metadata_raw = row[1]
+
+        if row.get("analyzed") == 1:
+            return {
+                "status": "success",
+                "article_id": article_id,
+                "factual_score": row.get("factual_accuracy_score"),
+                "no_op": True,
+                "reason": "already analyzed",
+            }
+
+        content = row.get("content")
+        structured_metadata_raw = row.get("structured_metadata")
         
         if not content:
-             logger.warning(f"Article {article_id} has no content")
-             cursor.execute("UPDATE articles SET analyzed = 1 WHERE id = %s", (article_id,))
-             db.mb_conn.commit()
-             cursor.close()
-             return {"status": "skipped", "reason": "no content"}
+            logger.warning(f"Article {article_id} has no content")
+            _execute_update_with_retry(
+                db,
+                "UPDATE articles SET analyzed = 1, updated_at = NOW() WHERE id = %s",
+                (article_id,),
+                article_id,
+            )
+            return {"status": "skipped", "reason": "no content", "article_id": article_id}
 
         # Run Analysis
         engine = get_analyst_engine()
@@ -661,7 +801,12 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
             logger.warning(f"Factual Audit failed for {article_id}: {e}")
         
         # Construct Metadata Update
-        current_struct = json.loads(structured_metadata_raw) if structured_metadata_raw else {}
+        try:
+            current_struct = json.loads(structured_metadata_raw) if structured_metadata_raw else {}
+            if not isinstance(current_struct, dict):
+                current_struct = {}
+        except Exception:
+            current_struct = {}
         current_struct['analysis'] = {
             'statistics': stats,
             'metrics': metrics,
@@ -686,9 +831,12 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
         # Prepare params
         audit_json = json.dumps(audit_result) if audit_result else None
         
-        cursor.execute(update_query, (json.dumps(current_struct), factual_score, audit_json, article_id))
-        db.mb_conn.commit()
-        cursor.close()
+        _execute_update_with_retry(
+            db,
+            update_query,
+            (json.dumps(current_struct), factual_score, audit_json, article_id),
+            article_id,
+        )
         
         logger.info(f"Article {article_id} analyzed successfully (Score: {factual_score})")
         return {"status": "success", "article_id": article_id, "factual_score": factual_score}

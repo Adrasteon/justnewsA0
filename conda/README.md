@@ -15,6 +15,9 @@ cd /path/to/JustNews
 bash scripts/dev/setup_dev_environment.sh --create-all-phases
 bash scripts/dev/select_phase_env.sh --phase 1
 source ./global.env
+
+# Playwright browser binaries (required for crawler/browser automation in phase 1)
+python -m playwright install --with-deps chromium
 ```
 
 ### Environment Files

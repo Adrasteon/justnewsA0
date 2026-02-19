@@ -68,6 +68,25 @@ def check_queue():
         count = cursor.fetchone()[0]
         print(f"Total Articles in DB: {count}")
 
+        cursor.execute("SELECT COUNT(*) FROM sources")
+        sources_total = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM sources WHERE last_crawl_at IS NOT NULL")
+        sources_crawled = cursor.fetchone()[0]
+        print(f"Sources Crawled: {sources_crawled}/{sources_total}")
+
+        sources_with_articles = 0
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME='articles'
+              AND COLUMN_NAME='source_id'
+        """)
+        if cursor.fetchone()[0] > 0:
+            cursor.execute("SELECT COUNT(DISTINCT source_id) FROM articles WHERE source_id IS NOT NULL")
+            sources_with_articles = cursor.fetchone()[0]
+        print(f"Sources With Articles: {sources_with_articles}/{sources_total}")
+
         # Check pending/running jobs
         print("\n[Active Jobs]")
         cursor.execute("SELECT count(*) FROM crawler_jobs WHERE status IN ('pending', 'running')")

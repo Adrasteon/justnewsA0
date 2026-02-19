@@ -43,6 +43,8 @@ KILL_TIMEOUT="${KILL_TIMEOUT:-3}"
 MARIADB_PORT="${MARIADB_PORT:-3306}"
 CHROMADB_PORT="${CHROMADB_PORT:-3307}"
 REDIS_PORT="${REDIS_PORT:-6379}"
+PUBLISHER_ENABLED="${PUBLISHER_ENABLED:-1}"
+PUBLISHER_PORT="${PUBLISHER_PORT:-8100}"
 
 # ============================================================================
 # LOGGING & OUTPUT
@@ -205,7 +207,7 @@ stop_agent() {
   local pids
   pids=$(get_pids_for_port "${port}") || true
 
-  if [ -zm "${pids}" ]; then
+  if [ -z "${pids}" ]; then
     # Try to find processes by module/agent name
     pids=$(pgrep -f "agents\\.${agent_name}" || true)
   fi
@@ -259,6 +261,17 @@ stop_all_agents() {
   done
 
   log_section "All Agents Stopped"
+}
+
+stop_publisher_service() {
+  if [ "${PUBLISHER_ENABLED}" != "1" ]; then
+    log_verbose "Publisher shutdown disabled (PUBLISHER_ENABLED=${PUBLISHER_ENABLED})"
+    return 0
+  fi
+
+  log_section "Stopping Publisher Service"
+  stop_agent "publisher" "${PUBLISHER_PORT}" || true
+  log_section "Publisher Service Stopped"
 }
 
 stop_mariadb() {
@@ -381,6 +394,9 @@ main() {
 
   # Stop agents first (in reverse order)
   stop_all_agents || true
+
+  # Stop publisher service
+  stop_publisher_service || true
 
   # Stop database services
   stop_database_services || true

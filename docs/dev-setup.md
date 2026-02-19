@@ -46,8 +46,8 @@ uv venv /path/to/venv
 source /path/to/venv/bin/activate
 uv pip install -r requirements-bootstrap.txt
 
-# Install playwright browsers (if needed)
-playwright install
+# Install Playwright Chromium browser + system deps
+python -m playwright install --with-deps chromium
 ```
 
 **Option 2: Using Conda/Mamba**
@@ -59,8 +59,8 @@ mamba env create -f environment.yml -n ${CANONICAL_ENV:-justnews-py312} \
 
 mamba activate ${CANONICAL_ENV:-justnews-py312}
 
-# Install playwright browsers
-playwright install
+# Install Playwright Chromium browser + system deps
+python -m playwright install --with-deps chromium
 ```
 
 **Note:** The deprecated `requirements.txt` should not be used; use `requirements-bootstrap.txt` or `environment.yml` instead.

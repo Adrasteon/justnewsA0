@@ -99,25 +99,30 @@ class FactCheckerService:
         start_time = asyncio.get_event_loop().time()
         logger.info(f"Verifying fact: {request.fact}")
         
-        # 0. Check internal history (Echo Chamber Mitigation / Knowledge Reuse)
-        historical_evidence = await self._lookup_history(request.fact)
-        
+        # 0. Generate queries and run lookups/collection in parallel
         queries = self._generate_queries(request.fact, request.context)
         
         collect_start = asyncio.get_event_loop().time()
-        evidence = await self._collect_evidence(queries, request.sources)
+        # Parallelize historical lookup and web collection to reduce idle wait time
+        historical_task = asyncio.create_task(self._lookup_history(request.fact))
+        evidence_task = asyncio.create_task(self._collect_evidence(queries, request.sources))
+        
+        historical_evidence, evidence = await asyncio.gather(historical_task, evidence_task)
         
         # Merge historical evidence into the results for AI evaluation
         if historical_evidence:
             evidence.extend(historical_evidence)
         
         # Robustness Fix: Deep Crawl if evidence is thin
-        if len([e for e in evidence if e.evidence_type != EvidenceType.TEXT or "INTERNAL_DB" not in e.content]) < 5:
+        if len([e for e in evidence if e.evidence_type != EvidenceType.TEXT or "INTERNAL_DB" not in e.content]) < 3:
              logger.info("Thin evidence detected. Initiating deep crawl of top results.")
              top_urls = [e.source_url for e in evidence if e.source_url and "http" in e.source_url][:2]
              if top_urls:
-                 deep_evidence = await self._deep_crawl_sources(top_urls)
-                 evidence.extend(deep_evidence)
+                 try:
+                     deep_evidence = await asyncio.wait_for(self._deep_crawl_sources(top_urls), timeout=8.0)
+                     evidence.extend(deep_evidence)
+                 except asyncio.TimeoutError:
+                     logger.warning("Deep crawl timed out")
         
         collect_end = asyncio.get_event_loop().time()
         
@@ -409,7 +414,7 @@ class FactCheckerService:
         if context:
             base_queries.append(f"{sanitized_fact} {context}")
         
-        return base_queries[:7]
+        return base_queries[:6] # Parallelized queries are relative cheap; more queries reduces deep crawl triggers
 
     async def _collect_evidence(self, queries: List[str], overrides: List[str] = None) -> List[Evidence]:
         logger.info(f"Collecting evidence with queries: {queries}")
@@ -507,7 +512,8 @@ class FactCheckerService:
                         
                         evidence_snippets.append(f"- {e.content}{metrics_str} (Source: {e.source_url})")
                     
-                    evidence_text = "\n".join(evidence_snippets[:20])
+                    # REDUCED from 20 to 10 context pieces to decrease LLM latency and memory pressure
+                    evidence_text = "\n".join(evidence_snippets[:10])
 
                 prompt = (
                     f"Analyze the following fact for disinformation or accuracy using the provided evidence and historical domain reliability metrics.\n\n"
