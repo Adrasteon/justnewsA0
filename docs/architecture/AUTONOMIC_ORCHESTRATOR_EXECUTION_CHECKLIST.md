@@ -74,9 +74,9 @@ Evidence:
 ## Phase 6 — Learning and Hardening
 
 - [ ] Shadow-mode scoring validated over representative load
-- [ ] Optional contextual bandit gated behind feature flag
-- [ ] Auto-rollback on hard SLO breach implemented
-- [ ] Staleness/apply-failure alerts configured
+- [x] Optional contextual bandit gated behind feature flag
+- [x] Auto-rollback on hard SLO breach implemented
+- [x] Staleness/apply-failure alerts configured
 
 Evidence:
 - [ ] Shadow-mode quality report linked

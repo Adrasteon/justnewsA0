@@ -7,6 +7,7 @@ Executes the main orchestration loop.
 import asyncio
 import json
 import os
+import random
 import time
 from datetime import datetime, timezone
 from typing import Any, List
@@ -64,6 +65,37 @@ class OrchestratorEngine:
         self.autonomic_max_actions_per_window = max(
             1, int(os.environ.get("AUTONOMIC_MAX_ACTIONS_PER_WINDOW", "4"))
         )
+        self.learning_enabled = _env_bool("AUTONOMIC_LEARNING_ENABLED", default=True)
+        self.bandit_enabled = _env_bool("AUTONOMIC_BANDIT_ENABLED", default=False)
+        self.auto_rollback_enabled = _env_bool(
+            "AUTONOMIC_AUTO_ROLLBACK_ENABLED", default=False
+        )
+        self.shadow_score_window = max(
+            20, int(os.environ.get("AUTONOMIC_SHADOW_SCORE_WINDOW", "120"))
+        )
+        self.bandit_epsilon = min(
+            1.0,
+            max(0.0, float(os.environ.get("AUTONOMIC_BANDIT_EPSILON", "0.1"))),
+        )
+        self.slo_max_tick_error_rate = min(
+            1.0,
+            max(
+                0.0,
+                float(os.environ.get("AUTONOMIC_SLO_MAX_TICK_ERROR_RATE", "0.2")),
+            ),
+        )
+        self.slo_max_stall_seconds = max(
+            60,
+            int(os.environ.get("AUTONOMIC_SLO_MAX_STALL_SECONDS", "900")),
+        )
+        self.alert_staleness_seconds = max(
+            10,
+            int(os.environ.get("AUTONOMIC_ALERT_STALENESS_SECONDS", "180")),
+        )
+        self.alert_propagation_lag_seconds = max(
+            1,
+            int(os.environ.get("AUTONOMIC_ALERT_PROPAGATION_LAG_SECONDS", "5")),
+        )
         self.autonomic_allowed_keys = {
             "orchestrator.polling_interval_seconds",
             "orchestrator.max_concurrent_tasks",
@@ -77,6 +109,9 @@ class OrchestratorEngine:
         }
         self._autonomic_recent_action_epochs: list[float] = []
         self._autonomic_last_action_epoch: float | None = None
+        self._autonomic_last_apply_version: int | None = None
+        self._autonomic_last_apply_at: str | None = None
+        self._autonomic_last_rollback: dict[str, Any] | None = None
         self._autonomic_last_decision: dict[str, Any] | None = None
         self._autonomic_decision_history: list[dict[str, Any]] = []
         stall_threshold_seconds = int(
@@ -99,6 +134,16 @@ class OrchestratorEngine:
         }
         self._last_resource_stats = None
         self._last_resource_healthy = True
+        self._active_alerts: dict[str, Any] = {}
+        self._bandit_state: dict[str, Any] = {
+            "arms": {
+                "hold": {"pulls": 0, "reward_sum": 0.0},
+                "scale_down": {"pulls": 0, "reward_sum": 0.0},
+                "scale_up": {"pulls": 0, "reward_sum": 0.0},
+            },
+            "last_selected_arm": None,
+            "last_reward": None,
+        }
         self._load_config()
         self._init_policies()
 
@@ -414,6 +459,8 @@ class OrchestratorEngine:
         if apply_result.get("status") == "ok":
             self._autonomic_last_action_epoch = now_epoch
             self._autonomic_recent_action_epochs.append(now_epoch)
+            self._autonomic_last_apply_version = int(apply_result.get("version", 0))
+            self._autonomic_last_apply_at = _utc_now()
             self._sync_runtime_config(force=True)
 
         decision["result"] = {
@@ -437,6 +484,182 @@ class OrchestratorEngine:
                 "history_tail": self._autonomic_decision_history[-10:],
             }
         )
+
+        if self.learning_enabled and self.autonomic_mode == "shadow":
+            self._record_shadow_mode_score(decision)
+
+    def _record_shadow_mode_score(self, decision: dict[str, Any]) -> None:
+        autonomic_telemetry = self.telemetry.setdefault("autonomic", {})
+        learning = autonomic_telemetry.setdefault("learning", {})
+        shadow = learning.setdefault(
+            "shadow_mode",
+            {
+                "sample_count": 0,
+                "score_window": self.shadow_score_window,
+                "scores_recent": [],
+                "avg_score_recent": 0.0,
+                "last_score": 0.0,
+                "last_inputs": {},
+            },
+        )
+
+        inputs = decision.get("inputs", {}) if isinstance(decision, dict) else {}
+        score = 1.0
+        if not bool(inputs.get("resource_healthy", True)):
+            score -= 0.35
+        if bool(inputs.get("stalled", False)):
+            score -= 0.45
+        if decision.get("result", {}).get("status") == "blocked":
+            score -= 0.1
+        if decision.get("reason") == "stable_no_change":
+            score += 0.05
+
+        score = round(max(0.0, min(1.0, score)), 4)
+        scores_recent = list(shadow.get("scores_recent", []))
+        scores_recent.append(score)
+        scores_recent = scores_recent[-self.shadow_score_window :]
+
+        shadow["sample_count"] = int(shadow.get("sample_count", 0)) + 1
+        shadow["scores_recent"] = scores_recent
+        shadow["last_score"] = score
+        shadow["last_inputs"] = inputs
+        shadow["avg_score_recent"] = round(sum(scores_recent) / len(scores_recent), 4)
+
+        if self.bandit_enabled:
+            self._update_bandit_state(score)
+
+    def _update_bandit_state(self, reward: float) -> None:
+        arms = self._bandit_state.setdefault("arms", {})
+        if not arms:
+            return
+
+        arm_names = sorted(arms.keys())
+        pick_explore = random.random() < self.bandit_epsilon
+        if pick_explore:
+            selected_arm = random.choice(arm_names)
+        else:
+            selected_arm = max(
+                arm_names,
+                key=lambda arm: (
+                    float(arms[arm].get("reward_sum", 0.0))
+                    / max(1, int(arms[arm].get("pulls", 0)))
+                ),
+            )
+
+        arm_state = arms[selected_arm]
+        arm_state["pulls"] = int(arm_state.get("pulls", 0)) + 1
+        arm_state["reward_sum"] = round(
+            float(arm_state.get("reward_sum", 0.0)) + float(reward),
+            4,
+        )
+        arm_state["avg_reward"] = round(
+            float(arm_state.get("reward_sum", 0.0))
+            / max(1, int(arm_state.get("pulls", 0))),
+            4,
+        )
+        self._bandit_state["last_selected_arm"] = selected_arm
+        self._bandit_state["last_reward"] = round(float(reward), 4)
+
+    def _update_hardening_signals(self) -> None:
+        alerts: dict[str, Any] = {}
+        now_epoch = time.time()
+
+        if self.last_runtime_sync_at:
+            try:
+                sync_epoch = datetime.fromisoformat(
+                    str(self.last_runtime_sync_at).replace("Z", "+00:00")
+                ).astimezone(timezone.utc).timestamp()
+                age_seconds = max(0.0, now_epoch - sync_epoch)
+                if age_seconds > self.alert_staleness_seconds:
+                    alerts["runtime_config_stale"] = {
+                        "severity": "warning",
+                        "age_seconds": round(age_seconds, 3),
+                        "threshold_seconds": self.alert_staleness_seconds,
+                    }
+            except Exception:
+                pass
+
+        if self.last_runtime_apply_status.get("status") == "error":
+            alerts["runtime_apply_failure"] = {
+                "severity": "critical",
+                "detail": self.last_runtime_apply_status,
+            }
+
+        if self._autonomic_last_apply_at and self.last_runtime_sync_at:
+            try:
+                apply_epoch = datetime.fromisoformat(
+                    str(self._autonomic_last_apply_at).replace("Z", "+00:00")
+                ).astimezone(timezone.utc).timestamp()
+                sync_epoch = datetime.fromisoformat(
+                    str(self.last_runtime_sync_at).replace("Z", "+00:00")
+                ).astimezone(timezone.utc).timestamp()
+                propagation_lag = max(0.0, sync_epoch - apply_epoch)
+                if propagation_lag > self.alert_propagation_lag_seconds:
+                    alerts["apply_propagation_lag"] = {
+                        "severity": "warning",
+                        "lag_seconds": round(propagation_lag, 3),
+                        "threshold_seconds": self.alert_propagation_lag_seconds,
+                    }
+            except Exception:
+                pass
+
+        self._active_alerts = alerts
+
+    def _maybe_auto_rollback_on_slo_breach(self) -> None:
+        if not self.auto_rollback_enabled:
+            return
+        if self.runtime_store is None:
+            return
+        if self._autonomic_last_apply_version is None:
+            return
+
+        tick_count = int(self.telemetry.get("tick", {}).get("count", 0))
+        tick_errors = int(self.telemetry.get("tick", {}).get("error_count", 0))
+        error_rate = (float(tick_errors) / float(tick_count)) if tick_count > 0 else 0.0
+
+        progress = self.telemetry.get("progress", {})
+        last_progress_at = progress.get("last_progress_at")
+        seconds_since_last_progress = 0.0
+        if last_progress_at:
+            try:
+                last_epoch = datetime.fromisoformat(
+                    str(last_progress_at).replace("Z", "+00:00")
+                ).astimezone(timezone.utc).timestamp()
+                seconds_since_last_progress = max(0.0, time.time() - last_epoch)
+            except Exception:
+                seconds_since_last_progress = 0.0
+
+        hard_breach = (
+            error_rate > self.slo_max_tick_error_rate
+            or seconds_since_last_progress > self.slo_max_stall_seconds
+        )
+        if not hard_breach:
+            return
+
+        if self._autonomic_last_rollback and int(
+            self._autonomic_last_rollback.get("inverse_of_apply_version", -1)
+        ) == int(self._autonomic_last_apply_version):
+            return
+
+        rollback_result = self.runtime_store.rollback_apply_version(
+            self._autonomic_last_apply_version,
+            reason="autonomic:auto_rollback_slo_breach",
+            actor="autonomic_controller",
+        )
+        if rollback_result.get("status") == "ok":
+            self._sync_runtime_config(force=True)
+
+        self._autonomic_last_rollback = {
+            "timestamp": _utc_now(),
+            "error_rate": round(error_rate, 4),
+            "seconds_since_last_progress": round(seconds_since_last_progress, 3),
+            "thresholds": {
+                "max_tick_error_rate": self.slo_max_tick_error_rate,
+                "max_stall_seconds": self.slo_max_stall_seconds,
+            },
+            "result": rollback_result,
+            "inverse_of_apply_version": self._autonomic_last_apply_version,
+        }
 
     async def start(self):
         """Start the orchestration loop."""
@@ -524,6 +747,8 @@ class OrchestratorEngine:
                 logger.error(f"Policy '{policy_name}' failure: {e}")
 
         self._run_autonomic_decision_cycle()
+        self._update_hardening_signals()
+        self._maybe_auto_rollback_on_slo_breach()
 
     def get_status_snapshot(self) -> dict[str, Any]:
         now_epoch = time.time()
@@ -576,9 +801,15 @@ class OrchestratorEngine:
             "autonomic": {
                 "mode": self.autonomic_mode,
                 "decisions_enabled": self.autonomic_decisions_enabled,
+                "learning_enabled": self.learning_enabled,
+                "bandit_enabled": self.bandit_enabled,
+                "auto_rollback_enabled": self.auto_rollback_enabled,
                 "runtime_config_version": self.runtime_config_version,
                 "last_runtime_sync_at": self.last_runtime_sync_at,
                 "last_runtime_apply_status": self.last_runtime_apply_status,
+                "last_apply_version": self._autonomic_last_apply_version,
+                "last_apply_at": self._autonomic_last_apply_at,
+                "last_rollback": self._autonomic_last_rollback,
                 "last_decision": self._autonomic_last_decision,
                 "decision_history_tail": self._autonomic_decision_history[-10:],
                 "guardrails": {
@@ -587,6 +818,12 @@ class OrchestratorEngine:
                     "max_actions_per_window": self.autonomic_max_actions_per_window,
                     "allowed_keys": sorted(self.autonomic_allowed_keys),
                     "denylist_keys": sorted(self.autonomic_denylist_keys),
+                },
+                "learning": self.telemetry.get("autonomic", {}).get("learning", {}),
+                "bandit": self._bandit_state,
+                "slo_thresholds": {
+                    "max_tick_error_rate": self.slo_max_tick_error_rate,
+                    "max_stall_seconds": self.slo_max_stall_seconds,
                 },
             },
             "telemetry": self.telemetry,
@@ -601,5 +838,6 @@ class OrchestratorEngine:
                     "stalled_policies": stalled_policies,
                     "last_progress_at": last_progress_at,
                 },
+                "alerts": self._active_alerts,
             },
         }

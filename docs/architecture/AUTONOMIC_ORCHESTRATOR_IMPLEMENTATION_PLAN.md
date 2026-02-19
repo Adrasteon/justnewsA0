@@ -118,7 +118,7 @@ Use this section to track execution status during implementation.
 | 3 Sensing |  | 2026-02-19 | 2026-02-19 | Completed | docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE3_VERIFICATION_2026-02-19.md |
 | 4 Decision Engine |  | 2026-02-19 | 2026-02-19 | Completed | docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE4_VERIFICATION_2026-02-19.md |
 | 5 Actuation |  | 2026-02-19 | 2026-02-19 | Completed | docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE5_VERIFICATION_2026-02-19.md |
-| 6 Learning/Hardening |  |  |  | Not Started |  |
+| 6 Learning/Hardening |  | 2026-02-19 |  | In Progress | docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE6_KICKOFF_2026-02-19.md |
 | 7 Rollout |  |  |  | Not Started |  |
 
 ## Risk Register
@@ -139,3 +139,4 @@ Use this section to track execution status during implementation.
 - 2026-02-19: Phase 3 completed with per-tick runtime sync, per-policy telemetry capture, resource/stall signals, and enriched status payloads.
 - 2026-02-19: Phase 4 completed with deterministic safe-first decision engine, guardrails/denylist enforcement, explainability payloads, and mode/feature-flag controls.
 - 2026-02-19: Phase 5 completed with Tier-1/2/3 actuation wiring and inverse rollback-by-action verification.
+- 2026-02-19: Phase 6 started with shadow-mode learning telemetry, bandit-gated optimization state, SLO auto-rollback hooks, and runtime staleness/apply-failure alerts.
