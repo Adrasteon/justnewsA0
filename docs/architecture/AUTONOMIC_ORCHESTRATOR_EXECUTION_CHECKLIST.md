@@ -84,13 +84,13 @@ Evidence:
 
 ## Phase 7 — Canary and Production Rollout
 
-- [ ] Dev environment rollout complete
+- [x] Dev environment rollout complete
 - [ ] Canary subset rollout complete
 - [ ] Full rollout approval gate passed
 - [ ] Incident simulation executed with operator runbook
 
 Evidence:
-- [ ] Rollout gate review notes linked
+- [x] Rollout gate review notes linked (docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE7_DEV_ROLLOUT_GATE_2026-02-19.md)
 - [ ] Incident simulation report linked
 
 ## Global Exit Gates
