@@ -80,7 +80,7 @@ Evidence:
 
 Evidence:
 - [x] Shadow-mode quality report linked (docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE6_SHADOW_VALIDATION_2026-02-19.md)
-- [ ] Auto-rollback drill evidence linked
+- [x] Auto-rollback drill evidence linked (docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE6_AUTOROLLBACK_DRILL_2026-02-19.md)
 
 ## Phase 7 — Canary and Production Rollout
 
