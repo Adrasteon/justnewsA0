@@ -73,13 +73,13 @@ Evidence:
 
 ## Phase 6 — Learning and Hardening
 
-- [ ] Shadow-mode scoring validated over representative load
+- [x] Shadow-mode scoring validated over representative load
 - [x] Optional contextual bandit gated behind feature flag
 - [x] Auto-rollback on hard SLO breach implemented
 - [x] Staleness/apply-failure alerts configured
 
 Evidence:
-- [ ] Shadow-mode quality report linked
+- [x] Shadow-mode quality report linked (docs/operations/AUTONOMIC_ORCHESTRATOR_PHASE6_SHADOW_VALIDATION_2026-02-19.md)
 - [ ] Auto-rollback drill evidence linked
 
 ## Phase 7 — Canary and Production Rollout
