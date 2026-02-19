@@ -14,7 +14,7 @@ The Workflow Orchestrator (`agents/workflow_orchestrator`) executes business-sta
 - `IngestionToAnalysisPolicy`
 - `AnalysisToEmbeddingPolicy`
 - `AnalysisToSummaryPolicy` *(optional; disabled by default via `ORCHESTRATOR_ENABLE_SOURCE_SUMMARY_STAGE=0`)*
-- `SummaryToFactCheckPolicy` *(fact-check gating no longer depends on per-source summary presence)*
+- `AnalysisToFactCheckPolicy` *(fact-check gating no longer depends on per-source summary presence)*
 - `FactCheckToClusterPolicy`
 - `ClusterToSynthesisPolicy`
 - `HeavyClusterRetryPolicy`

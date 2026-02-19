@@ -6,6 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     curl git python3 python3-pip python3-venv python3-distutils \
     build-essential libmariadb-dev gpg ca-certificates \
+    docker.io docker-compose \
     redis-server \
     libgbm-dev libasound2 libnss3 libxss1 libatk1.0-0 libatk-bridge2.0-0 \
     libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxrandr2 \

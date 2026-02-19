@@ -638,17 +638,82 @@ class CrawlerEngine:
         try:
             # Respect profile-level 'follow_external' override (or let the adapter
             # consult environment variables when None).
-            return await crawl_site_with_crawl4ai(
+            articles = await crawl_site_with_crawl4ai(
                 site_config,
                 profile,
                 effective_limit,
                 follow_external=profile.get("follow_external", None),
             )
+
+            if self.paywall_detector and articles:
+                paywall_marked = 0
+                for article in articles:
+                    if article.get("skip_ingest"):
+                        continue
+
+                    target_url = article.get("url") or ""
+                    content_text = (
+                        article.get("content")
+                        or article.get("extracted_text")
+                        or article.get("markdown")
+                        or ""
+                    )
+                    html_text = article.get("html") or content_text
+
+                    if not target_url or not html_text:
+                        continue
+
+                    try:
+                        paywall_result = await self.paywall_detector.analyze(
+                            url=target_url,
+                            html=str(html_text),
+                            text=str(content_text),
+                        )
+                    except Exception as detector_error:
+                        logger.debug(
+                            "Paywall detection failed for %s: %s",
+                            target_url,
+                            detector_error,
+                        )
+                        continue
+
+                    if not getattr(paywall_result, "should_skip", False):
+                        continue
+
+                    article["skip_ingest"] = True
+                    article["paywall_flag"] = True
+                    article["ingestion_status"] = "paywall_skipped"
+                    metadata = article.setdefault("extraction_metadata", {})
+                    paywall_meta = metadata.setdefault("paywall_detection", {})
+                    paywall_meta.update(
+                        {
+                            "is_paywall": bool(getattr(paywall_result, "is_paywall", False)),
+                            "confidence": float(getattr(paywall_result, "confidence", 0.0)),
+                            "reasons": list(getattr(paywall_result, "reasons", []) or []),
+                            "source": "crawler_engine_profiled",
+                        }
+                    )
+                    paywall_marked += 1
+
+                if paywall_marked > 0:
+                    logger.info(
+                        "🚫 Profiled crawl marked %s paywalled candidates for %s",
+                        paywall_marked,
+                        site_config.domain or site_config.name,
+                    )
+
+            return articles
         except Exception as exc:  # noqa: BLE001 - resilience over strict typing
             logger.error(
-                "Crawl4AI profiled crawl failed for %s: %s", site_config.name, exc
+                "Crawl4AI profiled crawl failed for %s: %s",
+                site_config.name,
+                exc,
             )
-            return []
+            logger.warning(
+                "Falling back to generic crawl for %s after Crawl4AI failure",
+                site_config.name,
+            )
+            return await self._crawl_generic_mode(site_config, effective_limit)
         finally:
             await self._cleanup_orphaned_processes()
 

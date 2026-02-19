@@ -73,6 +73,9 @@ CHROMADB_HOST="${CHROMADB_HOST:-localhost}"
 CHROMADB_PORT="${CHROMADB_PORT:-3307}"
 REDIS_HOST="${REDIS_HOST:-localhost}"
 REDIS_PORT="${REDIS_PORT:-6379}"
+PUBLISHER_ENABLED="${PUBLISHER_ENABLED:-1}"
+PUBLISHER_HOST="${PUBLISHER_HOST:-0.0.0.0}"
+PUBLISHER_PORT="${PUBLISHER_PORT:-8100}"
 
 # Process tracking
 declare -A PROCESSES
@@ -121,6 +124,7 @@ check_and_cleanup() {
   local agent_process_patterns=(
     "uvicorn agents"
     "common\.agent_runner"
+    "manage.py runserver.*${PUBLISHER_PORT}"
   )
   
   # Check if any agents are running
@@ -189,6 +193,10 @@ check_and_cleanup() {
   if [ "${SKIP_DB}" != "1" ]; then
     ports_to_check+=("${MARIADB_PORT}" "${CHROMADB_PORT}" "${REDIS_PORT}")
   fi
+
+  if [ "${PUBLISHER_ENABLED}" = "1" ]; then
+    ports_to_check+=("${PUBLISHER_PORT}")
+  fi
   
   local blocked_ports=()
   for port in "${ports_to_check[@]}"; do
@@ -252,6 +260,8 @@ ENVIRONMENT VARIABLES:
   SKIP_DB=1             Skip database startup
   SKIP_MIGRATIONS=1     Skip migrations
   SKIP_HEALTH_CHECK=1   Skip health verification
+  PUBLISHER_ENABLED=1   Start Django publisher server (default: enabled)
+  PUBLISHER_PORT=8100   Publisher server port (default: 8100)
   USE_DOCKER=1          Use Docker for database services
   SERVICE_TIMEOUT=120   Service readiness timeout (seconds)
   AGENT_START_DELAY=2   Delay between agent starts (seconds)
@@ -704,6 +714,7 @@ start_agent() {
   local port
   local module
   local log_file
+  local workers=1
 
   port=$(get_agent_port "${agent_name}") || return 1
   module=$(get_agent_module "${agent_name}") || return 1
@@ -716,6 +727,11 @@ start_agent() {
   fi
 
   log_info "Starting ${agent_name} on port ${port}..."
+
+  if [ "${agent_name}" = "analyst" ]; then
+    workers="${ANALYST_WORKERS:-2}"
+    log_info "Using analyst worker count: ${workers}"
+  fi
 
   # Check if port already in use
   if ${PYTHON_CMD} -c "import socket; s = socket.socket(); s.connect(('localhost', ${port})); s.close()" 2>/dev/null; then
@@ -736,6 +752,7 @@ start_agent() {
       --agent-name "${agent_name}" \
       --host 0.0.0.0 \
       --port "${port}" \
+      --workers "${workers}" \
       --log-level info
   ) >"${startup_log}" 2>&1 &
   local pid=$!
@@ -788,6 +805,45 @@ start_agents_sequential() {
   done
 
   log_section "All ${count} Agents Started"
+}
+
+start_publisher_service() {
+  if [ "${PUBLISHER_ENABLED}" != "1" ]; then
+    log_info "Publisher startup disabled (PUBLISHER_ENABLED=${PUBLISHER_ENABLED})"
+    return 0
+  fi
+
+  if [ "${DRY_RUN}" = "1" ]; then
+    log_info "[DRY RUN] Would start Django publisher on port ${PUBLISHER_PORT}"
+    return 0
+  fi
+
+  log_section "Publisher Startup"
+  log_info "Starting Django publisher on ${PUBLISHER_HOST}:${PUBLISHER_PORT}..."
+
+  if ${PYTHON_CMD} -c "import socket; s = socket.socket(); s.connect(('localhost', ${PUBLISHER_PORT})); s.close()" 2>/dev/null; then
+    log_warn "Publisher port ${PUBLISHER_PORT} already in use - publisher may already be running"
+    STARTED_SERVICES+=("publisher-existing")
+    return 0
+  fi
+
+  local startup_log="${LOG_DIR}/publisher.startup.log"
+  (
+    cd "${PROJECT_ROOT}"
+    exec "${PYTHON_CMD}" manage.py runserver "${PUBLISHER_HOST}:${PUBLISHER_PORT}"
+  ) >"${startup_log}" 2>&1 &
+
+  local pid=$!
+  PROCESSES["publisher"]=$pid
+
+  if wait_for_port "${PUBLISHER_PORT}" "${AGENT_TIMEOUT}" "localhost"; then
+    log_success "Publisher is ready on port ${PUBLISHER_PORT}"
+  else
+    log_warn "Publisher not responding on port ${PUBLISHER_PORT} (may still be initializing)"
+  fi
+
+  STARTED_SERVICES+=("publisher")
+  return 0
 }
 
 # ============================================================================
@@ -845,6 +901,15 @@ verify_services() {
     fi
   done
 
+  if [ "${PUBLISHER_ENABLED}" = "1" ]; then
+    if wait_for_port "${PUBLISHER_PORT}" 2; then
+      log_success "Publisher: ✓"
+    else
+      log_warn "Publisher: ✗"
+      all_healthy=0
+    fi
+  fi
+
   if [ ${all_healthy} -eq 0 ]; then
     log_warn "Some services are not responding"
   fi
@@ -878,6 +943,12 @@ print_status_summary() {
     IFS='|' read -r name _ port <<< "$entry"
     echo "    • ${name}: http://localhost:${port}"
   done
+
+  if [ "${PUBLISHER_ENABLED}" = "1" ]; then
+    echo
+    echo "  Publisher:"
+    echo "    • django_publisher: http://localhost:${PUBLISHER_PORT}"
+  fi
 
   echo
   log_info "Log directories:"
@@ -944,6 +1015,11 @@ main() {
   # Start agents
   if ! start_agents_sequential; then
     log_warn "Some agents had issues during startup"
+  fi
+
+  # Start Django publisher
+  if ! start_publisher_service; then
+    log_warn "Publisher had issues during startup"
   fi
 
   # Verify all services

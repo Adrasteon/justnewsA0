@@ -46,9 +46,26 @@ def check_pipeline_metrics():
     metrics = {}
     
     try:
-        # Stage 1: Sources tracked
+        # Stage 1: Source coverage
         cursor.execute("SELECT COUNT(*) FROM sources")
-        metrics['sources'] = cursor.fetchone()[0]
+        metrics['sources_total'] = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM sources WHERE last_crawl_at IS NOT NULL")
+        metrics['sources_crawled'] = cursor.fetchone()[0]
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE()
+              AND TABLE_NAME='articles'
+              AND COLUMN_NAME='source_id'
+        """)
+        has_source_id = cursor.fetchone()[0] > 0
+        if has_source_id:
+            cursor.execute("SELECT COUNT(DISTINCT source_id) FROM articles WHERE source_id IS NOT NULL")
+            metrics['sources_with_articles'] = cursor.fetchone()[0]
+        else:
+            metrics['sources_with_articles'] = 0
         
         # Stage 2: Articles ingested
         cursor.execute("SELECT COUNT(*) FROM articles")
@@ -136,7 +153,11 @@ def print_pipeline_report(metrics, iteration=1):
     print(f"{'='*70}\n")
     
     print("📊 STAGE METRICS:")
-    print(f"  Sources tracked:              {metrics.get('sources', 0):>5}")
+    sources_total = metrics.get('sources_total', 0)
+    sources_crawled = metrics.get('sources_crawled', 0)
+    sources_with_articles = metrics.get('sources_with_articles', 0)
+    print(f"  Sources crawled:              {sources_crawled:>5}/{sources_total}")
+    print(f"  Sources with articles:        {sources_with_articles:>5}/{sources_total}")
     print(f"  Articles ingested:            {metrics.get('articles_total', 0):>5}")
     print(f"    - Embedded:                 {metrics.get('articles_embedded', 0):>5}")
     print(f"    - Clustered:                {metrics.get('articles_clustered', 0):>5}")
@@ -153,7 +174,7 @@ def print_pipeline_report(metrics, iteration=1):
     # Determine pipeline flow status
     print(f"\n🔄 PIPELINE FLOW:")
     stages = [
-        ("Crawler",     metrics.get('sources', 0) > 0),
+        ("Crawler",     metrics.get('sources_crawled', 0) > 0),
         ("Ingestion",   metrics.get('articles_total', 0) > 0),
         ("Embedding",   metrics.get('articles_embedded', 0) > 0),
         ("Clustering",  metrics.get('articles_clustered', 0) > 0),

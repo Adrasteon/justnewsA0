@@ -162,6 +162,12 @@ Shared by all phases:
 - chromadb
 - nvidia-ml-py (GPU monitoring)
 
+Post-create step for phase 1:
+
+```bash
+python -m playwright install --with-deps chromium
+```
+
 ### **Phase 2 Additions** (`environment.phase2.yml`)
 *Inherits base*
 - hdbscan

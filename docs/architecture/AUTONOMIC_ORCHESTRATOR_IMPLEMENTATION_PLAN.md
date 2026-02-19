@@ -1,0 +1,135 @@
+# Autonomic Orchestrator Implementation Plan
+
+Date: 2026-02-19  
+Status: Approved for Execution
+
+## Related Docs
+
+- [AUTONOMIC_ORCHESTRATOR_ARCHITECTURE.md](AUTONOMIC_ORCHESTRATOR_ARCHITECTURE.md)
+- [AUTONOMIC_ORCHESTRATOR_EXECUTION_CHECKLIST.md](AUTONOMIC_ORCHESTRATOR_EXECUTION_CHECKLIST.md)
+- [../operations/AUTONOMIC_ORCHESTRATOR_RUNBOOK.md](../operations/AUTONOMIC_ORCHESTRATOR_RUNBOOK.md)
+- [LIVE_TUNING_CONTROL_PLANE_DESIGN.md](LIVE_TUNING_CONTROL_PLANE_DESIGN.md)
+
+## Scope and Fixed Decisions
+
+- Scope: Full end-state Autonomic Orchestrator plan
+- Runtime config source-of-truth: New runtime config store/API first
+- Workflow orchestrator canonical port: 8023
+
+## Goal
+
+Deliver a safe, auditable autonomic control loop for JustNews that can sense system state, make bounded decisions, apply reversible runtime actions, and improve policy choices over time without destabilizing production.
+
+## Success Criteria
+
+- Runtime config changes are versioned, validated, and rollback-capable.
+- Orchestrator applies supported hot-reload settings within 5 seconds.
+- Autonomic actions stay within safety envelopes and are fully audited.
+- No unbounded regressions in throughput, latency, or error rates during canary/rollout.
+
+## Execution Phases
+
+### Phase 1 — Foundation and Drift Cleanup
+
+- [ ] Align workflow orchestrator references to port 8023 across docs/config/runtime mappings.
+- [ ] Resolve policy naming drift (`AnalysisToFactCheckPolicy` naming consistency).
+- [ ] Fix override expiry reliability path in orchestrator policy utilities.
+- [ ] Add baseline observability snapshot and regression guardrails.
+
+Exit Criteria:
+- [ ] No conflicting port/policy references remain in canonical paths.
+- [ ] Existing orchestrator code compiles and baseline health/status remains green.
+
+### Phase 2 — Runtime Control Plane Prerequisites
+
+- [ ] Implement versioned runtime config read/validate/apply API.
+- [ ] Define mutability contracts (`hot` vs `restart_required`) and enforce validation.
+- [ ] Add audit log entries for every config write/rollback.
+- [ ] Implement rollback endpoint and target-version restore.
+
+Exit Criteria:
+- [ ] Config writes are atomic and versioned.
+- [ ] Invalid updates are rejected pre-apply.
+- [ ] Rollback restores prior effective values.
+
+### Phase 3 — Orchestrator Sensing Integration
+
+- [ ] Add periodic config-version check and apply cycle in orchestrator engine.
+- [ ] Add per-policy telemetry capture (queue depth, success/fail, latency).
+- [ ] Add resource and downstream stall signals to sensing state.
+- [ ] Expose applied config version and autonomic status via status endpoints.
+
+Exit Criteria:
+- [ ] Orchestrator reports effective version and last apply result.
+- [ ] Sensing metrics available for decision inputs.
+
+### Phase 4 — Decision Engine (Safe-First)
+
+- [ ] Implement deterministic rule-based controller with bounded action space.
+- [ ] Add cooldowns, budgets, guardrails, and denylist for unsafe knobs.
+- [ ] Add explainability payload for each decision (why/action/expected impact).
+- [ ] Add feature flag for enabling autonomic decisions.
+
+Exit Criteria:
+- [ ] Decisions are reproducible and bounded.
+- [ ] Every decision is explainable and auditable.
+
+### Phase 5 — Actuation and Reversibility
+
+- [ ] Implement Tier-1 actuation (orchestrator polling/concurrency/resource thresholds).
+- [ ] Implement Tier-2 actuation (MCP timeout/retry/circuit thresholds).
+- [ ] Implement Tier-3 actuation (fact-check query/deep-crawl runtime knobs).
+- [ ] Ensure each action has inverse rollback operation.
+
+Exit Criteria:
+- [ ] Supported actions apply without restart.
+- [ ] Rollback paths are verified for all supported actions.
+
+### Phase 6 — Learning Layer and Hardening
+
+- [ ] Start with shadow-mode scoring (no live changes) to validate signal quality.
+- [ ] Add optional contextual-bandit optimizer behind feature flag.
+- [ ] Add SLO-driven auto-rollback triggers.
+- [ ] Add propagation lag, apply-failure, and staleness alerts.
+
+Exit Criteria:
+- [ ] Shadow mode demonstrates stable policy quality.
+- [ ] Live mode canary passes without SLO regressions.
+
+### Phase 7 — Canary and Production Rollout
+
+- [ ] Run staged rollout (dev → canary subset → full).
+- [ ] Track throughput/latency/error deltas at each gate.
+- [ ] Execute rollback drills before full rollout approval.
+- [ ] Publish operations handoff and on-call playbook.
+
+Exit Criteria:
+- [ ] Canary and full rollout gates passed.
+- [ ] Runbook validated by at least one incident simulation.
+
+## Monitoring Board
+
+Use this section to track execution status during implementation.
+
+| Phase | Owner | Start Date | Target Date | Status | Evidence Link |
+|---|---|---|---|---|---|
+| 1 Foundation |  |  |  | Not Started |  |
+| 2 Control Plane |  |  |  | Not Started |  |
+| 3 Sensing |  |  |  | Not Started |  |
+| 4 Decision Engine |  |  |  | Not Started |  |
+| 5 Actuation |  |  |  | Not Started |  |
+| 6 Learning/Hardening |  |  |  | Not Started |  |
+| 7 Rollout |  |  |  | Not Started |  |
+
+## Risk Register
+
+- Risk: Over-tuning causes oscillation
+  - Mitigation: Cooldowns, change budgets, and write-rate limits
+- Risk: Partial adoption creates inconsistent behavior
+  - Mitigation: Version visibility, apply acknowledgements, unsupported-key errors
+- Risk: Runtime config store outage
+  - Mitigation: Last-known-good cache and staleness alerts
+
+## Change Log
+
+- 2026-02-19: Initial plan created with execution phases and monitoring board.

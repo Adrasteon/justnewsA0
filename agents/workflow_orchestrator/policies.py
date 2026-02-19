@@ -1133,7 +1133,7 @@ class AnalysisToSummaryPolicy(WorkflowPolicy):
         logger.info(f"Summarization batch complete. Success: {success_count}/{len(items)}")
 
 
-class SummaryToFactCheckPolicy(WorkflowPolicy):
+class AnalysisToFactCheckPolicy(WorkflowPolicy):
     """
     Policy: Summarized -> Fact Checked
     Condition: articles.analyzed = 1 AND articles.fact_check_status IS NULL
@@ -1141,7 +1141,7 @@ class SummaryToFactCheckPolicy(WorkflowPolicy):
     """
 
     def name(self) -> str:
-        return "summary_to_fact_check"
+        return "analysis_to_fact_check"
 
     def check_condition(self, limit: int) -> List[int]:
         ids = []
@@ -1192,6 +1192,10 @@ class SummaryToFactCheckPolicy(WorkflowPolicy):
                 logger.error(f"Fact check task failed: {res}")
         
         logger.info(f"Fact check batch complete. Success: {success_count}/{len(items)}")
+
+
+    # Backward-compatible alias for legacy imports
+    SummaryToFactCheckPolicy = AnalysisToFactCheckPolicy
 
 
 

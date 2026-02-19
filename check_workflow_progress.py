@@ -19,6 +19,25 @@ def get_db_conn():
 def check_progress():
     conn = get_db_conn()
     cursor = conn.cursor(dictionary=True)
+
+    # Source coverage
+    cursor.execute("SELECT COUNT(*) as count FROM sources")
+    sources_total = cursor.fetchone()['count']
+    cursor.execute("SELECT COUNT(*) as count FROM sources WHERE last_crawl_at IS NOT NULL")
+    sources_crawled = cursor.fetchone()['count']
+
+    cursor.execute("""
+        SELECT COUNT(*) as count
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME='articles'
+          AND COLUMN_NAME='source_id'
+    """)
+    has_source_id = cursor.fetchone()['count'] > 0
+    sources_with_articles = 0
+    if has_source_id:
+        cursor.execute("SELECT COUNT(DISTINCT source_id) as count FROM articles WHERE source_id IS NOT NULL")
+        sources_with_articles = cursor.fetchone()['count']
     
     # Check total articles
     cursor.execute("SELECT COUNT(*) as count FROM articles")
@@ -47,6 +66,8 @@ def check_progress():
     recent = cursor.fetchall()
     
     print(f"Total Articles: {total}")
+    print(f"Sources Crawled: {sources_crawled}/{sources_total}")
+    print(f"Sources With Articles: {sources_with_articles}/{sources_total}")
     print(f"Analyzed: {analyzed}")
     print(f"Embedded: {embedded}")
     print("\nRecent 20 Articles Status:")

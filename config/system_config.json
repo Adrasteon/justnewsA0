@@ -255,6 +255,16 @@
       "max_size_mb": 512
     }
   },
+  "orchestrator": {
+    "polling_interval_seconds": 3,
+    "max_concurrent_tasks": 15,
+    "resource_limits": {
+      "max_cpu_percent": 95,
+      "max_memory_percent": 98,
+      "max_gpu_utilization": 95,
+      "max_gpu_memory_percent": 95
+    }
+  },
   "external_services": {
     "news_sources": {
       "verification_required": true,

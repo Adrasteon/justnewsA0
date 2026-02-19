@@ -2,8 +2,8 @@
 import os
 import sys
 import json
-import logging
 from datetime import datetime, timedelta
+
 import mysql.connector
 from dotenv import load_dotenv
 
@@ -11,23 +11,18 @@ from dotenv import load_dotenv
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv('global.env')
 
-# DB Config
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_USER = os.getenv("DB_USER", "adra")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "justnews_db_ password") # Note: Ensure this is correct or loaded from env
-DB_NAME = os.getenv("DB_NAME", "justnews")
-
-# Override if needed (password might be hidden in context, assuming env works or user provided secrets)
-# Checking secrets.env if it exists
-if os.path.exists("secrets.env"):
-    load_dotenv("secrets.env")
-
-DB_PASSWORD = os.getenv("DB_PASSWORD")
+# DB Config (canonical MariaDB env vars first, then legacy fallback)
+DB_HOST = os.getenv("MARIADB_HOST") or os.getenv("DB_HOST", "mariadb")
+DB_PORT = int(os.getenv("MARIADB_PORT") or os.getenv("DB_PORT", "3306"))
+DB_USER = os.getenv("MARIADB_USER") or os.getenv("DB_USER", "justnews")
+DB_PASSWORD = os.getenv("MARIADB_PASSWORD") or os.getenv("DB_PASSWORD", "dev_justnews_password")
+DB_NAME = os.getenv("MARIADB_DB") or os.getenv("DB_NAME", "justnews")
 
 def check_ready():
     try:
         conn = mysql.connector.connect(
             host=DB_HOST,
+            port=DB_PORT,
             user=DB_USER,
             password=DB_PASSWORD,
             database=DB_NAME

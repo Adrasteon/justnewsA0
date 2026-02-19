@@ -649,6 +649,35 @@ class PerformanceConfig(BaseModel):
     )
 
 
+class OrchestratorResourceLimitsConfig(BaseModel):
+    """Workflow orchestrator resource limits configuration"""
+
+    max_cpu_percent: PositiveInt = Field(default=95, description="Max CPU percentage")
+    max_memory_percent: PositiveInt = Field(
+        default=98, description="Max memory percentage"
+    )
+    max_gpu_utilization: PositiveInt = Field(
+        default=95, description="Max GPU utilization percentage"
+    )
+    max_gpu_memory_percent: PositiveInt = Field(
+        default=95, description="Max GPU memory percentage"
+    )
+
+
+class OrchestratorConfig(BaseModel):
+    """Workflow orchestrator runtime configuration"""
+
+    polling_interval_seconds: PositiveInt = Field(
+        default=10, description="Orchestrator polling interval in seconds"
+    )
+    max_concurrent_tasks: PositiveInt = Field(
+        default=5, description="Maximum concurrent tasks per policy"
+    )
+    resource_limits: OrchestratorResourceLimitsConfig = Field(
+        default_factory=OrchestratorResourceLimitsConfig
+    )
+
+
 # ============================================================================
 # EXTERNAL SERVICES CONFIGURATION
 # ============================================================================
@@ -712,6 +741,7 @@ class JustNewsConfig(BaseModel):
         default_factory=DataMinimizationConfig
     )
     performance: PerformanceConfig = Field(default_factory=PerformanceConfig)
+    orchestrator: OrchestratorConfig = Field(default_factory=OrchestratorConfig)
     external_services: ExternalServicesConfig = Field(
         default_factory=ExternalServicesConfig
     )

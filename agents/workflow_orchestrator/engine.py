@@ -16,7 +16,7 @@ from .policies import (
     IngestionToAnalysisPolicy,
     AnalysisToEmbeddingPolicy,
     AnalysisToSummaryPolicy,
-    SummaryToFactCheckPolicy,
+    AnalysisToFactCheckPolicy,
     IncrementalClusteringPolicy,
     ClusterToSynthesisPolicy,
     HeavyClusterRetryPolicy,
@@ -66,7 +66,7 @@ class OrchestratorEngine:
         self.policies.append(IngestionToAnalysisPolicy(self.mcp_bus_url))
         self.policies.append(AnalysisToEmbeddingPolicy(self.mcp_bus_url))
         self.policies.append(AnalysisToSummaryPolicy(self.mcp_bus_url))
-        self.policies.append(SummaryToFactCheckPolicy(self.mcp_bus_url))
+        self.policies.append(AnalysisToFactCheckPolicy(self.mcp_bus_url))
         self.policies.append(IncrementalClusteringPolicy(self.mcp_bus_url))
         self.policies.append(ClusterToSynthesisPolicy(self.mcp_bus_url))
         self.policies.append(SynthesisToCritiquePolicy(self.mcp_bus_url))

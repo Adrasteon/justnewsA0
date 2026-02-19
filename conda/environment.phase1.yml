@@ -93,6 +93,8 @@ dependencies:
     - chromadb>=0.4
     - crawl4ai==0.8.0
     - playwright
+    # After environment creation, install browser binaries:
+    #   python -m playwright install --with-deps chromium
     - faster-whisper>=1.0
     - patchright
     - tf-playwright-stealth

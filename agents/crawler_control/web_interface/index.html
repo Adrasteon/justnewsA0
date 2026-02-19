@@ -61,6 +61,50 @@
             overflow: auto;
             user-select: none;
         }
+        .label-with-help {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .help-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1px solid #63b3ed;
+            color: #63b3ed;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: help;
+            user-select: none;
+        }
+        #hoverHelpModal {
+            position: fixed;
+            z-index: 1080;
+            max-width: 320px;
+            background: #1f2937;
+            border: 1px solid #63b3ed;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            padding: 10px 12px;
+            color: #e2e8f0;
+            display: none;
+            pointer-events: none;
+        }
+        #hoverHelpModalTitle {
+            color: #90cdf4;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        #hoverHelpModalBody {
+            font-size: 0.82rem;
+            color: #cbd5e0;
+            line-height: 1.35;
+            white-space: normal;
+        }
     </style>
 </head>
 <body>
@@ -145,16 +189,26 @@
                                             <div class="card-body">
                                                 <div class="row">
                                                     <div class="col-md-4">
-                                                        <label for="crawlDepth" class="form-label">Crawl Depth</label>
-                                                        <input type="number" class="form-control" id="crawlDepth" value="1" min="0" max="10">
-                                                        <div class="form-text" style="color: #a0aec0;">0 = seed page only</div>
+                                                        <label for="crawlEngine" class="form-label label-with-help">Engine <span class="help-icon" data-help-title="crawl4ai.engine" data-help-body="Crawler backend to use in generated profile overrides.">?</span></label>
+                                                        <input type="text" class="form-control" id="crawlEngine" value="crawl4ai">
                                                     </div>
                                                     <div class="col-md-4">
-                                                        <label for="maxPages" class="form-label">Max Pages</label>
+                                                        <label for="crawlMode" class="form-label label-with-help">Mode <span class="help-icon" data-help-title="crawl4ai.mode" data-help-body="Profile mode hint for Crawl4AI, usually landing.">?</span></label>
+                                                        <input type="text" class="form-control" id="crawlMode" value="landing">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label for="crawlDepth" class="form-label label-with-help">Crawl Depth <span class="help-icon" data-help-title="crawl4ai.crawl_depth" data-help-body="Maximum link-hop depth from seed URLs; 0 means seed-only.">?</span></label>
+                                                        <input type="number" class="form-control" id="crawlDepth" value="1" min="0" max="10">
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3">
+                                                    <div class="col-md-4">
+                                                        <label for="maxPages" class="form-label label-with-help">Max Pages <span class="help-icon" data-help-title="crawl4ai.max_pages" data-help-body="Page budget per domain profile.">?</span></label>
                                                         <input type="number" class="form-control" id="maxPages" value="25" min="1" max="500">
                                                     </div>
                                                     <div class="col-md-4">
-                                                        <label for="cacheMode" class="form-label">Cache Mode</label>
+                                                        <label for="cacheMode" class="form-label label-with-help">Cache Mode <span class="help-icon" data-help-title="crawl4ai.run_config.cache_mode" data-help-body="Crawl4AI cache policy for fetch behavior.">?</span></label>
                                                         <select class="form-select" id="cacheMode">
                                                             <option value="bypass" selected>Bypass</option>
                                                             <option value="enabled">Enabled</option>
@@ -162,60 +216,112 @@
                                                             <option value="write_only">Write Only</option>
                                                         </select>
                                                     </div>
+                                                    <div class="col-md-4">
+                                                        <label for="startUrls" class="form-label label-with-help">Start URLs (CSV) <span class="help-icon" data-help-title="crawl4ai.start_urls" data-help-body="Optional seed URLs; defaults to source URL when omitted.">?</span></label>
+                                                        <input type="text" class="form-control" id="startUrls" placeholder="https://example.com/news,https://example.com/world">
+                                                    </div>
                                                 </div>
 
                                                 <div class="row mt-3">
                                                     <div class="col-md-4">
                                                         <div class="form-check mt-2">
                                                             <input class="form-check-input" type="checkbox" id="followInternalLinks" checked>
-                                                            <label class="form-check-label" for="followInternalLinks">Follow Internal Links</label>
+                                                            <label class="form-check-label label-with-help" for="followInternalLinks">Follow Internal Links <span class="help-icon" data-help-title="crawl4ai.follow_internal_links" data-help-body="Allow internal link expansion within allowed domains.">?</span></label>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <div class="form-check mt-2">
                                                             <input class="form-check-input" type="checkbox" id="followExternalLinks">
-                                                            <label class="form-check-label" for="followExternalLinks">Follow External Links</label>
+                                                            <label class="form-check-label label-with-help" for="followExternalLinks">Follow External Links <span class="help-icon" data-help-title="crawl4ai.follow_external" data-help-body="Permit crossing to off-domain links.">?</span></label>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-4">
                                                         <div class="form-check mt-2">
                                                             <input class="form-check-input" type="checkbox" id="scoreLinks" checked>
-                                                            <label class="form-check-label" for="scoreLinks">Score Links</label>
+                                                            <label class="form-check-label label-with-help" for="scoreLinks">Score Links <span class="help-icon" data-help-title="crawl4ai.run_config.score_links" data-help-body="Rank links before expansion.">?</span></label>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 <div class="row mt-3">
                                                     <div class="col-md-6">
-                                                        <label for="wordCountThreshold" class="form-label">Word Count Threshold</label>
+                                                        <label for="wordCountThreshold" class="form-label label-with-help">Word Count Threshold <span class="help-icon" data-help-title="crawl4ai.run_config.word_count_threshold" data-help-body="Minimum extracted text size to keep content.">?</span></label>
                                                         <input type="number" class="form-control" id="wordCountThreshold" value="120" min="0" max="5000">
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <label for="waitFor" class="form-label">Wait For (Optional)</label>
+                                                        <label for="waitFor" class="form-label label-with-help">Wait For (Optional) <span class="help-icon" data-help-title="crawl4ai.wait_for" data-help-body="Wait condition for dynamic pages, such as css selectors.">?</span></label>
                                                         <input type="text" class="form-control" id="waitFor" placeholder="e.g. css:.article-body">
                                                     </div>
                                                 </div>
 
                                                 <div class="row mt-3">
+                                                    <div class="col-12">
+                                                        <label for="jsCode" class="form-label label-with-help">JS Code (Optional) <span class="help-icon" data-help-title="crawl4ai.js_code" data-help-body="Custom JavaScript to execute before extraction; one command per line.">?</span></label>
+                                                        <textarea class="form-control" id="jsCode" rows="2" placeholder="window.scrollTo(0, document.body.scrollHeight);"></textarea>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3">
                                                     <div class="col-md-6">
-                                                        <label for="includePatterns" class="form-label">Include Patterns</label>
+                                                        <label for="includePatterns" class="form-label label-with-help">Include Patterns <span class="help-icon" data-help-title="crawl4ai.link_preview.include_patterns" data-help-body="Only keep links matching one of these substrings.">?</span></label>
                                                         <input type="text" class="form-control" id="includePatterns" placeholder="/news,/world,/politics">
                                                     </div>
                                                     <div class="col-md-6">
-                                                        <label for="excludePatterns" class="form-label">Exclude Patterns</label>
+                                                        <label for="excludePatterns" class="form-label label-with-help">Exclude Patterns <span class="help-icon" data-help-title="crawl4ai.link_preview.exclude_patterns" data-help-body="Skip links matching any provided substring.">?</span></label>
                                                         <input type="text" class="form-control" id="excludePatterns" placeholder="/live,/video,/sport">
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3">
+                                                    <div class="col-md-6">
+                                                        <label for="browserConfigJson" class="form-label label-with-help">Browser Config (JSON) <span class="help-icon" data-help-title="crawl4ai.browser_config" data-help-body="Browser settings such as headers, proxy, viewport, and headless.">?</span></label>
+                                                        <textarea class="form-control" id="browserConfigJson" rows="4" placeholder='{"headless": true, "ignore_https_errors": true}'></textarea>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="runConfigJson" class="form-label label-with-help">Run Config (JSON) <span class="help-icon" data-help-title="crawl4ai.run_config" data-help-body="Advanced run_config object; merged with common controls above.">?</span></label>
+                                                        <textarea class="form-control" id="runConfigJson" rows="4" placeholder='{"remove_overlay_elements": true, "process_iframes": false}'></textarea>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3">
+                                                    <div class="col-md-6">
+                                                        <label for="linkPreviewJson" class="form-label label-with-help">Link Preview (JSON) <span class="help-icon" data-help-title="crawl4ai.link_preview" data-help-body="Advanced link preview keys like max_links and score_threshold.">?</span></label>
+                                                        <textarea class="form-control" id="linkPreviewJson" rows="4" placeholder='{"max_links": 25, "score_threshold": 0.4}'></textarea>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="adaptiveJson" class="form-label label-with-help">Adaptive (JSON) <span class="help-icon" data-help-title="crawl4ai.adaptive" data-help-body="Adaptive crawler configuration options.">?</span></label>
+                                                        <textarea class="form-control" id="adaptiveJson" rows="4" placeholder='{"max_pages": 30}'></textarea>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3">
+                                                    <div class="col-12">
+                                                        <label for="extraJson" class="form-label label-with-help">Extra (JSON) <span class="help-icon" data-help-title="crawl4ai.extra" data-help-body="Advanced extras: alternate domains, query, dedupe controls, and more.">?</span></label>
+                                                        <textarea class="form-control" id="extraJson" rows="3" placeholder='{"alternate_domains": ["m.example.com"], "query": "latest politics"}'></textarea>
                                                     </div>
                                                 </div>
 
                                                 <div class="row mt-3">
                                                     <div class="col-12">
                                                         <div class="d-flex justify-content-between align-items-center mb-1">
-                                                            <label for="profileOverridesJson" class="form-label mb-0">Per-Domain Overrides (JSON)</label>
+                                                            <label for="profileOverridesJson" class="form-label mb-0 label-with-help">Per-Domain Overrides (JSON) <span class="help-icon" data-help-title="profile_overrides" data-help-body="Per-domain Crawl4AI object map merged on top of global crawl4ai settings.">?</span></label>
                                                             <button type="button" id="generateOverridesTemplate" class="btn btn-sm btn-outline-info">Generate Template</button>
                                                         </div>
                                                         <textarea class="form-control" id="profileOverridesJson" rows="6" placeholder='{"bbc.com":{"extra":{"crawl_depth":2}},"cnn.com":{"link_preview":{"include_patterns":["/world"]}}}'></textarea>
                                                         <div class="form-text" style="color: #a0aec0;">
                                                             Optional domain-specific overrides. These are merged on top of the global Crawl4AI settings for matching domains.
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="row mt-3">
+                                                    <div class="col-12">
+                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                            <label class="form-label mb-0 label-with-help">Backend Option Registry <span class="help-icon" data-help-title="/api/crawl/options" data-help-body="Loads live option keys and notes from crawler_control so UI help stays aligned with backend support.">?</span></label>
+                                                            <button type="button" id="refreshCrawlOptions" class="btn btn-sm btn-outline-light">Refresh from API</button>
+                                                        </div>
+                                                        <div id="crawlOptionsSummary" style="background:#111827;border:1px solid #4a5568;border-radius:6px;padding:10px;font-size:.83rem;color:#cbd5e0;max-height:180px;overflow:auto;">
+                                                            Option metadata not loaded yet.
                                                         </div>
                                                     </div>
                                                 </div>
@@ -535,16 +641,27 @@
                         document.getElementById('userAgent').value = settings.user_agent || 'JustNews/1.0';
                         if (settings.crawl4ai) {
                             const cfg = settings.crawl4ai;
+                            document.getElementById('crawlEngine').value = cfg.engine || 'crawl4ai';
+                            document.getElementById('crawlMode').value = cfg.mode || 'landing';
                             document.getElementById('crawlDepth').value = cfg.crawl_depth ?? 1;
                             document.getElementById('maxPages').value = cfg.max_pages ?? 25;
+                            document.getElementById('startUrls').value = (cfg.start_urls || []).join(',');
                             document.getElementById('followInternalLinks').checked = cfg.follow_internal_links !== false;
                             document.getElementById('followExternalLinks').checked = cfg.follow_external === true;
                             document.getElementById('scoreLinks').checked = cfg.run_config?.score_links !== false;
                             document.getElementById('wordCountThreshold').value = cfg.run_config?.word_count_threshold ?? 120;
                             document.getElementById('waitFor').value = cfg.run_config?.wait_for || '';
                             document.getElementById('cacheMode').value = cfg.run_config?.cache_mode || 'bypass';
+                            document.getElementById('jsCode').value = Array.isArray(cfg.js_code)
+                                ? cfg.js_code.join('\n')
+                                : (cfg.js_code || cfg.run_config?.js_code || '');
                             document.getElementById('includePatterns').value = (cfg.link_preview?.include_patterns || []).join(',');
                             document.getElementById('excludePatterns').value = (cfg.link_preview?.exclude_patterns || []).join(',');
+                            document.getElementById('browserConfigJson').value = JSON.stringify(cfg.browser_config || {}, null, 2);
+                            document.getElementById('runConfigJson').value = JSON.stringify(cfg.run_config || {}, null, 2);
+                            document.getElementById('linkPreviewJson').value = JSON.stringify(cfg.link_preview || {}, null, 2);
+                            document.getElementById('adaptiveJson').value = JSON.stringify(cfg.adaptive || {}, null, 2);
+                            document.getElementById('extraJson').value = JSON.stringify(cfg.extra || {}, null, 2);
                         }
                         if (settings.profile_overrides) {
                             document.getElementById('profileOverridesJson').value = JSON.stringify(settings.profile_overrides, null, 2);
@@ -678,6 +795,20 @@
                 .filter(Boolean);
         }
 
+        function parseJsonField(fieldId, label, defaultValue = {}) {
+            const raw = document.getElementById(fieldId).value.trim();
+            if (!raw) return defaultValue;
+            try {
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                    throw new Error(`${label} must be a JSON object`);
+                }
+                return parsed;
+            } catch (error) {
+                throw new Error(`Invalid ${label}: ${error.message}`);
+            }
+        }
+
         function normalizeDomain(value) {
             const raw = String(value || '').trim();
             if (!raw) return '';
@@ -703,35 +834,64 @@
         }
 
         function buildCrawl4AIConfig() {
+            const engine = document.getElementById('crawlEngine').value.trim() || 'crawl4ai';
+            const mode = document.getElementById('crawlMode').value.trim() || 'landing';
             const crawlDepth = parseInt(document.getElementById('crawlDepth').value, 10);
             const maxPages = parseInt(document.getElementById('maxPages').value, 10);
+            const startUrls = parseCsvInput(document.getElementById('startUrls').value);
             const followInternalLinks = document.getElementById('followInternalLinks').checked;
             const followExternalLinks = document.getElementById('followExternalLinks').checked;
             const scoreLinks = document.getElementById('scoreLinks').checked;
             const wordCountThreshold = parseInt(document.getElementById('wordCountThreshold').value, 10);
             const waitFor = document.getElementById('waitFor').value.trim();
+            const jsCodeText = document.getElementById('jsCode').value.trim();
             const cacheMode = document.getElementById('cacheMode').value;
             const includePatterns = parseCsvInput(document.getElementById('includePatterns').value);
             const excludePatterns = parseCsvInput(document.getElementById('excludePatterns').value);
+            const browserConfig = parseJsonField('browserConfigJson', 'browser_config', {});
+            const runConfigJson = parseJsonField('runConfigJson', 'run_config', {});
+            const linkPreviewJson = parseJsonField('linkPreviewJson', 'link_preview', {});
+            const adaptiveJson = parseJsonField('adaptiveJson', 'adaptive', {});
+            const extraJson = parseJsonField('extraJson', 'extra', {});
+
+            const jsCodeLines = jsCodeText
+                ? jsCodeText.split('\n').map(line => line.trim()).filter(Boolean)
+                : [];
 
             const config = {
+                engine,
+                mode,
                 crawl_depth: Number.isNaN(crawlDepth) ? 1 : Math.max(0, crawlDepth),
                 max_pages: Number.isNaN(maxPages) ? 25 : Math.max(1, maxPages),
                 follow_internal_links: followInternalLinks,
                 follow_external: followExternalLinks,
+                browser_config: browserConfig,
                 run_config: {
+                    ...runConfigJson,
                     cache_mode: cacheMode,
                     score_links: scoreLinks,
                     word_count_threshold: Number.isNaN(wordCountThreshold) ? 120 : Math.max(0, wordCountThreshold)
                 },
                 link_preview: {
+                    ...linkPreviewJson,
                     include_patterns: includePatterns,
                     exclude_patterns: excludePatterns
-                }
+                },
+                adaptive: adaptiveJson,
+                extra: extraJson
             };
+
+            if (startUrls.length) {
+                config.start_urls = startUrls;
+            }
 
             if (waitFor) {
                 config.run_config.wait_for = waitFor;
+            }
+
+            if (jsCodeLines.length) {
+                config.js_code = jsCodeLines;
+                config.run_config.js_code = jsCodeLines;
             }
 
             return config;
@@ -753,6 +913,66 @@
             }
         }
 
+        function renderOptionList(values) {
+            if (!Array.isArray(values) || values.length === 0) {
+                return '<span style="color:#9ca3af;">None</span>';
+            }
+            return values.map(item => `<code style="color:#90cdf4;">${item}</code>`).join(', ');
+        }
+
+        function syncHelpNotesFromApi(notes) {
+            if (!notes || typeof notes !== 'object') {
+                return;
+            }
+            const icons = Array.from(document.querySelectorAll('.help-icon'));
+            const updateMap = new Map();
+            Object.entries(notes).forEach(([key, value]) => {
+                updateMap.set(key, String(value));
+                updateMap.set(`crawl4ai.${key}`, String(value));
+            });
+
+            icons.forEach(icon => {
+                const helpTitle = icon.getAttribute('data-help-title');
+                if (!helpTitle) return;
+                const note = updateMap.get(helpTitle);
+                if (note) {
+                    icon.setAttribute('data-help-body', note);
+                }
+            });
+        }
+
+        async function loadCrawlOptionsFromApi() {
+            const summaryNode = document.getElementById('crawlOptionsSummary');
+            if (!summaryNode) return;
+
+            summaryNode.innerHTML = 'Loading option metadata from <code>/api/crawl/options</code>...';
+            try {
+                const response = await fetch('/api/crawl/options');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const payload = await response.json();
+                const crawl4ai = payload?.crawl4ai || {};
+                const topLevel = crawl4ai?.top_level || [];
+                const browserKeys = crawl4ai?.browser_config_keys || [];
+                const runConfigKeys = crawl4ai?.run_config_keys || [];
+                const linkPreviewKeys = crawl4ai?.link_preview_keys || [];
+                const notes = crawl4ai?.notes || {};
+
+                syncHelpNotesFromApi(notes);
+
+                summaryNode.innerHTML = `
+                    <div><strong style="color:#e2e8f0;">Top-level:</strong> ${renderOptionList(topLevel)}</div>
+                    <div class="mt-2"><strong style="color:#e2e8f0;">browser_config keys:</strong> ${renderOptionList(browserKeys)}</div>
+                    <div class="mt-2"><strong style="color:#e2e8f0;">run_config keys:</strong> ${renderOptionList(runConfigKeys)}</div>
+                    <div class="mt-2"><strong style="color:#e2e8f0;">link_preview keys:</strong> ${renderOptionList(linkPreviewKeys)}</div>
+                    <div class="mt-2"><strong style="color:#e2e8f0;">Notes synced:</strong> <span style="color:#90cdf4;">${Object.keys(notes).length}</span></div>
+                `;
+            } catch (error) {
+                summaryNode.innerHTML = `<span style="color:#fca5a5;">Failed to load option metadata: ${String(error)}</span>`;
+            }
+        }
+
         // Start metrics refresh when metrics tab is shown
         document.getElementById('metrics-tab')?.addEventListener('shown.bs.tab', function() {
             updateMetrics();
@@ -767,6 +987,38 @@
             initializeCharts();
             initializeResizable();
             initializeDraggable();
+
+            const hoverHelpModal = document.createElement('div');
+            hoverHelpModal.id = 'hoverHelpModal';
+            hoverHelpModal.innerHTML = '<div id="hoverHelpModalTitle"></div><div id="hoverHelpModalBody"></div>';
+            document.body.appendChild(hoverHelpModal);
+
+            function hideHoverHelp() {
+                hoverHelpModal.style.display = 'none';
+            }
+
+            document.querySelectorAll('.help-icon').forEach(icon => {
+                icon.addEventListener('mouseenter', (event) => {
+                    const title = icon.getAttribute('data-help-title') || 'Option Help';
+                    const body = icon.getAttribute('data-help-body') || 'No description available.';
+                    document.getElementById('hoverHelpModalTitle').textContent = title;
+                    document.getElementById('hoverHelpModalBody').textContent = body;
+
+                    const rect = event.target.getBoundingClientRect();
+                    hoverHelpModal.style.left = `${Math.min(window.innerWidth - 340, rect.right + 10)}px`;
+                    hoverHelpModal.style.top = `${Math.max(12, rect.top - 4)}px`;
+                    hoverHelpModal.style.display = 'block';
+                });
+                icon.addEventListener('mouseleave', hideHoverHelp);
+            });
+
+            document.addEventListener('scroll', hideHoverHelp, true);
+
+            document.getElementById('refreshCrawlOptions')?.addEventListener('click', function() {
+                loadCrawlOptionsFromApi();
+            });
+
+            loadCrawlOptionsFromApi();
             
             // Auto-refresh crawl status every 3 seconds
             statusRefreshInterval = setInterval(checkCrawlStatus, 3000);

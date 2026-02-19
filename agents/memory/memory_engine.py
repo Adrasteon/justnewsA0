@@ -657,6 +657,47 @@ class MemoryEngine:
                 except Exception:
                     pass
 
+            if chosen_source_id is None:
+                source_domain = (article_payload.get("domain") or "").strip().lower()
+                if source_domain:
+                    lookup_conn = None
+                    lookup_cursor = None
+                    try:
+                        conn_getter = getattr(self.db_service, "get_connection", None)
+                        if callable(conn_getter):
+                            lookup_conn = conn_getter()
+                        else:
+                            lookup_conn = getattr(self.db_service, "mb_conn", None)
+
+                        if lookup_conn is not None:
+                            lookup_cursor = lookup_conn.cursor(dictionary=True, buffered=True)
+                            lookup_cursor.execute(
+                                "SELECT id FROM sources WHERE LOWER(domain) = %s LIMIT 1",
+                                (source_domain,),
+                            )
+                            source_row = lookup_cursor.fetchone()
+                            if source_row and source_row.get("id") is not None:
+                                chosen_source_id = source_row["id"]
+                    except Exception as source_lookup_error:
+                        logger.debug(
+                            "Could not resolve source_id for domain %s: %s",
+                            source_domain,
+                            source_lookup_error,
+                        )
+                    finally:
+                        if lookup_cursor is not None:
+                            try:
+                                lookup_cursor.close()
+                            except Exception:
+                                pass
+                        if lookup_conn is not None and lookup_conn is not getattr(
+                            self.db_service, "mb_conn", None
+                        ):
+                            try:
+                                lookup_conn.close()
+                            except Exception:
+                                pass
+
             # Now save the article content
             try:
                 content = article_payload.get("content", "")

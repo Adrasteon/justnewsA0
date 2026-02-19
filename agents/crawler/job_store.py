@@ -173,6 +173,33 @@ def set_error(job_id: str, error: str) -> None:
         _in_memory_store.set_error(job_id, error)
 
 
+def set_cancelled(job_id: str, reason: str = "cancelled by user") -> None:
+    """Mark a job as cancelled while preserving optional reason text."""
+    if not _db_is_available():
+        job = _in_memory_store._store.setdefault(job_id, {})
+        job["error"] = reason
+        job["status"] = "cancelled"
+        job["updated_at"] = time.time()
+        return
+    try:
+        with _get_conn() as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    "UPDATE crawler_jobs SET error = %s, status = %s, updated_at = CURRENT_TIMESTAMP WHERE job_id = %s",
+                    (reason, "cancelled", job_id),
+                )
+                conn.commit()
+            finally:
+                cursor.close()
+    except Exception as exc:
+        logger.debug("Job store set_cancelled failed: %s", exc)
+        job = _in_memory_store._store.setdefault(job_id, {})
+        job["error"] = reason
+        job["status"] = "cancelled"
+        job["updated_at"] = time.time()
+
+
 def get_job(job_id: str) -> dict[str, Any] | None:
     if not _db_is_available():
         return _in_memory_store.get_job(job_id)

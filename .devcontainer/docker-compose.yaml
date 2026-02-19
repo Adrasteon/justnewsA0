@@ -7,6 +7,7 @@ services:
       - ..:/app:cached
       - justnews_deps:/deps
       - justnews_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
     gpus: all
     user: root
     depends_on:

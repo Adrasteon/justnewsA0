@@ -19,6 +19,10 @@ log_success() { echo -e "${GREEN}[✓]${NC} $1"; }
 log_warning() { echo -e "${YELLOW}[⚠]${NC} $1"; }
 log_error() { echo -e "${RED}[✗]${NC} $1"; }
 
+PUBLISHER_ENABLED=${PUBLISHER_ENABLED:-1}
+PUBLISHER_HOST=${PUBLISHER_HOST:-0.0.0.0}
+PUBLISHER_PORT=${PUBLISHER_PORT:-8100}
+
 # Activate virtualenv and load environment
 if [ -f "/deps/.venv/bin/activate" ]; then
     source /deps/.venv/bin/activate
@@ -55,7 +59,7 @@ AGENTS=(
   "mcp_bus|agents.mcp_bus.main:app|8000||1"
   "chief_editor|agents.chief_editor.main:app|8001||1"
   "$FACT_CHECKER_CMD"
-  "analyst|agents.analyst.main:app|8004|FACT_CHECKER_URL=http://localhost:8018|1"
+  "analyst|agents.analyst.main:app|8004|FACT_CHECKER_URL=http://localhost:8018|2"
   "synthesizer|agents.synthesizer.main:app|8005|EVIDENCE_AUDIT_BASE_URL=http://localhost:8000|2"
   "critic|agents.critic.main:app|8006||1"
   "memory|agents.memory.main:app|8007||1"
@@ -73,6 +77,8 @@ AGENTS=(
 PIDS=()
 STARTED_AGENTS=()
 FAILED_AGENTS=()
+PUBLISHER_PID=""
+PUBLISHER_STARTED=0
 
 log_info "Checking for existing processes on target ports..."
 for entry in "${AGENTS[@]}"; do
@@ -81,6 +87,29 @@ for entry in "${AGENTS[@]}"; do
     log_warning "Port $port already in use (may be previous agent instance)"
   fi
 done
+
+if [ "$PUBLISHER_ENABLED" = "1" ]; then
+  log_info ""
+  log_info "Starting Django publisher website (port $PUBLISHER_PORT)..."
+  if ss -ltn "sport = :$PUBLISHER_PORT" 2>/dev/null | grep -q LISTEN; then
+    log_warning "Port $PUBLISHER_PORT already in use (publisher may already be running)"
+    PUBLISHER_STARTED=1
+  else
+    publisher_startup_log="$LOG_DIR/publisher.startup.log"
+    publisher_main_log="$LOG_DIR/publisher.log"
+    publisher_cmd="python manage.py runserver $PUBLISHER_HOST:$PUBLISHER_PORT"
+
+    if eval "$publisher_cmd > \"$publisher_startup_log\" 2>&1 &"
+    then
+      PUBLISHER_PID=$!
+      PIDS+=("$PUBLISHER_PID")
+      PUBLISHER_STARTED=1
+      log_success "publisher started (PID: $PUBLISHER_PID) -> logs: $publisher_main_log (console: $publisher_startup_log)"
+    else
+      log_error "publisher failed to start"
+    fi
+  fi
+fi
 
 log_info ""
 log_info "Starting ${#AGENTS[@]} agents..."
@@ -144,6 +173,18 @@ log_info ""
 log_info "Performing health checks..."
 log_info ""
 
+if [ "$PUBLISHER_ENABLED" = "1" ] && [ "$PUBLISHER_STARTED" = "1" ]; then
+  if timeout 2 curl -s "http://localhost:$PUBLISHER_PORT/" >/dev/null 2>&1; then
+    log_success "publisher (port $PUBLISHER_PORT): ✓ Responding"
+  elif [ -n "$PUBLISHER_PID" ] && kill -0 "$PUBLISHER_PID" 2>/dev/null; then
+    log_warning "publisher (port $PUBLISHER_PORT): ⏱ Starting (may still be initializing)"
+  elif [ -z "$PUBLISHER_PID" ]; then
+    log_success "publisher (port $PUBLISHER_PORT): ✓ Already running"
+  else
+    log_error "publisher (port $PUBLISHER_PORT): ✗ Process died"
+  fi
+fi
+
 HEALTHY_COUNT=0
 UNHEALTHY_AGENTS=()
 
@@ -173,6 +214,13 @@ log_info "Total agents: $((${#STARTED_AGENTS[@]} + ${#FAILED_AGENTS[@]}))"
 log_info "Started: ${#STARTED_AGENTS[@]}"
 log_info "Healthy: $HEALTHY_COUNT"
 log_info "Failed to start: ${#FAILED_AGENTS[@]}"
+if [ "$PUBLISHER_ENABLED" = "1" ]; then
+  if [ "$PUBLISHER_STARTED" = "1" ]; then
+    log_info "Publisher: Started on http://localhost:$PUBLISHER_PORT"
+  else
+    log_warning "Publisher: Not started"
+  fi
+fi
 log_info ""
 
 if [ ${#FAILED_AGENTS[@]} -gt 0 ]; then
@@ -196,8 +244,14 @@ log_info ""
 log_info "Log directory: $LOG_DIR"
 log_info "View logs: tail -f $LOG_DIR/*.log"
 log_info "View startup errors: tail -f $LOG_DIR/*.startup.log"
+if [ "$PUBLISHER_ENABLED" = "1" ]; then
+  log_info "Publisher URL: http://localhost:$PUBLISHER_PORT/"
+fi
 log_info ""
 log_info "To stop all agents: pkill -f 'common.agent_runner'"
+if [ "$PUBLISHER_ENABLED" = "1" ]; then
+  log_info "To stop publisher: pkill -f 'manage.py runserver.*$PUBLISHER_PORT'"
+fi
 log_info ""
 
 if [ ${#FAILED_AGENTS[@]} -eq 0 ]; then
