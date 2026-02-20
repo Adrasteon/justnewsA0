@@ -257,7 +257,7 @@
   },
   "orchestrator": {
     "polling_interval_seconds": 3,
-    "max_concurrent_tasks": 15,
+    "max_concurrent_tasks": 20,
     "resource_limits": {
       "max_cpu_percent": 95,
       "max_memory_percent": 98,

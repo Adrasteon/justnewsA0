@@ -1,6 +1,744 @@
 {
-  "audit_log": [],
-  "overrides": {},
+  "audit_log": [
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 19,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "previous_version": 0,
+      "reason": "autonomic:resource_pressure",
+      "timestamp": "2026-02-19T22:57:17.285022Z",
+      "version": 1,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 20,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "previous_version": 1,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:14:57.933667Z",
+      "version": 2,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 21,
+        "orchestrator.polling_interval_seconds": 2
+      },
+      "previous_version": 2,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:15:59.943460Z",
+      "version": 3,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 22,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 3,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:17:01.935586Z",
+      "version": 4,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 23,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 4,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:18:02.728236Z",
+      "version": 5,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 24,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 5,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:19:58.817794Z",
+      "version": 6,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 25,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 6,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:21:00.780991Z",
+      "version": 7,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 7,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:22:02.673020Z",
+      "version": 8,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 8,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:23:03.442905Z",
+      "version": 9,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 8,
+      "timestamp": "2026-02-19T23:24:56.321449Z",
+      "version": 10
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 10,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:24:59.591008Z",
+      "version": 11,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 10,
+      "timestamp": "2026-02-19T23:24:59.594210Z",
+      "version": 12
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 12,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:26:01.501061Z",
+      "version": 13,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 12,
+      "timestamp": "2026-02-19T23:26:01.504387Z",
+      "version": 14
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 14,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:27:03.382253Z",
+      "version": 15,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 14,
+      "timestamp": "2026-02-19T23:27:03.385626Z",
+      "version": 16
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 16,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:28:04.204900Z",
+      "version": 17,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 16,
+      "timestamp": "2026-02-19T23:28:04.208576Z",
+      "version": 18
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 18,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:30:00.399870Z",
+      "version": 19,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 18,
+      "timestamp": "2026-02-19T23:30:00.409310Z",
+      "version": 20
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 20,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:31:02.330317Z",
+      "version": 21,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 20,
+      "timestamp": "2026-02-19T23:31:02.334143Z",
+      "version": 22
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 22,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:32:04.235567Z",
+      "version": 23,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 22,
+      "timestamp": "2026-02-19T23:32:04.239464Z",
+      "version": 24
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 24,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:33:05.101754Z",
+      "version": 25,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 24,
+      "timestamp": "2026-02-19T23:33:05.106169Z",
+      "version": 26
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 26,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:35:01.425892Z",
+      "version": 27,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 26,
+      "timestamp": "2026-02-19T23:35:01.430561Z",
+      "version": 28
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 28,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:36:03.354859Z",
+      "version": 29,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 28,
+      "timestamp": "2026-02-19T23:36:03.359206Z",
+      "version": 30
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 30,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:37:05.300631Z",
+      "version": 31,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 30,
+      "timestamp": "2026-02-19T23:37:05.305190Z",
+      "version": 32
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 32,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:38:06.157462Z",
+      "version": 33,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 32,
+      "timestamp": "2026-02-19T23:38:06.162069Z",
+      "version": 34
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 34,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:40:02.412356Z",
+      "version": 35,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 34,
+      "timestamp": "2026-02-19T23:40:02.417171Z",
+      "version": 36
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 36,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:41:04.338258Z",
+      "version": 37,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 36,
+      "timestamp": "2026-02-19T23:41:04.343426Z",
+      "version": 38
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 38,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:42:06.305436Z",
+      "version": 39,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 38,
+      "timestamp": "2026-02-19T23:42:06.310406Z",
+      "version": 40
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 40,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:43:07.173566Z",
+      "version": 41,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 40,
+      "timestamp": "2026-02-19T23:43:07.178394Z",
+      "version": 42
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 42,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:45:02.423111Z",
+      "version": 43,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 42,
+      "timestamp": "2026-02-19T23:45:02.434136Z",
+      "version": 44
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 44,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:46:04.380205Z",
+      "version": 45,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 44,
+      "timestamp": "2026-02-19T23:46:04.385593Z",
+      "version": 46
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 46,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:47:06.364008Z",
+      "version": 47,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 46,
+      "timestamp": "2026-02-19T23:47:06.369482Z",
+      "version": 48
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 48,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:48:07.279306Z",
+      "version": 49,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 48,
+      "timestamp": "2026-02-19T23:48:07.285341Z",
+      "version": 50
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 50,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:50:02.610030Z",
+      "version": 51,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 50,
+      "timestamp": "2026-02-19T23:50:02.617373Z",
+      "version": 52
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 52,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:51:04.556989Z",
+      "version": 53,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 52,
+      "timestamp": "2026-02-19T23:51:04.568502Z",
+      "version": 54
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 54,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:52:06.554635Z",
+      "version": 55,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 54,
+      "timestamp": "2026-02-19T23:52:06.560849Z",
+      "version": 56
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 56,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:53:07.405324Z",
+      "version": 57,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 56,
+      "timestamp": "2026-02-19T23:53:07.411473Z",
+      "version": 58
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 58,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:55:02.649054Z",
+      "version": 59,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 58,
+      "timestamp": "2026-02-19T23:55:02.661454Z",
+      "version": 60
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 60,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:56:04.637606Z",
+      "version": 61,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 60,
+      "timestamp": "2026-02-19T23:56:04.644088Z",
+      "version": 62
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 62,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:57:06.877171Z",
+      "version": 63,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 62,
+      "timestamp": "2026-02-19T23:57:06.883754Z",
+      "version": 64
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 64,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-19T23:58:07.854208Z",
+      "version": 65,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 64,
+      "timestamp": "2026-02-19T23:58:07.860906Z",
+      "version": 66
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 66,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-20T00:00:03.237204Z",
+      "version": 67,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 66,
+      "timestamp": "2026-02-20T00:00:03.244255Z",
+      "version": 68
+    }
+  ],
+  "overrides": {
+    "orchestrator.max_concurrent_tasks": 26,
+    "orchestrator.polling_interval_seconds": 1
+  },
   "timeline": [
     {
       "actor": "system",
@@ -9,8 +747,1391 @@
       "reason": "initial_state",
       "timestamp": "2026-02-19T16:12:02.850381Z",
       "version": 0
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {},
+        "method": "rollback_to_version",
+        "target_version": 0
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 19,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 19,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "previous_version": 0,
+      "reason": "autonomic:resource_pressure",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T22:57:17.285022Z",
+      "version": 1
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 19,
+          "orchestrator.polling_interval_seconds": 4
+        },
+        "method": "rollback_to_version",
+        "target_version": 1
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 20,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 20,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "previous_version": 1,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:14:57.933667Z",
+      "version": 2
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 20,
+          "orchestrator.polling_interval_seconds": 3
+        },
+        "method": "rollback_to_version",
+        "target_version": 2
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 21,
+        "orchestrator.polling_interval_seconds": 2
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 21,
+        "orchestrator.polling_interval_seconds": 2
+      },
+      "previous_version": 2,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:15:59.943460Z",
+      "version": 3
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 21,
+          "orchestrator.polling_interval_seconds": 2
+        },
+        "method": "rollback_to_version",
+        "target_version": 3
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 22,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 22,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 3,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:17:01.935586Z",
+      "version": 4
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 22,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 4
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 23,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 23,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 4,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:18:02.728236Z",
+      "version": 5
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 23,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 5
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 24,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 24,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 5,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:19:58.817794Z",
+      "version": 6
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 24,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 6
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 25,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 25,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 6,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:21:00.780991Z",
+      "version": 7
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 25,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 7
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 7,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:22:02.673020Z",
+      "version": 8
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 8
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 8,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:23:03.442905Z",
+      "version": 9
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 8,
+      "timestamp": "2026-02-19T23:24:56.321449Z",
+      "version": 10
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 10
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 10,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:24:59.591008Z",
+      "version": 11
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 10,
+      "timestamp": "2026-02-19T23:24:59.594210Z",
+      "version": 12
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 12
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 12,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:26:01.501061Z",
+      "version": 13
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 12,
+      "timestamp": "2026-02-19T23:26:01.504387Z",
+      "version": 14
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 14
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 14,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:27:03.382253Z",
+      "version": 15
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 14,
+      "timestamp": "2026-02-19T23:27:03.385626Z",
+      "version": 16
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 16
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 16,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:28:04.204900Z",
+      "version": 17
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 16,
+      "timestamp": "2026-02-19T23:28:04.208576Z",
+      "version": 18
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 18
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 18,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:30:00.399870Z",
+      "version": 19
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 18,
+      "timestamp": "2026-02-19T23:30:00.409310Z",
+      "version": 20
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 20
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 20,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:31:02.330317Z",
+      "version": 21
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 20,
+      "timestamp": "2026-02-19T23:31:02.334143Z",
+      "version": 22
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 22
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 22,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:32:04.235567Z",
+      "version": 23
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 22,
+      "timestamp": "2026-02-19T23:32:04.239464Z",
+      "version": 24
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 24
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 24,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:33:05.101754Z",
+      "version": 25
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 24,
+      "timestamp": "2026-02-19T23:33:05.106169Z",
+      "version": 26
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 26
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 26,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:35:01.425892Z",
+      "version": 27
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 26,
+      "timestamp": "2026-02-19T23:35:01.430561Z",
+      "version": 28
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 28
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 28,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:36:03.354859Z",
+      "version": 29
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 28,
+      "timestamp": "2026-02-19T23:36:03.359206Z",
+      "version": 30
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 30
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 30,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:37:05.300631Z",
+      "version": 31
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 30,
+      "timestamp": "2026-02-19T23:37:05.305190Z",
+      "version": 32
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 32
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 32,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:38:06.157462Z",
+      "version": 33
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 32,
+      "timestamp": "2026-02-19T23:38:06.162069Z",
+      "version": 34
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 34
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 34,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:40:02.412356Z",
+      "version": 35
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 34,
+      "timestamp": "2026-02-19T23:40:02.417171Z",
+      "version": 36
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 36
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 36,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:41:04.338258Z",
+      "version": 37
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 36,
+      "timestamp": "2026-02-19T23:41:04.343426Z",
+      "version": 38
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 38
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 38,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:42:06.305436Z",
+      "version": 39
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 38,
+      "timestamp": "2026-02-19T23:42:06.310406Z",
+      "version": 40
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 40
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 40,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:43:07.173566Z",
+      "version": 41
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 40,
+      "timestamp": "2026-02-19T23:43:07.178394Z",
+      "version": 42
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 42
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 42,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:45:02.423111Z",
+      "version": 43
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 42,
+      "timestamp": "2026-02-19T23:45:02.434136Z",
+      "version": 44
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 44
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 44,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:46:04.380205Z",
+      "version": 45
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 44,
+      "timestamp": "2026-02-19T23:46:04.385593Z",
+      "version": 46
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 46
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 46,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:47:06.364008Z",
+      "version": 47
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 46,
+      "timestamp": "2026-02-19T23:47:06.369482Z",
+      "version": 48
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 48
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 48,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:48:07.279306Z",
+      "version": 49
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 48,
+      "timestamp": "2026-02-19T23:48:07.285341Z",
+      "version": 50
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 50
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 50,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:50:02.610030Z",
+      "version": 51
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 50,
+      "timestamp": "2026-02-19T23:50:02.617373Z",
+      "version": 52
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 52
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 52,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:51:04.556989Z",
+      "version": 53
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 52,
+      "timestamp": "2026-02-19T23:51:04.568502Z",
+      "version": 54
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 54
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 54,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:52:06.554635Z",
+      "version": 55
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 54,
+      "timestamp": "2026-02-19T23:52:06.560849Z",
+      "version": 56
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 56
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 56,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:53:07.405324Z",
+      "version": 57
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 56,
+      "timestamp": "2026-02-19T23:53:07.411473Z",
+      "version": 58
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 58
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 58,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:55:02.649054Z",
+      "version": 59
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 58,
+      "timestamp": "2026-02-19T23:55:02.661454Z",
+      "version": 60
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 60
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 60,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:56:04.637606Z",
+      "version": 61
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 60,
+      "timestamp": "2026-02-19T23:56:04.644088Z",
+      "version": 62
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 62
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 62,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:57:06.877171Z",
+      "version": 63
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 62,
+      "timestamp": "2026-02-19T23:57:06.883754Z",
+      "version": 64
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 64
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 64,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-19T23:58:07.854208Z",
+      "version": 65
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 64,
+      "timestamp": "2026-02-19T23:58:07.860906Z",
+      "version": 66
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 66
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 66,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-20T00:00:03.237204Z",
+      "version": 67
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 66,
+      "timestamp": "2026-02-20T00:00:03.244255Z",
+      "version": 68
     }
   ],
-  "updated_at": "2026-02-19T16:12:02.850381Z",
-  "version": 0
+  "updated_at": "2026-02-20T00:00:03.244255Z",
+  "version": 68
 }
