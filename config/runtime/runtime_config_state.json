@@ -733,6 +733,27 @@
       "rollback_target_version": 66,
       "timestamp": "2026-02-20T00:00:03.244255Z",
       "version": 68
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 68,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-02-20T00:01:05.273099Z",
+      "version": 69,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 68,
+      "timestamp": "2026-02-20T00:01:05.280163Z",
+      "version": 70
     }
   ],
   "overrides": {
@@ -2130,8 +2151,47 @@
       "rollback_target_version": 66,
       "timestamp": "2026-02-20T00:00:03.244255Z",
       "version": 68
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 26,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 68
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 27,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "previous_version": 68,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-02-20T00:01:05.273099Z",
+      "version": 69
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.max_concurrent_tasks": 26,
+        "orchestrator.polling_interval_seconds": 1
+      },
+      "reason": "autonomic:auto_rollback_slo_breach",
+      "rollback_target_version": 68,
+      "timestamp": "2026-02-20T00:01:05.280163Z",
+      "version": 70
     }
   ],
-  "updated_at": "2026-02-20T00:00:03.244255Z",
-  "version": 68
+  "updated_at": "2026-02-20T00:01:05.280163Z",
+  "version": 70
 }
