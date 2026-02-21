@@ -147,6 +147,24 @@ class OrchestratorEngine:
         self._load_config()
         self._init_policies()
 
+    def _policy_batch_limit(self, policy_name: str, default_limit: int) -> int:
+        capped_default_map = {
+            "ingestion_to_analysis": 6,
+            "analysis_to_fact_check": 4,
+            "incremental_clustering": 8,
+            "cluster_to_synthesis": 4,
+            "synthesis_to_publishing": 6,
+        }
+        fallback = min(default_limit, capped_default_map.get(policy_name, default_limit))
+        env_key = f"ORCH_POLICY_LIMIT_{policy_name.upper()}"
+        raw = os.environ.get(env_key)
+        if raw is None:
+            return max(1, fallback)
+        try:
+            return max(1, min(default_limit, int(raw)))
+        except Exception:
+            return max(1, fallback)
+
     def _load_config(self):
         self.mcp_bus_url = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
         
@@ -732,16 +750,23 @@ class OrchestratorEngine:
             check_started = time.time()
             # We treat max_tasks as a per-policy limit for simplicity v1
             try:
-                items = policy.check_condition(limit=max_tasks)
+                policy_limit = self._policy_batch_limit(policy_name, max_tasks)
+                items = policy.check_condition(limit=policy_limit)
                 policy_telemetry["check_count"] += 1
                 policy_telemetry["last_checked_at"] = _utc_now()
                 policy_telemetry["last_check_ms"] = round(
                     (time.time() - check_started) * 1000.0, 3
                 )
+                policy_telemetry["last_limit"] = int(policy_limit)
                 policy_telemetry["last_queue_depth"] = len(items)
                 policy_telemetry["total_items_seen"] += len(items)
                 if items:
-                    logger.info(f"Policy '{policy_name}' matched {len(items)} items.")
+                    logger.info(
+                        "Policy '%s' matched %s items (limit=%s).",
+                        policy_name,
+                        len(items),
+                        policy_limit,
+                    )
                     execute_started = time.time()
                     await policy.execute(items)
                     policy_telemetry["execute_count"] += 1
