@@ -638,11 +638,21 @@ def upsert_living_story_record(
     article_ids: list[int],
     title_text: str,
     body_text: str,
+    generation_audit: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     normalized_ids = sorted({int(x) for x in article_ids})
     input_arts_json = json.dumps(normalized_ids)
     fingerprint = _cluster_input_fingerprint(normalized_ids)
     now_iso = datetime.utcnow().isoformat() + "Z"
+    generation_event = {
+        "timestamp": now_iso,
+        "source_agent": "synthesizer",
+        "source_tool": "aggregate_cluster",
+        "body_length_chars": len(body_text or ""),
+        "body_length_words": len((body_text or "").split()),
+    }
+    if isinstance(generation_audit, dict):
+        generation_event.update(generation_audit)
     urgency_class = _infer_urgency_class(title_text, body_text)
     calibration = _resolve_living_story_calibration(urgency_class)
 
@@ -705,6 +715,10 @@ def upsert_living_story_record(
                     "calibration_profile": calibration.get("profile", "balanced"),
                 },
             }
+        }
+        synth_metadata["generation"] = {
+            "last_event": generation_event,
+            "history": [generation_event],
         }
         cursor.execute(
             """
@@ -806,6 +820,13 @@ def upsert_living_story_record(
     )
 
     next_meta = previous_meta.copy()
+    generation_meta = next_meta.get("generation") if isinstance(next_meta.get("generation"), dict) else {}
+    generation_history = generation_meta.get("history") if isinstance(generation_meta.get("history"), list) else []
+    generation_history.append(generation_event)
+    next_meta["generation"] = {
+        "last_event": generation_event,
+        "history": generation_history[-25:],
+    }
     next_meta["living_story"] = {
         "revision": revision,
         "input_fingerprint": fingerprint,
@@ -1572,6 +1593,13 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                         article_ids=article_ids,
                         title_text=title_text,
                         body_text=body_text,
+                        generation_audit={
+                            "method": synthesis_result.get("method"),
+                            "model_used": synthesis_result.get("model_used"),
+                            "confidence": synthesis_result.get("confidence"),
+                            "article_count": len(texts),
+                            "has_previous_context": bool(previous_context),
+                        },
                     )
 
                     # 4. Mark articles as synthesized (always, even when update is not meaningful)
@@ -1774,6 +1802,13 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                         article_ids=article_ids,
                         title_text=title_text,
                         body_text=body_text,
+                        generation_audit={
+                            "method": synthesis_result.get("method"),
+                            "model_used": synthesis_result.get("model_used"),
+                            "confidence": synthesis_result.get("confidence"),
+                            "article_count": len(texts),
+                            "retry_policy": "heavy_cluster_retry",
+                        },
                     )
 
                     # 4. Mark articles as synthesized (always, even when update is not meaningful)

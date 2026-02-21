@@ -1,10 +1,13 @@
 import json
 import math
 import re
+from datetime import date, datetime
 from email.utils import format_datetime
 from html import escape
+from urllib.parse import urlparse
 
 from django.conf import settings
+from django.db import connection
 from django.http import Http404, HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.csrf import csrf_exempt
@@ -107,6 +110,343 @@ def _seo_description(article: Article, max_words: int = 30) -> str:
     return " ".join(words[:max_words]).strip()
 
 
+def _safe_json_object(value: object) -> dict[str, object]:
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str) and value.strip():
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, dict):
+                return parsed
+        except Exception:
+            return {}
+    return {}
+
+
+def _safe_json_list(value: object) -> list[object]:
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str) and value.strip():
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, list):
+                return parsed
+        except Exception:
+            return []
+    return []
+
+
+def _cursor_row_to_dict(row: tuple[object, ...], columns: list[str]) -> dict[str, object]:
+    return {columns[index]: row[index] for index in range(len(columns))}
+
+
+def _resolve_story_suffix(slug: str) -> str | None:
+    match = re.search(r"(STORY-[a-f0-9]{2})$", str(slug or ""), re.IGNORECASE)
+    return match.group(1).upper() if match else None
+
+
+def _resolve_story_context(article: Article, latest_audit: PublishAudit | None) -> dict[str, object]:
+    story_id = None
+    if latest_audit and latest_audit.payload:
+        payload = latest_audit.payload if isinstance(latest_audit.payload, dict) else _safe_json_object(latest_audit.payload)
+        candidate = payload.get("story_id") if isinstance(payload, dict) else None
+        if isinstance(candidate, str) and candidate.strip():
+            story_id = candidate.strip()
+
+    with connection.cursor() as cursor:
+        if story_id:
+            cursor.execute(
+                """
+                SELECT story_id, cluster_id, input_articles, synth_metadata, updated_at
+                FROM synthesized_articles
+                WHERE story_id = %s
+                ORDER BY updated_at DESC, id DESC
+                LIMIT 1
+                """,
+                [story_id],
+            )
+            row = cursor.fetchone()
+            if row:
+                raw_meta = row[3]
+                metadata = _safe_json_object(raw_meta)
+                return {
+                    "story_id": row[0],
+                    "cluster_id": row[1],
+                    "input_articles": _safe_json_list(row[2]),
+                    "synth_metadata": metadata,
+                    "living_story": metadata.get("living_story") if isinstance(metadata.get("living_story"), dict) else {},
+                    "publish": metadata.get("publish") if isinstance(metadata.get("publish"), dict) else {},
+                    "updated_at": row[4],
+                }
+
+        suffix = _resolve_story_suffix(article.slug)
+        if not suffix:
+            return {}
+
+        cursor.execute(
+            """
+            SELECT story_id, cluster_id, input_articles, synth_metadata, updated_at
+            FROM synthesized_articles
+            WHERE story_id LIKE %s
+            ORDER BY updated_at DESC, id DESC
+            LIMIT 1
+            """,
+            [f"{suffix}%"],
+        )
+        row = cursor.fetchone()
+        if not row:
+            return {}
+
+        raw_meta = row[3]
+        metadata = _safe_json_object(raw_meta)
+        return {
+            "story_id": row[0],
+            "cluster_id": row[1],
+            "input_articles": _safe_json_list(row[2]),
+            "synth_metadata": metadata,
+            "living_story": metadata.get("living_story") if isinstance(metadata.get("living_story"), dict) else {},
+            "publish": metadata.get("publish") if isinstance(metadata.get("publish"), dict) else {},
+            "updated_at": row[4],
+        }
+
+
+def _extract_source_article_ids(input_articles: list[object]) -> list[int]:
+    ids: list[int] = []
+    for item in input_articles:
+        if isinstance(item, dict):
+            candidate = item.get("id")
+            if str(candidate).isdigit():
+                ids.append(int(str(candidate)))
+        elif str(item).isdigit():
+            ids.append(int(str(item)))
+    deduped: list[int] = []
+    seen: set[int] = set()
+    for item_id in ids:
+        if item_id in seen:
+            continue
+        seen.add(item_id)
+        deduped.append(item_id)
+    return deduped
+
+
+def _source_bias_score(text: str) -> float:
+    normalized = (text or "").lower()
+    if not normalized.strip():
+        return 0.0
+    loaded_terms = [
+        "obviously",
+        "clearly",
+        "must",
+        "shocking",
+        "outrage",
+        "crisis",
+        "extreme",
+        "undeniable",
+    ]
+    certainty_terms = ["always", "never", "everyone", "no one", "proves", "without doubt"]
+    hits = sum(normalized.count(term) for term in loaded_terms + certainty_terms)
+    words = max(1, len(normalized.split()))
+    return round(min(1.0, (hits / words) * 55.0), 4)
+
+
+def _source_persuasion_score(text: str) -> float:
+    normalized = (text or "").lower()
+    if not normalized.strip():
+        return 0.0
+    persuasion_terms = [
+        "should",
+        "need to",
+        "act now",
+        "you must",
+        "demand",
+        "urge",
+        "support",
+        "oppose",
+    ]
+    hits = sum(normalized.count(term) for term in persuasion_terms)
+    words = max(1, len(normalized.split()))
+    return round(min(1.0, (hits / words) * 80.0), 4)
+
+
+def _format_range(values: list[float]) -> str:
+    if not values:
+        return "N/A"
+    return f"{sum(values)/len(values):.2f} avg ({min(values):.2f}–{max(values):.2f})"
+
+
+def _compute_cluster_signals(story_context: dict[str, object]) -> dict[str, object]:
+    input_articles = story_context.get("input_articles") if isinstance(story_context, dict) else []
+    source_ids = _extract_source_article_ids(input_articles if isinstance(input_articles, list) else [])
+    if not source_ids:
+        return {
+            "available": False,
+            "cluster_size": 0,
+            "source_sample_size": 0,
+            "distinct_source_domains": 0,
+            "date_start": None,
+            "date_end": None,
+            "sentiment_range": "N/A",
+            "sentiment_balance": "N/A",
+            "sentiment_distribution": {"positive": 0, "neutral": 0, "negative": 0},
+            "sentiment_percent": {"positive": 0, "neutral": 0, "negative": 0},
+            "bias_range": "N/A",
+            "bias_high_share": "N/A",
+            "bias_distribution": {"low": 0, "medium": 0, "high": 0},
+            "bias_percent": {"low": 0, "medium": 0, "high": 0},
+            "persuasion_range": "N/A",
+            "persuasion_high_share": "N/A",
+            "persuasion_distribution": {"low": 0, "medium": 0, "high": 0},
+            "persuasion_percent": {"low": 0, "medium": 0, "high": 0},
+        }
+
+    placeholders = ",".join(["%s"] * len(source_ids))
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""
+            SELECT id, source_url, publication_date, published_at, created_at,
+                   sentiment_score, title, summary, content
+            FROM articles
+            WHERE id IN ({placeholders})
+            """,
+            source_ids,
+        )
+        columns = [col[0] for col in cursor.description]
+        rows = [_cursor_row_to_dict(row, columns) for row in cursor.fetchall()]
+
+    sentiment_scores: list[float] = []
+    positive = 0
+    neutral = 0
+    negative = 0
+    bias_scores: list[float] = []
+    persuasion_scores: list[float] = []
+    domains: set[str] = set()
+    dates: list[datetime | date] = []
+
+    for row in rows:
+        sentiment = row.get("sentiment_score")
+        if sentiment is not None:
+            try:
+                score = float(sentiment)
+                sentiment_scores.append(score)
+                if score >= 0.2:
+                    positive += 1
+                elif score <= -0.2:
+                    negative += 1
+                else:
+                    neutral += 1
+            except Exception:
+                pass
+
+        source_url = str(row.get("source_url") or "").strip()
+        if source_url:
+            host = urlparse(source_url).netloc.lower()
+            if host.startswith("www."):
+                host = host[4:]
+            if host:
+                domains.add(host)
+
+        published_marker = row.get("publication_date") or row.get("published_at") or row.get("created_at")
+        if isinstance(published_marker, (datetime, date)):
+            dates.append(published_marker)
+
+        source_text = " ".join(
+            str(row.get(key) or "").strip()
+            for key in ["title", "summary", "content"]
+        ).strip()
+        bias_scores.append(_source_bias_score(source_text))
+        persuasion_scores.append(_source_persuasion_score(source_text))
+
+    bias_high = sum(1 for value in bias_scores if value >= 0.25)
+    persuasion_high = sum(1 for value in persuasion_scores if value >= 0.2)
+    denominator = max(1, len(rows))
+
+    sentiment_distribution = {
+        "positive": positive,
+        "neutral": neutral,
+        "negative": negative,
+    }
+    sentiment_percent = {
+        key: int(round((value / denominator) * 100))
+        for key, value in sentiment_distribution.items()
+    }
+
+    bias_distribution = {
+        "low": sum(1 for value in bias_scores if value < 0.15),
+        "medium": sum(1 for value in bias_scores if 0.15 <= value < 0.35),
+        "high": sum(1 for value in bias_scores if value >= 0.35),
+    }
+    bias_percent = {
+        key: int(round((value / denominator) * 100))
+        for key, value in bias_distribution.items()
+    }
+
+    persuasion_distribution = {
+        "low": sum(1 for value in persuasion_scores if value < 0.12),
+        "medium": sum(1 for value in persuasion_scores if 0.12 <= value < 0.28),
+        "high": sum(1 for value in persuasion_scores if value >= 0.28),
+    }
+    persuasion_percent = {
+        key: int(round((value / denominator) * 100))
+        for key, value in persuasion_distribution.items()
+    }
+
+    return {
+        "available": bool(rows),
+        "cluster_size": len(source_ids),
+        "source_sample_size": len(rows),
+        "distinct_source_domains": len(domains),
+        "date_start": min(dates) if dates else None,
+        "date_end": max(dates) if dates else None,
+        "sentiment_range": _format_range(sentiment_scores),
+        "sentiment_balance": f"+{positive} / ~{neutral} / -{negative}" if sentiment_scores else "N/A",
+        "sentiment_distribution": sentiment_distribution,
+        "sentiment_percent": sentiment_percent,
+        "bias_range": _format_range(bias_scores),
+        "bias_high_share": f"{bias_high}/{denominator}",
+        "bias_distribution": bias_distribution,
+        "bias_percent": bias_percent,
+        "persuasion_range": _format_range(persuasion_scores),
+        "persuasion_high_share": f"{persuasion_high}/{denominator}",
+        "persuasion_distribution": persuasion_distribution,
+        "persuasion_percent": persuasion_percent,
+    }
+
+
+def _build_story_insights(story_context: dict[str, object], cluster_signals: dict[str, object]) -> dict[str, object]:
+    if not story_context:
+        return {
+            "available": False,
+            "story_type": "One-off",
+        }
+
+    living_story = story_context.get("living_story") if isinstance(story_context.get("living_story"), dict) else {}
+    explainability = living_story.get("explainability") if isinstance(living_story.get("explainability"), dict) else {}
+    last_diff = living_story.get("last_diff") if isinstance(living_story.get("last_diff"), dict) else {}
+    reasons = explainability.get("reasons") if isinstance(explainability.get("reasons"), list) else []
+
+    composite_score = living_story.get("last_composite_score")
+    if composite_score is None:
+        composite_score = last_diff.get("composite_score")
+
+    return {
+        "available": True,
+        "story_id": story_context.get("story_id") or "N/A",
+        "cluster_id": story_context.get("cluster_id") or "N/A",
+        "story_type": "Living Story" if living_story else "One-off",
+        "update_action": living_story.get("last_update_action") if living_story else "created",
+        "revision": living_story.get("revision") if living_story else None,
+        "last_new_articles": living_story.get("last_new_articles") if living_story else None,
+        "meaningful_score": living_story.get("last_meaningful_score") if living_story else None,
+        "composite_score": composite_score,
+        "urgency_class": explainability.get("urgency_class") if explainability else None,
+        "decision": explainability.get("decision") if explainability else None,
+        "primary_reason": reasons[0] if reasons else None,
+        "cluster_size": cluster_signals.get("cluster_size", 0),
+        "date_start": cluster_signals.get("date_start"),
+        "date_end": cluster_signals.get("date_end"),
+    }
+
+
 def home(request):
     featured_qs = Article.objects.filter(is_featured=True).order_by("-published_at")[:5]
     latest_qs = Article.objects.order_by("-published_at")[:12]
@@ -139,13 +479,13 @@ def article_detail(request, slug):
         .order_by("-created_at")
         .first()
     )
+    story_context = _resolve_story_context(article, latest_audit)
+    cluster_signals = _compute_cluster_signals(story_context)
+    story_insights = _build_story_insights(story_context, cluster_signals)
 
-    related_qs = (
-        Article.objects.filter(category=article.category)
-        .exclude(id=article.id)
-        .order_by("-published_at")[:4]
+    latest_news = list(
+        Article.objects.exclude(id=article.id).order_by("-published_at")[:6]
     )
-    related_cards = [_build_article_card(item) for item in related_qs]
     seo_description = _seo_description(article, max_words=30)
 
     return render(
@@ -159,8 +499,10 @@ def article_detail(request, slug):
             "read_time": _estimate_read_time(article.body or article.summary),
             "evidence_links": evidence_links,
             "narrative_signals": narrative_signals,
-            "related_cards": related_cards,
+            "latest_news": latest_news,
             "latest_audit": latest_audit,
+            "story_insights": story_insights,
+            "cluster_signals": cluster_signals,
         },
     )
 
@@ -293,7 +635,6 @@ PUBLISHING_LATENCY_SECONDS = Histogram(
 
 # BBC-style category views
 def category_view(request, category):
-    # Normalize category to match model choices
     category_map = {
         "world": "World",
         "uk": "UK",
@@ -305,7 +646,8 @@ def category_view(request, category):
         "entertainment": "Entertainment",
         "sport": "Sport",
     }
-    cat_label = category_map.get(category.lower())
+    cat_key = category.lower()
+    cat_label = category_map.get(cat_key)
     if not cat_label:
         return render(
             request,
@@ -318,7 +660,7 @@ def category_view(request, category):
         )
     articles = [
         _build_article_card(article)
-        for article in Article.objects.filter(category=cat_label).order_by("-published_at")
+        for article in Article.objects.filter(category=cat_key).order_by("-published_at")
     ]
     return render(
         request,
@@ -425,7 +767,7 @@ def sitemap_static_xml(request):
 
     for slug, label in _category_map().items():
         category_latest = (
-            Article.objects.filter(category=label)
+            Article.objects.filter(category=slug)
             .order_by("-updated_at")
             .values_list("updated_at", flat=True)
             .first()

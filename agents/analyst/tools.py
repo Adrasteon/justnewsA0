@@ -18,8 +18,11 @@ All functions include robust error handling, validation, and fallbacks.
 """
 
 import json
+import os
 import time
 from typing import Any
+
+import requests
 
 from common.observability import get_logger
 from database.utils.migrated_database_utils import create_database_service
@@ -101,7 +104,7 @@ def _fetch_article_row_with_retry(db: Any, article_id: int, max_retries: int = 2
             cursor, conn, shared_conn = _acquire_cursor(db, dictionary=True, buffered=True)
             cursor.execute(
                 """
-                SELECT id, content, structured_metadata, analyzed, factual_accuracy_score, fact_check_details
+                SELECT id, content, source_url, structured_metadata, analyzed, factual_accuracy_score, fact_check_details
                 FROM articles
                 WHERE id = %s
                 """,
@@ -837,6 +840,71 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
             (json.dumps(current_struct), factual_score, audit_json, article_id),
             article_id,
         )
+
+        try:
+            from training_system import collect_prediction
+
+            collect_prediction(
+                agent_name="analyst",
+                task_type="analyze_article",
+                input_text=content[:5000],
+                prediction={
+                    "article_id": article_id,
+                    "sentiment": sent_bias.get("sentiment"),
+                    "bias": sent_bias.get("bias"),
+                    "factual_score": factual_score,
+                    "entities": entities,
+                },
+                confidence=1.0,
+                source_url=str(row.get("source_url") or f"article_id:{article_id}"),
+            )
+        except ImportError as import_err:
+            logger.warning(
+                "training_system import unavailable in analyst path; using direct HTTP fallback: %s",
+                import_err,
+            )
+            try:
+                base_url = os.environ.get("TRAINING_SYSTEM_URL", "").strip().rstrip("/")
+                if not base_url:
+                    ts_port = os.environ.get("TRAINING_SYSTEM_PORT", "8011")
+                    ts_host = os.environ.get("TRAINING_SYSTEM_HOSTNAME", "localhost")
+                    base_url = f"http://{ts_host}:{ts_port}"
+
+                timeout_sec = float(os.environ.get("TRAINING_SYSTEM_FORWARD_TIMEOUT_SEC", "8.0"))
+                requests.post(
+                    f"{base_url}/tool/add_prediction_feedback",
+                    json={
+                        "agent_name": "analyst",
+                        "task_type": "analyze_article",
+                        "input_text": content[:5000],
+                        "predicted_output": {
+                            "article_id": article_id,
+                            "sentiment": sent_bias.get("sentiment"),
+                            "bias": sent_bias.get("bias"),
+                            "factual_score": factual_score,
+                            "entities": entities,
+                        },
+                        "actual_output": {
+                            "article_id": article_id,
+                            "sentiment": sent_bias.get("sentiment"),
+                            "bias": sent_bias.get("bias"),
+                            "factual_score": factual_score,
+                            "entities": entities,
+                        },
+                        "confidence_score": 1.0,
+                    },
+                    timeout=timeout_sec,
+                )
+            except Exception as fallback_error:
+                logger.warning(
+                    "Direct HTTP fallback training collection failed for analyze_article %s: %s",
+                    article_id,
+                    fallback_error,
+                )
+        except Exception as e:
+            logger.warning(
+                f"Failed to collect training data for analyze_article {article_id}: {e}"
+            )
         
         logger.info(f"Article {article_id} analyzed successfully (Score: {factual_score})")
         return {"status": "success", "article_id": article_id, "factual_score": factual_score}

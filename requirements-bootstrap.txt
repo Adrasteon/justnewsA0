@@ -17,7 +17,7 @@ torchvision
 torchaudio
 nvidia-ml-py
 fastapi>=0.120
-uvicorn
+uvicorn[standard]
 starlette
 django>=4.2
 requests>=2.31
@@ -27,6 +27,7 @@ aiofiles
 uvloop
 httptools
 watchfiles
+websockets
 python-dotenv>=1.0
 orjson
 ujson

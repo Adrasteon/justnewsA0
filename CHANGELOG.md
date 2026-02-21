@@ -3,6 +3,55 @@ last_updated: 2025-09-12 last_updated: 2025-11-01 ---
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-02-20 - **INGEST RESILIENCY, STARTUP ALIGNMENT, AND TRAINING PIPELINE HARDENING**
+
+### 🧭 **Workflow Autonomic Shadow Telemetry (Latest)**
+
+- **✅** Added explicit workflow autonomic shadow-mode environment controls in `global.env` usage:
+  - `AUTONOMIC_MODE=shadow`
+  - `AUTONOMIC_DECISIONS_ENABLED=1`
+  - `AUTONOMIC_LEARNING_ENABLED=1`
+- **✅** Hardened orchestrator telemetry in `agents/workflow_orchestrator/engine.py` so `last_decision` is populated early in shadow mode even during long policy execution windows.
+- **✅** Added shadow-decision log emission for operator visibility:
+  - `Autonomic shadow decision recorded: status=<...> reason=<...> patch=<...>`
+
+### 🕷️ **Crawler + Memory Ingest Resiliency**
+
+- **✅** Added bounded ingest backpressure controls in crawler (`UNIFIED_CRAWLER_INGEST_MAX_INFLIGHT`, `UNIFIED_CRAWLER_INGEST_BACKOFF_SECONDS`).
+- **✅** Implemented disk-backed deferred ingest spool and replay in `agents/crawler/crawler_engine.py`:
+  - transient outage classification
+  - deferred on-disk queueing
+  - oldest-first replay batches
+  - oldest-first pruning at capacity
+- **✅** Added memory load-shedding toggle `MEMORY_ESSENTIAL_MODE` in `agents/memory/tools.py` to prioritize core ingest path by skipping optional heavy post-ingest work.
+
+### 🧭 **Service Startup / Manifest Alignment**
+
+- **✅** Added `training_system` to startup manifests and scripts:
+  - `infrastructure/agents_manifest.sh`
+  - `infrastructure/systemd/scripts/enable_all.sh`
+  - `infrastructure/systemd/scripts/justnews-start-agent.sh`
+  - `scripts/ops/start_services_daemon.sh`
+  - `scripts/ops/stop_services.sh`
+  - `start_all_services.sh`
+- **✅** Added crawler spool env resolution defaults in startup scripts for persistent spool paths with safe fallback behavior.
+
+### 🧠 **Training System Forwarding + Compatibility**
+
+- **✅** Added resilient training forward path in `training_system/core/system_manager.py`:
+  - configurable forwarding endpoint and timeout
+  - enable/disable and local-fallback toggles
+  - compatibility feedback wrapper for MCP tool ingestion
+- **✅** Prioritized key pipeline task types in `training_system/core/training_coordinator.py` to avoid under-weighted feedback.
+
+### 🗄️ **Database Migration**
+
+- **✅** Added migration `database/migrations/019_align_training_examples_for_online_training.sql` to align `training_examples` with online training coordinator fields and indexes.
+
+### 📰 **Publisher Surface Enhancements**
+
+- **✅** Updated publisher templates and view logic to support expanded article diagnostics panels, latest-news rail, improved metadata/tooltips, and related story context.
+
 ## [Unreleased] - 2026-02-16 - **PUBLISHER UX + SEO DISCOVERABILITY OVERHAUL**
 
 ### 📰 **Website Publishing Experience Upgrade**

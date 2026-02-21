@@ -84,7 +84,7 @@ validate_agent_name() {
     if [[ -z "$agent" ]]; then
         log_error "Agent name is required"
         log_info "Usage: $SCRIPT_NAME <agent_name>"
-        log_info "Available agents: mcp_bus, chief_editor, fact_checker, analyst, synthesizer, critic, memory, reasoning, dashboard, analytics, archive, hitl_service, crawl4ai, gpu_orchestrator, crawler, crawler_control, workflow_orchestrator"
+        log_info "Available agents: mcp_bus, chief_editor, fact_checker, analyst, synthesizer, critic, memory, reasoning, training_system, dashboard, analytics, archive, hitl_service, crawl4ai, gpu_orchestrator, crawler, crawler_control, workflow_orchestrator"
         exit 1
     fi
 
@@ -100,6 +100,7 @@ validate_agent_name() {
         "memory"
         "reasoning"
         "newsreader"
+        "training_system"
         "dashboard"
         "analytics"
         "archive"
@@ -130,6 +131,19 @@ validate_agent_name() {
 check_agent_directory() {
     local agent="$1"
     local agent_dir="$PROJECT_ROOT/agents/$agent"
+
+    if [[ "$agent" == "training_system" ]]; then
+        local training_dir="$PROJECT_ROOT/training_system"
+        if [[ ! -d "$training_dir" ]]; then
+            log_error "Training system directory not found: $training_dir"
+            exit 1
+        fi
+        if [[ ! -f "$training_dir/mcp_integration.py" ]]; then
+            log_error "Training system entrypoint not found: $training_dir/mcp_integration.py"
+            exit 1
+        fi
+        return 0
+    fi
 
     if [[ ! -d "$agent_dir" ]]; then
         log_error "Agent directory not found: $agent_dir"
@@ -172,6 +186,32 @@ setup_environment() {
     # Set default environment variables if not set
     export PYTHONPATH="${PYTHONPATH:-$PROJECT_ROOT}"
     export PYTHONUNBUFFERED="${PYTHONUNBUFFERED:-1}"
+
+    # Crawler disk-backed ingest spool defaults (persistent path with fallback)
+    if [[ "$agent" == "crawler" ]]; then
+        local default_spool_dir=""
+        if [[ -n "${UNIFIED_CRAWLER_INGEST_SPOOL_DIR:-}" ]]; then
+            default_spool_dir="${UNIFIED_CRAWLER_INGEST_SPOOL_DIR}"
+        elif [[ -d "/media/adra/Data/justnews" ]]; then
+            default_spool_dir="/media/adra/Data/justnews/spool/crawler_ingest"
+        elif [[ -d "/media/adra/data/justnews" ]]; then
+            default_spool_dir="/media/adra/data/justnews/spool/crawler_ingest"
+        elif [[ -d "/var/lib/justnews" ]] || mkdir -p "/var/lib/justnews" 2>/dev/null; then
+            default_spool_dir="/var/lib/justnews/spool/crawler_ingest"
+        else
+            default_spool_dir="$PROJECT_ROOT/runtime/crawler_ingest_spool"
+        fi
+
+        export UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED="${UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED:-true}"
+        export UNIFIED_CRAWLER_INGEST_SPOOL_DIR="$default_spool_dir"
+
+        if ! mkdir -p "$UNIFIED_CRAWLER_INGEST_SPOOL_DIR" 2>/dev/null; then
+            log_warning "Could not create crawler spool dir: $UNIFIED_CRAWLER_INGEST_SPOOL_DIR"
+        fi
+        if [[ -d "$UNIFIED_CRAWLER_INGEST_SPOOL_DIR" && ! -w "$UNIFIED_CRAWLER_INGEST_SPOOL_DIR" ]]; then
+            log_warning "Crawler spool dir is not writable: $UNIFIED_CRAWLER_INGEST_SPOOL_DIR"
+        fi
+    fi
 
     # Safety mode: force CPU and conservative settings to avoid GPU-related hard resets
     if [[ "${SAFE_MODE:-false}" == "true" ]]; then
@@ -352,9 +392,15 @@ check_python_deps_and_exit_if_missing() {
         # Dashboard imports fastapi and uvicorn at module import time; ensure they exist
         modules=(uvicorn fastapi requests)
     fi
+    if [[ "$agent" == "training_system" ]]; then
+        modules=(uvicorn fastapi requests prometheus_client)
+    fi
 
     # Auto-detect common modules in the agent's main script and add them to checks
     local agent_main_path="$PROJECT_ROOT/agents/${agent}/main.py"
+    if [[ "$agent" == "training_system" ]]; then
+        agent_main_path="$PROJECT_ROOT/training_system/mcp_integration.py"
+    fi
     if [[ -f "$agent_main_path" ]]; then
         if grep -E "^\s*import[[:space:]]+uvicorn" "$agent_main_path" >/dev/null 2>&1 || grep -E "^\s*from[[:space:]]+uvicorn" "$agent_main_path" >/dev/null 2>&1; then
             modules+=(uvicorn)
@@ -492,6 +538,15 @@ start_agent() {
             log_warning "uvicorn not available; falling back to module runner"
             cmd=("${py_cmd_parts[@]}" "-m" "agents.${agent}.main")
         fi
+    elif [[ "$agent" == "training_system" ]]; then
+        local port="${TRAINING_SYSTEM_PORT:-8011}"
+        if "${py_cmd_parts[@]}" -c "import uvicorn" >/dev/null 2>&1; then
+            cmd=("${py_cmd_parts[@]}" "-m" "uvicorn" "training_system.mcp_integration:app" "--host" "0.0.0.0" "--port" "$port" "--log-level" "info")
+            log_info "Using uvicorn runner on port $port"
+        else
+            log_warning "uvicorn not available; falling back to module runner"
+            cmd=("${py_cmd_parts[@]}" "-m" "training_system.main")
+        fi
     else
         cmd=("${py_cmd_parts[@]}" "-m" "agents.${agent}.main")
     fi
@@ -536,6 +591,7 @@ AGENTS:
     critic          Quality assessment
     memory          Data storage
     reasoning       Logical reasoning
+    training_system System-wide online training coordinator
     # newsreader      News processing (Deprecated)
     dashboard       Web interface
     analytics       System analytics and monitoring

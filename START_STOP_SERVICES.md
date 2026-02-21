@@ -6,7 +6,7 @@ This document describes the canonical `start_all_services.sh` and `stop_all_serv
 
 The JustNews system consists of:
 - **Database Services**: MariaDB, ChromaDB, Redis
-- **Agents**: 16 agent services managed through the canonical agents manifest
+- **Agents**: 17 agent services managed through the canonical agents manifest
 
 These scripts provide a single, comprehensive entry point for starting and stopping all services in the correct order with proper dependency management.
 
@@ -64,7 +64,7 @@ Starts all JustNews services in the correct dependency order:
 2. **Database Services** - Starts Redis, ChromaDB, MariaDB in sequence
 3. **Wait for Readiness** - Waits for database ports to respond
 4. **Run Migrations** - Executes schema migrations
-5. **Start Agents** - Launches all 16 agents from canonical manifest
+5. **Start Agents** - Launches all 17 agents from canonical manifest
 6. **Health Verification** - Validates all services are responding
 
 ### Usage
@@ -106,6 +106,26 @@ VERBOSE=1 ./start_all_services.sh
 ./start_all_services.sh --skip-migrations
 ```
 
+### Crawler Deferred-Ingest Spool (Persistent)
+
+`start_all_services.sh` now sets crawler ingest spool defaults for durability under downstream outages.
+
+Resolution order for `UNIFIED_CRAWLER_INGEST_SPOOL_DIR`:
+
+1. explicit env override
+2. `/media/adra/Data/justnews/spool/crawler_ingest`
+3. `/media/adra/data/justnews/spool/crawler_ingest`
+4. `/var/lib/justnews/spool/crawler_ingest`
+5. `/app/runtime/crawler_ingest_spool`
+
+Related env variables:
+
+- `UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED=true`
+- `UNIFIED_CRAWLER_INGEST_SPOOL_MAX_ITEMS`
+- `UNIFIED_CRAWLER_INGEST_SPOOL_REPLAY_BATCH`
+- `UNIFIED_CRAWLER_INGEST_MAX_INFLIGHT`
+- `UNIFIED_CRAWLER_INGEST_BACKOFF_SECONDS`
+
 ### Output Example
 
 ```
@@ -127,7 +147,7 @@ VERBOSE=1 ./start_all_services.sh
 2025-02-09T00:00:11Z [INFO] Running Django migrations...
 2025-02-09T00:00:20Z [SUCCESS] Django migrations completed
 
-=== Agents Startup (16 agents) ===
+=== Agents Startup (17 agents) ===
 2025-02-09T00:00:21Z [INFO] Starting mcp_bus on port 8000...
 2025-02-09T00:00:23Z [SUCCESS] mcp_bus is ready on port 8000
 ...
@@ -161,6 +181,27 @@ SKIP_HEALTH_CHECK=1   # Skip health verification
 SERVICE_TIMEOUT=120    # Timeout for service readiness (seconds)
 AGENT_START_DELAY=2    # Delay between agent starts (seconds)
 
+# Host RAM guardrail (default cap: 85% used)
+JUSTNEWS_RAM_CAP_ENFORCE=1                  # Enforce RAM usage gate before each service start
+JUSTNEWS_RAM_CAP_PERCENT=85                 # Block startup when host RAM usage is at/above this percent
+JUSTNEWS_RAM_CAP_WAIT_SECONDS=120           # Max seconds to wait for usage to drop below cap
+JUSTNEWS_RAM_CAP_CHECK_INTERVAL_SECONDS=5   # Poll interval while waiting for RAM headroom
+
+# Runtime memory governor (lifecycle moderation; environment-agnostic)
+JUSTNEWS_MEMORY_GOVERNOR_ENABLED=1          # Enable runtime governor daemon
+JUSTNEWS_MEMORY_SOFT_PERCENT=85             # Pause one non-critical process at/above this usage
+JUSTNEWS_MEMORY_HARD_PERCENT=88             # Pause/terminate non-critical process at/above this usage
+JUSTNEWS_MEMORY_EMERGENCY_PERCENT=92        # Shed highest-RSS non-critical process at/above this usage
+JUSTNEWS_MEMORY_RESUME_PERCENT=80           # Resume paused processes below this usage
+JUSTNEWS_MEMORY_CHECK_INTERVAL_SECONDS=5    # Poll interval for runtime governor
+JUSTNEWS_MEMORY_ACTION_COOLDOWN_SECONDS=20  # Minimum seconds between governor actions
+JUSTNEWS_MEMORY_TERMINATE_GRACE_SECONDS=12  # Grace period before SIGKILL
+
+# Workflow autonomic controller (orchestrator)
+AUTONOMIC_MODE=shadow                        # disabled|shadow|active
+AUTONOMIC_DECISIONS_ENABLED=1                # Enable decision cycle
+AUTONOMIC_LEARNING_ENABLED=1                 # Keep learning telemetry in shadow mode
+
 # Database configuration (usually from global.env)
 MARIADB_HOST=localhost
 MARIADB_PORT=3306
@@ -173,7 +214,40 @@ CHROMADB_PORT=3307
 
 REDIS_HOST=localhost
 REDIS_PORT=6379
+
+# Crawler ingest resiliency
+UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED=true
+UNIFIED_CRAWLER_INGEST_SPOOL_DIR=/var/lib/justnews/spool/crawler_ingest
+UNIFIED_CRAWLER_INGEST_SPOOL_MAX_ITEMS=2500
+UNIFIED_CRAWLER_INGEST_SPOOL_REPLAY_BATCH=25
+UNIFIED_CRAWLER_INGEST_MAX_INFLIGHT=6
+UNIFIED_CRAWLER_INGEST_BACKOFF_SECONDS=8
+
+# Memory pressure mitigation
+MEMORY_ESSENTIAL_MODE=true
 ```
+
+### Runtime Memory Governor Behavior
+
+- The startup script launches `scripts/ops/justnews_memory_governor.py` after services pass startup/verification.
+- Governor logic is tiered to avoid brittle behavior:
+	- soft pressure: pause one non-critical process (`SIGSTOP`)
+	- hard pressure: pause additional process, then terminate one non-critical process if pressure persists
+	- emergency pressure: terminate highest-RSS non-critical process
+	- recovery window: resume paused processes (`SIGCONT`) once memory drops below resume threshold
+- Critical core services (`mcp_bus`, `memory`) are protected from governor termination actions.
+- Governor state/log files:
+	- `/tmp/justnews_services_logs/memory_governor/justnews_memory_governor.log`
+	- `/tmp/justnews_services_logs/memory_governor/justnews_memory_governor_state.json`
+
+### Workflow Autonomic Shadow Telemetry
+
+- The workflow orchestrator exposes shadow/autonomic state at:
+	- `GET http://localhost:8023/autonomic/status`
+- In shadow mode (`AUTONOMIC_MODE=shadow`), decisions are recorded without runtime patch application.
+- Latest shadow-decision visibility is available in logs via:
+	- `Autonomic shadow decision recorded: status=<...> reason=<...> patch=<...>`
+	- log file: `/tmp/justnews_services_logs/workflow_orchestrator.startup.log`
 
 ## stop_all_services.sh
 

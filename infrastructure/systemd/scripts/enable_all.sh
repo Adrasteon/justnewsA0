@@ -21,6 +21,7 @@ SERVICES=(
     "memory"
     "reasoning"
     "newsreader"
+    "training_system"
     "analytics"      # Analytics service (port 8012 per canonical mapping)
     "archive"        # Archive agent (port 8012)
     "dashboard"      # Dashboard agent (port 8013)

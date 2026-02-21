@@ -475,6 +475,14 @@ class OrchestratorEngine:
         if len(self._autonomic_decision_history) > 50:
             self._autonomic_decision_history = self._autonomic_decision_history[-50:]
 
+        if decision.get("mode") == "shadow":
+            logger.info(
+                "Autonomic shadow decision recorded: status=%s reason=%s patch=%s",
+                decision.get("result", {}).get("status"),
+                decision.get("reason"),
+                decision.get("proposed_patch", {}),
+            )
+
         self.telemetry.setdefault("autonomic", {})
         self.telemetry["autonomic"].update(
             {
@@ -700,6 +708,16 @@ class OrchestratorEngine:
         thresholds = self.config["resource_limits"]
         self._last_resource_stats = self.resource_monitor.get_stats()
         self._last_resource_healthy = self.resource_monitor.check_health(thresholds)
+
+        # In shadow mode, emit a decision snapshot before potentially long policy
+        # execution so telemetry endpoints always have a recent last_decision.
+        if (
+            self.autonomic_mode == "shadow"
+            and self.autonomic_decisions_enabled
+            and self._autonomic_last_decision is None
+        ):
+            self._run_autonomic_decision_cycle()
+
         if not self._last_resource_healthy:
             logger.info("Resources saturated. Skipping tick.")
             self._run_autonomic_decision_cycle()

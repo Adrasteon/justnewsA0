@@ -14,7 +14,8 @@ SYSTEM_PROMPT = (
     "You are the JustNews synthesis lead. Given multiple article snippets, "
     "produce JSON with body (full neutral synthesis), summary (2 sentence abstract), "
     "narrative_voice, key_points (list), cautions (list), "
-    "and pull_quotes (list). Emphasize factual consistency and note any gaps."
+    "and pull_quotes (list). Emphasize factual consistency and note any gaps. "
+    "The body must be substantially longer than the summary (target 220-450 words)."
 )
 
 class SynthesizerModelAdapter:
@@ -31,7 +32,7 @@ class SynthesizerModelAdapter:
             api_key="unused", # os.environ.get("VLLM_API_KEY") or "unused",
             system_prompt=SYSTEM_PROMPT,
             temperature=0.3,
-            max_tokens=600,  # Slightly increased from legacy 512
+            max_tokens=1400,
             timeout=300.0
         )
         self.adapter.load()

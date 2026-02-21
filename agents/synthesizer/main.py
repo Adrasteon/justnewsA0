@@ -544,16 +544,37 @@ async def synthesize_and_publish(request: SynthesisRequest) -> dict[str, Any]:
         except Exception:
             embedding = None
 
+        audit_story_id = request.story_id or f"synth_{request.cluster_id or 'manual'}_{int(datetime.now().timestamp())}"
+        synthesis_text = result.get("synthesis", "")
+        synthesis_metadata = {
+            "provenance": {
+                "generated_at": datetime.utcnow().isoformat() + "Z",
+                "source_agent": "synthesizer",
+                "entrypoint": "synthesize_and_publish",
+                "cluster_id": request.cluster_id,
+                "story_id": audit_story_id,
+                "method": result.get("method"),
+                "model_used": result.get("model_used"),
+                "confidence": result.get("confidence"),
+                "context": request.context,
+                "articles_processed": result.get("articles_processed"),
+                "clusters_found": result.get("clusters_found"),
+                "synthesis_length_chars": len(synthesis_text or ""),
+                "synthesis_length_words": len((synthesis_text or "").split()),
+            },
+            "critic": critic_result,
+            "draft_fact_check": draft_report,
+        }
+
         save_synthesized_draft(
-            story_id=request.story_id
-            or f"synth_{request.cluster_id or 'manual'}_{int(datetime.now().timestamp())}",
+            story_id=audit_story_id,
             title=result.get("title") or result.get("synthesis", "")[:200],
             body=result.get("synthesis", ""),
             summary=result.get("summary"),
             analysis_summary=getattr(draft_report, "analysis_summary", None)
             if draft_report
             else None,
-            synth_metadata={"critique": critic_result},
+            synth_metadata=synthesis_metadata,
             persistence_mode=persistence_mode,
             embedding=embedding,
         )

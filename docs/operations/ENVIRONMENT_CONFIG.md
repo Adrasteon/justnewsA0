@@ -20,6 +20,17 @@ JustNews uses a **layered configuration approach**:
 
 The `scripts/run_with_env.sh` wrapper sources these in order, so later values override earlier ones.
 
+## Dependency manifests (Conda + UV/Pip)
+
+- `environment.yml` is the canonical dependency specification.
+- `requirements-bootstrap.txt` is the UV/pip bootstrap mirror used in non-conda bootstrap flows.
+- `requirements.txt` is a compatibility wrapper that includes `requirements-bootstrap.txt`.
+
+Recommended:
+
+- Use conda for primary runtime provisioning.
+- Use UV/pip bootstrap only where conda is not used, while keeping parity with `environment.yml`.
+
 ## The `/etc/justnews/global.env` File
 
 ### Purpose
@@ -146,6 +157,12 @@ MCP_BUS_MISSING_AGENT_POLL_INTERVAL_SEC=30
 UNIFIED_CRAWLER_ENABLE_HTTP_FETCH=true
 UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR=3
 UNIFIED_CRAWLER_MAX_REQUEST_CAP=150
+UNIFIED_CRAWLER_INGEST_MAX_INFLIGHT=6
+UNIFIED_CRAWLER_INGEST_BACKOFF_SECONDS=8
+UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED=true
+UNIFIED_CRAWLER_INGEST_SPOOL_DIR=/var/lib/justnews/spool/crawler_ingest
+UNIFIED_CRAWLER_INGEST_SPOOL_MAX_ITEMS=2500
+UNIFIED_CRAWLER_INGEST_SPOOL_REPLAY_BATCH=25
 
 ## Analytics Dashboard
 
@@ -160,6 +177,41 @@ FACT_CHECKER_SHIM_TIMEOUT_SEC=45
 FACT_CHECKER_SHIM_MAX_RETRIES=0
 FACT_CHECKER_SHIM_CB_FAILURE_THRESHOLD=20
 FACT_CHECKER_SHIM_CB_OPEN_SEC=20
+
+## Memory load-shedding (optional under sustained ingest pressure)
+
+MEMORY_ESSENTIAL_MODE=true
+
+## Startup RAM guardrail (host memory pressure protection)
+
+JUSTNEWS_RAM_CAP_ENFORCE=1
+JUSTNEWS_RAM_CAP_PERCENT=85
+JUSTNEWS_RAM_CAP_WAIT_SECONDS=120
+JUSTNEWS_RAM_CAP_CHECK_INTERVAL_SECONDS=5
+
+## Runtime memory governor (portable lifecycle control)
+
+JUSTNEWS_MEMORY_GOVERNOR_ENABLED=1
+JUSTNEWS_MEMORY_SOFT_PERCENT=85
+JUSTNEWS_MEMORY_HARD_PERCENT=88
+JUSTNEWS_MEMORY_EMERGENCY_PERCENT=92
+JUSTNEWS_MEMORY_RESUME_PERCENT=80
+JUSTNEWS_MEMORY_CHECK_INTERVAL_SECONDS=5
+JUSTNEWS_MEMORY_ACTION_COOLDOWN_SECONDS=20
+JUSTNEWS_MEMORY_TERMINATE_GRACE_SECONDS=12
+
+## Training system forwarding controls
+
+TRAINING_SYSTEM_URL=http://localhost:8011
+TRAINING_SYSTEM_FORWARD_ENABLED=1
+TRAINING_SYSTEM_FORWARD_TIMEOUT_SEC=8.0
+TRAINING_SYSTEM_LOCAL_FALLBACK_ENABLED=0
+
+## Workflow autonomic controller
+
+AUTONOMIC_MODE=shadow
+AUTONOMIC_DECISIONS_ENABLED=1
+AUTONOMIC_LEARNING_ENABLED=1
 
 ## Workflow Orchestrator (validated low-load profile)
 
@@ -205,6 +257,60 @@ Recommended starting point (development):
 
 - `UNIFIED_CRAWLER_DEDUPE_REPLACEMENT_FACTOR=3`
 - `UNIFIED_CRAWLER_MAX_REQUEST_CAP=150`
+
+Crawler ingest resiliency notes:
+
+- `UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED`
+	- Enables disk-backed deferred ingest queueing when memory/bus is transiently unavailable.
+- `UNIFIED_CRAWLER_INGEST_SPOOL_DIR`
+	- Use a persistent volume-backed path for durability across restarts/reboots.
+- `UNIFIED_CRAWLER_INGEST_SPOOL_MAX_ITEMS`
+	- Hard cap on deferred entries; oldest entries are pruned first when exceeded.
+- `UNIFIED_CRAWLER_INGEST_SPOOL_REPLAY_BATCH`
+	- Max spooled entries replayed per ingest cycle.
+- `UNIFIED_CRAWLER_INGEST_MAX_INFLIGHT` / `UNIFIED_CRAWLER_INGEST_BACKOFF_SECONDS`
+	- Primary controls for route pressure and retry pacing.
+
+Memory pressure mitigation note:
+
+- `MEMORY_ESSENTIAL_MODE=true` keeps core ingest path prioritized by skipping optional heavy post-ingest work.
+
+Startup RAM guardrail notes:
+
+- `JUSTNEWS_RAM_CAP_ENFORCE=1`
+	- Enables host RAM gate in `start_all_services.sh` before each agent/publisher launch.
+- `JUSTNEWS_RAM_CAP_PERCENT`
+	- Blocks additional service startup while host RAM usage is at/above this threshold (use `85` to reserve ~15% headroom).
+- `JUSTNEWS_RAM_CAP_WAIT_SECONDS` and `JUSTNEWS_RAM_CAP_CHECK_INTERVAL_SECONDS`
+	- Control how long startup waits for memory pressure to subside before aborting.
+
+Runtime memory governor notes:
+
+- `JUSTNEWS_MEMORY_GOVERNOR_ENABLED=1`
+	- Starts `scripts/ops/justnews_memory_governor.py` after startup completes.
+- `JUSTNEWS_MEMORY_SOFT_PERCENT` / `JUSTNEWS_MEMORY_HARD_PERCENT` / `JUSTNEWS_MEMORY_EMERGENCY_PERCENT`
+	- Tiered lifecycle controls to reduce pressure without immediate hard kills.
+- `JUSTNEWS_MEMORY_RESUME_PERCENT`
+	- Hysteresis threshold used to resume paused non-critical services once pressure drops.
+- `JUSTNEWS_MEMORY_ACTION_COOLDOWN_SECONDS`
+	- Prevents action thrashing under noisy memory usage.
+- `JUSTNEWS_MEMORY_TERMINATE_GRACE_SECONDS`
+	- Graceful termination window before forced kill when shedding process memory.
+
+Workflow autonomic controller notes:
+
+- `AUTONOMIC_MODE`
+	- `disabled` disables decisions entirely, `shadow` records decisions without applying changes, `active` can apply bounded runtime patches.
+- `AUTONOMIC_DECISIONS_ENABLED`
+	- Feature flag for running the decision cycle.
+- `AUTONOMIC_LEARNING_ENABLED`
+	- Enables shadow-mode learning telemetry collection.
+
+Runtime diagnostics:
+
+- Endpoint: `GET /autonomic/status` on `workflow_orchestrator` (port `8023`).
+- In shadow mode, `last_decision` is now populated early per tick and shadow decisions are logged as:
+	- `Autonomic shadow decision recorded: status=<...> reason=<...> patch=<...>`
 
 #### Telemetry & Monitoring
 

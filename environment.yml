@@ -50,6 +50,7 @@ dependencies:
   - uvloop
   - httptools
   - watchfiles
+  - websockets
 
   # Enterprise Research Stack (Recommended)
   # - duckduckgo-search>=5.0  # Privacy-friendly search

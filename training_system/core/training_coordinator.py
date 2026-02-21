@@ -255,6 +255,16 @@ class OnTheFlyTrainingCoordinator:
             # For other tasks, use uncertainty as importance
             importance_score = uncertainty_score
 
+        pipeline_task_types = {
+            "analyze_article",
+            "embed_article",
+            "summarize_article",
+            "aggregate_cluster",
+            "synthesize_and_publish",
+        }
+        if task_type in pipeline_task_types and importance_score < 0.8:
+            importance_score = 0.8
+
         # Only add examples with high uncertainty or prediction errors
         if uncertainty_score > 0.6 or importance_score > 0.7:
             self.add_training_example(

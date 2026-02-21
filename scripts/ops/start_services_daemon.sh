@@ -28,6 +28,7 @@ AGENTS=(
   "memory|agents.memory.main:app|8007"
   "reasoning|agents.reasoning.main:app|8008"
   # "newsreader|agents.newsreader.main:app|8009"
+  "training_system|training_system.mcp_integration:app|8011"
   # db_worker removed
   "dashboard|agents.dashboard.main:app|8013"
   "analytics|agents.analytics.dashboard:analytics_app|8012"
@@ -157,6 +158,8 @@ else
 fi
 export MODEL_STORE_ROOT="${MODEL_STORE_ROOT:-"$DEFAULT_BASE_MODELS_DIR/model_store"}"
 export BASE_MODEL_DIR="${BASE_MODEL_DIR:-"$DEFAULT_BASE_MODELS_DIR/agents"}"
+export UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED="${UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED:-true}"
+export UNIFIED_CRAWLER_INGEST_SPOOL_DIR="${UNIFIED_CRAWLER_INGEST_SPOOL_DIR:-"$DEFAULT_BASE_MODELS_DIR/spool/crawler_ingest"}"
 
 # Enforce strict ModelStore usage by default for production runs started via this script.
 # Set STRICT_MODEL_STORE=0 to allow fallbacks for development/testing.
@@ -199,6 +202,13 @@ for d in "$BASE_MODEL_DIR" "$SYNTHESIZER_MODEL_CACHE" "$MEMORY_MODEL_CACHE" "$CH
     echo "WARNING: $d is not writable by $(id -un). If agents need to download models here, adjust permissions or run as a user with access."
   fi
 done
+
+if [ ! -d "$UNIFIED_CRAWLER_INGEST_SPOOL_DIR" ]; then
+  mkdir -p "$UNIFIED_CRAWLER_INGEST_SPOOL_DIR" 2>/dev/null || echo "WARNING: Could not create crawler ingest spool dir $UNIFIED_CRAWLER_INGEST_SPOOL_DIR"
+fi
+if [ -d "$UNIFIED_CRAWLER_INGEST_SPOOL_DIR" ] && [ ! -w "$UNIFIED_CRAWLER_INGEST_SPOOL_DIR" ]; then
+  echo "WARNING: Crawler ingest spool dir is not writable: $UNIFIED_CRAWLER_INGEST_SPOOL_DIR"
+fi
 
 echo "Checking ports 8000..8025 for running agents..."
 for port in $(seq 8000 8025); do
@@ -275,7 +285,11 @@ start_agent() {
 
   echo "Starting $name -> $module on port $port"
   # Start uvicorn via conda run so the right env is used. Run in background.
-  conda run --name "$CONDA_ENV" uvicorn "$module" --host 0.0.0.0 --port "$port" --log-level info >"$out_log" 2>"$err_log" &
+  if [ "$name" = "training_system" ]; then
+    TRAINING_SYSTEM_PORT="$port" conda run --name "$CONDA_ENV" uvicorn "$module" --host 0.0.0.0 --port "$port" --log-level info >"$out_log" 2>"$err_log" &
+  else
+    conda run --name "$CONDA_ENV" uvicorn "$module" --host 0.0.0.0 --port "$port" --log-level info >"$out_log" 2>"$err_log" &
+  fi
   local pid=$!
   PIDS+=("$pid")
   echo "$name started (pid $pid), logs: $out_log, $err_log"

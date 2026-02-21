@@ -20,6 +20,15 @@
 #   USE_DOCKER=1          - Use Docker/Docker Compose for database services
 #   SERVICE_TIMEOUT=120   - Timeout in seconds for service readiness
 #   AGENT_START_DELAY=2   - Delay between agent starts (seconds)
+#   JUSTNEWS_RAM_CAP_ENFORCE=1                - Enforce RAM usage gate before each service start
+#   JUSTNEWS_RAM_CAP_PERCENT=85               - Block service startup when host RAM usage is at/above this percent
+#   JUSTNEWS_RAM_CAP_WAIT_SECONDS=120         - Max seconds to wait for RAM usage to drop below cap
+#   JUSTNEWS_RAM_CAP_CHECK_INTERVAL_SECONDS=5 - Poll interval while waiting for RAM headroom
+#   JUSTNEWS_MEMORY_GOVERNOR_ENABLED=1        - Enable runtime memory governor (portable, non-systemd)
+#   JUSTNEWS_MEMORY_SOFT_PERCENT=80           - Soft pressure threshold (start non-critical shedding)
+#   JUSTNEWS_MEMORY_HARD_PERCENT=84           - Hard pressure threshold (accelerated non-critical shedding)
+#   JUSTNEWS_MEMORY_EMERGENCY_PERCENT=88      - Emergency threshold (aggressive non-critical shedding)
+#   JUSTNEWS_MEMORY_RESUME_PERCENT=75         - Resume paused processes below this usage threshold
 #
 
 set -euo pipefail
@@ -54,6 +63,26 @@ USE_DOCKER="${USE_DOCKER:-0}"
 VERBOSE="${VERBOSE:-0}"
 DRY_RUN="${DRY_RUN:-0}"
 
+# Host RAM pressure guardrails
+JUSTNEWS_RAM_CAP_ENFORCE="${JUSTNEWS_RAM_CAP_ENFORCE:-1}"
+JUSTNEWS_RAM_CAP_PERCENT="${JUSTNEWS_RAM_CAP_PERCENT:-85}"
+JUSTNEWS_RAM_CAP_WAIT_SECONDS="${JUSTNEWS_RAM_CAP_WAIT_SECONDS:-120}"
+JUSTNEWS_RAM_CAP_CHECK_INTERVAL_SECONDS="${JUSTNEWS_RAM_CAP_CHECK_INTERVAL_SECONDS:-5}"
+
+# Runtime memory governor (lifecycle control)
+JUSTNEWS_MEMORY_GOVERNOR_ENABLED="${JUSTNEWS_MEMORY_GOVERNOR_ENABLED:-1}"
+JUSTNEWS_MEMORY_SOFT_PERCENT="${JUSTNEWS_MEMORY_SOFT_PERCENT:-80}"
+JUSTNEWS_MEMORY_HARD_PERCENT="${JUSTNEWS_MEMORY_HARD_PERCENT:-84}"
+JUSTNEWS_MEMORY_EMERGENCY_PERCENT="${JUSTNEWS_MEMORY_EMERGENCY_PERCENT:-88}"
+JUSTNEWS_MEMORY_RESUME_PERCENT="${JUSTNEWS_MEMORY_RESUME_PERCENT:-75}"
+JUSTNEWS_MEMORY_CHECK_INTERVAL_SECONDS="${JUSTNEWS_MEMORY_CHECK_INTERVAL_SECONDS:-5}"
+JUSTNEWS_MEMORY_ACTION_COOLDOWN_SECONDS="${JUSTNEWS_MEMORY_ACTION_COOLDOWN_SECONDS:-15}"
+JUSTNEWS_MEMORY_TERMINATE_GRACE_SECONDS="${JUSTNEWS_MEMORY_TERMINATE_GRACE_SECONDS:-12}"
+JUSTNEWS_MEMORY_STALE_EXIT_SECONDS="${JUSTNEWS_MEMORY_STALE_EXIT_SECONDS:-45}"
+JUSTNEWS_MEMORY_SOFT_DWELL_SECONDS="${JUSTNEWS_MEMORY_SOFT_DWELL_SECONDS:-15}"
+JUSTNEWS_MEMORY_HARD_DWELL_SECONDS="${JUSTNEWS_MEMORY_HARD_DWELL_SECONDS:-8}"
+JUSTNEWS_MEMORY_STATUS_LOG_INTERVAL_SECONDS="${JUSTNEWS_MEMORY_STATUS_LOG_INTERVAL_SECONDS:-20}"
+
 # Python executable
 PYTHON_CMD="/usr/bin/python3"
 if [ -f "/deps/.venv/bin/python" ]; then
@@ -76,6 +105,10 @@ REDIS_PORT="${REDIS_PORT:-6379}"
 PUBLISHER_ENABLED="${PUBLISHER_ENABLED:-1}"
 PUBLISHER_HOST="${PUBLISHER_HOST:-0.0.0.0}"
 PUBLISHER_PORT="${PUBLISHER_PORT:-8100}"
+MEMORY_GOVERNOR_PID_FILE="${LOG_DIR}/memory_governor/justnews_memory_governor.pid"
+MEMORY_GOVERNOR_MAP_FILE="${LOG_DIR}/memory_governor/managed_processes.json"
+MEMORY_GOVERNOR_LOG_FILE="${LOG_DIR}/memory_governor/justnews_memory_governor.log"
+MEMORY_GOVERNOR_STATE_FILE="${LOG_DIR}/memory_governor/justnews_memory_governor_state.json"
 
 # Process tracking
 declare -A PROCESSES
@@ -109,8 +142,222 @@ log_verbose() {
   fi
 }
 
+resolve_crawler_spool_dir() {
+  if [ -n "${UNIFIED_CRAWLER_INGEST_SPOOL_DIR:-}" ]; then
+    echo "${UNIFIED_CRAWLER_INGEST_SPOOL_DIR}"
+    return 0
+  fi
+
+  if [ -d "/media/adra/Data/justnews" ]; then
+    echo "/media/adra/Data/justnews/spool/crawler_ingest"
+    return 0
+  fi
+
+  if [ -d "/media/adra/data/justnews" ]; then
+    echo "/media/adra/data/justnews/spool/crawler_ingest"
+    return 0
+  fi
+
+  if [ -d "/var/lib/justnews" ] || mkdir -p "/var/lib/justnews" 2>/dev/null; then
+    echo "/var/lib/justnews/spool/crawler_ingest"
+    return 0
+  fi
+
+  echo "${PROJECT_ROOT}/runtime/crawler_ingest_spool"
+  return 0
+}
+
 log_section() {
   printf "\n%s \033[1;36m=== %s ===\033[0m\n" "$(timestamp)" "$*"
+}
+
+get_host_ram_usage_percent() {
+  if [ ! -r "/proc/meminfo" ]; then
+    return 1
+  fi
+
+  local total_kb
+  local available_kb
+  total_kb=$(awk '/^MemTotal:/ {print $2}' /proc/meminfo)
+  available_kb=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)
+
+  if [ -z "${total_kb}" ] || [ -z "${available_kb}" ] || [ "${total_kb}" -le 0 ]; then
+    return 1
+  fi
+
+  local used_kb=$((total_kb - available_kb))
+  local used_pct=$((used_kb * 100 / total_kb))
+  echo "${used_pct}"
+  return 0
+}
+
+enforce_ram_cap_before_start() {
+  local service_name="$1"
+
+  if [ "${JUSTNEWS_RAM_CAP_ENFORCE}" != "1" ]; then
+    return 0
+  fi
+
+  local cap_pct="${JUSTNEWS_RAM_CAP_PERCENT}"
+  if ! [[ "${cap_pct}" =~ ^[0-9]+$ ]] || [ "${cap_pct}" -lt 1 ] || [ "${cap_pct}" -gt 99 ]; then
+    log_warn "Invalid JUSTNEWS_RAM_CAP_PERCENT=${cap_pct}; expected 1-99. Skipping RAM cap enforcement."
+    return 0
+  fi
+
+  local max_wait="${JUSTNEWS_RAM_CAP_WAIT_SECONDS}"
+  local interval="${JUSTNEWS_RAM_CAP_CHECK_INTERVAL_SECONDS}"
+  if ! [[ "${max_wait}" =~ ^[0-9]+$ ]]; then
+    max_wait=120
+  fi
+  if ! [[ "${interval}" =~ ^[0-9]+$ ]] || [ "${interval}" -lt 1 ]; then
+    interval=5
+  fi
+
+  local elapsed=0
+  while true; do
+    local usage_pct
+    if ! usage_pct="$(get_host_ram_usage_percent)"; then
+      log_warn "Unable to read host RAM usage from /proc/meminfo; continuing without RAM cap gate."
+      return 0
+    fi
+
+    if [ "${usage_pct}" -lt "${cap_pct}" ]; then
+      log_verbose "RAM guard before ${service_name}: ${usage_pct}% used (cap ${cap_pct}%)"
+      return 0
+    fi
+
+    if [ "${elapsed}" -ge "${max_wait}" ]; then
+      log_error "RAM cap gate blocked ${service_name}: host RAM usage ${usage_pct}% >= cap ${cap_pct}% after waiting ${elapsed}s"
+      log_error "Free memory or lower load, then retry. To bypass temporarily: JUSTNEWS_RAM_CAP_ENFORCE=0"
+      return 1
+    fi
+
+    log_warn "RAM cap gate delaying ${service_name}: host RAM usage ${usage_pct}% >= cap ${cap_pct}% (waited ${elapsed}s/${max_wait}s)"
+    sleep "${interval}"
+    elapsed=$((elapsed + interval))
+  done
+}
+
+get_pid_for_port() {
+  local port="$1"
+
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -ti "tcp:${port}" 2>/dev/null | head -n 1 || true
+    return 0
+  fi
+
+  if command -v ss >/dev/null 2>&1; then
+    ss -ltnp 2>/dev/null | awk -v p=":${port}" '
+      index($0, p) && /pid=/ {
+        match($0, /pid=[0-9]+/)
+        if (RSTART > 0) {
+          pid=substr($0, RSTART+4, RLENGTH-4)
+          print pid
+          exit
+        }
+      }
+    ' || true
+    return 0
+  fi
+
+  return 1
+}
+
+start_memory_governor() {
+  if [ "${JUSTNEWS_MEMORY_GOVERNOR_ENABLED}" != "1" ]; then
+    log_info "Runtime memory governor disabled (JUSTNEWS_MEMORY_GOVERNOR_ENABLED=${JUSTNEWS_MEMORY_GOVERNOR_ENABLED})"
+    return 0
+  fi
+
+  if [ "${DRY_RUN}" = "1" ]; then
+    log_info "[DRY RUN] Would start runtime memory governor"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "${MEMORY_GOVERNOR_PID_FILE}")"
+
+  if [ -f "${MEMORY_GOVERNOR_PID_FILE}" ]; then
+    local existing_pid
+    existing_pid="$(cat "${MEMORY_GOVERNOR_PID_FILE}" 2>/dev/null || true)"
+    if [ -n "${existing_pid}" ] && kill -0 "${existing_pid}" 2>/dev/null; then
+      log_info "Stopping existing memory governor PID ${existing_pid}"
+      kill -TERM "${existing_pid}" 2>/dev/null || true
+      sleep 1
+      if kill -0 "${existing_pid}" 2>/dev/null; then
+        kill -9 "${existing_pid}" 2>/dev/null || true
+      fi
+    fi
+    rm -f "${MEMORY_GOVERNOR_PID_FILE}"
+  fi
+
+  local managed_count=0
+  {
+    echo '{"processes":['
+    local first=1
+    local entry
+    for entry in "${AGENTS_MANIFEST[@]}"; do
+      IFS='|' read -r name _ port <<< "$entry"
+      local pid
+      pid="$(get_pid_for_port "${port}" | tr -d '[:space:]')"
+      if [[ ! "${pid}" =~ ^[0-9]+$ ]]; then
+        continue
+      fi
+
+      local critical=false
+      if [ "${name}" = "mcp_bus" ] || [ "${name}" = "memory" ]; then
+        critical=true
+      fi
+
+      if [ ${first} -eq 0 ]; then
+        echo ','
+      fi
+      printf '{"name":"%s","pid":%s,"critical":%s}' "${name}" "${pid}" "${critical}"
+      first=0
+      managed_count=$((managed_count + 1))
+    done
+
+    if [ "${PUBLISHER_ENABLED}" = "1" ]; then
+      local publisher_pid
+      publisher_pid="$(get_pid_for_port "${PUBLISHER_PORT}" | tr -d '[:space:]')"
+      if [[ "${publisher_pid}" =~ ^[0-9]+$ ]]; then
+        if [ ${first} -eq 0 ]; then
+          echo ','
+        fi
+        printf '{"name":"publisher","pid":%s,"critical":false}' "${publisher_pid}"
+        managed_count=$((managed_count + 1))
+      fi
+    fi
+
+    echo ']}'
+  } > "${MEMORY_GOVERNOR_MAP_FILE}"
+
+  if [ ${managed_count} -eq 0 ]; then
+    log_warn "Memory governor not started: no managed service PIDs discovered"
+    return 0
+  fi
+
+  nohup "${PYTHON_CMD}" "${PROJECT_ROOT}/scripts/ops/justnews_memory_governor.py" \
+    --pid-map "${MEMORY_GOVERNOR_MAP_FILE}" \
+    --log-file "${MEMORY_GOVERNOR_LOG_FILE}" \
+    --state-file "${MEMORY_GOVERNOR_STATE_FILE}" \
+    --soft-percent "${JUSTNEWS_MEMORY_SOFT_PERCENT}" \
+    --hard-percent "${JUSTNEWS_MEMORY_HARD_PERCENT}" \
+    --emergency-percent "${JUSTNEWS_MEMORY_EMERGENCY_PERCENT}" \
+    --resume-percent "${JUSTNEWS_MEMORY_RESUME_PERCENT}" \
+    --check-interval-seconds "${JUSTNEWS_MEMORY_CHECK_INTERVAL_SECONDS}" \
+    --action-cooldown-seconds "${JUSTNEWS_MEMORY_ACTION_COOLDOWN_SECONDS}" \
+    --terminate-grace-seconds "${JUSTNEWS_MEMORY_TERMINATE_GRACE_SECONDS}" \
+    --stale-exit-seconds "${JUSTNEWS_MEMORY_STALE_EXIT_SECONDS}" \
+    --soft-dwell-seconds "${JUSTNEWS_MEMORY_SOFT_DWELL_SECONDS}" \
+    --hard-dwell-seconds "${JUSTNEWS_MEMORY_HARD_DWELL_SECONDS}" \
+    --status-log-interval-seconds "${JUSTNEWS_MEMORY_STATUS_LOG_INTERVAL_SECONDS}" \
+    >/dev/null 2>&1 &
+
+  local gov_pid=$!
+  echo "${gov_pid}" > "${MEMORY_GOVERNOR_PID_FILE}"
+  PROCESSES["memory_governor"]=${gov_pid}
+  STARTED_SERVICES+=("memory_governor")
+  log_success "Runtime memory governor started (PID ${gov_pid}, managed services ${managed_count})"
 }
 
 # ============================================================================
@@ -265,6 +512,15 @@ ENVIRONMENT VARIABLES:
   USE_DOCKER=1          Use Docker for database services
   SERVICE_TIMEOUT=120   Service readiness timeout (seconds)
   AGENT_START_DELAY=2   Delay between agent starts (seconds)
+  JUSTNEWS_RAM_CAP_ENFORCE=1                Enforce RAM usage gate before each service start
+  JUSTNEWS_RAM_CAP_PERCENT=85               Block startup when host RAM usage is at/above this percent
+  JUSTNEWS_RAM_CAP_WAIT_SECONDS=120         Max wait for RAM usage to drop below cap
+  JUSTNEWS_RAM_CAP_CHECK_INTERVAL_SECONDS=5 Poll interval while waiting for RAM headroom
+  JUSTNEWS_MEMORY_GOVERNOR_ENABLED=1        Enable runtime memory governor (portable, non-systemd)
+  JUSTNEWS_MEMORY_SOFT_PERCENT=80           Soft pressure threshold for governor actions
+  JUSTNEWS_MEMORY_HARD_PERCENT=84           Hard pressure threshold for stronger governor actions
+  JUSTNEWS_MEMORY_EMERGENCY_PERCENT=88      Emergency threshold for process shedding
+  JUSTNEWS_MEMORY_RESUME_PERCENT=75         Resume paused processes below this threshold
 
 EOF
 }
@@ -726,6 +982,10 @@ start_agent() {
     return 0
   fi
 
+  if ! enforce_ram_cap_before_start "agent:${agent_name}"; then
+    return 1
+  fi
+
   log_info "Starting ${agent_name} on port ${port}..."
 
   if [ "${agent_name}" = "analyst" ]; then
@@ -748,12 +1008,33 @@ start_agent() {
   local startup_log="${LOG_DIR}/${agent_name}.startup.log"
   (
     cd "${PROJECT_ROOT}"
-    exec "${PYTHON_CMD}" -m common.agent_runner "${module}" \
-      --agent-name "${agent_name}" \
-      --host 0.0.0.0 \
-      --port "${port}" \
-      --workers "${workers}" \
-      --log-level info
+    if [ "${agent_name}" = "training_system" ]; then
+      exec env TRAINING_SYSTEM_PORT="${port}" "${PYTHON_CMD}" -m common.agent_runner "${module}" \
+        --agent-name "${agent_name}" \
+        --host 0.0.0.0 \
+        --port "${port}" \
+        --workers "${workers}" \
+        --log-level info
+    elif [ "${agent_name}" = "crawler" ]; then
+      crawler_spool_dir="$(resolve_crawler_spool_dir)"
+      mkdir -p "${crawler_spool_dir}" >/dev/null 2>&1 || true
+      exec env \
+        UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED="${UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED:-true}" \
+        UNIFIED_CRAWLER_INGEST_SPOOL_DIR="${crawler_spool_dir}" \
+        "${PYTHON_CMD}" -m common.agent_runner "${module}" \
+        --agent-name "${agent_name}" \
+        --host 0.0.0.0 \
+        --port "${port}" \
+        --workers "${workers}" \
+        --log-level info
+    else
+      exec "${PYTHON_CMD}" -m common.agent_runner "${module}" \
+        --agent-name "${agent_name}" \
+        --host 0.0.0.0 \
+        --port "${port}" \
+        --workers "${workers}" \
+        --log-level info
+    fi
   ) >"${startup_log}" 2>&1 &
   local pid=$!
   PROCESSES["${agent_name}"]=$pid
@@ -816,6 +1097,10 @@ start_publisher_service() {
   if [ "${DRY_RUN}" = "1" ]; then
     log_info "[DRY RUN] Would start Django publisher on port ${PUBLISHER_PORT}"
     return 0
+  fi
+
+  if ! enforce_ram_cap_before_start "publisher"; then
+    return 1
   fi
 
   log_section "Publisher Startup"
@@ -1025,6 +1310,11 @@ main() {
   # Verify all services
   if ! verify_services; then
     log_warn "Service verification had issues"
+  fi
+
+  # Start runtime memory governor after startup/verification to avoid startup race conditions
+  if ! start_memory_governor; then
+    log_warn "Runtime memory governor failed to start"
   fi
 
   # Print summary

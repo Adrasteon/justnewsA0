@@ -22,6 +22,9 @@ This includes Search Console/Bing submission, live-domain sitemap/feed verificat
 - **API Reference**: [docs/api/README.md](docs/api/README.md)
 - **Operations**: [docs/operations/README.md](docs/operations/README.md)
 - **Live SEO Launch Checklist**: [docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md](docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md)
+- **Crawler Ingest Resiliency**: [docs/operations/CRAWLER_INGEST_RESILIENCY.md](docs/operations/CRAWLER_INGEST_RESILIENCY.md)
+- **Environment & Dependency Config**: [docs/operations/ENVIRONMENT_CONFIG.md](docs/operations/ENVIRONMENT_CONFIG.md)
+- **Documentation Index**: [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)
 
 ## 🚀 Quick Start
 

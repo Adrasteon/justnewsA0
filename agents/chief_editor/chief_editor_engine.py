@@ -13,6 +13,7 @@ Key Features:
 """
 
 import os
+import re
 from dataclasses import dataclass
 from datetime import timezone, datetime
 from enum import Enum
@@ -37,6 +38,34 @@ except ImportError:
     SENTENCE_TRANSFORMERS_AVAILABLE = False
 
 logger = get_logger(__name__)
+
+_VALID_CATEGORIES = {
+    "world",
+    "uk",
+    "business",
+    "politics",
+    "health",
+    "science",
+    "technology",
+    "entertainment",
+    "sport",
+}
+
+_CATEGORY_NORMALIZATION = {
+    "general": "world",
+    "global": "world",
+    "international": "world",
+    "britain": "uk",
+    "economy": "business",
+    "finance": "business",
+    "markets": "business",
+    "government": "politics",
+    "policy": "politics",
+    "medicine": "health",
+    "tech": "technology",
+    "culture": "entertainment",
+    "sports": "sport",
+}
 
 
 class EditorialPriority(Enum):
@@ -249,6 +278,17 @@ class ChiefEditorEngine:
         if not result or not isinstance(result, dict) or "category" not in result:
             return self._fallback_categorization(text)
 
+        normalized = self._normalize_category(result.get("category"))
+        confidence = result.get("confidence", 0.0)
+        try:
+            normalized_confidence = min(1.0, max(0.0, float(confidence)))
+        except Exception:
+            normalized_confidence = 0.0
+        if normalized == "world" and normalized_confidence < 0.4:
+            return self._fallback_categorization(text)
+
+        result["category"] = normalized
+        result["confidence"] = normalized_confidence
         result["model"] = "qwen-14b"
         
         self.log_feedback(
@@ -458,7 +498,45 @@ class ChiefEditorEngine:
         return {"overall_quality": 0.5, "assessment": "medium", "model": "fallback"}
 
     def _fallback_categorization(self, text: str) -> dict[str, Any]:
-        return {"category": "general", "confidence": 0.5, "model": "fallback"}
+        return {"category": self._keyword_fallback_category(text), "confidence": 0.45, "model": "fallback"}
+
+    def _normalize_category(self, raw_category: Any) -> str:
+        normalized = str(raw_category or "").strip().lower()
+        if not normalized:
+            return "world"
+        if normalized in _VALID_CATEGORIES:
+            return normalized
+        if normalized in _CATEGORY_NORMALIZATION:
+            return _CATEGORY_NORMALIZATION[normalized]
+        for key, mapped in _CATEGORY_NORMALIZATION.items():
+            if key in normalized:
+                return mapped
+        return "world"
+
+    def _keyword_fallback_category(self, text: str) -> str:
+        normalized_text = str(text or "").lower()
+        def keyword_present(haystack: str, needle: str) -> bool:
+            escaped = re.escape(needle.lower())
+            return bool(re.search(rf"\b{escaped}\b", haystack, flags=re.IGNORECASE))
+
+        keyword_groups = {
+            "politics": ["election", "parliament", "government", "minister", "policy", "senate"],
+            "business": ["market", "economy", "finance", "inflation", "stock", "bank"],
+            "technology": ["ai", "software", "chip", "cyber", "startup", "cloud"],
+            "science": ["research", "study", "scientist", "space", "climate", "laboratory"],
+            "health": ["health", "hospital", "vaccine", "disease", "medical", "patient"],
+            "sport": ["match", "league", "tournament", "goal", "coach", "fifa"],
+            "entertainment": ["film", "movie", "music", "celebrity", "tv", "streaming"],
+            "uk": ["uk", "britain", "british", "london", "england", "westminster"],
+        }
+        best_category = "world"
+        best_hits = 0
+        for category_name, needles in keyword_groups.items():
+            hits = sum(1 for needle in needles if keyword_present(normalized_text, needle))
+            if hits > best_hits:
+                best_hits = hits
+                best_category = category_name
+        return best_category
 
     def _fallback_sentiment_analysis(self, text: str) -> dict[str, Any]:
         return {

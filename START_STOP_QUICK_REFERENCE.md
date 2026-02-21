@@ -3,7 +3,7 @@
 ## TL;DR - Getting Started Fast
 
 ```bash
-# Start EVERYTHING (databases + 16 agents)
+# Start EVERYTHING (databases + 17 agents)
 ./start_all_services.sh
 
 # Watch the startup (verbose)
@@ -23,7 +23,7 @@ VERBOSE=1 ./start_all_services.sh
 
 | Script | Purpose | Key Features |
 |--------|---------|--------------|
-| **start_all_services.sh** | Start databases + all 16 agents | Ordered startup, health checks, migrations |
+| **start_all_services.sh** | Start databases + all 17 agents | Ordered startup, health checks, migrations |
 | **stop_all_services.sh** | Graceful shutdown of all services | Reverse order, graceful first, force fallback |
 
 ## Common Startup Scenarios
@@ -83,6 +83,7 @@ tail -f /tmp/justnews_services_logs/*.log
    ├─ memory (8007)
    ├─ reasoning (8008)
    ├─ newsreader (8009)
+   ├─ training_system (8011)
    ├─ analytics (8012)
    ├─ dashboard (8013)
    ├─ gpu_orchestrator (8014)
@@ -146,6 +147,7 @@ KILL_TIMEOUT=3       Kill signal timeout (sec)
 | Memory | 8007 | http://localhost:8007 |
 | Reasoning | 8008 | http://localhost:8008 |
 | Newsreader | 8009 | http://localhost:8009 |
+| Training System | 8011 | http://localhost:8011 |
 | Analytics | 8012 | http://localhost:8012 |
 | Dashboard | 8013 | http://localhost:8013 |
 | GPU Orchestrator | 8014 | http://localhost:8014 |
@@ -188,9 +190,27 @@ curl http://localhost:8007/health
 curl http://localhost:8022/health
 
 # Check all agents (basic port check)
-for port in 8000 8001 8003 8004 8005 8006 8007 8008 8009 8012 8013 8014 8016 8020 8022 8023; do
+for port in 8000 8001 8003 8004 8005 8006 8007 8008 8009 8011 8012 8013 8014 8016 8020 8022 8023; do
   nc -z localhost $port 2>/dev/null && echo "Port $port: OK" || echo "Port $port: DOWN"
 done
+```
+
+## Workflow Autonomic (Shadow) Quick Check
+
+```bash
+# Current autonomic mode / decision state
+python3 - <<'PY'
+import json, urllib.request
+with urllib.request.urlopen('http://localhost:8023/autonomic/status', timeout=5) as r:
+      d = json.loads(r.read().decode('utf-8'))
+a = d.get('autonomic', {})
+print('mode=', a.get('mode'))
+print('decisions_enabled=', a.get('decisions_enabled'))
+print('last_decision=', a.get('last_decision'))
+PY
+
+# Tail recorded shadow decisions
+grep "Autonomic shadow decision recorded:" /tmp/justnews_services_logs/workflow_orchestrator.startup.log | tail -n 20
 ```
 
 ## Troubleshooting Quick Fixes
@@ -314,6 +334,9 @@ pytest tests/
 - **Full Documentation**: [START_STOP_SERVICES.md](START_STOP_SERVICES.md)
 - **Agent Manifest**: [infrastructure/agents_manifest.sh](infrastructure/agents_manifest.sh)
 - **Environment Template**: [global.env.sample](global.env.sample)
+- **Crawler Ingest Resiliency**: [docs/operations/CRAWLER_INGEST_RESILIENCY.md](docs/operations/CRAWLER_INGEST_RESILIENCY.md)
+- **Environment & Dependency Policy**: [docs/operations/ENVIRONMENT_CONFIG.md](docs/operations/ENVIRONMENT_CONFIG.md)
+- **Documentation Index**: [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)
 - **Architecture**: [docs/architecture_overview.md](docs/architecture_overview.md)
 
 ## Quick Commands Reference

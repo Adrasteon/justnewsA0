@@ -18,7 +18,10 @@ Features:
 
 from dataclasses import asdict
 from datetime import timezone, datetime
+import os
 from typing import Any
+
+import requests
 
 from common.observability import get_logger
 
@@ -32,6 +35,66 @@ from .training_coordinator import (
 )
 
 logger = get_logger(__name__)
+
+
+def _env_truthy(name: str, default: str = "1") -> bool:
+    raw = os.environ.get(name, default)
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _training_system_base_url() -> str:
+    explicit = os.environ.get("TRAINING_SYSTEM_URL")
+    if explicit and explicit.strip():
+        return explicit.strip().rstrip("/")
+    port = os.environ.get("TRAINING_SYSTEM_PORT", "8011")
+    host = os.environ.get("TRAINING_SYSTEM_HOSTNAME", "localhost")
+    return f"http://{host}:{port}"
+
+
+def _forward_prediction_feedback(
+    *,
+    agent_name: str,
+    task_type: str,
+    input_text: str,
+    prediction: Any,
+    confidence: float,
+    ground_truth: Any | None,
+) -> bool:
+    if not _env_truthy("TRAINING_SYSTEM_FORWARD_ENABLED", "1"):
+        return False
+
+    if str(agent_name).strip().lower() == "training_system":
+        return False
+
+    payload = {
+        "agent_name": agent_name,
+        "task_type": task_type,
+        "input_text": input_text,
+        "predicted_output": prediction,
+        "actual_output": ground_truth if ground_truth is not None else prediction,
+        "confidence_score": max(0.0, min(1.0, float(confidence or 0.0))),
+    }
+    timeout = float(os.environ.get("TRAINING_SYSTEM_FORWARD_TIMEOUT_SEC", "8.0"))
+    endpoint = f"{_training_system_base_url()}/tool/add_prediction_feedback"
+
+    try:
+        response = requests.post(endpoint, json=payload, timeout=timeout)
+        if response.status_code < 300:
+            return True
+        logger.warning(
+            "Training forward returned non-success status %s for %s/%s",
+            response.status_code,
+            agent_name,
+            task_type,
+        )
+    except Exception as exc:
+        logger.debug(
+            "Training forward unavailable for %s/%s: %s",
+            agent_name,
+            task_type,
+            exc,
+        )
+    return False
 
 
 class SystemWideTrainingManager:
@@ -155,6 +218,12 @@ class SystemWideTrainingManager:
             f"   🤖 Total models: {sum(len(config['models']) for config in self.agent_configs.values())}"
         )
 
+    def _ensure_coordinator(self) -> bool:
+        if self.coordinator is not None:
+            return True
+        self.coordinator = get_training_coordinator() or initialize_online_training()
+        return self.coordinator is not None
+
     def collect_agent_prediction(
         self,
         agent_name: str,
@@ -171,7 +240,7 @@ class SystemWideTrainingManager:
         This should be called by agents after making predictions
         """
         try:
-            if not self.coordinator:
+            if not self._ensure_coordinator():
                 return
 
             # If we have ground truth, use it; otherwise use prediction (will be corrected by user feedback)
@@ -194,6 +263,33 @@ class SystemWideTrainingManager:
 
         except Exception as e:
             logger.error(f"Failed to collect prediction from {agent_name}: {e}")
+
+    def add_prediction_feedback(
+        self,
+        agent_name: str,
+        task_type: str,
+        input_text: str,
+        predicted_output: Any,
+        actual_output: Any,
+        confidence_score: float,
+    ) -> dict[str, Any]:
+        """Compatibility wrapper used by MCP API endpoint for prediction feedback ingestion."""
+        self.collect_agent_prediction(
+            agent_name=agent_name,
+            task_type=task_type,
+            input_text=input_text,
+            prediction=predicted_output,
+            confidence=confidence_score,
+            ground_truth=actual_output,
+            source_url="",
+        )
+        return {
+            "accepted": True,
+            "agent_name": agent_name,
+            "task_type": task_type,
+            "confidence_score": confidence_score,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
 
     def submit_user_correction(
         self,
@@ -572,6 +668,25 @@ def collect_prediction(
     source_url: str = "",
 ) -> None:
     """Convenience function to collect agent predictions"""
+    forwarded = _forward_prediction_feedback(
+        agent_name=agent_name,
+        task_type=task_type,
+        input_text=input_text,
+        prediction=prediction,
+        confidence=confidence,
+        ground_truth=ground_truth,
+    )
+    if forwarded:
+        return
+
+    if not _env_truthy("TRAINING_SYSTEM_LOCAL_FALLBACK_ENABLED", "0"):
+        logger.warning(
+            "Training forward failed and local fallback disabled for %s/%s",
+            agent_name,
+            task_type,
+        )
+        return
+
     manager = get_system_training_manager()
     manager.collect_agent_prediction(
         agent_name,

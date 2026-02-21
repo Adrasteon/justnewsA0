@@ -20,6 +20,8 @@ Architecture:
 import json
 import os
 
+import requests
+
 # Import tools
 from agents.memory.tools import get_embedding_model, log_feedback, save_article
 from common.json_utils import make_json_safe
@@ -192,6 +194,65 @@ class MemoryEngine:
              finally:
                  if conn:
                      conn.close()
+
+             try:
+                 from training_system import collect_prediction
+
+                 collect_prediction(
+                     agent_name="memory",
+                     task_type="embed_article",
+                     input_text=(article.get("content") or "")[:5000],
+                     prediction={
+                         "article_id": article_id,
+                         "embedded": True,
+                         "metadata_keys": sorted(list(safe_meta.keys()))[:25],
+                     },
+                     confidence=1.0,
+                     source_url=f"article_id:{article_id}",
+                 )
+             except ImportError as import_err:
+                 logger.warning(
+                     "training_system import unavailable in memory path; using direct HTTP fallback: %s",
+                     import_err,
+                 )
+                 try:
+                     base_url = os.environ.get("TRAINING_SYSTEM_URL", "").strip().rstrip("/")
+                     if not base_url:
+                         ts_port = os.environ.get("TRAINING_SYSTEM_PORT", "8011")
+                         ts_host = os.environ.get("TRAINING_SYSTEM_HOSTNAME", "localhost")
+                         base_url = f"http://{ts_host}:{ts_port}"
+
+                     timeout_sec = float(os.environ.get("TRAINING_SYSTEM_FORWARD_TIMEOUT_SEC", "8.0"))
+                     requests.post(
+                         f"{base_url}/tool/add_prediction_feedback",
+                         json={
+                             "agent_name": "memory",
+                             "task_type": "embed_article",
+                             "input_text": (article.get("content") or "")[:5000],
+                             "predicted_output": {
+                                 "article_id": article_id,
+                                 "embedded": True,
+                                 "metadata_keys": sorted(list(safe_meta.keys()))[:25],
+                             },
+                             "actual_output": {
+                                 "article_id": article_id,
+                                 "embedded": True,
+                                 "metadata_keys": sorted(list(safe_meta.keys()))[:25],
+                             },
+                             "confidence_score": 1.0,
+                         },
+                         timeout=timeout_sec,
+                     )
+                 except Exception as fallback_error:
+                     logger.warning(
+                         "Direct HTTP fallback training collection failed for embed_article %s: %s",
+                         article_id,
+                         fallback_error,
+                     )
+             except Exception as e:
+                 logger.warning(
+                     f"Failed to collect training data for embed_article {article_id}: {e}"
+                 )
              
              return {"status": "success", "article_id": article_id}
 

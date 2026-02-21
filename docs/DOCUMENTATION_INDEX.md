@@ -94,6 +94,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Monitoring Infrastructure](./operations/MONITORING_INFRASTRUCTURE.md) — Prometheus/Grafana deployment
 
+- [Crawler Ingest Resiliency Runbook](./operations/CRAWLER_INGEST_RESILIENCY.md) — Disk-backed deferred ingest spool, replay tuning, and outage recovery
+
 **Deployment & Infrastructure**:
 
 - [Systemd Operations](./infrastructure/systemd/README.md) — Service management
@@ -223,6 +225,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 - [Systemd Operations](./infrastructure/systemd/README.md) — Service commands
 
 - [Systemd Monitoring](./operations/systemd-monitoring.md) — Health checks
+
+- [Crawler Ingest Resiliency Runbook](./operations/CRAWLER_INGEST_RESILIENCY.md) — Deferred ingest spool controls and replay diagnostics
 
 ### Monitoring & Troubleshooting
 

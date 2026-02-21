@@ -137,7 +137,7 @@ class MCPBusEngine:
 
         # Check circuit breaker
         if self._is_circuit_breaker_open(agent_name):
-            raise ValueError(f"Circuit breaker open for agent {agent_name}")
+            raise RuntimeError(f"Circuit breaker open for agent {agent_name}")
 
         if requests is None:
             raise RuntimeError("Requests library unavailable on host")
@@ -198,7 +198,18 @@ class MCPBusEngine:
                     f"Tool call attempt {attempt + 1} failed for {agent_name}: {e}"
                 )
 
+                lower_error = last_error.lower()
+                hard_unavailable = (
+                    "connection refused" in lower_error
+                    or "failed to establish a new connection" in lower_error
+                    or "name or service not known" in lower_error
+                    or "nodename nor servname provided" in lower_error
+                )
+
                 # Exponential backoff
+                if hard_unavailable:
+                    break
+
                 if attempt < self.config.max_retries - 1:
                     backoff_time = self.config.retry_backoff_base * (2**attempt)
                     time.sleep(backoff_time)

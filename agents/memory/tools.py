@@ -220,6 +220,10 @@ def save_article(
         chroma_require_canonical = (
             os.environ.get("CHROMADB_REQUIRE_CANONICAL", "1") == "1"
         )
+        memory_essential_mode = (
+            os.environ.get("MEMORY_ESSENTIAL_MODE", "false").strip().lower()
+            in {"1", "true", "yes", "on"}
+        )
         if chroma_require_canonical and getattr(db_service, "collection", None) is None:
             logger.error(
                 "CHROMADB_REQUIRE_CANONICAL enabled but Chroma collection not available"
@@ -514,140 +518,147 @@ def save_article(
             else:
                  logger.warning("Continuing save_article despite ChromaDB failure (REQUIRE_CANONICAL disabled)")
 
-        # --- Living Stories: Assign-or-Buffer Logic ---
-        try:
-            # Only proceed if we have an embedding and DB service
-            if locals().get("embedding") is not None and getattr(db_service, "mb_conn", None) and getattr(db_service, "chroma_client", None):
-                import numpy as np
-                import uuid
-                
-                # Configuration
-                ls_threshold = float(os.environ.get("LS_SIMILARITY_THRESHOLD", "0.85"))
-                ls_decay = float(os.environ.get("LS_DRIFT_DECAY_RATE", "0.2"))
-                
-                ls_collection = None
-                try:
-                    ls_collection = db_service.chroma_client.get_collection("active_living_stories")
-                except Exception:
+        if not memory_essential_mode:
+            # --- Living Stories: Assign-or-Buffer Logic ---
+            try:
+                # Only proceed if we have an embedding and DB service
+                if locals().get("embedding") is not None and getattr(db_service, "mb_conn", None) and getattr(db_service, "chroma_client", None):
+                    import numpy as np
+                    import uuid
+
+                    # Configuration
+                    ls_threshold = float(os.environ.get("LS_SIMILARITY_THRESHOLD", "0.85"))
+                    ls_decay = float(os.environ.get("LS_DRIFT_DECAY_RATE", "0.2"))
+
+                    ls_collection = None
                     try:
-                        ls_collection = db_service.chroma_client.get_or_create_collection(
-                            name="active_living_stories",
-                            metadata={"hnsw:space": "cosine"},
-                        )
+                        ls_collection = db_service.chroma_client.get_collection("active_living_stories")
                     except Exception:
-                        # Collection might not exist if setup script wasn't run or failed
-                        pass
-                
-                match_found = False
-                
-                if ls_collection:
-                    # Search for nearest story
-                    # embedding is a list of floats, ensure it's compatible
-                    embedding_query = list(map(float, embedding))
-                    
-                    results = ls_collection.query(
-                        query_embeddings=[embedding_query],
-                        n_results=1,
-                        include=["embeddings", "distances", "metadatas"]
-                    )
-                    
-                    if results["ids"] and len(results["ids"][0]) > 0:
-                        # Distance check (Cosine distance)
-                        distance = results["distances"][0][0]
-                        if distance < (1.0 - ls_threshold):
-                            match_found = True
-                            story_id = results["ids"][0][0]
-                            old_centroid = results["embeddings"][0][0]
-                            
-                            # Calculate new centroid
-                            req_vec = np.array(embedding_query)
-                            cur_vec = np.array(old_centroid)
-                            new_vec = (cur_vec * (1 - ls_decay)) + (req_vec * ls_decay)
-                            # Normalize
-                            norm = np.linalg.norm(new_vec)
-                            if norm > 0:
-                                new_vec = new_vec / norm
-                            new_centroid = new_vec.tolist()
-                            
-                            # 1. Update Chroma Collection
-                            ls_collection.update(
-                                ids=[story_id],
-                                embeddings=[new_centroid],
-                                metadatas=results["metadatas"][0] if results["metadatas"] else None
+                        try:
+                            ls_collection = db_service.chroma_client.get_or_create_collection(
+                                name="active_living_stories",
+                                metadata={"hnsw:space": "cosine"},
                             )
-                            
-                            # 2. Update DB
-                            cursor = db_service.mb_conn.cursor()
-                            try:
-                                # Update timestamp and centroid
-                                cursor.execute(
-                                    "UPDATE living_stories SET last_updated_at = NOW(), semantic_centroid = %s WHERE id = %s",
-                                    (json.dumps(new_centroid), story_id)
-                                )
-                                
-                                # Insert StoryUpdate
-                                update_id = str(uuid.uuid4())
-                                article_ids_json = json.dumps([next_id])
-                                
-                                cursor.execute(
-                                    """
-                                    INSERT INTO story_updates (id, story_id, article_ids, article_count, batch_centroid, timestamp)
-                                    VALUES (%s, %s, %s, 1, %s, NOW())
-                                    """,
-                                    (update_id, story_id, article_ids_json, json.dumps(new_centroid))
-                                )
-                                db_service.mb_conn.commit()
-                                logger.debug(f"Living Stories: Article {next_id} assigned to story {story_id}")
-                            except Exception as db_err:
-                                logger.error(f"Living Stories DB Update failed: {db_err}")
-                            finally:
-                                cursor.close()
+                        except Exception:
+                            # Collection might not exist if setup script wasn't run or failed
+                            pass
 
-                if not match_found:
-                    # Buffer to Pending Pool
-                    domain = metadata.get("domain") or "unknown"
-                    vector_blob = json.dumps(list(map(float, embedding)))
-                    
-                    cursor = db_service.mb_conn.cursor()
-                    try:
-                        cursor.execute(
-                            """
-                            INSERT INTO pending_articles_pool (article_id, source_domain, vector_blob, added_at)
-                            VALUES (%s, %s, %s, NOW())
-                            """,
-                            (next_id, domain, vector_blob)
+                    match_found = False
+
+                    if ls_collection:
+                        # Search for nearest story
+                        # embedding is a list of floats, ensure it's compatible
+                        embedding_query = list(map(float, embedding))
+
+                        results = ls_collection.query(
+                            query_embeddings=[embedding_query],
+                            n_results=1,
+                            include=["embeddings", "distances", "metadatas"]
                         )
-                        db_service.mb_conn.commit()
-                        logger.debug(f"Living Stories: Article {next_id} buffered to pending pool")
-                    except Exception as e:
-                         logger.warning(f"Failed to buffer article {next_id}: {e}")
-                    finally:
-                        cursor.close()
 
-        except Exception as e:
-            logger.error(f"Living Stories: Fast path logic failed: {e}")
+                        if results["ids"] and len(results["ids"][0]) > 0:
+                            # Distance check (Cosine distance)
+                            distance = results["distances"][0][0]
+                            if distance < (1.0 - ls_threshold):
+                                match_found = True
+                                story_id = results["ids"][0][0]
+                                old_centroid = results["embeddings"][0][0]
+
+                                # Calculate new centroid
+                                req_vec = np.array(embedding_query)
+                                cur_vec = np.array(old_centroid)
+                                new_vec = (cur_vec * (1 - ls_decay)) + (req_vec * ls_decay)
+                                # Normalize
+                                norm = np.linalg.norm(new_vec)
+                                if norm > 0:
+                                    new_vec = new_vec / norm
+                                new_centroid = new_vec.tolist()
+
+                                # 1. Update Chroma Collection
+                                ls_collection.update(
+                                    ids=[story_id],
+                                    embeddings=[new_centroid],
+                                    metadatas=results["metadatas"][0] if results["metadatas"] else None
+                                )
+
+                                # 2. Update DB
+                                cursor = db_service.mb_conn.cursor()
+                                try:
+                                    # Update timestamp and centroid
+                                    cursor.execute(
+                                        "UPDATE living_stories SET last_updated_at = NOW(), semantic_centroid = %s WHERE id = %s",
+                                        (json.dumps(new_centroid), story_id)
+                                    )
+
+                                    # Insert StoryUpdate
+                                    update_id = str(uuid.uuid4())
+                                    article_ids_json = json.dumps([next_id])
+
+                                    cursor.execute(
+                                        """
+                                        INSERT INTO story_updates (id, story_id, article_ids, article_count, batch_centroid, timestamp)
+                                        VALUES (%s, %s, %s, 1, %s, NOW())
+                                        """,
+                                        (update_id, story_id, article_ids_json, json.dumps(new_centroid))
+                                    )
+                                    db_service.mb_conn.commit()
+                                    logger.debug(f"Living Stories: Article {next_id} assigned to story {story_id}")
+                                except Exception as db_err:
+                                    logger.error(f"Living Stories DB Update failed: {db_err}")
+                                finally:
+                                    cursor.close()
+
+                    if not match_found:
+                        # Buffer to Pending Pool
+                        domain = metadata.get("domain") or "unknown"
+                        vector_blob = json.dumps(list(map(float, embedding)))
+
+                        cursor = db_service.mb_conn.cursor()
+                        try:
+                            cursor.execute(
+                                """
+                                INSERT INTO pending_articles_pool (article_id, source_domain, vector_blob, added_at)
+                                VALUES (%s, %s, %s, NOW())
+                                """,
+                                (next_id, domain, vector_blob)
+                            )
+                            db_service.mb_conn.commit()
+                            logger.debug(f"Living Stories: Article {next_id} buffered to pending pool")
+                        except Exception as e:
+                             logger.warning(f"Failed to buffer article {next_id}: {e}")
+                        finally:
+                            cursor.close()
+
+            except Exception as e:
+                logger.error(f"Living Stories: Fast path logic failed: {e}")
+        else:
+            logger.debug(
+                "MEMORY_ESSENTIAL_MODE enabled; skipping Living Stories fast-path for article %s",
+                next_id,
+            )
 
         log_feedback("save_article", {"status": "success", "article_id": next_id})
 
         result = {"status": "success", "article_id": next_id, "id": next_id}
 
         # Collect prediction for training
-        try:
-            from training_system import collect_prediction
+        if not memory_essential_mode:
+            try:
+                from training_system import collect_prediction
 
-            collect_prediction(
-                agent_name="memory",
-                task_type="article_storage",
-                input_text=content,
-                prediction=result,
-                confidence=0.95,  # High confidence for successful storage
-                source_url="",
-            )
-            logger.debug("📊 Training data collected for article storage")
-        except ImportError:
-            logger.debug("Training system not available - skipping data collection")
-        except Exception as e:
-            logger.warning(f"Failed to collect training data: {e}")
+                collect_prediction(
+                    agent_name="memory",
+                    task_type="article_storage",
+                    input_text=content,
+                    prediction=result,
+                    confidence=0.95,  # High confidence for successful storage
+                    source_url="",
+                )
+                logger.debug("📊 Training data collected for article storage")
+            except ImportError:
+                logger.debug("Training system not available - skipping data collection")
+            except Exception as e:
+                logger.warning(f"Failed to collect training data: {e}")
 
         # Return both 'article_id' and legacy 'id' key for backward compatibility
         metrics.record_ingestion("success")

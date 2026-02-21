@@ -106,6 +106,471 @@ def _resolve_publication_summary(body: str, source_summary: str, title: str) -> 
 
     return "Developing story updates are being verified."
 
+
+def _is_collapsed_publication_body(body: str, summary: str) -> bool:
+    normalized_body = re.sub(r"\s+", " ", (body or "")).strip().lower()
+    normalized_summary = re.sub(r"\s+", " ", (summary or "")).strip().lower()
+
+    if not normalized_body:
+        return True
+
+    body_words = len(normalized_body.split())
+    if body_words < 80:
+        return True
+
+    if normalized_summary and normalized_body == normalized_summary:
+        return True
+
+    if normalized_summary and len(normalized_summary) >= 40:
+        overlap = normalized_body[: len(normalized_summary)]
+        if overlap == normalized_summary and len(normalized_body) <= int(len(normalized_summary) * 1.2):
+            return True
+
+    return False
+
+
+def _expand_publication_body_from_sources(
+    source: dict[str, Any],
+    cursor: Any | None,
+    body: str,
+    summary: str,
+) -> str:
+    snippets: list[str] = []
+
+    normalized_summary = re.sub(r"\s+", " ", (summary or "")).strip()
+    if normalized_summary:
+        snippets.append(normalized_summary)
+
+    raw_input_articles = source.get("input_articles")
+    parsed_items = []
+    if isinstance(raw_input_articles, str) and raw_input_articles.strip():
+        try:
+            parsed_items = json.loads(raw_input_articles)
+        except Exception:
+            parsed_items = []
+    elif isinstance(raw_input_articles, list):
+        parsed_items = raw_input_articles
+
+    article_ids: list[int] = []
+    for item in parsed_items if isinstance(parsed_items, list) else []:
+        if isinstance(item, dict):
+            local_text = " ".join(
+                str(item.get(key) or "").strip()
+                for key in ["title", "summary", "content", "body"]
+            ).strip()
+            if local_text:
+                snippets.append(local_text)
+            candidate_id = item.get("id")
+            if str(candidate_id).isdigit():
+                article_ids.append(int(candidate_id))
+        elif str(item).isdigit():
+            article_ids.append(int(item))
+
+    if cursor is not None and article_ids:
+        try:
+            placeholders = ",".join(["%s"] * len(article_ids))
+            cursor.execute(
+                f"""
+                SELECT title, summary, content
+                FROM articles
+                WHERE id IN ({placeholders})
+                ORDER BY created_at DESC
+                LIMIT 40
+                """,
+                tuple(article_ids),
+            )
+            for row in cursor.fetchall() or []:
+                row_text = " ".join(
+                    str((row.get(key) if isinstance(row, dict) else "") or "").strip()
+                    for key in ["title", "summary", "content"]
+                ).strip()
+                if row_text:
+                    snippets.append(row_text)
+        except Exception:
+            pass
+
+    sentences: list[str] = []
+    seen: set[str] = set()
+    for raw in snippets:
+        normalized = re.sub(r"\s+", " ", str(raw or "")).strip()
+        if not normalized:
+            continue
+        for sentence in re.split(r"(?<=[.!?])\s+", normalized):
+            candidate = re.sub(r"\s+", " ", sentence).strip()
+            if len(candidate) < 35:
+                continue
+            key = candidate.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            sentences.append(candidate)
+            if len(sentences) >= 20:
+                break
+        if len(sentences) >= 20:
+            break
+
+    if not sentences:
+        return body
+
+    paragraphs: list[str] = []
+    for index in range(0, len(sentences), 3):
+        paragraph = " ".join(sentences[index : index + 3]).strip()
+        if paragraph:
+            paragraphs.append(paragraph)
+
+    expanded = "\n\n".join(paragraphs).strip()
+    return expanded if len(expanded) > len((body or "").strip()) else body
+
+
+_CATEGORY_ALIASES = {
+    "world": "world",
+    "international": "world",
+    "global": "world",
+    "uk": "uk",
+    "britain": "uk",
+    "business": "business",
+    "economy": "business",
+    "finance": "business",
+    "markets": "business",
+    "politics": "politics",
+    "policy": "politics",
+    "government": "politics",
+    "health": "health",
+    "medicine": "health",
+    "science": "science",
+    "technology": "technology",
+    "tech": "technology",
+    "entertainment": "entertainment",
+    "culture": "entertainment",
+    "sport": "sport",
+    "sports": "sport",
+    "general": "world",
+}
+
+
+_CATEGORY_SIGNAL_KEYWORDS = {
+    "politics": [
+        "election",
+        "parliament",
+        "congress",
+        "senate",
+        "minister",
+        "policy",
+        "government",
+        "vote",
+    ],
+    "business": [
+        "market",
+        "inflation",
+        "interest rate",
+        "stock",
+        "shares",
+        "earnings",
+        "merger",
+        "bank",
+        "economy",
+    ],
+    "technology": [
+        "ai",
+        "artificial intelligence",
+        "chip",
+        "software",
+        "cyber",
+        "startup",
+        "cloud",
+        "openai",
+    ],
+    "science": [
+        "research",
+        "study",
+        "scientists",
+        "laboratory",
+        "climate",
+        "physics",
+        "space",
+        "nasa",
+    ],
+    "health": [
+        "hospital",
+        "vaccine",
+        "disease",
+        "virus",
+        "medical",
+        "nhs",
+        "patient",
+        "health",
+    ],
+    "sport": [
+        "match",
+        "league",
+        "tournament",
+        "goal",
+        "coach",
+        "premier league",
+        "fifa",
+        "olympic",
+    ],
+    "entertainment": [
+        "film",
+        "movie",
+        "music",
+        "celebrity",
+        "tv",
+        "streaming",
+        "festival",
+        "box office",
+    ],
+    "uk": [
+        "uk",
+        "britain",
+        "british",
+        "london",
+        "westminster",
+        "england",
+        "scotland",
+        "wales",
+    ],
+    "world": [
+        "un",
+        "nato",
+        "international",
+        "global",
+        "diplomatic",
+        "foreign",
+    ],
+}
+
+
+def _compute_keyword_category_scores(title: str, summary: str, body: str) -> dict[str, float]:
+    text = " ".join(part for part in [title or "", summary or "", body or ""] if part).lower()
+    if not text:
+        return {}
+
+    def keyword_present(haystack: str, needle: str) -> bool:
+        escaped = re.escape(needle.lower())
+        return bool(re.search(rf"\b{escaped}\b", haystack, flags=re.IGNORECASE))
+
+    scores: dict[str, float] = {}
+    for category, needles in _CATEGORY_SIGNAL_KEYWORDS.items():
+        hits = 0
+        for needle in needles:
+            if keyword_present(text, needle):
+                hits += 1
+        if hits:
+            scores[category] = min(1.0, hits / 3.0)
+    return scores
+
+
+def _normalize_publication_category(raw_category: Any) -> str:
+    if raw_category is None:
+        return "world"
+    normalized = str(raw_category).strip().lower()
+    if not normalized:
+        return "world"
+    if normalized in _CATEGORY_ALIASES:
+        return _CATEGORY_ALIASES[normalized]
+
+    keyword_map = {
+        "politic": "politics",
+        "elect": "politics",
+        "government": "politics",
+        "business": "business",
+        "econom": "business",
+        "market": "business",
+        "finance": "business",
+        "tech": "technology",
+        "science": "science",
+        "health": "health",
+        "medical": "health",
+        "sport": "sport",
+        "entertain": "entertainment",
+        "culture": "entertainment",
+        "world": "world",
+        "international": "world",
+        "uk": "uk",
+        "brit": "uk",
+    }
+    for needle, mapped in keyword_map.items():
+        if needle in normalized:
+            return mapped
+    return "world"
+
+
+def _derive_publication_category(
+    source: dict[str, Any],
+    title: str,
+    summary: str,
+    body: str,
+    cursor: Any | None = None,
+) -> str:
+    weighted_scores: dict[str, float] = {}
+
+    def add_score(category_value: Any, weight: float):
+        normalized = _normalize_publication_category(category_value)
+        weighted_scores[normalized] = weighted_scores.get(normalized, 0.0) + max(0.0, float(weight))
+
+    metadata_category = None
+    if source.get("synth_metadata"):
+        try:
+            meta = json.loads(source["synth_metadata"])
+            if isinstance(meta, dict):
+                metadata_category = meta.get("category")
+        except Exception:
+            metadata_category = None
+
+    normalized_from_meta = _normalize_publication_category(metadata_category)
+    if metadata_category is not None and normalized_from_meta:
+        add_score(normalized_from_meta, 0.35)
+
+    if cursor is not None:
+        try:
+            raw_input_articles = source.get("input_articles")
+            parsed_ids = json.loads(raw_input_articles) if isinstance(raw_input_articles, str) else raw_input_articles
+            article_ids = [int(item) for item in (parsed_ids or []) if str(item).isdigit()]
+            if article_ids:
+                placeholders = ",".join(["%s"] * len(article_ids))
+                cursor.execute(
+                    f"""
+                    SELECT section, COUNT(*) AS c
+                    FROM articles
+                    WHERE id IN ({placeholders})
+                      AND section IS NOT NULL
+                      AND TRIM(section) <> ''
+                    GROUP BY section
+                    ORDER BY c DESC
+                    LIMIT 10
+                    """,
+                    tuple(article_ids),
+                )
+                rows = cursor.fetchall() or []
+                total = sum(
+                    float((row.get("c") if isinstance(row, dict) else (row[1] if len(row) > 1 else 0)) or 0)
+                    for row in rows
+                )
+                if total > 0:
+                    for row in rows:
+                        section_value = (
+                            row.get("section") if isinstance(row, dict) else (row[0] if len(row) > 0 else None)
+                        )
+                        count_value = float(
+                            (row.get("c") if isinstance(row, dict) else (row[1] if len(row) > 1 else 0)) or 0
+                        )
+                        if section_value and count_value > 0:
+                            add_score(section_value, 0.45 * (count_value / total))
+        except Exception:
+            pass
+
+    keyword_scores = _compute_keyword_category_scores(title, summary, body)
+    for keyword_category, keyword_score in keyword_scores.items():
+        add_score(keyword_category, 0.35 * keyword_score)
+
+    try:
+        classification = categorize_content("\n\n".join([title or "", summary or "", body or ""]))
+        predicted = classification.get("category") if isinstance(classification, dict) else None
+        confidence = classification.get("confidence", 0.0) if isinstance(classification, dict) else 0.0
+        normalized_predicted = _normalize_publication_category(predicted)
+        clamped_confidence = min(1.0, max(0.0, float(confidence or 0.0)))
+        if normalized_predicted:
+            add_score(normalized_predicted, 0.20 + (0.80 * clamped_confidence))
+    except Exception:
+        pass
+
+    if weighted_scores:
+        ordered = sorted(weighted_scores.items(), key=lambda item: item[1], reverse=True)
+        winner, winner_score = ordered[0]
+        if winner == "world" and len(ordered) > 1:
+            runner_up, runner_score = ordered[1]
+            if runner_up != "world" and (winner_score - runner_score) <= 0.12:
+                return runner_up
+        return winner
+
+    return "world"
+
+
+def _resolve_publication_evidence(source: dict[str, Any], cursor: Any | None = None) -> str:
+    raw_input_articles = source.get("input_articles")
+    parsed_items: list[Any] = []
+    if isinstance(raw_input_articles, str) and raw_input_articles.strip():
+        try:
+            loaded = json.loads(raw_input_articles)
+            if isinstance(loaded, list):
+                parsed_items = loaded
+        except Exception:
+            return raw_input_articles
+    elif isinstance(raw_input_articles, list):
+        parsed_items = raw_input_articles
+
+    if not parsed_items:
+        return str(raw_input_articles or "")
+
+    evidence_lines: list[str] = []
+    article_ids: list[int] = []
+    seen_urls: set[str] = set()
+
+    for item in parsed_items:
+        if isinstance(item, dict):
+            title = str(item.get("title") or "").strip()
+            url = str(item.get("url") or item.get("source_url") or "").strip()
+            item_id = item.get("id")
+            if str(item_id).isdigit():
+                article_ids.append(int(item_id))
+
+            if url:
+                seen_urls.add(url)
+                if title and item_id:
+                    evidence_lines.append(f"[{item_id}] {title} — {url}")
+                elif title:
+                    evidence_lines.append(f"{title} — {url}")
+                elif item_id:
+                    evidence_lines.append(f"[{item_id}] {url}")
+                else:
+                    evidence_lines.append(url)
+            elif title:
+                evidence_lines.append(f"[{item_id}] {title}" if item_id else title)
+        elif str(item).isdigit():
+            article_ids.append(int(item))
+
+    if cursor is not None and article_ids:
+        try:
+            placeholders = ",".join(["%s"] * len(article_ids))
+            cursor.execute(
+                f"""
+                SELECT id, title, source_url
+                FROM articles
+                WHERE id IN ({placeholders})
+                ORDER BY created_at DESC
+                LIMIT 50
+                """,
+                tuple(article_ids),
+            )
+            rows = cursor.fetchall() or []
+            for row in rows:
+                row_id = row.get("id") if isinstance(row, dict) else None
+                title = str((row.get("title") if isinstance(row, dict) else "") or "").strip()
+                url = str((row.get("source_url") if isinstance(row, dict) else "") or "").strip()
+                if not url or url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                if title and row_id:
+                    evidence_lines.append(f"[{row_id}] {title} — {url}")
+                elif title:
+                    evidence_lines.append(f"{title} — {url}")
+                elif row_id:
+                    evidence_lines.append(f"[{row_id}] {url}")
+                else:
+                    evidence_lines.append(url)
+        except Exception:
+            pass
+
+    if evidence_lines:
+        return "\n".join(evidence_lines)
+
+    compact_ids = [str(item) for item in parsed_items if str(item).isdigit()]
+    if compact_ids:
+        return "Source article IDs: " + ", ".join(compact_ids)
+
+    return str(raw_input_articles or "")
+
 # Global engine instance
 _engine: ChiefEditorEngine | None = None
 
@@ -420,6 +885,15 @@ def publish_story(story_id: str) -> dict[str, Any]:
                     source_summary=source.get('summary') or "",
                     title=title,
                 )
+
+                if _is_collapsed_publication_body(body, summary):
+                    body = _expand_publication_body_from_sources(source, cursor, body, summary)
+                    summary = _resolve_publication_summary(
+                        body=body,
+                        source_summary=source.get('summary') or "",
+                        title=title,
+                    )
+
                 title = _derive_publication_title(title, summary, body)
 
                 headline_input = "\n".join(
@@ -458,17 +932,9 @@ def publish_story(story_id: str) -> dict[str, Any]:
                     slug_base = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower()).strip('-')
                     slug = f"{slug_base[:40]}-{story_suffix}"
 
-                evidence = source.get('input_articles') or "{}"
+                evidence = _resolve_publication_evidence(source, cursor=cursor)
                 
-                category = "General"
-                # Try to parse category from metadata
-                if source.get('synth_metadata'):
-                    try:
-                        meta = json.loads(source['synth_metadata'])
-                        if isinstance(meta, dict) and 'category' in meta:
-                            category = str(meta['category'])[:20]
-                    except Exception:
-                        pass
+                category = _derive_publication_category(source, title, summary, body, cursor=cursor)
                 
                 now = datetime.now()
                 author = "Chief Editor"
@@ -480,11 +946,42 @@ def publish_story(story_id: str) -> dict[str, Any]:
                     (title, slug, summary, body, published_at, updated_at, author, score, evidence, is_featured, category)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE
-                    title=VALUES(title), summary=VALUES(summary), body=VALUES(body), updated_at=VALUES(updated_at)
+                    title=VALUES(title),
+                    summary=VALUES(summary),
+                    body=VALUES(body),
+                    published_at=VALUES(published_at),
+                    updated_at=VALUES(updated_at),
+                    author=VALUES(author),
+                    score=VALUES(score),
+                    evidence=VALUES(evidence),
+                    category=VALUES(category)
                 """
                 cursor.execute(upsert_sql, (
                     title, slug, summary, body, now, now, author, score, evidence, 0, category
                 ))
+
+                cursor.execute(
+                    """
+                    SELECT id
+                    FROM news_article
+                    WHERE slug = %s
+                    ORDER BY updated_at DESC, id DESC
+                    LIMIT 1
+                    """,
+                    (slug,),
+                )
+                article_row = cursor.fetchone()
+                article_id = article_row.get("id") if article_row else None
+
+                publish_provenance = {
+                    "timestamp": now.isoformat() + "Z",
+                    "actor": "chief_editor",
+                    "story_id": story_id,
+                    "article_id": article_id,
+                    "slug": slug,
+                    "category": category,
+                    "source_model": "rule_based",
+                }
 
                 # 4. Mark as Published
                 cursor.execute(
@@ -501,6 +998,55 @@ def publish_story(story_id: str) -> dict[str, Any]:
                     (now, summary, story_id)
                 )
                 publish_marked = cursor.rowcount > 0
+
+                try:
+                    raw_meta = source.get("synth_metadata")
+                    existing_meta = json.loads(raw_meta) if isinstance(raw_meta, str) and raw_meta.strip() else (raw_meta if isinstance(raw_meta, dict) else {})
+                except Exception:
+                    existing_meta = {}
+                publish_meta = existing_meta.get("publish") if isinstance(existing_meta.get("publish"), dict) else {}
+                history = publish_meta.get("history") if isinstance(publish_meta.get("history"), list) else []
+                history.append(publish_provenance)
+                existing_meta["publish"] = {
+                    "last_event": publish_provenance,
+                    "history": history[-25:],
+                }
+                cursor.execute(
+                    """
+                    UPDATE synthesized_articles
+                    SET synth_metadata = %s
+                    WHERE story_id = %s
+                    """,
+                    (json.dumps(existing_meta), story_id),
+                )
+
+                try:
+                    payload = {
+                        "story_id": story_id,
+                        "slug": slug,
+                        "title": title,
+                        "category": category,
+                        "status": "success" if publish_marked else "skipped",
+                        "source": "chief_editor.publish_story",
+                        "model": "rule_based",
+                    }
+                    cursor.execute(
+                        """
+                        INSERT INTO news_publishaudit
+                        (article_id, status, actor, token, latency_seconds, payload, created_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, NOW())
+                        """,
+                        (
+                            article_id,
+                            "success" if publish_marked else "skipped",
+                            "chief_editor",
+                            "",
+                            None,
+                            json.dumps(payload),
+                        ),
+                    )
+                except Exception as audit_error:
+                    logger.warning(f"Failed to persist publish audit for {story_id}: {audit_error}")
 
         status = "published" if publish_marked else "published_already"
         result = {

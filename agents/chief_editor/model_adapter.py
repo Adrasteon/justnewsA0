@@ -21,17 +21,32 @@ class ChiefEditorModelAdapter:
     def __init__(self) -> None:
         disable_qwen = os.environ.get("CHIEF_EDITOR_DISABLE_QWEN", "0")
         self.enabled = str(disable_qwen).lower() not in {"1", "true"}
+
+        base_url = (
+            os.environ.get("VLLM_BASE_URL")
+            or os.environ.get("OPENAI_BASE_URL")
+            or os.environ.get("OPENAI_API_BASE")
+        )
+        if not base_url:
+            vllm_host = os.environ.get("VLLM_HOST", "vllm")
+            vllm_port = os.environ.get("VLLM_PORT", "8010")
+            base_url = f"http://{vllm_host}:{vllm_port}/v1"
         
         self.adapter = OpenAIAdapter(
             name="chief_editor_qwen",
             model=os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ"),
-            base_url=os.environ.get("VLLM_BASE_URL", "http://127.0.0.1:8010/v1"),
+            base_url=base_url,
             api_key=os.environ.get("VLLM_API_KEY", "unused"),
             system_prompt=SYSTEM_PROMPT,
             temperature=0.15,
             max_tokens=380,
             timeout=45.0
         )
+        if self.enabled:
+            try:
+                self.adapter.load()
+            except Exception as e:
+                logger.warning(f"Chief Editor Qwen adapter load failed: {e}")
 
     def review_content(
         self, content: str, metadata: dict[str, Any] | None = None
@@ -67,8 +82,10 @@ class ChiefEditorModelAdapter:
                 "overall_quality (0.0-1.0), assessment (high|medium|low), reasoning."
             ),
             "categorize": (
-                "Categorize this text into one news category (e.g. Politics, Technology, distinct). "
-                "Return JSON with: category (string), confidence (0.0-1.0)."
+                "Categorize this text into exactly one of these categories: "
+                "world, uk, business, politics, health, science, technology, entertainment, sport. "
+                "Prefer the most specific category that is directly supported by the text. "
+                "Return strict JSON only with keys: category (one of the allowed values), confidence (0.0-1.0)."
             ),
             "sentiment": (
                 "Analyze the editorial sentiment/tone. Return JSON with: "

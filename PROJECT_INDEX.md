@@ -20,12 +20,16 @@
 2. **Monitoring Setup:** [MONITORING.md](docs/operations/MONITORING.md) - Metrics, alerting, logging
 3. **Service Operations:** [SERVICE_OPERATIONS.md](docs/operations/SERVICE_OPERATIONS.md) - Troubleshooting guide
 4. **Performance Baselines:** [performance-baselines.md](docs/performance-baselines.md) - Metric thresholds
+5. **Crawler Ingest Resiliency:** [CRAWLER_INGEST_RESILIENCY.md](docs/operations/CRAWLER_INGEST_RESILIENCY.md) - Disk-backed deferred ingest spool and replay recovery
+6. **Environment & Dependencies:** [ENVIRONMENT_CONFIG.md](docs/operations/ENVIRONMENT_CONFIG.md) - Runtime vars plus conda/UV dependency manifest policy
 
 ### For Development Team
 1. **Testing Framework:** [tests/integration/README.md](tests/integration/README.md) - Integration test procedures
 2. **Integration Tests:** [tests/integration/test_devcontainer.py](tests/integration/test_devcontainer.py) - 5-test suite
 3. **Baseline Capture:** [tests/integration/baseline_capture.py](tests/integration/baseline_capture.py) - Performance metrics
 4. **Dependencies:** [.devcontainer/DEPENDENCIES.md](.devcontainer/DEPENDENCIES.md) - Service dependency matrix
+5. **Bootstrap Requirements:** [requirements-bootstrap.txt](requirements-bootstrap.txt) - UV/pip bootstrap dependency mirror
+6. **Global Docs Index:** [DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md) - Canonical doc navigation
 
 ### For Security Team
 1. **Security Audit:** [SECURITY_AUDIT.md](docs/security/SECURITY_AUDIT.md) - 13-section compliance checklist

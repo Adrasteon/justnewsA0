@@ -45,6 +45,8 @@ CHROMADB_PORT="${CHROMADB_PORT:-3307}"
 REDIS_PORT="${REDIS_PORT:-6379}"
 PUBLISHER_ENABLED="${PUBLISHER_ENABLED:-1}"
 PUBLISHER_PORT="${PUBLISHER_PORT:-8100}"
+LOG_DIR="${LOG_DIR:-/tmp/justnews_services_logs}"
+MEMORY_GOVERNOR_PID_FILE="${LOG_DIR}/memory_governor/justnews_memory_governor.pid"
 
 # ============================================================================
 # LOGGING & OUTPUT
@@ -274,6 +276,32 @@ stop_publisher_service() {
   log_section "Publisher Service Stopped"
 }
 
+stop_memory_governor() {
+  if [ ! -f "${MEMORY_GOVERNOR_PID_FILE}" ]; then
+    return 0
+  fi
+
+  local governor_pid
+  governor_pid="$(cat "${MEMORY_GOVERNOR_PID_FILE}" 2>/dev/null || true)"
+  if [ -z "${governor_pid}" ]; then
+    rm -f "${MEMORY_GOVERNOR_PID_FILE}"
+    return 0
+  fi
+
+  if kill -0 "${governor_pid}" 2>/dev/null; then
+    log_info "Stopping memory governor (PID ${governor_pid})..."
+    kill -TERM "${governor_pid}" 2>/dev/null || true
+    sleep 1
+    if kill -0 "${governor_pid}" 2>/dev/null; then
+      kill -9 "${governor_pid}" 2>/dev/null || true
+    fi
+    log_success "Memory governor stopped"
+  fi
+
+  rm -f "${MEMORY_GOVERNOR_PID_FILE}"
+  return 0
+}
+
 stop_mariadb() {
   log_info "Stopping MariaDB on port ${MARIADB_PORT}..."
 
@@ -397,6 +425,9 @@ main() {
 
   # Stop publisher service
   stop_publisher_service || true
+
+  # Stop detached runtime memory governor
+  stop_memory_governor || true
 
   # Stop database services
   stop_database_services || true

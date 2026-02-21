@@ -39,8 +39,31 @@
 {% endblock %}
 
 {% block content %}
-<div class="row g-4">
-    <div class="col-xl-8">
+<div class="row g-4 align-items-start">
+    <div class="col-xl-3">
+        <aside class="jn-analysis-rail">
+            <div class="jn-card p-3 mb-3">
+                <h3 class="h5 mb-3">Latest News</h3>
+                {% if latest_news %}
+                    <ul class="list-unstyled mb-0">
+                        {% for item in latest_news %}
+                        <li class="mb-3 pb-3 border-bottom">
+                            <div class="jn-meta-row mb-1">
+                                <span class="jn-chip">{{ item.category|title }}</span>
+                            </div>
+                            <a href="{% url 'article_detail' item.slug %}" class="text-decoration-none fw-semibold d-block mb-1">{{ item.title }}</a>
+                            <small class="text-muted">{{ item.published_at|date:"M d, H:i" }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted mb-0">No recent stories available.</p>
+                {% endif %}
+            </div>
+        </aside>
+    </div>
+
+    <div class="col-xl-6">
         <nav aria-label="breadcrumb" class="mb-3">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="/">Home</a></li>
@@ -51,22 +74,22 @@
 
         <article class="jn-card jn-article-main">
             <div class="jn-meta-row mb-3">
-                <span class="jn-chip">{{ article.category|title|default:"World" }}</span>
-                <span class="jn-chip {{ trust_class }}">{{ trust_label }}</span>
-                <span class="jn-chip jn-chip-neutral"><i class="fa-regular fa-file-lines me-1"></i>{{ read_time }} min read</span>
+                <span class="jn-chip" data-bs-toggle="tooltip" title="Editorial category assigned to this article.">{{ article.category|title|default:"World" }}</span>
+                <span class="jn-chip {{ trust_class }}" data-bs-toggle="tooltip" title="Confidence band derived from editorial scoring and verification signals.">{{ trust_label }}</span>
+                <span class="jn-chip jn-chip-neutral" data-bs-toggle="tooltip" title="Estimated reading time based on article length."><i class="fa-regular fa-file-lines me-1"></i>{{ read_time }} min read</span>
             </div>
 
             <h1 class="jn-article-title">{{ article.title }}</h1>
             <p class="jn-article-summary">{{ article.summary }}</p>
 
             <div class="jn-meta-muted border-bottom pb-3 mb-4">
-                <span><i class="fa-solid fa-user-pen me-1"></i>{{ article.author }}</span>
-                <span class="ms-3"><i class="fa-regular fa-clock me-1"></i>{{ article.published_at|date:"M d, Y H:i" }}</span>
-                <span class="ms-3"><i class="fa-solid fa-square-poll-vertical me-1"></i>Score {{ article.score|floatformat:2 }}</span>
+                <span data-bs-toggle="tooltip" title="Publishing pipeline actor or byline associated with this version."><i class="fa-solid fa-user-pen me-1"></i>{{ article.author }}</span>
+                <span class="ms-3" data-bs-toggle="tooltip" title="Timestamp when this article was published to the site."><i class="fa-regular fa-clock me-1"></i>{{ article.published_at|date:"M d, Y H:i" }}</span>
+                <span class="ms-3" data-bs-toggle="tooltip" title="Composite editorial score used for confidence banding and ranking."><i class="fa-solid fa-square-poll-vertical me-1"></i>Score {{ article.score|floatformat:2 }}</span>
             </div>
 
-            <div class="article-body fs-5 lh-lg text-break">
-                {{ article.body|linebreaks }}
+            <div class="article-body fs-5 lh-base text-break">
+                {{ article.body|linebreaksbr }}
             </div>
         </article>
 
@@ -92,56 +115,123 @@
             </div>
         </section>
 
-        {% if related_cards %}
-        <section class="jn-section mt-4">
-            <h2 class="jn-section-title h4 mb-3">Related Coverage</h2>
-            <div class="row row-cols-1 row-cols-md-2 g-3">
-                {% for item in related_cards %}
-                <div class="col">
-                    <article class="jn-card jn-card-story h-100 position-relative">
-                        <div class="jn-meta-row mb-2">
-                            <span class="jn-chip">{{ item.article.category|title }}</span>
-                            <span class="jn-chip {{ item.trust_class }}">{{ item.article.score|floatformat:2 }}</span>
-                        </div>
-                        <h3 class="jn-story-title h6 mb-2">
-                            <a href="{% url 'article_detail' item.article.slug %}" class="stretched-link text-decoration-none text-dark">{{ item.article.title }}</a>
-                        </h3>
-                        <p class="jn-story-summary mb-0">{{ item.article.summary|truncatewords:20 }}</p>
-                    </article>
-                </div>
-                {% endfor %}
-            </div>
-        </section>
-        {% endif %}
-
         <div class="mt-4 mb-5">
             <a href="/" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Back to Headlines</a>
         </div>
     </div>
 
-    <div class="col-xl-4">
-        <aside class="jn-analysis-rail sticky-xl-top">
+    <div class="col-xl-3">
+        <aside class="jn-analysis-rail">
             <div class="jn-card p-3 mb-3">
-                <h3 class="h5 mb-3">Analysis Signals</h3>
+                <h3 class="h5 mb-3" data-bs-toggle="tooltip" title="Signals that indicate whether this article is part of an ongoing evolving story cluster.">Story Continuity</h3>
                 <ul class="list-unstyled mb-0 jn-metric-list">
                     <li>
-                        <span>Confidence band</span>
+                        <span data-bs-toggle="tooltip" title="Living Story means the cluster has meaningful updates over time; One-off means a single event snapshot.">Story type</span>
+                        <strong>{{ story_insights.story_type }}</strong>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Internal synthesized story identifier used by the editorial pipeline.">Story ID</span>
+                        <strong>{{ story_insights.story_id }}</strong>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Cluster identifier grouping related source articles into one narrative thread.">Cluster ID</span>
+                        <strong>{{ story_insights.cluster_id }}</strong>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Number of source articles currently represented in this story cluster.">Cluster size</span>
+                        <strong>{{ story_insights.cluster_size }}</strong>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Earliest to latest source publication date currently represented in the cluster.">Coverage window</span>
+                        <strong>
+                            {% if story_insights.date_start and story_insights.date_end %}
+                                {{ story_insights.date_start|date:"M d, Y" }} → {{ story_insights.date_end|date:"M d, Y" }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </strong>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Most recent living-story action (for example created, updated, or skipped).">Update action</span>
+                        <strong>{{ story_insights.update_action|default:"N/A" }}</strong>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Count of newly added source articles in the most recent story update decision.">New articles (last)</span>
+                        <strong>{{ story_insights.last_new_articles|default:"N/A" }}</strong>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="jn-card p-3 mb-3">
+                <h3 class="h5 mb-3" data-bs-toggle="tooltip" title="Distribution metrics computed across source articles in this cluster.">Cluster Spread</h3>
+                <ul class="list-unstyled mb-0 jn-metric-list">
+                    <li>
+                        <span data-bs-toggle="tooltip" title="How many source articles and distinct domains are included in the spread analysis.">Source sample</span>
+                        <strong>{{ cluster_signals.source_sample_size }} articles / {{ cluster_signals.distinct_source_domains }} domains</strong>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Average and min-max sentiment score across source articles.">Sentiment spread</span>
+                        <strong>{{ cluster_signals.sentiment_range }}</strong>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Counts of positive, neutral, and negative source sentiment in this cluster.">Sentiment balance</span>
+                        <strong>{{ cluster_signals.sentiment_balance }}</strong>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ cluster_signals.sentiment_percent.positive }}%" aria-label="Positive sentiment"></div>
+                            <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ cluster_signals.sentiment_percent.neutral }}%" aria-label="Neutral sentiment"></div>
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: {{ cluster_signals.sentiment_percent.negative }}%" aria-label="Negative sentiment"></div>
+                        </div>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Estimated framing-intensity score spread derived from loaded/certainty language in source texts.">Bias spread</span>
+                        <strong>{{ cluster_signals.bias_range }}</strong>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ cluster_signals.bias_percent.low }}%" aria-label="Low bias"></div>
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ cluster_signals.bias_percent.medium }}%" aria-label="Medium bias"></div>
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: {{ cluster_signals.bias_percent.high }}%" aria-label="High bias"></div>
+                        </div>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Share of source articles classified into the high-bias bucket.">Bias high-share</span>
+                        <strong>{{ cluster_signals.bias_high_share }}</strong>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Estimated persuasive-language score spread across source article text.">Persuasion spread</span>
+                        <strong>{{ cluster_signals.persuasion_range }}</strong>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ cluster_signals.persuasion_percent.low }}%" aria-label="Low persuasion"></div>
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ cluster_signals.persuasion_percent.medium }}%" aria-label="Medium persuasion"></div>
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: {{ cluster_signals.persuasion_percent.high }}%" aria-label="High persuasion"></div>
+                        </div>
+                    </li>
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Share of source articles classified into the high-persuasion bucket.">Persuasion high-share</span>
+                        <strong>{{ cluster_signals.persuasion_high_share }}</strong>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="jn-card p-3 mb-3">
+                <h3 class="h5 mb-3" data-bs-toggle="tooltip" title="Heuristic diagnostics computed from the current published article text.">Analysis Signals</h3>
+                <ul class="list-unstyled mb-0 jn-metric-list">
+                    <li>
+                        <span data-bs-toggle="tooltip" title="Confidence class derived from editorial score thresholds.">Confidence band</span>
                         <strong>{{ trust_label }}</strong>
                     </li>
                     <li>
-                        <span>Emotive language</span>
+                        <span data-bs-toggle="tooltip" title="Detected intensity of emotive/loaded wording in the current article.">Emotive language</span>
                         <strong>{{ narrative_signals.emotive_language_level }} ({{ narrative_signals.emotive_language_hits }})</strong>
                     </li>
                     <li>
-                        <span>Attribution markers</span>
+                        <span data-bs-toggle="tooltip" title="Count of phrases suggesting sourcing and attribution (e.g. according to, officials say).">Attribution markers</span>
                         <strong>{{ narrative_signals.attribution_density_hits }}</strong>
                     </li>
                     <li>
-                        <span>Counterview markers</span>
+                        <span data-bs-toggle="tooltip" title="Count of phrases indicating alternative perspectives or counter-arguments.">Counterview markers</span>
                         <strong>{{ narrative_signals.counterview_signals }}</strong>
                     </li>
                     <li>
-                        <span>Evidence links</span>
+                        <span data-bs-toggle="tooltip" title="Number of extracted external source links visible in the Evidence & Sources section.">Evidence links</span>
                         <strong>{{ evidence_links|length }}</strong>
                     </li>
                 </ul>
@@ -157,7 +247,7 @@
 
             {% if latest_audit %}
             <div class="jn-card p-3">
-                <h3 class="h6 mb-2">Publication Metadata</h3>
+                <h3 class="h6 mb-2" data-bs-toggle="tooltip" title="Latest publisher-side audit event recorded for this article.">Publication Metadata</h3>
                 <p class="jn-note mb-1"><strong>Last published:</strong> {{ latest_audit.created_at|date:"M d, Y H:i" }}</p>
                 <p class="jn-note mb-1"><strong>Pipeline actor:</strong> {{ latest_audit.actor|default:"N/A" }}</p>
                 <p class="jn-note mb-0"><strong>Publish status:</strong> {{ latest_audit.status|title }}</p>

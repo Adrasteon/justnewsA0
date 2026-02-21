@@ -16,6 +16,7 @@ AGENTS_MANIFEST=(
   "memory|agents.memory.main:app|8007"
   "reasoning|agents.reasoning.main:app|8008"
   "newsreader|agents.newsreader.main:app|8009"
+  "training_system|training_system.mcp_integration:app|8011"
   "dashboard|agents.dashboard.main:app|8013"
   "analytics|agents.analytics.dashboard:analytics_app|8012"
   # balancer removed - keep this entry deleted to avoid starting the agent

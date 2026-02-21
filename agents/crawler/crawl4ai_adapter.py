@@ -761,17 +761,11 @@ async def crawl_site_with_crawl4ai(
         lower = message.lower()
         return any(marker in lower for marker in recoverable_markers)
 
-    async def _fetch_with_retries(target_url: str):
+    async def _fetch_with_retries(crawler: Any, target_url: str) -> tuple[Any | None, bool]:
         attempts = 3
         for attempt in range(1, attempts + 1):
             try:
-                crawler_factory = (
-                    AsyncWebCrawler(config=browser_config)
-                    if browser_config
-                    else AsyncWebCrawler()
-                )
-                async with crawler_factory as crawler:
-                    result = await crawler.arun(target_url, config=run_config)
+                result = await crawler.arun(target_url, config=run_config)
             except Exception as exc:  # noqa: BLE001 - robustness first
                 message = str(exc)
                 logger.warning(
@@ -781,77 +775,103 @@ async def crawl_site_with_crawl4ai(
                     attempts,
                     message,
                 )
-                if attempt == attempts or not _is_recoverable_error(message):
-                    return None
+                if not _is_recoverable_error(message):
+                    return None, False
+                if attempt == attempts:
+                    return None, True
                 await asyncio.sleep(0.5 * attempt)
                 continue
 
             if getattr(result, "success", True):
-                return result
+                return result, False
 
             error_text = str(
                 getattr(result, "error", "") or getattr(result, "message", "")
             )
             logger.debug("Crawl4AI returned unsuccessful result for %s", target_url)
-            if attempt == attempts or not _is_recoverable_error(error_text):
-                return result
+            if not _is_recoverable_error(error_text):
+                return result, False
+            if attempt == attempts:
+                return result, True
             await asyncio.sleep(0.5 * attempt)
 
-        return None
+        return None, False
 
     while (
         queue
         and pages_fetched < context.page_budget
         and len(articles) < context.max_articles
     ):
-        current_url, current_depth = queue.pop(0)
-        if not current_url or current_url in visited:
-            continue
-        visited.add(current_url)
-
-        result = await _fetch_with_retries(current_url)
-        if result is None:
-            continue
-
-        pages_fetched += 1
-        if not getattr(result, "success", True):
-            continue
-
-        article = _build_article_from_result(
-            builder,
-            current_url,
-            result,
-            profile,
-            links_followed=max(0, len(visited) - len(unique_urls)),
+        crawler_factory = (
+            AsyncWebCrawler(config=browser_config)
+            if browser_config
+            else AsyncWebCrawler()
         )
-        if article:
-            crawl_meta = article.setdefault("extraction_metadata", {}).setdefault(
-                "crawl4ai", {}
-            )
-            crawl_meta["crawl_depth"] = current_depth
-            if skip_seed_articles and current_url in seed_urls:
-                seed_buffer.append(article)
-            else:
-                articles.append(article)
-                if len(articles) >= context.max_articles:
+        restart_session = False
+        async with crawler_factory as crawler:
+            while (
+                queue
+                and pages_fetched < context.page_budget
+                and len(articles) < context.max_articles
+            ):
+                current_url, current_depth = queue.pop(0)
+                if not current_url or current_url in visited:
+                    continue
+
+                result, restart_session = await _fetch_with_retries(crawler, current_url)
+                if restart_session:
+                    queue.insert(0, (current_url, current_depth))
+                    logger.info(
+                        "Restarting Crawl4AI browser session after recoverable driver/browser closure"
+                    )
                     break
 
-        if (
-            context.follow_internal_links
-            and len(articles) < context.max_articles
-            and getattr(result, "links", None)
-        ):
-            if context.crawl_depth is not None and current_depth >= context.crawl_depth:
-                continue
-            remaining_pages = context.page_budget - pages_fetched
-            candidates = result.links.get("internal", []) if result.links else []
-            next_urls = _select_link_candidates(
-                candidates, context, visited, remaining_pages
-            )
-            for url in next_urls:
-                queued_urls = {queued for queued, _depth in queue}
-                if url not in queued_urls and url not in visited:
-                    queue.append((url, current_depth + 1))
+                visited.add(current_url)
+                if result is None:
+                    continue
+
+                pages_fetched += 1
+                if not getattr(result, "success", True):
+                    continue
+
+                article = _build_article_from_result(
+                    builder,
+                    current_url,
+                    result,
+                    profile,
+                    links_followed=max(0, len(visited) - len(unique_urls)),
+                )
+                if article:
+                    crawl_meta = article.setdefault("extraction_metadata", {}).setdefault(
+                        "crawl4ai", {}
+                    )
+                    crawl_meta["crawl_depth"] = current_depth
+                    if skip_seed_articles and current_url in seed_urls:
+                        seed_buffer.append(article)
+                    else:
+                        articles.append(article)
+                        if len(articles) >= context.max_articles:
+                            break
+
+                if (
+                    context.follow_internal_links
+                    and len(articles) < context.max_articles
+                    and getattr(result, "links", None)
+                ):
+                    if context.crawl_depth is not None and current_depth >= context.crawl_depth:
+                        continue
+                    remaining_pages = context.page_budget - pages_fetched
+                    candidates = result.links.get("internal", []) if result.links else []
+                    next_urls = _select_link_candidates(
+                        candidates, context, visited, remaining_pages
+                    )
+                    for url in next_urls:
+                        queued_urls = {queued for queued, _depth in queue}
+                        if url not in queued_urls and url not in visited:
+                            queue.append((url, current_depth + 1))
+
+        if not restart_session:
+            break
 
     if (
         skip_seed_articles

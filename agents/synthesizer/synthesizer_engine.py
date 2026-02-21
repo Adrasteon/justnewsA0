@@ -831,11 +831,18 @@ class SynthesizerEngine:
                         qwen_doc.get("body")
                         or qwen_doc.get("draft_body")
                         or qwen_doc.get("article_body")
-                        or qwen_doc.get("summary")
                         or ""
                     )
                     summary = qwen_doc.get("summary") or self._derive_summary_from_text(body)
                     key_points = qwen_doc.get("key_points", [])
+                    if len((body or "").split()) < 120:
+                        body = self._compose_body_fallback(
+                            source_texts=texts,
+                            summary=summary,
+                            key_points=key_points,
+                        )
+                        if not summary:
+                            summary = self._derive_summary_from_text(body)
                     return {
                         "status": "success",
                         "body": body,
@@ -925,6 +932,55 @@ class SynthesizerEngine:
         if len(words) > max_words:
             summary = " ".join(words[:max_words]).rstrip(" ,;:-") + "…"
         return summary
+
+    def _compose_body_fallback(
+        self,
+        source_texts: list[str],
+        summary: str,
+        key_points: list[str] | None,
+    ) -> str:
+        paragraphs: list[str] = []
+
+        normalized_summary = " ".join((summary or "").split()).strip()
+        if normalized_summary:
+            paragraphs.append(normalized_summary)
+
+        points = [" ".join(str(point).split()).strip() for point in (key_points or []) if str(point).strip()]
+        if points:
+            paragraphs.append("Key points: " + " ".join(f"{point}." for point in points[:5]))
+
+        sentence_candidates: list[str] = []
+        for raw in source_texts:
+            cleaned = " ".join((raw or "").split()).strip()
+            if not cleaned:
+                continue
+            sentence_candidates.extend(re.split(r"(?<=[.!?])\s+", cleaned))
+
+        deduped_sentences: list[str] = []
+        seen: set[str] = set()
+        for sentence in sentence_candidates:
+            s = " ".join(sentence.split()).strip()
+            if len(s) < 35:
+                continue
+            key = s.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped_sentences.append(s)
+            if len(deduped_sentences) >= 18:
+                break
+
+        if deduped_sentences:
+            for idx in range(0, len(deduped_sentences), 3):
+                chunk = " ".join(deduped_sentences[idx: idx + 3]).strip()
+                if chunk:
+                    paragraphs.append(chunk)
+
+        composed = "\n\n".join(p for p in paragraphs if p).strip()
+        if composed:
+            return composed
+
+        return normalized_summary or "Synthesis in progress; source details are being consolidated."
 
     async def _summarize_text(self, text: str) -> SynthesisResult:
         """Summarize individual text using Qwen (primary) with fallbacks.

@@ -24,6 +24,8 @@
 
 - [Crawler Maturity Checklist](./CRAWLER_MATURITY_CHECKLIST.md) — Phased roadmap and acceptance criteria to move toward enterprise-grade crawling
 
+- [Crawler Ingest Resiliency Runbook](./CRAWLER_INGEST_RESILIENCY.md) — Disk-backed deferred ingest spool, replay behavior, and outage recovery
+
 **Infrastructure**:
 
 - [Vault Setup & Administration](./VAULT_SETUP.md) — Secrets management, AppRole, key rotation

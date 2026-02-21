@@ -5,6 +5,13 @@ system.
 
 ## ✅ **Latest Status - October 23, 2025**
 
+### 🗄️ **Online Training Schema Alignment - February 20, 2026**
+
+- **✅ Migration 019 Added**: `019_align_training_examples_for_online_training.sql` aligns legacy `training_examples` with online training coordinator fields.
+- **✅ New Columns Added**: `agent_name`, `task_type`, `expected_output`, `uncertainty_score`, `importance_score`, `source_url`, `timestamp`, `user_feedback`, `correction_priority`.
+- **✅ Backfill Included**: legacy `task`/`output` values backfilled into `task_type`/`expected_output` where needed.
+- **✅ Indexing Added**: `idx_training_examples_agent_task` and `idx_training_examples_timestamp` for faster feedback retrieval and reporting.
+
 ### 🗄️ **Pydantic V2 Migration Complete - PRODUCTION READY**
 
 - **✅ Pydantic V2 Migration**: All deprecated V1 APIs successfully migrated to modern V2 patterns

@@ -12,8 +12,10 @@ import os
 import time
 from collections.abc import Mapping, Sequence
 from datetime import timezone, datetime
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+from uuid import uuid4
 
 import requests
 
@@ -249,6 +251,106 @@ class CrawlerEngine:
         self._hitl_failure_streak = 0
         self._hitl_suspended_until = 0.0
 
+        self.ingest_max_inflight = _parse_int(
+            "UNIFIED_CRAWLER_INGEST_MAX_INFLIGHT", 6, 1
+        )
+        self.ingest_backoff_seconds = _parse_int(
+            "UNIFIED_CRAWLER_INGEST_BACKOFF_SECONDS", 8, 1
+        )
+        self._ingest_call_semaphore = asyncio.Semaphore(self.ingest_max_inflight)
+        self._memory_route_backoff_until = 0.0
+        self.ingest_spool_enabled = (
+            os.environ.get("UNIFIED_CRAWLER_INGEST_SPOOL_ENABLED", "true")
+            .strip()
+            .lower()
+            in {"1", "true", "yes", "on"}
+        )
+        self.ingest_spool_max_items = _parse_int(
+            "UNIFIED_CRAWLER_INGEST_SPOOL_MAX_ITEMS", 2500, 100
+        )
+        self.ingest_spool_replay_batch = _parse_int(
+            "UNIFIED_CRAWLER_INGEST_SPOOL_REPLAY_BATCH", 25, 1
+        )
+        self.ingest_spool_dir = Path(
+            os.environ.get(
+                "UNIFIED_CRAWLER_INGEST_SPOOL_DIR", "/tmp/justnews_ingest_spool"
+            )
+        )
+        self._ingest_spool_lock = asyncio.Lock()
+        if self.ingest_spool_enabled:
+            try:
+                self.ingest_spool_dir.mkdir(parents=True, exist_ok=True)
+            except Exception as spool_error:
+                logger.warning(
+                    "Failed to create ingest spool dir %s: %s",
+                    self.ingest_spool_dir,
+                    spool_error,
+                )
+                self.ingest_spool_enabled = False
+
+    def _spool_depth(self) -> int:
+        if not self.ingest_spool_enabled:
+            return 0
+        try:
+            return sum(1 for _ in self.ingest_spool_dir.glob("*.json"))
+        except Exception:
+            return 0
+
+    def _spool_write_item(self, article: dict[str, Any], reason: str) -> None:
+        self.ingest_spool_dir.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "article": make_json_safe(article),
+            "last_error": reason,
+            "queued_at": time.time(),
+        }
+        filename = f"{int(time.time() * 1000)}_{uuid4().hex}.json"
+        path = self.ingest_spool_dir / filename
+        path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    def _spool_prune_oldest(self) -> None:
+        files = sorted(self.ingest_spool_dir.glob("*.json"), key=lambda p: p.name)
+        overflow = len(files) - self.ingest_spool_max_items
+        if overflow <= 0:
+            return
+        for path in files[:overflow]:
+            try:
+                path.unlink(missing_ok=True)
+            except Exception:
+                pass
+        logger.warning(
+            "Ingest spool exceeded %s items; pruned %s oldest deferred entries",
+            self.ingest_spool_max_items,
+            overflow,
+        )
+
+    def _spool_read_replay_batch(self, batch_size: int) -> list[dict[str, Any]]:
+        files = sorted(self.ingest_spool_dir.glob("*.json"), key=lambda p: p.name)[
+            :batch_size
+        ]
+        replay_items: list[dict[str, Any]] = []
+        for path in files:
+            try:
+                raw = path.read_text(encoding="utf-8")
+                parsed = json.loads(raw)
+                if isinstance(parsed, dict) and isinstance(parsed.get("article"), dict):
+                    replay_items.append(
+                        {"article": parsed["article"], "spool_path": str(path)}
+                    )
+                else:
+                    path.unlink(missing_ok=True)
+            except Exception:
+                try:
+                    path.unlink(missing_ok=True)
+                except Exception:
+                    pass
+        return replay_items
+
+    def _spool_delete_item(self, spool_path: str) -> None:
+        try:
+            Path(spool_path).unlink(missing_ok=True)
+        except Exception:
+            pass
+
     def _start_background_cleanup(self):
         """Start background cleanup task - disabled to prevent conflicts with async context manager"""
         # Background cleanup disabled - cleanup is now handled by async context manager
@@ -448,27 +550,34 @@ class CrawlerEngine:
             # Final aggressive cleanup - kill all browser processes from this session
             await self._cleanup_orphaned_processes()
 
-            # Force kill any remaining processes - be more aggressive here
-            import subprocess
+            force_global_cleanup = (
+                os.environ.get("CRAWLER_FORCE_GLOBAL_PROCESS_CLEANUP", "false")
+                .strip()
+                .lower()
+                in {"1", "true", "yes", "on"}
+            )
 
-            try:
-                # Kill all Chrome processes (they should all be from this crawler instance)
-                subprocess.run(
-                    ["pkill", "-9", "-f", "chrome"], timeout=10, capture_output=True
-                )
-                # Kill Playwright drivers
-                subprocess.run(
-                    ["pkill", "-9", "-f", "playwright.*run-driver"],
-                    timeout=10,
-                    capture_output=True,
-                )
-                logger.info(
-                    "Forced cleanup of all browser processes from crawler session"
-                )
-            except subprocess.TimeoutExpired:
-                logger.warning("Force cleanup timed out")
-            except Exception as e:
-                logger.debug(f"Force cleanup failed: {e}")
+            if force_global_cleanup:
+                import subprocess
+
+                try:
+                    subprocess.run(
+                        ["pkill", "-9", "-f", "chrome"],
+                        timeout=10,
+                        capture_output=True,
+                    )
+                    subprocess.run(
+                        ["pkill", "-9", "-f", "playwright.*run-driver"],
+                        timeout=10,
+                        capture_output=True,
+                    )
+                    logger.warning(
+                        "Global process cleanup enabled; force-killed chrome/playwright processes"
+                    )
+                except subprocess.TimeoutExpired:
+                    logger.warning("Force cleanup timed out")
+                except Exception as e:
+                    logger.debug(f"Force cleanup failed: {e}")
 
         except Exception as e:
             logger.warning(f"Resource cleanup failed: {e}")
@@ -562,13 +671,9 @@ class CrawlerEngine:
         logger.info(
             f"🤖 AI-enhanced crawling stub: delegating to generic mode for {site_config.name}"
         )
-        try:
-            articles = await self._crawl_generic_mode(site_config, max_articles)
-            self.performance_metrics["mode_usage"]["ai_enhanced"] += 1
-            return articles
-        finally:
-            # Always cleanup after AI-enhanced crawling
-            await self._cleanup_orphaned_processes()
+        articles = await self._crawl_generic_mode(site_config, max_articles)
+        self.performance_metrics["mode_usage"]["ai_enhanced"] += 1
+        return articles
 
     async def _crawl_generic_mode(
         self, site_config: SiteConfig, max_articles: int = 25
@@ -601,9 +706,6 @@ class CrawlerEngine:
         except Exception as e:
             logger.error(f"Generic crawling failed for {site_config.name}: {e}")
             return []
-        finally:
-            # Always cleanup after generic crawling
-            await self._cleanup_orphaned_processes()
 
     async def _crawl_with_profile(
         self,
@@ -714,8 +816,6 @@ class CrawlerEngine:
                 site_config.name,
             )
             return await self._crawl_generic_mode(site_config, effective_limit)
-        finally:
-            await self._cleanup_orphaned_processes()
 
     async def _apply_ai_analysis(self, article: dict) -> dict:
         """Delegate AI analysis to Analyst agent via MCP bus"""
@@ -1770,126 +1870,208 @@ class CrawlerEngine:
         new_articles = 0
         duplicates = 0
         errors = 0
+        deferred = 0
         details: list[dict[str, Any]] = []
 
-        for article in articles:
-            try:
-                # Prepare article payload for ingestion
-                article_payload = {
-                    "url": article.get("url", ""),
-                    "normalized_url": article.get("normalized_url"),
-                    "title": article.get("title", ""),
-                    "content": article.get("content", ""),
-                    "domain": article.get("domain", ""),
-                    "publisher_meta": article.get("publisher_meta", {}),
-                    "confidence": article.get("confidence", 0.5),
-                    "paywall_flag": article.get("paywall_flag", False),
-                    "extraction_metadata": article.get("extraction_metadata", {}),
-                    "extracted_metadata": article.get("extracted_metadata", {}),
-                    "structured_metadata": article.get("structured_metadata", {}),
-                    "language": article.get("language"),
-                    "authors": article.get("authors", []),
-                    "section": article.get("section"),
-                    "tags": article.get("tags", []),
-                    "publication_date": article.get("publication_date"),
-                    "raw_html_ref": article.get("raw_html_ref"),
-                    "timestamp": article.get("timestamp"),
-                    "url_hash": article.get("url_hash"),
-                    "url_hash_algorithm": article.get("url_hash_algorithm"),
-                    "canonical": article.get("canonical"),
-                    "needs_review": article.get("needs_review"),
-                    "review_reasons": article.get("extraction_metadata", {}).get(
-                        "review_reasons", []
-                    ),
-                    "disable_dedupe": article.get("disable_dedupe"),
-                }
+        transient_patterns = [
+            "connection refused",
+            "max retries exceeded",
+            "read timed out",
+            "failed to establish a new connection",
+            "name or service not known",
+            "memory_route_backoff_active",
+            "circuit is open",
+            "temporarily unavailable",
+        ]
 
-                # Build SQL statements for source upsert and article insertion
-                # This mirrors the logic from the site-specific crawlers
-                # Use ON DUPLICATE KEY UPDATE to handle existing sources gracefully
-                # Note: last_crawl_at is the timestamp field on sources table, not last_verified
-                source_sql = """
+        def _is_transient_unavailable(
+            message: str,
+            *,
+            status_code: int | None = None,
+            response_text: str | None = None,
+        ) -> bool:
+            msg = (message or "").lower()
+            body = (response_text or "").lower()
+            if status_code in {429, 500, 502, 503, 504}:
+                return True
+            if status_code == 400 and any(pattern in body for pattern in transient_patterns):
+                return True
+            if any(pattern in msg for pattern in transient_patterns):
+                return True
+            return any(pattern in body for pattern in transient_patterns)
+
+        async def _enqueue_deferred(article: dict[str, Any], reason: str) -> None:
+            if not self.ingest_spool_enabled:
+                return
+            async with self._ingest_spool_lock:
+                try:
+                    await asyncio.to_thread(self._spool_write_item, article, reason)
+                    await asyncio.to_thread(self._spool_prune_oldest)
+                except Exception as spool_error:
+                    logger.warning("Failed to persist deferred article to spool: %s", spool_error)
+
+        def _build_ingest_payload(article: dict[str, Any]) -> dict[str, Any]:
+            article_payload = {
+                "url": article.get("url", ""),
+                "normalized_url": article.get("normalized_url"),
+                "title": article.get("title", ""),
+                "content": article.get("content", ""),
+                "domain": article.get("domain", ""),
+                "publisher_meta": article.get("publisher_meta", {}),
+                "confidence": article.get("confidence", 0.5),
+                "paywall_flag": article.get("paywall_flag", False),
+                "extraction_metadata": article.get("extraction_metadata", {}),
+                "extracted_metadata": article.get("extracted_metadata", {}),
+                "structured_metadata": article.get("structured_metadata", {}),
+                "language": article.get("language"),
+                "authors": article.get("authors", []),
+                "section": article.get("section"),
+                "tags": article.get("tags", []),
+                "publication_date": article.get("publication_date"),
+                "raw_html_ref": article.get("raw_html_ref"),
+                "timestamp": article.get("timestamp"),
+                "url_hash": article.get("url_hash"),
+                "url_hash_algorithm": article.get("url_hash_algorithm"),
+                "canonical": article.get("canonical"),
+                "needs_review": article.get("needs_review"),
+                "review_reasons": article.get("extraction_metadata", {}).get(
+                    "review_reasons", []
+                ),
+                "disable_dedupe": article.get("disable_dedupe"),
+            }
+
+            source_sql = """
                 INSERT INTO sources (name, domain, url, last_crawl_at)
                 VALUES (%s, %s, %s, NOW())
                 ON DUPLICATE KEY UPDATE
                     last_crawl_at = NOW()
                 """
 
-                source_params = (
-                    article.get("source_name", article.get("domain", "unknown")),
-                    article.get("domain", "unknown"),
-                    f"https://{article.get('domain', 'unknown')}",
-                )
+            source_params = (
+                article.get("source_name", article.get("domain", "unknown")),
+                article.get("domain", "unknown"),
+                f"https://{article.get('domain', 'unknown')}",
+            )
 
-                # Article insertion SQL (will be handled by memory agent)
-                # The memory agent handles the article insertion via save_article
+            statements = [[source_sql, list(source_params)]]
+            safe_article_payload = make_json_safe(article_payload)
 
-                statements = [[source_sql, list(source_params)]]
+            if lxml_etree is not None:
 
-                safe_article_payload = make_json_safe(article_payload)
-
-                if lxml_etree is not None:
-
-                    def _find_non_jsonable(
-                        value: Any, path: str = "payload"
-                    ) -> str | None:
-                        if isinstance(value, (str, int, float, bool)) or value is None:
-                            return None
-                        if isinstance(value, bytes):
-                            return None
-                        if isinstance(value, Mapping):
-                            for key, val in value.items():
-                                found = _find_non_jsonable(val, f"{path}.{key}")
-                                if found:
-                                    return found
-                            return None
-                        if isinstance(value, Sequence) and not isinstance(
-                            value, (str, bytes, bytearray)
-                        ):
-                            for index, item in enumerate(value):
-                                found = _find_non_jsonable(item, f"{path}[{index}]")
-                                if found:
-                                    return found
-                            return None
-                        if isinstance(value, set):
-                            for index, item in enumerate(value):
-                                found = _find_non_jsonable(item, f"{path}{{{index}}}")
-                                if found:
-                                    return found
-                            return None
-                        if hasattr(lxml_etree, "_Element") and isinstance(
-                            value, lxml_etree._Element
-                        ):  # type: ignore[attr-defined]
-                            return path
+                def _find_non_jsonable(value: Any, path: str = "payload") -> str | None:
+                    if isinstance(value, (str, int, float, bool)) or value is None:
                         return None
+                    if isinstance(value, bytes):
+                        return None
+                    if isinstance(value, Mapping):
+                        for key, val in value.items():
+                            found = _find_non_jsonable(val, f"{path}.{key}")
+                            if found:
+                                return found
+                        return None
+                    if isinstance(value, Sequence) and not isinstance(
+                        value, (str, bytes, bytearray)
+                    ):
+                        for index, item in enumerate(value):
+                            found = _find_non_jsonable(item, f"{path}[{index}]")
+                            if found:
+                                return found
+                        return None
+                    if isinstance(value, set):
+                        for index, item in enumerate(value):
+                            found = _find_non_jsonable(item, f"{path}{{{index}}}")
+                            if found:
+                                return found
+                        return None
+                    if hasattr(lxml_etree, "_Element") and isinstance(
+                        value, lxml_etree._Element
+                    ):
+                        return path
+                    return None
 
-                    non_jsonable_path = _find_non_jsonable(safe_article_payload)
-                    if non_jsonable_path:
-                        logger.warning(
-                            "Non-JSONable element present after sanitisation at %s",
-                            non_jsonable_path,
-                        )
+                non_jsonable_path = _find_non_jsonable(safe_article_payload)
+                if non_jsonable_path:
+                    logger.warning(
+                        "Non-JSONable element present after sanitisation at %s",
+                        non_jsonable_path,
+                    )
 
-                payload = {
-                    "agent": "memory",
-                    "tool": "ingest_article",
-                    "args": [],
-                    "kwargs": {
-                        "article_payload": safe_article_payload,
-                        "statements": statements,
-                    },
-                }
+            payload = {
+                "agent": "memory",
+                "tool": "ingest_article",
+                "args": [],
+                "kwargs": {
+                    "article_payload": safe_article_payload,
+                    "statements": statements,
+                },
+            }
+            return make_json_safe(payload)
 
-                payload = make_json_safe(payload)
-                payload_json = json.dumps(payload, default=str)
+        async def _post_memory_ingest(payload: dict[str, Any]):
+            now = time.time()
+            if now < self._memory_route_backoff_until:
+                raise RuntimeError("memory_route_backoff_active")
 
-                # Make MCP bus call to memory agent
-                response = requests.post(
+            def _do_post() -> requests.Response:
+                return requests.post(
                     f"{MCP_BUS_URL}/call",
-                    data=payload_json,
-                    headers={"Content-Type": "application/json"},
+                    json=payload,
                     timeout=(5, 60),
                 )
+
+            async with self._ingest_call_semaphore:
+                try:
+                    response = await asyncio.to_thread(_do_post)
+                    response_text = ""
+                    try:
+                        response_text = response.text[:1000]
+                    except Exception:
+                        response_text = ""
+
+                    if _is_transient_unavailable(
+                        "",
+                        status_code=response.status_code,
+                        response_text=response_text,
+                    ):
+                        self._memory_route_backoff_until = (
+                            time.time() + self.ingest_backoff_seconds
+                        )
+                    response.raise_for_status()
+                    return response
+                except Exception as post_exc:
+                    status_code = None
+                    response_text = ""
+                    if getattr(post_exc, "response", None) is not None:
+                        try:
+                            status_code = int(post_exc.response.status_code)
+                        except Exception:
+                            status_code = None
+                        try:
+                            response_text = post_exc.response.text[:1000]
+                        except Exception:
+                            response_text = ""
+
+                    if _is_transient_unavailable(
+                        str(post_exc),
+                        status_code=status_code,
+                        response_text=response_text,
+                    ):
+                        self._memory_route_backoff_until = (
+                            time.time() + self.ingest_backoff_seconds
+                        )
+                    raise
+
+        async def _try_ingest_article(
+            article: dict[str, Any],
+            *,
+            allow_defer: bool,
+            replay: bool = False,
+            spool_path: str | None = None,
+        ) -> str:
+            nonlocal new_articles, duplicates, errors, deferred, details
+            try:
+                payload = _build_ingest_payload(article)
+                response = await _post_memory_ingest(payload)
                 response.raise_for_status()
                 result = response.json()
 
@@ -1907,50 +2089,122 @@ class CrawlerEngine:
                     if effective_payload.get("duplicate"):
                         duplicates += 1
                         article["ingestion_status"] = "duplicate"
-                        logger.debug(f"Duplicate article skipped: {article.get('url')}")
                     else:
                         new_articles += 1
                         article["ingestion_status"] = "new"
-                        logger.debug(f"New article ingested: {article.get('url')}")
                     details.append(
                         {
                             "url": article.get("url"),
                             "status": article.get("ingestion_status"),
+                            "replayed": replay,
                         }
                     )
-                else:
-                    errors += 1
-                    article["ingestion_status"] = "error"
+                    if spool_path:
+                        await asyncio.to_thread(self._spool_delete_item, spool_path)
+                    return article["ingestion_status"]
+
+                status_hint = effective_payload.get("status")
+                error_hint = effective_payload.get("error") or result
+                if allow_defer and _is_transient_unavailable(
+                    str(error_hint), response_text=json.dumps(effective_payload)[:1000]
+                ):
+                    if spool_path:
+                        article["ingestion_status"] = "deferred"
+                    else:
+                        await _enqueue_deferred(article, str(error_hint))
+                        article["ingestion_status"] = "deferred"
+                    deferred += 1
                     details.append(
                         {
                             "url": article.get("url"),
-                            "status": "error",
-                            "error": effective_payload.get("error") or result,
+                            "status": "deferred",
+                            "replayed": replay,
+                            "error": error_hint,
                         }
                     )
-                    logger.warning(
-                        f"Failed to ingest article {article.get('url')}: {result}"
-                    )
+                    return "deferred"
 
-            except Exception as e:
                 errors += 1
                 article["ingestion_status"] = "error"
                 details.append(
                     {
                         "url": article.get("url"),
                         "status": "error",
+                        "replayed": replay,
+                        "error": error_hint,
+                        "status_hint": status_hint,
+                    }
+                )
+                logger.warning(
+                    "Failed to ingest article %s: %s",
+                    article.get("url"),
+                    result,
+                )
+                return "error"
+
+            except Exception as e:
+                if allow_defer and _is_transient_unavailable(str(e)):
+                    if spool_path:
+                        article["ingestion_status"] = "deferred"
+                    else:
+                        await _enqueue_deferred(article, str(e))
+                        article["ingestion_status"] = "deferred"
+                    deferred += 1
+                    details.append(
+                        {
+                            "url": article.get("url"),
+                            "status": "deferred",
+                            "replayed": replay,
+                            "error": str(e),
+                        }
+                    )
+                    return "deferred"
+
+                errors += 1
+                article["ingestion_status"] = "error"
+                details.append(
+                    {
+                        "url": article.get("url"),
+                        "status": "error",
+                        "replayed": replay,
                         "error": str(e),
                     }
                 )
                 logger.warning(
-                    f"Error ingesting article {article.get('url', 'unknown')}: {e}"
+                    "Error ingesting article %s: %s",
+                    article.get("url", "unknown"),
+                    e,
                 )
-                continue
+                return "error"
+
+        if self.ingest_spool_enabled:
+            replay_items: list[dict[str, Any]] = []
+            async with self._ingest_spool_lock:
+                replay_items = await asyncio.to_thread(
+                    self._spool_read_replay_batch,
+                    self.ingest_spool_replay_batch,
+                )
+
+            for item in replay_items:
+                article = item.get("article") if isinstance(item, dict) else None
+                if not isinstance(article, dict):
+                    continue
+                await _try_ingest_article(
+                    article,
+                    allow_defer=True,
+                    replay=True,
+                    spool_path=str(item.get("spool_path") or "") or None,
+                )
+
+        for article in articles:
+            await _try_ingest_article(article, allow_defer=True, replay=False)
 
         return {
             "new_articles": new_articles,
             "duplicates": duplicates,
             "errors": errors,
+            "deferred": deferred,
+            "spool_depth": self._spool_depth(),
             "details": details,
         }
 
