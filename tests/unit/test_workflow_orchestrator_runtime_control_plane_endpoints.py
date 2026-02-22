@@ -186,3 +186,151 @@ def test_runtime_config_actuation_and_apply_rollback_endpoints(monkeypatch, tmp_
         assert rolled["status"] == "ok"
         assert rolled["inverse_of_apply_version"] == apply_version
         assert rolled["owner"] == "workflow_orchestrator"
+
+
+def test_runtime_config_validate_reports_errors_for_invalid_patch(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    main_mod = _load_main_with_stubs(monkeypatch)
+
+    with TestClient(main_mod.app) as client:
+        response = client.post(
+            "/runtime-config/validate",
+            json={
+                "patch": {
+                    "orchestrator.unknown.key": 1,
+                    "orchestrator.lane_policy.min_article_count": 0,
+                }
+            },
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "error"
+    assert payload["ok"] is False
+    assert any("Unknown runtime key" in err for err in payload["errors"])
+    assert any("below minimum" in err for err in payload["errors"])
+
+
+def test_runtime_config_apply_requires_reason(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    main_mod = _load_main_with_stubs(monkeypatch)
+
+    with TestClient(main_mod.app) as client:
+        response = client.patch(
+            "/runtime-config",
+            json={
+                "patch": {"orchestrator.lane_policy.enabled": True},
+                "reason": "",
+                "actor": "test",
+            },
+        )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "reason is required"
+
+
+def test_runtime_config_apply_rejects_unknown_and_non_hot_keys(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    main_mod = _load_main_with_stubs(monkeypatch)
+
+    with TestClient(main_mod.app) as client:
+        unknown_key = client.patch(
+            "/runtime-config",
+            json={
+                "patch": {"orchestrator.lane_policy.not_real": 1},
+                "reason": "unknown key",
+                "actor": "test",
+            },
+        )
+        assert unknown_key.status_code == 400
+        detail = unknown_key.json()["detail"]
+        assert detail["status"] == "error"
+        assert any("Unknown runtime key" in err for err in detail["errors"])
+
+        non_hot = client.patch(
+            "/runtime-config",
+            json={
+                "patch": {"analyst.workers": 3},
+                "reason": "non-hot key",
+                "actor": "test",
+            },
+        )
+        assert non_hot.status_code == 400
+        detail = non_hot.json()["detail"]
+        assert detail["status"] == "error"
+        assert "runtime apply rejected" in detail["errors"][0]
+        assert "analyst.workers" in detail["blocked_non_hot"]
+
+
+def test_runtime_config_rollback_errors(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    main_mod = _load_main_with_stubs(monkeypatch)
+
+    with TestClient(main_mod.app) as client:
+        missing_reason = client.post(
+            "/runtime-config/rollback",
+            json={"target_version": 999, "reason": "", "actor": "test"},
+        )
+        assert missing_reason.status_code == 400
+        assert missing_reason.json()["detail"] == "reason is required"
+
+        bad_target = client.post(
+            "/runtime-config/rollback",
+            json={"target_version": 999, "reason": "bad target", "actor": "test"},
+        )
+        assert bad_target.status_code == 400
+        detail = bad_target.json()["detail"]
+        assert detail["status"] == "error"
+        assert "not found" in detail["message"]
+
+
+def test_runtime_config_actuate_and_rollback_error_paths(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    main_mod = _load_main_with_stubs(monkeypatch)
+
+    with TestClient(main_mod.app) as client:
+        missing_reason = client.post(
+            "/runtime-config/actuate",
+            json={
+                "tier": "tier1",
+                "patch": {"orchestrator.lane_policy.enabled": True},
+                "reason": "",
+                "actor": "test",
+            },
+        )
+        assert missing_reason.status_code == 400
+        assert missing_reason.json()["detail"] == "reason is required"
+
+        unknown_tier = client.post(
+            "/runtime-config/actuate",
+            json={
+                "tier": "tier9",
+                "patch": {"orchestrator.lane_policy.enabled": True},
+                "reason": "unknown tier",
+                "actor": "test",
+            },
+        )
+        assert unknown_tier.status_code == 400
+        detail = unknown_tier.json()["detail"]
+        assert detail["status"] == "error"
+        assert "unknown tier" in detail["errors"][0]
+
+        rollback_missing_reason = client.post(
+            "/runtime-config/actuate/rollback",
+            json={"apply_version": 1, "reason": "", "actor": "test"},
+        )
+        assert rollback_missing_reason.status_code == 400
+        assert rollback_missing_reason.json()["detail"] == "reason is required"
+
+        rollback_unknown_apply = client.post(
+            "/runtime-config/actuate/rollback",
+            json={
+                "apply_version": 123,
+                "reason": "unknown apply",
+                "actor": "test",
+            },
+        )
+        assert rollback_unknown_apply.status_code == 400
+        detail = rollback_unknown_apply.json()["detail"]
+        assert detail["status"] == "error"
+        assert "not found" in detail["message"]
