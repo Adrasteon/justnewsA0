@@ -7,9 +7,11 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel
 
 from common.observability import bootstrap_observability, get_logger
+from common.metrics import get_metrics
 from agents.common.mcp_bus_client import MCPBusClient
 from database.utils.migrated_database_utils import create_database_service, get_db_config
 from .engine import OrchestratorEngine
@@ -45,6 +47,7 @@ except Exception as e:
 # Global Engine
 engine = OrchestratorEngine()
 runtime_store = RuntimeConfigStore()
+metrics = get_metrics("workflow_orchestrator")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -76,6 +79,7 @@ async def lifespan(app: FastAPI):
     logger.info("Workflow Orchestrator Agent Stopped.")
 
 app = FastAPI(title="Workflow Orchestrator", lifespan=lifespan)
+app.middleware("http")(metrics.request_middleware)
 
 class ToolCall(BaseModel):
     args: list[Any]
@@ -113,6 +117,11 @@ class RuntimeActuationRollbackRequest(BaseModel):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "engine_running": engine.running}
+
+
+@app.get("/metrics")
+async def metrics_endpoint():
+    return Response(metrics.get_metrics(), media_type="text/plain; charset=utf-8")
 
 @app.get("/status")
 async def status_endpoint():

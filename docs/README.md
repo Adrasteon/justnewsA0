@@ -718,6 +718,8 @@ docs/docs_navigator.py status`.**
 
 - Multi-Source Refactor Action Checklist: [operations/MULTI_SOURCE_REFACTOR_ACTION_CHECKLIST_2026-02-22.md](operations/MULTI_SOURCE_REFACTOR_ACTION_CHECKLIST_2026-02-22.md)
 
+- Multi-Source Refactor Metrics Note: [operations/MULTI_SOURCE_REFACTOR_METRICS_NOTE_2026-02-22.md](operations/MULTI_SOURCE_REFACTOR_METRICS_NOTE_2026-02-22.md)
+
 - AI Assistant Refactor Guardrails: [operations/AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md](operations/AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md)
 
 - AI Assistant Task Prompt Template: [operations/AI_ASSISTANT_TASK_PROMPT_TEMPLATE_2026-02-22.md](operations/AI_ASSISTANT_TASK_PROMPT_TEMPLATE_2026-02-22.md)

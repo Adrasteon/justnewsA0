@@ -16,6 +16,8 @@
 
 - [Multi-Source Refactor Action Checklist (2026-02-22)](./MULTI_SOURCE_REFACTOR_ACTION_CHECKLIST_2026-02-22.md)
 
+- [Multi-Source Refactor Metrics Note (2026-02-22)](./MULTI_SOURCE_REFACTOR_METRICS_NOTE_2026-02-22.md)
+
 - [AI Assistant Refactor Guardrails (2026-02-22)](./AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md)
 
 - [AI Assistant Task Prompt Template (2026-02-22)](./AI_ASSISTANT_TASK_PROMPT_TEMPLATE_2026-02-22.md)

@@ -22,10 +22,18 @@ from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 
 from common.observability import get_logger
+from common.metrics import get_metrics
 from database.utils.migrated_database_utils import create_database_service
 from agents.common.headline_adapter import HeadlineAdapter
 
 logger = get_logger(__name__)
+_ORCH_METRICS = get_metrics("workflow_orchestrator")
+_LANE_METRIC_TOTALS: dict[str, int] = {
+    "verified_story": 0,
+    "developing_brief": 0,
+}
+_UNIQUE_DOMAIN_SAMPLES: list[int] = []
+_SINGLETON_CONVERSION_SEEN: set[str] = set()
 
 _HEADLINE_ADAPTER = HeadlineAdapter(name="orchestrator_title_llm")
 
@@ -483,6 +491,7 @@ def _fetch_article_context_metrics(db_service, article_ids: list[int]) -> dict[s
         return {
             "source_diversity_score": 0.0,
             "source_count": 0,
+            "unique_domain_count": 0,
             "fact_quality_score": 0.5,
             "recency_score": 0.0,
         }
@@ -502,6 +511,7 @@ def _fetch_article_context_metrics(db_service, article_ids: list[int]) -> dict[s
     cursor.close()
 
     unique_sources = set()
+    unique_domains = set()
     created_values = []
     fact_scores = []
 
@@ -517,10 +527,13 @@ def _fetch_article_context_metrics(db_service, article_ids: list[int]) -> dict[s
     }
 
     for source_id, source_url, created_at, factual_accuracy_score, fact_check_status in rows:
+        domain = _extract_domain(source_url)
+        if domain:
+            unique_domains.add(domain)
+
         if source_id is not None:
             unique_sources.add(f"sid:{source_id}")
         else:
-            domain = _extract_domain(source_url)
             if domain:
                 unique_sources.add(f"domain:{domain}")
 
@@ -548,9 +561,139 @@ def _fetch_article_context_metrics(db_service, article_ids: list[int]) -> dict[s
     return {
         "source_diversity_score": round(source_diversity_score, 4),
         "source_count": source_count,
+        "unique_domain_count": len(unique_domains),
         "fact_quality_score": round(fact_quality_score, 4),
         "recency_score": round(recency_score, 4),
     }
+
+
+def _derive_confidence_tier(
+    *,
+    source_count: int,
+    unique_domain_count: int,
+    fact_quality_score: float,
+) -> str:
+    if unique_domain_count >= 3 and source_count >= 3 and fact_quality_score >= 0.75:
+        return "high"
+    if unique_domain_count >= 2 and source_count >= 2 and fact_quality_score >= 0.60:
+        return "medium"
+    return "low"
+
+
+def _derive_publication_lane_metadata(
+    *,
+    cluster_id: str,
+    article_count: int,
+    input_fingerprint: str,
+    context_metrics: dict[str, Any],
+) -> dict[str, Any]:
+    min_sources = max(_safe_int(os.environ.get("MULTI_SOURCE_MIN_SOURCE_COUNT"), 2), 1)
+    min_unique_domains = max(
+        _safe_int(os.environ.get("MULTI_SOURCE_MIN_UNIQUE_DOMAINS"), 2),
+        1,
+    )
+    policy_version = str(os.environ.get("MULTI_SOURCE_LANE_POLICY_VERSION", "v1")).strip() or "v1"
+
+    source_count = max(_safe_int(context_metrics.get("source_count"), 0), 0)
+    unique_domain_count = max(_safe_int(context_metrics.get("unique_domain_count"), 0), 0)
+    fact_quality_score = max(min(_safe_float(context_metrics.get("fact_quality_score"), 0.5), 1.0), 0.0)
+
+    reason_codes: list[str] = []
+    if article_count < 2:
+        reason_codes.append("single_article_cluster")
+    if source_count < min_sources:
+        reason_codes.append("insufficient_source_count")
+    if unique_domain_count < min_unique_domains:
+        reason_codes.append("insufficient_domain_diversity")
+
+    publication_lane = "verified_story" if not reason_codes else "developing_brief"
+    confidence_tier = _derive_confidence_tier(
+        source_count=source_count,
+        unique_domain_count=unique_domain_count,
+        fact_quality_score=fact_quality_score,
+    )
+
+    return {
+        "publication_lane": publication_lane,
+        "source_count": source_count,
+        "unique_domain_count": unique_domain_count,
+        "confidence_tier": confidence_tier,
+        "provenance_trace_id": f"cluster:{cluster_id}:{input_fingerprint[:16]}",
+        "decision_reason_codes": reason_codes or ["meets_multi_source_thresholds"],
+        "policy_version": policy_version,
+        "policy_decision_at": datetime.utcnow().isoformat() + "Z",
+        "policy_thresholds": {
+            "min_source_count": min_sources,
+            "min_unique_domains": min_unique_domains,
+        },
+    }
+
+
+def _record_lane_metrics(lane_metadata: dict[str, Any]) -> None:
+    lane = str(lane_metadata.get("publication_lane") or "developing_brief").strip().lower()
+    if lane not in {"verified_story", "developing_brief"}:
+        lane = "developing_brief"
+
+    _LANE_METRIC_TOTALS[lane] = int(_LANE_METRIC_TOTALS.get(lane, 0)) + 1
+    metric_lane_suffix = lane.replace("-", "_")
+    _ORCH_METRICS.increment(f"published_total_{metric_lane_suffix}")
+
+    total = sum(int(v) for v in _LANE_METRIC_TOTALS.values())
+    verified = int(_LANE_METRIC_TOTALS.get("verified_story", 0))
+    verified_share = (verified / total) if total else 0.0
+    _ORCH_METRICS.gauge("published_verified_share", round(verified_share, 6))
+
+    unique_domains = max(_safe_int(lane_metadata.get("unique_domain_count"), 0), 0)
+    _UNIQUE_DOMAIN_SAMPLES.append(unique_domains)
+    sample_window = max(_safe_int(os.environ.get("MULTI_SOURCE_METRIC_SAMPLE_WINDOW"), 200), 10)
+    if len(_UNIQUE_DOMAIN_SAMPLES) > sample_window:
+        del _UNIQUE_DOMAIN_SAMPLES[:-sample_window]
+    _ORCH_METRICS.gauge(
+        "median_unique_domains_per_story",
+        float(statistics.median(_UNIQUE_DOMAIN_SAMPLES)) if _UNIQUE_DOMAIN_SAMPLES else 0.0,
+    )
+
+
+def _record_cluster_promotion_failure_metrics(lane_metadata: dict[str, Any]) -> None:
+    lane = str(lane_metadata.get("publication_lane") or "developing_brief").strip().lower()
+    if lane != "developing_brief":
+        return
+
+    reason_codes = lane_metadata.get("decision_reason_codes")
+    if not isinstance(reason_codes, list):
+        reason_codes = []
+
+    for reason in reason_codes:
+        reason_key = str(reason or "unknown").strip().lower() or "unknown"
+        reason_key = reason_key.replace("-", "_")
+        _ORCH_METRICS.increment(f"cluster_promotion_failures_{reason_key}")
+
+
+def _record_singleton_to_verified_conversion(
+    *,
+    story_id: str,
+    prev_meta: dict[str, Any],
+    lane_metadata: dict[str, Any],
+) -> None:
+    lane = str(lane_metadata.get("publication_lane") or "developing_brief").strip().lower()
+    if lane != "verified_story":
+        return
+
+    prev_lane = ""
+    if isinstance(prev_meta, dict):
+        prev_pub = prev_meta.get("publication")
+        if isinstance(prev_pub, dict):
+            prev_lane = str(prev_pub.get("publication_lane") or "").strip().lower()
+
+    if prev_lane != "developing_brief":
+        return
+    if not story_id:
+        return
+    if story_id in _SINGLETON_CONVERSION_SEEN:
+        return
+
+    _SINGLETON_CONVERSION_SEEN.add(story_id)
+    _ORCH_METRICS.increment("singleton_to_verified_conversion_total")
 
 
 def _update_decision_telemetry(
@@ -680,6 +823,14 @@ def upsert_living_story_record(
     )
     existing = cursor.fetchone()
 
+    context_metrics = _fetch_article_context_metrics(db_service, normalized_ids)
+    lane_metadata = _derive_publication_lane_metadata(
+        cluster_id=cluster_id,
+        article_count=len(normalized_ids),
+        input_fingerprint=fingerprint,
+        context_metrics=context_metrics,
+    )
+
     if not existing:
         story_id = f"STORY-{uuid.uuid4().hex[:8]}"
         synth_metadata = {
@@ -713,13 +864,17 @@ def upsert_living_story_record(
                     "reasons": ["first_story_for_cluster"],
                     "urgency_class": urgency_class,
                     "calibration_profile": calibration.get("profile", "balanced"),
+                    "lane_decision": lane_metadata,
                 },
             }
         }
+        synth_metadata["publication"] = lane_metadata
         synth_metadata["generation"] = {
             "last_event": generation_event,
             "history": [generation_event],
         }
+        _record_lane_metrics(lane_metadata)
+        _record_cluster_promotion_failure_metrics(lane_metadata)
         cursor.execute(
             """
             INSERT INTO synthesized_articles
@@ -735,6 +890,8 @@ def upsert_living_story_record(
             "new_article_count": len(normalized_ids),
             "text_delta": 1.0,
             "composite_score": 1.0,
+            "publication_lane": lane_metadata.get("publication_lane"),
+            "publication_reason_codes": lane_metadata.get("decision_reason_codes"),
         }
 
     story_id, prev_title, prev_body, prev_input_articles, prev_meta_raw, _is_published = existing
@@ -745,7 +902,6 @@ def upsert_living_story_record(
     similarity = _text_similarity(prev_body, body_text)
     text_delta = 1.0 - similarity
 
-    context_metrics = _fetch_article_context_metrics(db_service, normalized_ids)
     source_diversity_score = _safe_float(context_metrics.get("source_diversity_score"), 0.0)
     recency_score = _safe_float(context_metrics.get("recency_score"), 0.0)
     fact_quality_score = _safe_float(context_metrics.get("fact_quality_score"), 0.5)
@@ -818,6 +974,10 @@ def upsert_living_story_record(
         action_label=final_action,
         score_value=text_delta,
     )
+    lane_counts = dict(telemetry_next.get("lane_counts") or {})
+    lane_key = str(lane_metadata.get("publication_lane") or "unknown")
+    lane_counts[lane_key] = int(lane_counts.get(lane_key, 0)) + 1
+    telemetry_next["lane_counts"] = lane_counts
 
     next_meta = previous_meta.copy()
     generation_meta = next_meta.get("generation") if isinstance(next_meta.get("generation"), dict) else {}
@@ -827,6 +987,7 @@ def upsert_living_story_record(
         "last_event": generation_event,
         "history": generation_history[-25:],
     }
+    next_meta["publication"] = lane_metadata
     next_meta["living_story"] = {
         "revision": revision,
         "input_fingerprint": fingerprint,
@@ -868,8 +1029,16 @@ def upsert_living_story_record(
             "source_count": int(context_metrics.get("source_count", 0)),
             "override": override,
             "override_rejected": override_rejected,
+            "lane_decision": lane_metadata,
         },
     }
+    _record_lane_metrics(lane_metadata)
+    _record_cluster_promotion_failure_metrics(lane_metadata)
+    _record_singleton_to_verified_conversion(
+        story_id=str(story_id or ""),
+        prev_meta=previous_meta,
+        lane_metadata=lane_metadata,
+    )
 
     if meaningful:
         cursor.execute(
@@ -906,6 +1075,8 @@ def upsert_living_story_record(
         "new_article_count": new_article_count,
         "text_delta": round(text_delta, 4),
         "composite_score": round(composite_score, 4),
+        "publication_lane": lane_metadata.get("publication_lane"),
+        "publication_reason_codes": lane_metadata.get("decision_reason_codes"),
         "override": override,
         "override_rejected": override_rejected,
     }

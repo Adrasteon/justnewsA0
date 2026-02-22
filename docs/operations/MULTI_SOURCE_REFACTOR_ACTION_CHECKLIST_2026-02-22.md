@@ -56,6 +56,8 @@
 
 ## 4) Telemetry, Dashboard, and Alerting
 
+Reference: [MULTI_SOURCE_REFACTOR_METRICS_NOTE_2026-02-22.md](./MULTI_SOURCE_REFACTOR_METRICS_NOTE_2026-02-22.md)
+
 - [ ] Emit required metrics:
   - [ ] `published_total{lane}`
   - [ ] `published_verified_share`
