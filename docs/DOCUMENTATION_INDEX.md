@@ -96,6 +96,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Multi-Source Refactor Action Checklist (2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_ACTION_CHECKLIST_2026-02-22.md) — Implementation checklist, validation steps, and evidence tracking
 
+- [Multi-Source Refactor M2 Sign-Off Evidence Index (2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md) — Canonical artifact index for M2 gate sign-off (QA/Ops/Product)
+
 - [AI Assistant Refactor Guardrails (2026-02-22)](./operations/AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md) — AI implementation constraints, safety rules, and acceptance gates
 
 - [AI Assistant Task Prompt Template (2026-02-22)](./operations/AI_ASSISTANT_TASK_PROMPT_TEMPLATE_2026-02-22.md) — Standardized prompt scaffold to enforce guardrails on each AI task

@@ -6,6 +6,7 @@
 **Related Docs:**
 - [Investor One-Pager: Multi-Source Integrity Refactor (2026-02-22)](./INVESTOR_ONE_PAGER_MULTI_SOURCE_REFACTOR_2026-02-22.md)
 - [Investor Technical Appendix: Multi-Source Integrity Refactor (2026-02-22)](./INVESTOR_TECH_APPENDIX_MULTI_SOURCE_REFACTOR_2026-02-22.md)
+- [M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md)
 
 ## 1) Objective
 
@@ -201,4 +202,4 @@ Legend: **A** = Accountable, **R** = Responsible, **C** = Consulted
 - [ ] **Dashboards/alerts live:** publish panel links and alert IDs for verified share + promotion failure signals.
 - [ ] **Provenance deploy verification:** attach production-like sample records proving required lane/provenance fields are populated end-to-end.
 - [ ] **Rollback drill artifact bundle:** attach apply/rollback JSON responses, before/after `owner_overrides`, and lane behavior reversion evidence.
-- [ ] **Sign-off packet prep:** compile QA + Ops evidence links for M2 gate review (single index section in docs/operations).
+- [ ] **Sign-off packet prep:** compile QA + Ops evidence links in [M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md).
