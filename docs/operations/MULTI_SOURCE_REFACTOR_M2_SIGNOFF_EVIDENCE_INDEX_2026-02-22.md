@@ -64,6 +64,7 @@ The following items require non-local artifacts to complete M2 sign-off:
   - Dev/staging `/metrics` snapshot link.
   - Dev/staging rollback drill artifact link.
   - Dev/staging provenance sample export link.
+  - Execute collection using [Dev/Staging Parity Runsheet (2026-02-22)](./MULTI_SOURCE_REFACTOR_DEV_STAGING_PARITY_RUNSHEET_2026-02-22.md).
 
 ## 7) Fill-In Blocks (External Artifacts)
 
@@ -84,6 +85,7 @@ The following items require non-local artifacts to complete M2 sign-off:
 - Alert rule ID(s): `MultiSourceVerifiedShareLow`, `MultiSourcePromotionFailuresSpike`
 - Screenshot/export link(s): `<pending after dashboard import>`
 - Notes: `Alert definitions stored at monitoring/alerts/multi_source_refactor_alerts.yml`
+- Execution runsheet: [Dev/Staging Parity Runsheet (2026-02-22)](./MULTI_SOURCE_REFACTOR_DEV_STAGING_PARITY_RUNSHEET_2026-02-22.md)
 
 ### 7.3 M2 Approver Sign-Off
 

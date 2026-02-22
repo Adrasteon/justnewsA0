@@ -102,6 +102,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Multi-Source Refactor Closeout Summary (2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_CLOSEOUT_SUMMARY_2026-02-22.md) — Current-purpose closure record with delivered scope and follow-up items
 
+- [Multi-Source Refactor Dev/Staging Parity Runsheet (2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_DEV_STAGING_PARITY_RUNSHEET_2026-02-22.md) — Operator execution checklist to capture remaining dev/staging parity artifacts
+
 - [Multi-Source Refactor Metrics Snapshot (Local, 2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_METRICS_SNAPSHOT_2026-02-22_LOCAL.md) — Seeded `/metrics` evidence confirming required lane observability series
 
 - [Multi-Source Refactor Observability Dashboard (Grafana JSON)](./grafana/multi-source-refactor-observability-dashboard.json) — Panel definitions for verified share, lane totals, promotion failures, and conversions

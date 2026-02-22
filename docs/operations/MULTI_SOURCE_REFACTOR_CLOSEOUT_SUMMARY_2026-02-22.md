@@ -40,6 +40,9 @@ These are tracked as post-approval follow-up items rather than blockers for curr
 - Dev/staging rollback drill artifact.
 - Dev/staging provenance sample export.
 
+Execution guide for these follow-up captures:
+- [Dev/Staging Parity Runsheet (2026-02-22)](./MULTI_SOURCE_REFACTOR_DEV_STAGING_PARITY_RUNSHEET_2026-02-22.md)
+
 ## 5) Final Note
 
 For current purposes, this closeout summary and the M2 evidence index serve as the authoritative record of completion state and follow-up scope.
