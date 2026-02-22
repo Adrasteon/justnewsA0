@@ -39,7 +39,47 @@ Canonical payload examples are also available directly from the service:
 curl -sS "$ORCH_URL/runtime-config/examples" | jq .
 ```
 
-## 4) Validate a Patch Before Apply
+## 4) Runtime API Reference
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `/runtime-config/examples` | `GET` | Returns canonical lane-policy payload examples |
+| `/runtime-config/validate` | `POST` | Validates patch shape and constraints without applying |
+| `/runtime-config` | `PATCH` | Applies hot runtime overrides with reason/actor audit |
+| `/runtime-config` | `GET` | Shows current overrides, config version, and available rollback versions |
+| `/runtime-config/rollback` | `POST` | Rolls back to a target config version |
+
+## 5) End-to-End Operator Flow (Validate → Apply → Verify → Rollback)
+
+1. Validate desired patch with `/runtime-config/validate`.
+2. Apply patch with `/runtime-config` and record returned `version`.
+3. Verify state via `/runtime-config` and signals via `/metrics`.
+4. Roll back by version with `/runtime-config/rollback` if quality signals regress.
+
+Example sequence:
+
+```bash
+# 1) Validate
+curl -sS -X POST "$ORCH_URL/runtime-config/validate" \
+  -H "Content-Type: application/json" \
+  -d '{"patch":{"orchestrator.lane_policy.enabled":true,"orchestrator.lane_policy.min_source_count":2,"orchestrator.lane_policy.min_unique_domains":2,"orchestrator.lane_policy.version":"v1-dev"}}' | jq .
+
+# 2) Apply
+curl -sS -X PATCH "$ORCH_URL/runtime-config" \
+  -H "Content-Type: application/json" \
+  -d '{"patch":{"orchestrator.lane_policy.enabled":true,"orchestrator.lane_policy.min_source_count":2,"orchestrator.lane_policy.min_unique_domains":2,"orchestrator.lane_policy.version":"v1-dev"},"reason":"dev baseline lane policy","actor":"ops"}' | tee /tmp/lane_apply.json | jq .
+
+# 3) Verify
+curl -sS "$ORCH_URL/runtime-config" | jq '{config_version, owner_overrides}'
+curl -sS "$ORCH_URL/metrics" | grep -E "published_verified_share|published_total_"
+
+# 4) Roll back (example target)
+curl -sS -X POST "$ORCH_URL/runtime-config/rollback" \
+  -H "Content-Type: application/json" \
+  -d '{"target_version":0,"reason":"rollback after regression","actor":"ops"}' | jq .
+```
+
+## 6) Validate a Patch Before Apply
 
 ```bash
 curl -sS -X POST "$ORCH_URL/runtime-config/validate" \
@@ -56,7 +96,7 @@ curl -sS -X POST "$ORCH_URL/runtime-config/validate" \
 
 Expected: `"status": "ok"` and no validation errors.
 
-## 5) Apply Patch (Hot Runtime)
+## 7) Apply Patch (Hot Runtime)
 
 ```bash
 curl -sS -X PATCH "$ORCH_URL/runtime-config" \
@@ -79,7 +119,7 @@ Expected response includes:
 - `version: <new version>`
 - `owner_apply_result.applied` containing the lane keys.
 
-## 6) Common Change Recipes
+## 8) Common Change Recipes
 
 ### A) Disable lane policy quickly (safety hold)
 
@@ -128,7 +168,7 @@ curl -sS -X PATCH "$ORCH_URL/runtime-config" \
   }' | jq .
 ```
 
-## 7) Inspect Active Runtime State
+## 9) Inspect Active Runtime State
 
 ```bash
 curl -sS "$ORCH_URL/runtime-config" | jq '{config_version, owner_overrides, effective_owner_config}'
@@ -136,7 +176,7 @@ curl -sS "$ORCH_URL/runtime-config" | jq '{config_version, owner_overrides, effe
 
 Use this before/after each apply to capture evidence.
 
-## 8) Versioned Rollback
+## 10) Versioned Rollback
 
 1. Get available versions:
 
@@ -156,7 +196,7 @@ curl -sS -X POST "$ORCH_URL/runtime-config/rollback" \
   }' | jq .
 ```
 
-## 9) Post-Change Verification
+## 11) Post-Change Verification
 
 - Confirm runtime state reflects intended keys.
 - Confirm orchestrator `/metrics` includes refactor gauges/counters.
@@ -169,7 +209,7 @@ curl -sS "$ORCH_URL/runtime-config" | jq '.owner_overrides'
 curl -sS "$ORCH_URL/metrics" | grep -E "published_verified_share|published_total_"
 ```
 
-## 10) Rollback Triggers
+## 12) Rollback Triggers
 
 Execute rollback immediately when any is true:
 
@@ -178,7 +218,7 @@ Execute rollback immediately when any is true:
 - Unintended lane behavior appears in sampled records.
 - Sev1/Sev2 quality incident is active.
 
-## 11) Evidence to Attach to Ticket
+## 13) Evidence to Attach to Ticket
 
 - Validation request/response JSON.
 - Apply/rollback response JSON with version IDs.
