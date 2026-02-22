@@ -26,7 +26,7 @@ Provide one canonical location for all artifacts required to close M2 exit crite
 | CI gate proof | Workflow run for `workflow-orchestrator-control-plane-tests` | `.github/workflows/workflow-orchestrator-control-plane-tests.yml` (commit `235e60e`) | Eng | In progress | Attach Actions run URL from PR/push execution |
 | Rollback drill proof | Apply/rollback JSON + before/after `owner_overrides` | [Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) + [Rollback Drill Artifact Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_TEMPLATE_2026-02-22.md) + commit `89bb1e8` | Ops | In progress | Local harness artifact attached; add real dev run artifact for M2 closure |
 | Lane behavior reversion | Sample lane decision before/apply/rollback | [Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) + commit `89bb1e8` (`test_runtime_rollback_sla_and_lane_revert`) | QA/Ops | In progress | Includes observed `developing_brief -> verified_story -> developing_brief` |
-| Provenance field completeness | Sample records with required publication fields | [Provenance Sample Evidence Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_TEMPLATE_2026-02-22.md) | Data/Eng | Pending | Fill with sampled records validating lane/provenance completeness |
+| Provenance field completeness | Sample records with required publication fields | [Provenance Sample Evidence (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_2026-02-22_LOCAL.md) + [Provenance Sample Evidence Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_TEMPLATE_2026-02-22.md) | Data/Eng | In progress | Local sample pass attached; add dev/staging export for M2 closure |
 | Dashboard + alert readiness | Panel URLs + alert rule IDs | `<add link>` | Ops | Pending | Verified share + promotion failure alerts |
 | M2 sign-off summary | Review note with approvers and decision | `<add link>` | Product/Ops | Pending | Final go/no-go for M2 closure |
 
@@ -36,7 +36,7 @@ Provide one canonical location for all artifacts required to close M2 exit crite
 - [ ] CI workflow run URL attached
 - [x] Rollback drill payloads attached (local harness)
 - [ ] Metrics snapshot attached
-- [ ] Provenance sample snapshot attached
+- [x] Provenance sample snapshot attached (local harness)
 - [ ] Dashboard/alert links attached
 - [ ] Approver sign-off note attached
 

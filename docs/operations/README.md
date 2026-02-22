@@ -28,6 +28,8 @@
 
 - [Multi-Source Refactor Provenance Sample Evidence Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_TEMPLATE_2026-02-22.md)
 
+- [Multi-Source Refactor Provenance Sample Evidence (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_2026-02-22_LOCAL.md)
+
 - [AI Assistant Refactor Guardrails (2026-02-22)](./AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md)
 
 - [AI Assistant Task Prompt Template (2026-02-22)](./AI_ASSISTANT_TASK_PROMPT_TEMPLATE_2026-02-22.md)

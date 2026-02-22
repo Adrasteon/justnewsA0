@@ -104,6 +104,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Multi-Source Refactor Provenance Sample Evidence Template (2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_TEMPLATE_2026-02-22.md) — Standardized sample-record checklist for provenance field completeness
 
+- [Multi-Source Refactor Provenance Sample Evidence (Local, 2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_2026-02-22_LOCAL.md) — Seeded provenance-field completeness evidence from local harness sample set
+
 - [AI Assistant Refactor Guardrails (2026-02-22)](./operations/AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md) — AI implementation constraints, safety rules, and acceptance gates
 
 - [AI Assistant Task Prompt Template (2026-02-22)](./operations/AI_ASSISTANT_TASK_PROMPT_TEMPLATE_2026-02-22.md) — Standardized prompt scaffold to enforce guardrails on each AI task
