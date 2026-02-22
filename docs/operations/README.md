@@ -30,6 +30,8 @@
 
 - [Multi-Source Refactor M2 Sign-Off Summary (Draft, 2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_SUMMARY_2026-02-22_DRAFT.md)
 
+- [Multi-Source Refactor Closeout Summary (2026-02-22)](./MULTI_SOURCE_REFACTOR_CLOSEOUT_SUMMARY_2026-02-22.md)
+
 - [Multi-Source Refactor Rollback Drill Artifact Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_TEMPLATE_2026-02-22.md)
 
 - [Multi-Source Refactor Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md)

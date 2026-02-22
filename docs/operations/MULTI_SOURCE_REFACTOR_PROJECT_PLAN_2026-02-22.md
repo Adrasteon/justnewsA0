@@ -7,6 +7,7 @@
 - [Investor One-Pager: Multi-Source Integrity Refactor (2026-02-22)](./INVESTOR_ONE_PAGER_MULTI_SOURCE_REFACTOR_2026-02-22.md)
 - [Investor Technical Appendix: Multi-Source Integrity Refactor (2026-02-22)](./INVESTOR_TECH_APPENDIX_MULTI_SOURCE_REFACTOR_2026-02-22.md)
 - [M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md)
+- [Multi-Source Refactor Closeout Summary (2026-02-22)](./MULTI_SOURCE_REFACTOR_CLOSEOUT_SUMMARY_2026-02-22.md)
 
 ## 1) Objective
 
@@ -182,9 +183,9 @@ Legend: **A** = Accountable, **R** = Responsible, **C** = Consulted
 - [x] Lane routing merged and tested
 - [ ] Provenance contract deployed
 - [ ] Dashboards and alerts live
-- [ ] Rollback drill evidence attached
+- [x] Rollback drill evidence attached (current-purpose local artifact)
 - [x] Runbook + action checklist completed
-- [ ] Final closeout summary published
+- [x] Final closeout summary published (current purposes)
 
 ## 13) Current Evidence Snapshot (2026-02-22)
 
