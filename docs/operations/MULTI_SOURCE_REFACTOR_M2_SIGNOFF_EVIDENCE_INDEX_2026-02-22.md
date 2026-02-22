@@ -64,3 +64,32 @@ The following items require non-local artifacts to complete M2 sign-off:
   - Dev/staging `/metrics` snapshot link.
   - Dev/staging rollback drill artifact link.
   - Dev/staging provenance sample export link.
+
+## 7) Fill-In Blocks (External Artifacts)
+
+### 7.1 CI Workflow Run Evidence
+
+- Workflow: `workflow-orchestrator-control-plane-tests`
+- Run URL: `<paste run URL>`
+- Commit SHA: `<paste SHA>`
+- Branch: `<paste branch>`
+- Run status: `<success|failure>`
+- Timestamp (UTC): `<paste timestamp>`
+
+### 7.2 Dashboard and Alert Evidence
+
+- Environment: `<dev|staging|canary>`
+- Dashboard URL(s): `<paste URL(s)>`
+- Panel ID(s): `<paste panel IDs>`
+- Alert rule ID(s): `<paste alert IDs>`
+- Screenshot/export link(s): `<paste artifact links>`
+- Notes: `<optional notes>`
+
+### 7.3 M2 Approver Sign-Off
+
+- QA approver (name/role): `<paste>`
+- Ops approver (name/role): `<paste>`
+- Product approver (name/role): `<paste>`
+- Decision: `<go|no-go|conditional>`
+- Timestamp (UTC): `<paste timestamp>`
+- Conditions/follow-ups: `<paste notes>`
