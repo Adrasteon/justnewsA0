@@ -3,6 +3,11 @@ import sys
 import types
 
 from fastapi.testclient import TestClient
+from agents.workflow_orchestrator.policies import (
+    _record_cluster_promotion_failure_metrics,
+    _record_lane_metrics,
+    _record_singleton_to_verified_conversion,
+)
 
 
 def _load_main_with_stubs(monkeypatch):
@@ -334,3 +339,39 @@ def test_runtime_config_actuate_and_rollback_error_paths(monkeypatch, tmp_path):
         detail = rollback_unknown_apply.json()["detail"]
         assert detail["status"] == "error"
         assert "not found" in detail["message"]
+
+
+def test_metrics_endpoint_exposes_lane_observability_contract(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    main_mod = _load_main_with_stubs(monkeypatch)
+
+    _record_lane_metrics(
+        {
+            "publication_lane": "verified_story",
+            "unique_domain_count": 3,
+        }
+    )
+    _record_cluster_promotion_failure_metrics(
+        {
+            "publication_lane": "developing_brief",
+            "decision_reason_codes": ["insufficient_source_count"],
+        }
+    )
+    _record_singleton_to_verified_conversion(
+        story_id="STORY-METRICS-1",
+        prev_meta={"publication": {"publication_lane": "developing_brief"}},
+        lane_metadata={"publication_lane": "verified_story"},
+    )
+
+    with TestClient(main_mod.app) as client:
+        response = client.get("/metrics")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+
+    body = response.text
+    assert "justnews_custom_counter_published_total_verified_story" in body
+    assert "justnews_custom_gauge_published_verified_share" in body
+    assert "justnews_custom_gauge_median_unique_domains_per_story" in body
+    assert "justnews_custom_counter_cluster_promotion_failures_insufficient_source_count" in body
+    assert "justnews_custom_counter_singleton_to_verified_conversion_total" in body
