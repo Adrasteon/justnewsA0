@@ -195,3 +195,10 @@ Legend: **A** = Accountable, **R** = Responsible, **C** = Consulted
 - Recent focused validation runs in this stream:
    - `22 passed` (control-plane + metrics contract suite)
    - `24 passed` (after rollback env-clearing regression additions)
+
+## 14) Open Gaps to Close M2
+
+- [ ] **Dashboards/alerts live:** publish panel links and alert IDs for verified share + promotion failure signals.
+- [ ] **Provenance deploy verification:** attach production-like sample records proving required lane/provenance fields are populated end-to-end.
+- [ ] **Rollback drill artifact bundle:** attach apply/rollback JSON responses, before/after `owner_overrides`, and lane behavior reversion evidence.
+- [ ] **Sign-off packet prep:** compile QA + Ops evidence links for M2 gate review (single index section in docs/operations).
