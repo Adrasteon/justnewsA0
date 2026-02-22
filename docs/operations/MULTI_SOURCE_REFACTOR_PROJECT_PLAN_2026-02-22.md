@@ -203,3 +203,5 @@ Legend: **A** = Accountable, **R** = Responsible, **C** = Consulted
 - [ ] **Provenance deploy verification:** attach production-like sample records proving required lane/provenance fields are populated end-to-end.
 - [ ] **Rollback drill artifact bundle:** attach apply/rollback JSON responses, before/after `owner_overrides`, and lane behavior reversion evidence.
 - [ ] **Sign-off packet prep:** compile QA + Ops evidence links in [M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md).
+
+**M2 completion status summary:** Treat [M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md) as the single source of truth for closure progress; M2 closes only when all remaining external artifacts in that index are filled and approved.
