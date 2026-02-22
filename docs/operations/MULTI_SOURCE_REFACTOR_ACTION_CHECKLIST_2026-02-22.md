@@ -121,6 +121,7 @@ Reference: [MULTI_SOURCE_REFACTOR_METRICS_NOTE_2026-02-22.md](./MULTI_SOURCE_REF
 
 - [ ] Trigger runtime-config rollback to last known good version
 - [ ] Verify behavior reverted (lane mix + policy decision output)
+- [ ] Verify removed lane-policy overrides are fully cleared (no stale topic override influence)
 - [ ] Confirm alert noise normalizes
 - [ ] Publish incident summary and next-step decision
 

@@ -29,9 +29,11 @@ export ORCH_URL="http://localhost:8023"
 ## 3) Runtime Keys (Current)
 
 - `orchestrator.lane_policy.enabled` (bool)
+- `orchestrator.lane_policy.min_article_count` (int)
 - `orchestrator.lane_policy.min_source_count` (int)
 - `orchestrator.lane_policy.min_unique_domains` (int)
 - `orchestrator.lane_policy.version` (str)
+- `orchestrator.lane_policy.topic_overrides_json` (str/json)
 
 Canonical payload examples are also available directly from the service:
 
@@ -48,6 +50,8 @@ curl -sS "$ORCH_URL/runtime-config/examples" | jq .
 | `/runtime-config` | `PATCH` | Applies hot runtime overrides with reason/actor audit |
 | `/runtime-config` | `GET` | Shows current overrides, config version, and available rollback versions |
 | `/runtime-config/rollback` | `POST` | Rolls back to a target config version |
+| `/runtime-config/actuate` | `POST` | Applies tier-scoped runtime patch (`tier1` includes orchestrator keys) |
+| `/runtime-config/actuate/rollback` | `POST` | Rolls back by apply version (inverse operation) |
 
 ## 5) End-to-End Operator Flow (Validate → Apply → Verify → Rollback)
 
@@ -78,6 +82,8 @@ curl -sS -X POST "$ORCH_URL/runtime-config/rollback" \
   -H "Content-Type: application/json" \
   -d '{"target_version":0,"reason":"rollback after regression","actor":"ops"}' | jq .
 ```
+
+Rollback guarantee: when a lane-policy key is removed from active runtime overrides, the corresponding orchestrator env mapping is cleared on apply/sync so stale topic overrides do not persist after rollback.
 
 ## 6) Validate a Patch Before Apply
 
@@ -196,6 +202,14 @@ curl -sS -X POST "$ORCH_URL/runtime-config/rollback" \
   }' | jq .
 ```
 
+3. Confirm override removal is reflected in env-backed behavior:
+
+```bash
+curl -sS "$ORCH_URL/runtime-config" | jq '.owner_overrides'
+```
+
+Expected for full rollback to baseline: `topic_overrides_json` and other removed lane keys are absent from `owner_overrides` and no longer influence lane decisioning.
+
 ## 11) Post-Change Verification
 
 - Confirm runtime state reflects intended keys.
@@ -224,3 +238,12 @@ Execute rollback immediately when any is true:
 - Apply/rollback response JSON with version IDs.
 - Before/after `owner_overrides` snapshots.
 - Metrics snapshots for verified share and lane totals.
+
+Recommended verification command bundle:
+
+```bash
+pytest -q \
+  tests/unit/test_workflow_orchestrator_runtime_control_plane_endpoints.py \
+  tests/unit/test_workflow_orchestrator_runtime_overrides.py \
+  tests/unit/test_workflow_orchestrator_lane_metadata.py
+```
