@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-22  
 **Program:** JustNews Living Stories  
-**Status:** Approved for implementation kickoff  
+**Status:** In progress — M1/M2 implementation active; control-plane CI gate added (2026-02-22)  
 **Related Docs:**
 - [Investor One-Pager: Multi-Source Integrity Refactor (2026-02-22)](./INVESTOR_ONE_PAGER_MULTI_SOURCE_REFACTOR_2026-02-22.md)
 - [Investor Technical Appendix: Multi-Source Integrity Refactor (2026-02-22)](./INVESTOR_TECH_APPENDIX_MULTI_SOURCE_REFACTOR_2026-02-22.md)

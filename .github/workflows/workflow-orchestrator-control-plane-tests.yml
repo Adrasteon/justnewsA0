@@ -1,0 +1,49 @@
+name: CI — Workflow Orchestrator Control Plane
+
+on:
+  pull_request:
+    paths:
+      - 'agents/workflow_orchestrator/**'
+      - 'tests/unit/test_workflow_orchestrator_runtime_control_plane_endpoints.py'
+      - 'tests/unit/test_workflow_orchestrator_runtime_examples.py'
+      - 'tests/unit/test_workflow_orchestrator_runtime_examples_endpoint.py'
+      - 'tests/unit/test_workflow_orchestrator_runtime_overrides.py'
+      - 'tests/unit/test_workflow_orchestrator_lane_metadata.py'
+      - '.github/workflows/workflow-orchestrator-control-plane-tests.yml'
+  push:
+    paths:
+      - 'agents/workflow_orchestrator/**'
+      - 'tests/unit/test_workflow_orchestrator_runtime_control_plane_endpoints.py'
+      - 'tests/unit/test_workflow_orchestrator_runtime_examples.py'
+      - 'tests/unit/test_workflow_orchestrator_runtime_examples_endpoint.py'
+      - 'tests/unit/test_workflow_orchestrator_runtime_overrides.py'
+      - 'tests/unit/test_workflow_orchestrator_lane_metadata.py'
+      - '.github/workflows/workflow-orchestrator-control-plane-tests.yml'
+  workflow_dispatch: {}
+
+jobs:
+  runtime_control_plane_tests:
+    name: Runtime control-plane contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run orchestrator runtime control-plane tests
+        run: |
+          pytest -q \
+            tests/unit/test_workflow_orchestrator_runtime_control_plane_endpoints.py \
+            tests/unit/test_workflow_orchestrator_runtime_examples.py \
+            tests/unit/test_workflow_orchestrator_runtime_examples_endpoint.py \
+            tests/unit/test_workflow_orchestrator_runtime_overrides.py \
+            tests/unit/test_workflow_orchestrator_lane_metadata.py
