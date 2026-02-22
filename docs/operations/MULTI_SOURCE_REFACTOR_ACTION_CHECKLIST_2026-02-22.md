@@ -42,6 +42,8 @@
 
 ## 3) Policy and Routing Implementation
 
+Reference: [MULTI_SOURCE_REFACTOR_RUNTIME_TUNING_RUNBOOK_2026-02-22.md](./MULTI_SOURCE_REFACTOR_RUNTIME_TUNING_RUNBOOK_2026-02-22.md)
+
 - [ ] Implement lane-aware routing:
   - [ ] Lane A eligibility (`verified_story`)
   - [ ] Lane B fallback (`developing_brief`)
