@@ -277,6 +277,7 @@ class OrchestratorEngine:
             "orchestrator.lane_policy.min_source_count": "MULTI_SOURCE_MIN_SOURCE_COUNT",
             "orchestrator.lane_policy.min_unique_domains": "MULTI_SOURCE_MIN_UNIQUE_DOMAINS",
             "orchestrator.lane_policy.version": "MULTI_SOURCE_LANE_POLICY_VERSION",
+            "orchestrator.lane_policy.topic_overrides_json": "MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON",
         }
 
         for key, value in overrides.items():

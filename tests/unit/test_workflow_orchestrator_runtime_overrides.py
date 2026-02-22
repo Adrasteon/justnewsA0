@@ -13,6 +13,7 @@ def test_apply_runtime_overrides_sets_lane_policy_env(monkeypatch):
     monkeypatch.delenv("MULTI_SOURCE_MIN_SOURCE_COUNT", raising=False)
     monkeypatch.delenv("MULTI_SOURCE_MIN_UNIQUE_DOMAINS", raising=False)
     monkeypatch.delenv("MULTI_SOURCE_LANE_POLICY_VERSION", raising=False)
+    monkeypatch.delenv("MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON", raising=False)
 
     result = engine.apply_runtime_overrides(
         {
@@ -20,6 +21,7 @@ def test_apply_runtime_overrides_sets_lane_policy_env(monkeypatch):
             "orchestrator.lane_policy.min_source_count": 3,
             "orchestrator.lane_policy.min_unique_domains": 4,
             "orchestrator.lane_policy.version": "v-runtime-test",
+            "orchestrator.lane_policy.topic_overrides_json": '{"breaking":{"min_source_count":1}}',
         }
     )
 
@@ -28,11 +30,13 @@ def test_apply_runtime_overrides_sets_lane_policy_env(monkeypatch):
     assert "orchestrator.lane_policy.min_source_count" in applied
     assert "orchestrator.lane_policy.min_unique_domains" in applied
     assert "orchestrator.lane_policy.version" in applied
+    assert "orchestrator.lane_policy.topic_overrides_json" in applied
 
     assert os.environ["MULTI_SOURCE_LANE_POLICY_ENABLED"] == "0"
     assert os.environ["MULTI_SOURCE_MIN_SOURCE_COUNT"] == "3"
     assert os.environ["MULTI_SOURCE_MIN_UNIQUE_DOMAINS"] == "4"
     assert os.environ["MULTI_SOURCE_LANE_POLICY_VERSION"] == "v-runtime-test"
+    assert os.environ["MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON"] == '{"breaking":{"min_source_count":1}}'
 
 
 def test_apply_runtime_overrides_ignores_non_orchestrator(monkeypatch):

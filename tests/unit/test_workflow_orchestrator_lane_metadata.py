@@ -73,6 +73,33 @@ def test_lane_metadata_policy_disabled(monkeypatch):
     assert result["decision_reason_codes"] == ["lane_policy_disabled"]
 
 
+def test_lane_metadata_topic_override_applies(monkeypatch):
+    monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_ENABLED", "1")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_SOURCE_COUNT", "2")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_UNIQUE_DOMAINS", "2")
+    monkeypatch.setenv(
+        "MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON",
+        '{"breaking": {"min_article_count": 1, "min_source_count": 1, "min_unique_domains": 1}}',
+    )
+
+    result = _derive_publication_lane_metadata(
+        cluster_id="CL-999",
+        article_count=1,
+        input_fingerprint="999999abcdef",
+        context_metrics={
+            "source_count": 1,
+            "unique_domain_count": 1,
+            "fact_quality_score": 0.65,
+        },
+        urgency_class="breaking",
+    )
+
+    assert result["publication_lane"] == "verified_story"
+    assert result["policy_override_source"] == "topic_override:breaking"
+    assert result["policy_thresholds"]["min_source_count"] == 1
+    assert result["policy_thresholds"]["min_unique_domains"] == 1
+
+
 def test_record_lane_metrics_updates_counters_and_share(monkeypatch):
     class _MetricSpy:
         def __init__(self):

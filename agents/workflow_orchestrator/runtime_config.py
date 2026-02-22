@@ -96,6 +96,12 @@ RUNTIME_KEY_REGISTRY: dict[str, dict[str, Any]] = {
         "owner": "workflow_orchestrator",
         "apply_mode": "next_tick",
     },
+    "orchestrator.lane_policy.topic_overrides_json": {
+        "type": "str",
+        "mutability": "hot",
+        "owner": "workflow_orchestrator",
+        "apply_mode": "next_tick",
+    },
     "mcp_bus.call.read_timeout_sec": {
         "type": "float",
         "min": 0.1,

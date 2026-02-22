@@ -586,14 +586,32 @@ def _derive_publication_lane_metadata(
     article_count: int,
     input_fingerprint: str,
     context_metrics: dict[str, Any],
+    urgency_class: str | None = None,
 ) -> dict[str, Any]:
     policy_enabled = _env_bool("MULTI_SOURCE_LANE_POLICY_ENABLED", default=True)
+    min_article_count = max(_safe_int(os.environ.get("MULTI_SOURCE_MIN_ARTICLE_COUNT"), 2), 1)
     min_sources = max(_safe_int(os.environ.get("MULTI_SOURCE_MIN_SOURCE_COUNT"), 2), 1)
-    min_unique_domains = max(
-        _safe_int(os.environ.get("MULTI_SOURCE_MIN_UNIQUE_DOMAINS"), 2),
-        1,
-    )
+    min_unique_domains = max(_safe_int(os.environ.get("MULTI_SOURCE_MIN_UNIQUE_DOMAINS"), 2), 1)
     policy_version = str(os.environ.get("MULTI_SOURCE_LANE_POLICY_VERSION", "v1")).strip() or "v1"
+
+    override_source = "default"
+    raw_overrides = os.environ.get("MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON", "").strip()
+    if raw_overrides and urgency_class:
+        try:
+            parsed = json.loads(raw_overrides)
+            if isinstance(parsed, dict):
+                key = str(urgency_class).strip().lower()
+                candidate = parsed.get(key)
+                if isinstance(candidate, dict):
+                    min_article_count = max(_safe_int(candidate.get("min_article_count"), min_article_count), 1)
+                    min_sources = max(_safe_int(candidate.get("min_source_count"), min_sources), 1)
+                    min_unique_domains = max(
+                        _safe_int(candidate.get("min_unique_domains"), min_unique_domains),
+                        1,
+                    )
+                    override_source = f"topic_override:{key}"
+        except Exception:
+            pass
 
     source_count = max(_safe_int(context_metrics.get("source_count"), 0), 0)
     unique_domain_count = max(_safe_int(context_metrics.get("unique_domain_count"), 0), 0)
@@ -603,7 +621,7 @@ def _derive_publication_lane_metadata(
     if not policy_enabled:
         reason_codes.append("lane_policy_disabled")
     else:
-        if article_count < 2:
+        if article_count < min_article_count:
             reason_codes.append("single_article_cluster")
         if source_count < min_sources:
             reason_codes.append("insufficient_source_count")
@@ -626,8 +644,10 @@ def _derive_publication_lane_metadata(
         "decision_reason_codes": reason_codes or ["meets_multi_source_thresholds"],
         "policy_version": policy_version,
         "policy_enabled": policy_enabled,
+        "policy_override_source": override_source,
         "policy_decision_at": datetime.utcnow().isoformat() + "Z",
         "policy_thresholds": {
+            "min_article_count": min_article_count,
             "min_source_count": min_sources,
             "min_unique_domains": min_unique_domains,
         },
@@ -834,6 +854,7 @@ def upsert_living_story_record(
         article_count=len(normalized_ids),
         input_fingerprint=fingerprint,
         context_metrics=context_metrics,
+        urgency_class=urgency_class,
     )
 
     if not existing:
