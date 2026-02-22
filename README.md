@@ -123,4 +123,4 @@ Please read [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for details on our code
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the `LICENSE` file for details.
+This project is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Public License - see the `LICENSE` file for details.

@@ -50,6 +50,7 @@ CRAWLER_AGENT_URL = os.environ.get("CRAWLER_AGENT_URL", "http://localhost:8022")
 ANALYST_AGENT_URL = os.environ.get("ANALYST_AGENT_URL", "http://localhost:8004")
 MEMORY_AGENT_URL = os.environ.get("MEMORY_AGENT_URL", "http://localhost:8007")
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
+os.environ.setdefault("JUSTNEWS_DB_EMBEDDING_ENABLED", "0")
 
 # Security configuration
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")

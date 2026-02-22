@@ -554,6 +554,17 @@ class MigratedDatabaseService:
             logger.warning("ChromaDB not available - embeddings support disabled")
 
         # Embedding model: import sentence-transformers at runtime (best-effort)
+        embeddings_enabled = str(os.environ.get("JUSTNEWS_DB_EMBEDDING_ENABLED", "1")).lower() not in (
+            "0",
+            "false",
+            "no",
+            "off",
+        )
+        if not embeddings_enabled:
+            logger.info("DB embedding model loading disabled (JUSTNEWS_DB_EMBEDDING_ENABLED=0)")
+            self.embedding_model = None
+            return
+
         embedding_config = self.config['database']['embedding']
         try:
             from sentence_transformers import SentenceTransformer as _SentenceTransformer  # type: ignore

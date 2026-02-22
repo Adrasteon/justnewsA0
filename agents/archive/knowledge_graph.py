@@ -20,6 +20,7 @@ from database.utils.migrated_database_utils import (
 )
 
 logger = get_logger(__name__)
+os.environ.setdefault("JUSTNEWS_DB_EMBEDDING_ENABLED", "0")
 
 
 class KnowledgeGraphManager:

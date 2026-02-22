@@ -6,6 +6,20 @@
 
 - [Live SEO Launch Checklist](./LIVE_SEO_LAUNCH_CHECKLIST.md) — Required actions before and during production launch to maximize crawl frequency and ranking readiness
 
+**📈 Investor Proposal (Multi-Source Refactor):**
+
+- [Investor One-Pager: Multi-Source Integrity Refactor (2026-02-22)](./INVESTOR_ONE_PAGER_MULTI_SOURCE_REFACTOR_2026-02-22.md)
+
+- [Investor Technical Appendix: Multi-Source Integrity Refactor (2026-02-22)](./INVESTOR_TECH_APPENDIX_MULTI_SOURCE_REFACTOR_2026-02-22.md)
+
+- [Multi-Source Refactor Project Plan (2026-02-22)](./MULTI_SOURCE_REFACTOR_PROJECT_PLAN_2026-02-22.md)
+
+- [Multi-Source Refactor Action Checklist (2026-02-22)](./MULTI_SOURCE_REFACTOR_ACTION_CHECKLIST_2026-02-22.md)
+
+- [AI Assistant Refactor Guardrails (2026-02-22)](./AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md)
+
+- [AI Assistant Task Prompt Template (2026-02-22)](./AI_ASSISTANT_TASK_PROMPT_TEMPLATE_2026-02-22.md)
+
 **Getting Started**:
 
 - [Setup Guide](./SETUP_GUIDE.md) — Complete end-to-end installation (Python, Vault, MariaDB, ChromaDB, systemd)

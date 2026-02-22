@@ -30,6 +30,7 @@ PORT = int(os.environ.get("WORKFLOW_ORCHESTRATOR_PORT", 8023))
 HOST = os.environ.get("HOST", "0.0.0.0")
 PUBLIC_HOST = os.environ.get("PUBLIC_HOST", "localhost")
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
+os.environ.setdefault("JUSTNEWS_DB_EMBEDDING_ENABLED", "0")
 
 # Initialize DB Service without ChromaDB to prevent segfaults
 try:

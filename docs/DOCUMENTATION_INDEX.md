@@ -88,6 +88,18 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Living Story Runbook](./operations/LIVING_STORY_RUNBOOK.md) — Day-2 operations, validation, thresholds, and troubleshooting
 
+- [Investor One-Pager: Multi-Source Integrity Refactor (2026-02-22)](./operations/INVESTOR_ONE_PAGER_MULTI_SOURCE_REFACTOR_2026-02-22.md) — Strategic rationale, KPI framework, and phased delivery
+
+- [Investor Technical Appendix: Multi-Source Integrity Refactor (2026-02-22)](./operations/INVESTOR_TECH_APPENDIX_MULTI_SOURCE_REFACTOR_2026-02-22.md) — Technical rollout details, telemetry, and controls
+
+- [Multi-Source Refactor Project Plan (2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_PROJECT_PLAN_2026-02-22.md) — Execution plan, milestones, RACI, and go/no-go gates
+
+- [Multi-Source Refactor Action Checklist (2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_ACTION_CHECKLIST_2026-02-22.md) — Implementation checklist, validation steps, and evidence tracking
+
+- [AI Assistant Refactor Guardrails (2026-02-22)](./operations/AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md) — AI implementation constraints, safety rules, and acceptance gates
+
+- [AI Assistant Task Prompt Template (2026-02-22)](./operations/AI_ASSISTANT_TASK_PROMPT_TEMPLATE_2026-02-22.md) — Standardized prompt scaffold to enforce guardrails on each AI task
+
 - [Vault Setup & Administration](./operations/VAULT_SETUP.md) — Secrets management
 
 - [Troubleshooting](./operations/TROUBLESHOOTING.md) — Diagnostics and recovery

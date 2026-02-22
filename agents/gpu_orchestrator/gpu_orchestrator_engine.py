@@ -43,6 +43,7 @@ from prometheus_client import Counter, Gauge, Histogram
 from common.metrics import JustNewsMetrics
 from common.tracing import inject_trace_context
 from database.utils.migrated_database_utils import create_database_service
+os.environ.setdefault("JUSTNEWS_DB_EMBEDDING_ENABLED", "0")
 
 # Constants
 GPU_ORCHESTRATOR_PORT = int(os.environ.get("GPU_ORCHESTRATOR_PORT", "8008"))

@@ -6,6 +6,30 @@ to contributors; it complements the private `.copilot-instructions` file which i
 Purpose ------- Make the repository's expectations explicit when automated assistants (GitHub Copilot, other LLM
 helpers, or CI agents) suggest or apply fixes and edits.
 
+Mandatory guardrails for multi-source refactor -------------------------------------------
+
+For any task related to the Multi-Source Integrity Refactor, assistants must treat the following as required
+preflight context before proposing edits:
+
+- `docs/operations/AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md`
+- `docs/operations/MULTI_SOURCE_REFACTOR_PROJECT_PLAN_2026-02-22.md`
+- `docs/operations/MULTI_SOURCE_REFACTOR_ACTION_CHECKLIST_2026-02-22.md`
+
+Required behavior for refactor tasks:
+
+- State which guardrail section(s) the implementation follows.
+- Keep changes strictly in approved scope unless human approval expands scope.
+- Include acceptance-test evidence and rollback notes in task output.
+- Refuse silent policy-threshold changes in production-first workflows.
+
+Task preflight checklist (must pass):
+
+- [ ] Confirm objective maps to project-plan milestone
+- [ ] Confirm in-scope vs out-of-scope boundaries
+- [ ] Confirm validation checks and success criteria
+- [ ] Confirm rollback path and revert signals
+- [ ] Confirm evidence artifact(s) to attach
+
 Python runtime (project default) -------------------------------- The canonical project Python environment is a conda
 environment system with phase-specific variants:
 

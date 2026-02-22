@@ -96,6 +96,7 @@ ANALYST_PORT: int = _resolve_port()
 ANALYST_HOST: str = os.environ.get("ANALYST_HOST", "0.0.0.0")
 ANALYST_PUBLIC_HOST: str = os.environ.get("ANALYST_PUBLIC_HOST", "localhost")
 ANALYST_PUBLIC_SCHEME: str = os.environ.get("ANALYST_PUBLIC_SCHEME", "http")
+os.environ.setdefault("JUSTNEWS_DB_EMBEDDING_ENABLED", "0")
 
 MODEL_PATH = os.environ.get("MISTRAL_7B_PATH", "./models/mistral-7b-instruct-v0.2")
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")

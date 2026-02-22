@@ -710,6 +710,18 @@ docs/docs_navigator.py status`.**
 
 - Daily Ops Quick Reference: `../markdown_docs/agent_documentation/OPERATIONS_QUICK_REFERENCE.md`
 
+- Investor One-Pager (Multi-Source Refactor): [operations/INVESTOR_ONE_PAGER_MULTI_SOURCE_REFACTOR_2026-02-22.md](operations/INVESTOR_ONE_PAGER_MULTI_SOURCE_REFACTOR_2026-02-22.md)
+
+- Investor Technical Appendix (Multi-Source Refactor): [operations/INVESTOR_TECH_APPENDIX_MULTI_SOURCE_REFACTOR_2026-02-22.md](operations/INVESTOR_TECH_APPENDIX_MULTI_SOURCE_REFACTOR_2026-02-22.md)
+
+- Multi-Source Refactor Project Plan: [operations/MULTI_SOURCE_REFACTOR_PROJECT_PLAN_2026-02-22.md](operations/MULTI_SOURCE_REFACTOR_PROJECT_PLAN_2026-02-22.md)
+
+- Multi-Source Refactor Action Checklist: [operations/MULTI_SOURCE_REFACTOR_ACTION_CHECKLIST_2026-02-22.md](operations/MULTI_SOURCE_REFACTOR_ACTION_CHECKLIST_2026-02-22.md)
+
+- AI Assistant Refactor Guardrails: [operations/AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md](operations/AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md)
+
+- AI Assistant Task Prompt Template: [operations/AI_ASSISTANT_TASK_PROMPT_TEMPLATE_2026-02-22.md](operations/AI_ASSISTANT_TASK_PROMPT_TEMPLATE_2026-02-22.md)
+
 ## 📊 Monitoring & Observability
 
 - **Systemd Monitoring Stack**: `operations/systemd-monitoring.md` - Complete monitoring setup and operations

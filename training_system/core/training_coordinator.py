@@ -24,6 +24,7 @@ import torch
 
 from common.observability import get_logger
 from database.utils.migrated_database_utils import create_database_service
+os.environ.setdefault("JUSTNEWS_DB_EMBEDDING_ENABLED", "0")
 
 # Lazy import placeholders for heavy training utilities
 _TRANSFORMERS_AVAILABLE = importlib.util.find_spec("transformers") is not None
