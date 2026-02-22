@@ -23,7 +23,7 @@ Provide one canonical location for all artifacts required to close M2 exit crite
 | --- | --- | --- | --- | --- | --- |
 | Runtime control-plane tests | Focused test run output for endpoint + override + lane suite | Local run: `24 passed in 8.70s` (2026-02-22) | QA | In progress | Command: `pytest -q tests/unit/test_workflow_orchestrator_runtime_control_plane_endpoints.py tests/unit/test_workflow_orchestrator_runtime_examples.py tests/unit/test_workflow_orchestrator_runtime_examples_endpoint.py tests/unit/test_workflow_orchestrator_runtime_overrides.py tests/unit/test_workflow_orchestrator_lane_metadata.py` |
 | Metrics contract tests | `/metrics` contract test evidence | [Metrics Snapshot (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_METRICS_SNAPSHOT_2026-02-22_LOCAL.md) + commits: `49302b1`, `1610257` | QA | In progress | Local snapshot attached; add dev/staging snapshot for M2 closure |
-| CI gate proof | Workflow run for `workflow-orchestrator-control-plane-tests` | `.github/workflows/workflow-orchestrator-control-plane-tests.yml` (commit `235e60e`) | Eng | In progress | Attach Actions run URL from PR/push execution |
+| CI gate proof | Workflow run for `workflow-orchestrator-control-plane-tests` | https://github.com/Adrasteon/justnewsA0/actions/runs/22280864776 (`success`) | Eng | In progress | Branch `feat/integrity-refactor`, run #3, head SHA `89bb1e86b543635062e389f8b16aa9bc542df79f` |
 | Rollback drill proof | Apply/rollback JSON + before/after `owner_overrides` | [Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) + [Rollback Drill Artifact Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_TEMPLATE_2026-02-22.md) + commit `89bb1e8` | Ops | In progress | Local harness artifact attached; add real dev run artifact for M2 closure |
 | Lane behavior reversion | Sample lane decision before/apply/rollback | [Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) + commit `89bb1e8` (`test_runtime_rollback_sla_and_lane_revert`) | QA/Ops | In progress | Includes observed `developing_brief -> verified_story -> developing_brief` |
 | Provenance field completeness | Sample records with required publication fields | [Provenance Sample Evidence (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_2026-02-22_LOCAL.md) + [Provenance Sample Evidence Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_TEMPLATE_2026-02-22.md) | Data/Eng | In progress | Local sample pass attached; add dev/staging export for M2 closure |
@@ -33,7 +33,7 @@ Provide one canonical location for all artifacts required to close M2 exit crite
 ## 4) Minimum Artifact Bundle Checklist
 
 - [x] Latest focused test results attached
-- [ ] CI workflow run URL attached
+- [x] CI workflow run URL attached
 - [x] Rollback drill payloads attached (local harness)
 - [x] Metrics snapshot attached (local harness)
 - [x] Provenance sample snapshot attached (local harness)
@@ -70,11 +70,11 @@ The following items require non-local artifacts to complete M2 sign-off:
 ### 7.1 CI Workflow Run Evidence
 
 - Workflow: `workflow-orchestrator-control-plane-tests`
-- Run URL: `<paste run URL>`
-- Commit SHA: `<paste SHA>`
-- Branch: `<paste branch>`
-- Run status: `<success|failure>`
-- Timestamp (UTC): `<paste timestamp>`
+- Run URL: `https://github.com/Adrasteon/justnewsA0/actions/runs/22280864776`
+- Commit SHA: `89bb1e86b543635062e389f8b16aa9bc542df79f`
+- Branch: `feat/integrity-refactor`
+- Run status: `success`
+- Timestamp (UTC): `2026-02-22T16:25:59Z` (updated `2026-02-22T16:31:15Z`)
 
 ### 7.2 Dashboard and Alert Evidence
 
