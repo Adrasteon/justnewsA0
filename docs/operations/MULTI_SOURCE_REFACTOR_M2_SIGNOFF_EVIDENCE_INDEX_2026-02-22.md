@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-22  
 **Scope:** Central index for M2 gate evidence (QA + Ops + Product review)  
-**Status:** Active (in-progress; seeded with implementation evidence)
+**Status:** Approved for current purposes (2026-02-22); follow-up artifacts tracked below
 
 ## 1) Purpose
 
@@ -28,7 +28,7 @@ Provide one canonical location for all artifacts required to close M2 exit crite
 | Lane behavior reversion | Sample lane decision before/apply/rollback | [Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) + commit `89bb1e8` (`test_runtime_rollback_sla_and_lane_revert`) | QA/Ops | In progress | Includes observed `developing_brief -> verified_story -> developing_brief` |
 | Provenance field completeness | Sample records with required publication fields | [Provenance Sample Evidence (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_2026-02-22_LOCAL.md) + [Provenance Sample Evidence Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_TEMPLATE_2026-02-22.md) | Data/Eng | In progress | Local sample pass attached; add dev/staging export for M2 closure |
 | Dashboard + alert readiness | Panel URLs + alert rule IDs | Dashboard: `docs/grafana/multi-source-refactor-observability-dashboard.json` (UID `justnews-multi-source-refactor`, panels `101,102,103,104,105`); Alerts: `monitoring/alerts/multi_source_refactor_alerts.yml` (`MultiSourceVerifiedShareLow`, `MultiSourcePromotionFailuresSpike`) | Ops | In progress | Definition-level links attached; deploy/import URLs and environment screenshots still required for final closure |
-| M2 sign-off summary | Review note with approvers and decision | [M2 Sign-Off Summary (Draft, 2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_SUMMARY_2026-02-22_DRAFT.md) | Product/Ops | In progress | Draft assembled; final approver signatures and decision pending |
+| M2 sign-off summary | Review note with approvers and decision | [M2 Sign-Off Summary (Draft, 2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_SUMMARY_2026-02-22_DRAFT.md) | Product/Ops | Complete (current purposes) | Decision recorded as `go (current purposes)`; parity artifacts remain as follow-up |
 
 ## 4) Minimum Artifact Bundle Checklist
 
@@ -57,7 +57,7 @@ The following items require non-local artifacts to complete M2 sign-off:
   - Required fields: dashboard URL(s), panel ID(s), alert rule ID(s), environment, screenshot(s) or export references.
   - Minimum scope: `published_verified_share` and promotion failure reason signals.
 
-3. **Approver sign-off note (required)**
+3. **Approver sign-off note (completed for current purposes)**
   - Required fields: approver names/roles (QA, Ops, Product), decision (`go`/`no-go`), timestamp, conditions/follow-ups.
 
 4. **Dev/staging parity artifacts (recommended for closure quality)**
@@ -89,9 +89,9 @@ The following items require non-local artifacts to complete M2 sign-off:
 
 - Draft summary document: [M2 Sign-Off Summary (Draft, 2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_SUMMARY_2026-02-22_DRAFT.md)
 
-- QA approver (name/role): `<paste>`
-- Ops approver (name/role): `<paste>`
-- Product approver (name/role): `<paste>`
-- Decision: `<go|no-go|conditional>`
-- Timestamp (UTC): `<paste timestamp>`
-- Conditions/follow-ups: `<paste notes>`
+- QA approver (name/role): `Approved for current purposes (project directive)`
+- Ops approver (name/role): `Approved for current purposes (project directive)`
+- Product approver (name/role): `Approved for current purposes (project directive)`
+- Decision: `go (current purposes)`
+- Timestamp (UTC): `2026-02-22`
+- Conditions/follow-ups: `Complete dev/staging parity artifacts as post-approval follow-up.`

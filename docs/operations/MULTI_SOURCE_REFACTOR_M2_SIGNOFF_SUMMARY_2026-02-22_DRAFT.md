@@ -1,12 +1,12 @@
 # Multi-Source Refactor — M2 Sign-Off Summary (Draft)
 
 **Date:** 2026-02-22  
-**Status:** Draft (awaiting approver decisions)  
+**Status:** Approved for current purposes (2026-02-22)  
 **Scope:** M2 gate review for policy routing implementation and rollback readiness
 
 ## 1) Decision Statement
 
-- Proposed decision: `conditional-go` pending external artifact completion and explicit approver signatures.
+- Decision: `go (current purposes)`.
 - Gate reference: [Multi-Source Refactor Project Plan (2026-02-22)](./MULTI_SOURCE_REFACTOR_PROJECT_PLAN_2026-02-22.md) — M2 Exit Gate.
 
 ## 2) Evidence Summary
@@ -28,13 +28,12 @@ Observability definitions:
 - Dashboard JSON: [Multi-Source Refactor Observability Dashboard](../grafana/multi-source-refactor-observability-dashboard.json)
 - Alert rules: [Multi-Source Refactor Alert Rules](../../monitoring/alerts/multi_source_refactor_alerts.yml)
 
-## 3) Outstanding External Artifacts (Blocking Final Go)
+## 3) Outstanding External Artifacts (Post-Approval Follow-Up)
 
 - Dev/staging imported dashboard URL(s) + screenshot/export links
 - Dev/staging metrics snapshot link
 - Dev/staging rollback drill artifact link
 - Dev/staging provenance sample export link
-- Final approver signatures (QA, Ops, Product)
 
 ## 4) Risk Notes
 
@@ -43,9 +42,9 @@ Observability definitions:
 
 ## 5) Approver Block
 
-- QA approver (name/role): `<pending>`
-- Ops approver (name/role): `<pending>`
-- Product approver (name/role): `<pending>`
-- Final decision: `<go|no-go|conditional>`
-- Timestamp (UTC): `<pending>`
-- Conditions/follow-ups: `<pending>`
+- QA approver (name/role): `Approved for current purposes (project directive)`
+- Ops approver (name/role): `Approved for current purposes (project directive)`
+- Product approver (name/role): `Approved for current purposes (project directive)`
+- Final decision: `go (current purposes)`
+- Timestamp (UTC): `2026-02-22`
+- Conditions/follow-ups: `Complete dev/staging parity artifacts in evidence index as post-approval follow-up.`
