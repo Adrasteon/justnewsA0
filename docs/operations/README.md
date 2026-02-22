@@ -24,6 +24,8 @@
 
 - [Multi-Source Refactor Rollback Drill Artifact Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_TEMPLATE_2026-02-22.md)
 
+- [Multi-Source Refactor Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md)
+
 - [Multi-Source Refactor Provenance Sample Evidence Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_TEMPLATE_2026-02-22.md)
 
 - [AI Assistant Refactor Guardrails (2026-02-22)](./AI_ASSISTANT_REFACTOR_GUARDRAILS_2026-02-22.md)
