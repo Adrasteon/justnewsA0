@@ -1,6 +1,7 @@
 import os
 
 from agents.workflow_orchestrator.engine import OrchestratorEngine
+from agents.workflow_orchestrator.policies import _derive_publication_lane_metadata
 
 
 def test_apply_runtime_overrides_sets_lane_policy_env(monkeypatch):
@@ -51,3 +52,50 @@ def test_apply_runtime_overrides_ignores_non_orchestrator(monkeypatch):
     result = engine.apply_runtime_overrides({"fact_checker.search.max_queries": 8})
     assert result["applied"] == {}
     assert result["ignored"]["fact_checker.search.max_queries"] == 8
+
+
+def test_runtime_override_changes_lane_decision(monkeypatch):
+    monkeypatch.setattr(OrchestratorEngine, "_init_policies", lambda self: None)
+    monkeypatch.setattr(OrchestratorEngine, "_load_config", lambda self: setattr(self, "config", {}))
+
+    engine = OrchestratorEngine()
+
+    monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_ENABLED", "1")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_ARTICLE_COUNT", "2")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_SOURCE_COUNT", "2")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_UNIQUE_DOMAINS", "2")
+
+    before = _derive_publication_lane_metadata(
+        cluster_id="CL-RUNTIME-1",
+        article_count=1,
+        input_fingerprint="abcdef0123456789",
+        context_metrics={
+            "source_count": 1,
+            "unique_domain_count": 1,
+            "fact_quality_score": 0.72,
+        },
+        urgency_class="breaking",
+    )
+    assert before["publication_lane"] == "developing_brief"
+
+    engine.apply_runtime_overrides(
+        {
+            "orchestrator.lane_policy.enabled": True,
+            "orchestrator.lane_policy.topic_overrides_json": '{"breaking":{"min_article_count":1,"min_source_count":1,"min_unique_domains":1}}',
+        }
+    )
+
+    after = _derive_publication_lane_metadata(
+        cluster_id="CL-RUNTIME-1",
+        article_count=1,
+        input_fingerprint="abcdef0123456789",
+        context_metrics={
+            "source_count": 1,
+            "unique_domain_count": 1,
+            "fact_quality_score": 0.72,
+        },
+        urgency_class="breaking",
+    )
+
+    assert after["publication_lane"] == "verified_story"
+    assert after["policy_override_source"] == "topic_override:breaking"
