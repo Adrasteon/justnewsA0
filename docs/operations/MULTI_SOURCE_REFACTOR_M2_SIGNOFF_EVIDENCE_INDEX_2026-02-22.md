@@ -44,3 +44,23 @@ Provide one canonical location for all artifacts required to close M2 exit crite
 
 - 2026-02-22: Initial evidence index created.
 - 2026-02-22: Seeded with commit-linked evidence and fresh focused test result (`24 passed`).
+
+## 6) Remaining External Artifacts
+
+The following items require non-local artifacts to complete M2 sign-off:
+
+1. **CI run URL (required)**
+  - Workflow: `workflow-orchestrator-control-plane-tests`
+  - Required fields: run URL, commit SHA, branch, run status, timestamp.
+
+2. **Dashboard + alert links (required)**
+  - Required fields: dashboard URL(s), panel ID(s), alert rule ID(s), environment, screenshot(s) or export references.
+  - Minimum scope: `published_verified_share` and promotion failure reason signals.
+
+3. **Approver sign-off note (required)**
+  - Required fields: approver names/roles (QA, Ops, Product), decision (`go`/`no-go`), timestamp, conditions/follow-ups.
+
+4. **Dev/staging parity artifacts (recommended for closure quality)**
+  - Dev/staging `/metrics` snapshot link.
+  - Dev/staging rollback drill artifact link.
+  - Dev/staging provenance sample export link.
