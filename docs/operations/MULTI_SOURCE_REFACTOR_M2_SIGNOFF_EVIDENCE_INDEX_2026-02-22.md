@@ -22,7 +22,7 @@ Provide one canonical location for all artifacts required to close M2 exit crite
 | Evidence Category | Required Artifact | Link | Owner | Status | Notes |
 | --- | --- | --- | --- | --- | --- |
 | Runtime control-plane tests | Focused test run output for endpoint + override + lane suite | Local run: `24 passed in 8.70s` (2026-02-22) | QA | In progress | Command: `pytest -q tests/unit/test_workflow_orchestrator_runtime_control_plane_endpoints.py tests/unit/test_workflow_orchestrator_runtime_examples.py tests/unit/test_workflow_orchestrator_runtime_examples_endpoint.py tests/unit/test_workflow_orchestrator_runtime_overrides.py tests/unit/test_workflow_orchestrator_lane_metadata.py` |
-| Metrics contract tests | `/metrics` contract test evidence | Commits: `49302b1`, `1610257` | QA | In progress | Includes `test_metrics_endpoint_exposes_lane_observability_contract` |
+| Metrics contract tests | `/metrics` contract test evidence | [Metrics Snapshot (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_METRICS_SNAPSHOT_2026-02-22_LOCAL.md) + commits: `49302b1`, `1610257` | QA | In progress | Local snapshot attached; add dev/staging snapshot for M2 closure |
 | CI gate proof | Workflow run for `workflow-orchestrator-control-plane-tests` | `.github/workflows/workflow-orchestrator-control-plane-tests.yml` (commit `235e60e`) | Eng | In progress | Attach Actions run URL from PR/push execution |
 | Rollback drill proof | Apply/rollback JSON + before/after `owner_overrides` | [Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) + [Rollback Drill Artifact Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_TEMPLATE_2026-02-22.md) + commit `89bb1e8` | Ops | In progress | Local harness artifact attached; add real dev run artifact for M2 closure |
 | Lane behavior reversion | Sample lane decision before/apply/rollback | [Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) + commit `89bb1e8` (`test_runtime_rollback_sla_and_lane_revert`) | QA/Ops | In progress | Includes observed `developing_brief -> verified_story -> developing_brief` |
@@ -35,7 +35,7 @@ Provide one canonical location for all artifacts required to close M2 exit crite
 - [x] Latest focused test results attached
 - [ ] CI workflow run URL attached
 - [x] Rollback drill payloads attached (local harness)
-- [ ] Metrics snapshot attached
+- [x] Metrics snapshot attached (local harness)
 - [x] Provenance sample snapshot attached (local harness)
 - [ ] Dashboard/alert links attached
 - [ ] Approver sign-off note attached

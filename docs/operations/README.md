@@ -18,6 +18,8 @@
 
 - [Multi-Source Refactor Metrics Note (2026-02-22)](./MULTI_SOURCE_REFACTOR_METRICS_NOTE_2026-02-22.md)
 
+- [Multi-Source Refactor Metrics Snapshot (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_METRICS_SNAPSHOT_2026-02-22_LOCAL.md)
+
 - [Multi-Source Refactor Runtime Tuning Runbook (2026-02-22)](./MULTI_SOURCE_REFACTOR_RUNTIME_TUNING_RUNBOOK_2026-02-22.md)
 
 - [Multi-Source Refactor M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md)

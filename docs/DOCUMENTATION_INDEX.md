@@ -98,6 +98,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Multi-Source Refactor M2 Sign-Off Evidence Index (2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md) — Canonical artifact index for M2 gate sign-off (QA/Ops/Product)
 
+- [Multi-Source Refactor Metrics Snapshot (Local, 2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_METRICS_SNAPSHOT_2026-02-22_LOCAL.md) — Seeded `/metrics` evidence confirming required lane observability series
+
 - [Multi-Source Refactor Rollback Drill Artifact Template (2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_TEMPLATE_2026-02-22.md) — Standardized capture format for apply/rollback payloads, latency, and reversion proof
 
 - [Multi-Source Refactor Rollback Drill Artifact (Local, 2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) — Seeded rollback evidence from local control-plane harness run
