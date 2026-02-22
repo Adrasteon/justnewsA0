@@ -178,9 +178,20 @@ Legend: **A** = Accountable, **R** = Responsible, **C** = Consulted
 
 ## 12) Deliverables Checklist
 
-- [ ] Lane routing merged and tested
+- [x] Lane routing merged and tested
 - [ ] Provenance contract deployed
 - [ ] Dashboards and alerts live
 - [ ] Rollback drill evidence attached
-- [ ] Runbook + action checklist completed
+- [x] Runbook + action checklist completed
 - [ ] Final closeout summary published
+
+## 13) Current Evidence Snapshot (2026-02-22)
+
+- Runtime control-plane endpoint coverage added and passing (apply/validate/rollback/actuate + negative paths).
+- Metrics endpoint contract coverage added for required lane observability series.
+- Rollback reliability fix shipped to clear removed lane-policy env mappings (prevents stale topic override behavior after rollback).
+- CI gate added for orchestrator control-plane/runtime contract suite:
+   - `.github/workflows/workflow-orchestrator-control-plane-tests.yml`
+- Recent focused validation runs in this stream:
+   - `22 passed` (control-plane + metrics contract suite)
+   - `24 passed` (after rollback env-clearing regression additions)
