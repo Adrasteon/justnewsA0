@@ -8,6 +8,7 @@ import agents.workflow_orchestrator.policies as policies
 
 
 def test_lane_metadata_verified_story(monkeypatch):
+    monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_ENABLED", "1")
     monkeypatch.setenv("MULTI_SOURCE_MIN_SOURCE_COUNT", "2")
     monkeypatch.setenv("MULTI_SOURCE_MIN_UNIQUE_DOMAINS", "2")
     monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_VERSION", "v-test")
@@ -31,6 +32,7 @@ def test_lane_metadata_verified_story(monkeypatch):
 
 
 def test_lane_metadata_developing_brief_with_reason_codes(monkeypatch):
+    monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_ENABLED", "1")
     monkeypatch.setenv("MULTI_SOURCE_MIN_SOURCE_COUNT", "2")
     monkeypatch.setenv("MULTI_SOURCE_MIN_UNIQUE_DOMAINS", "2")
 

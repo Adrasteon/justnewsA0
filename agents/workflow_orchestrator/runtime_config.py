@@ -564,3 +564,54 @@ def extract_owner_overrides(overrides: dict[str, Any], owner: str) -> dict[str, 
         if metadata and metadata.get("owner") == owner:
             result[key] = value
     return result
+
+
+def get_lane_policy_runtime_examples() -> dict[str, Any]:
+    """Return canonical runtime-config payload examples for lane policy operations."""
+    return {
+        "owner": "workflow_orchestrator",
+        "notes": {
+            "validate_first": "Use /runtime-config/validate before /runtime-config",
+            "rollback": "Use /runtime-config/rollback with target_version from /runtime-config available_versions",
+        },
+        "examples": {
+            "enable_dev_baseline": {
+                "patch": {
+                    "orchestrator.lane_policy.enabled": True,
+                    "orchestrator.lane_policy.min_source_count": 2,
+                    "orchestrator.lane_policy.min_unique_domains": 2,
+                    "orchestrator.lane_policy.version": "v1-dev",
+                },
+                "reason": "enable lane policy for dev burn-in",
+                "actor": "ops",
+            },
+            "disable_safety_hold": {
+                "patch": {
+                    "orchestrator.lane_policy.enabled": False,
+                    "orchestrator.lane_policy.version": "v1-hold",
+                },
+                "reason": "temporary hold for quality investigation",
+                "actor": "ops",
+            },
+            "canary_tighten_thresholds": {
+                "patch": {
+                    "orchestrator.lane_policy.enabled": True,
+                    "orchestrator.lane_policy.min_source_count": 3,
+                    "orchestrator.lane_policy.min_unique_domains": 3,
+                    "orchestrator.lane_policy.version": "v2-canary",
+                },
+                "reason": "canary threshold increase",
+                "actor": "ops",
+            },
+            "sparse_topic_relief": {
+                "patch": {
+                    "orchestrator.lane_policy.enabled": True,
+                    "orchestrator.lane_policy.min_source_count": 2,
+                    "orchestrator.lane_policy.min_unique_domains": 1,
+                    "orchestrator.lane_policy.version": "v2-sparse-topic",
+                },
+                "reason": "sparse topic relief tuning",
+                "actor": "ops",
+            },
+        },
+    }

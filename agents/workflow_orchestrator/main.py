@@ -20,6 +20,7 @@ from .runtime_config import (
     RuntimeConfigStore,
     TIER_KEY_PREFIXES,
     extract_owner_overrides,
+    get_lane_policy_runtime_examples,
 )
 from .tools import get_orchestrator_status, force_run_policy
 
@@ -167,6 +168,14 @@ async def runtime_config_validate(request: RuntimeConfigValidateRequest):
         "warnings": result.warnings,
         "blocked_non_hot": result.blocked_non_hot,
         "impacted_services": result.impacted_services,
+    }
+
+
+@app.get("/runtime-config/examples")
+async def runtime_config_examples():
+    return {
+        "status": "ok",
+        "examples": get_lane_policy_runtime_examples(),
     }
 
 

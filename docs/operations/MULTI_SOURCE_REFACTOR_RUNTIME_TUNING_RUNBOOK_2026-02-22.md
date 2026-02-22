@@ -33,6 +33,12 @@ export ORCH_URL="http://localhost:8023"
 - `orchestrator.lane_policy.min_unique_domains` (int)
 - `orchestrator.lane_policy.version` (str)
 
+Canonical payload examples are also available directly from the service:
+
+```bash
+curl -sS "$ORCH_URL/runtime-config/examples" | jq .
+```
+
 ## 4) Validate a Patch Before Apply
 
 ```bash
