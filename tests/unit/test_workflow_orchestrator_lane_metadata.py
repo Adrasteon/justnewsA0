@@ -52,6 +52,25 @@ def test_lane_metadata_developing_brief_with_reason_codes(monkeypatch):
     assert "insufficient_domain_diversity" in result["decision_reason_codes"]
 
 
+def test_lane_metadata_policy_disabled(monkeypatch):
+    monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_ENABLED", "0")
+
+    result = _derive_publication_lane_metadata(
+        cluster_id="CL-789",
+        article_count=4,
+        input_fingerprint="fedcba9876543210fedcba",
+        context_metrics={
+            "source_count": 4,
+            "unique_domain_count": 4,
+            "fact_quality_score": 0.90,
+        },
+    )
+
+    assert result["publication_lane"] == "developing_brief"
+    assert result["policy_enabled"] is False
+    assert result["decision_reason_codes"] == ["lane_policy_disabled"]
+
+
 def test_record_lane_metrics_updates_counters_and_share(monkeypatch):
     class _MetricSpy:
         def __init__(self):

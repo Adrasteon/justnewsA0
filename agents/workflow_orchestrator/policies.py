@@ -587,6 +587,7 @@ def _derive_publication_lane_metadata(
     input_fingerprint: str,
     context_metrics: dict[str, Any],
 ) -> dict[str, Any]:
+    policy_enabled = _env_bool("MULTI_SOURCE_LANE_POLICY_ENABLED", default=True)
     min_sources = max(_safe_int(os.environ.get("MULTI_SOURCE_MIN_SOURCE_COUNT"), 2), 1)
     min_unique_domains = max(
         _safe_int(os.environ.get("MULTI_SOURCE_MIN_UNIQUE_DOMAINS"), 2),
@@ -599,12 +600,15 @@ def _derive_publication_lane_metadata(
     fact_quality_score = max(min(_safe_float(context_metrics.get("fact_quality_score"), 0.5), 1.0), 0.0)
 
     reason_codes: list[str] = []
-    if article_count < 2:
-        reason_codes.append("single_article_cluster")
-    if source_count < min_sources:
-        reason_codes.append("insufficient_source_count")
-    if unique_domain_count < min_unique_domains:
-        reason_codes.append("insufficient_domain_diversity")
+    if not policy_enabled:
+        reason_codes.append("lane_policy_disabled")
+    else:
+        if article_count < 2:
+            reason_codes.append("single_article_cluster")
+        if source_count < min_sources:
+            reason_codes.append("insufficient_source_count")
+        if unique_domain_count < min_unique_domains:
+            reason_codes.append("insufficient_domain_diversity")
 
     publication_lane = "verified_story" if not reason_codes else "developing_brief"
     confidence_tier = _derive_confidence_tier(
@@ -621,6 +625,7 @@ def _derive_publication_lane_metadata(
         "provenance_trace_id": f"cluster:{cluster_id}:{input_fingerprint[:16]}",
         "decision_reason_codes": reason_codes or ["meets_multi_source_thresholds"],
         "policy_version": policy_version,
+        "policy_enabled": policy_enabled,
         "policy_decision_at": datetime.utcnow().isoformat() + "Z",
         "policy_thresholds": {
             "min_source_count": min_sources,

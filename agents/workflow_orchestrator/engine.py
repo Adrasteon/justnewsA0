@@ -272,6 +272,13 @@ class OrchestratorEngine:
         applied: dict[str, Any] = {}
         ignored: dict[str, Any] = {}
 
+        lane_policy_env_map = {
+            "orchestrator.lane_policy.enabled": "MULTI_SOURCE_LANE_POLICY_ENABLED",
+            "orchestrator.lane_policy.min_source_count": "MULTI_SOURCE_MIN_SOURCE_COUNT",
+            "orchestrator.lane_policy.min_unique_domains": "MULTI_SOURCE_MIN_UNIQUE_DOMAINS",
+            "orchestrator.lane_policy.version": "MULTI_SOURCE_LANE_POLICY_VERSION",
+        }
+
         for key, value in overrides.items():
             if not key.startswith("orchestrator."):
                 ignored[key] = value
@@ -291,6 +298,14 @@ class OrchestratorEngine:
                         target[part] = {}
                     target = target[part]
                 target[path_parts[-1]] = value
+
+                mapped_env = lane_policy_env_map.get(key)
+                if mapped_env:
+                    if isinstance(value, bool):
+                        os.environ[mapped_env] = "1" if value else "0"
+                    else:
+                        os.environ[mapped_env] = str(value)
+
                 applied[key] = value
             except Exception:
                 ignored[key] = value
