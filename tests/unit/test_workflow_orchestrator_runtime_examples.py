@@ -23,6 +23,7 @@ def test_lane_policy_runtime_examples_keys_present():
     patch = enable["patch"]
 
     assert "orchestrator.lane_policy.enabled" in patch
+    assert "orchestrator.lane_policy.min_article_count" in patch
     assert "orchestrator.lane_policy.min_source_count" in patch
     assert "orchestrator.lane_policy.min_unique_domains" in patch
     assert "orchestrator.lane_policy.version" in patch

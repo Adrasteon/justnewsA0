@@ -74,6 +74,14 @@ RUNTIME_KEY_REGISTRY: dict[str, dict[str, Any]] = {
         "owner": "workflow_orchestrator",
         "apply_mode": "next_tick",
     },
+    "orchestrator.lane_policy.min_article_count": {
+        "type": "int",
+        "min": 1,
+        "max": 10,
+        "mutability": "hot",
+        "owner": "workflow_orchestrator",
+        "apply_mode": "next_tick",
+    },
     "orchestrator.lane_policy.min_source_count": {
         "type": "int",
         "min": 1,
@@ -584,6 +592,7 @@ def get_lane_policy_runtime_examples() -> dict[str, Any]:
             "enable_dev_baseline": {
                 "patch": {
                     "orchestrator.lane_policy.enabled": True,
+                    "orchestrator.lane_policy.min_article_count": 2,
                     "orchestrator.lane_policy.min_source_count": 2,
                     "orchestrator.lane_policy.min_unique_domains": 2,
                     "orchestrator.lane_policy.version": "v1-dev",
@@ -602,6 +611,7 @@ def get_lane_policy_runtime_examples() -> dict[str, Any]:
             "canary_tighten_thresholds": {
                 "patch": {
                     "orchestrator.lane_policy.enabled": True,
+                    "orchestrator.lane_policy.min_article_count": 3,
                     "orchestrator.lane_policy.min_source_count": 3,
                     "orchestrator.lane_policy.min_unique_domains": 3,
                     "orchestrator.lane_policy.version": "v2-canary",
@@ -612,6 +622,7 @@ def get_lane_policy_runtime_examples() -> dict[str, Any]:
             "sparse_topic_relief": {
                 "patch": {
                     "orchestrator.lane_policy.enabled": True,
+                    "orchestrator.lane_policy.min_article_count": 1,
                     "orchestrator.lane_policy.min_source_count": 2,
                     "orchestrator.lane_policy.min_unique_domains": 1,
                     "orchestrator.lane_policy.version": "v2-sparse-topic",
