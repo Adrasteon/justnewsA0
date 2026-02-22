@@ -20,6 +20,10 @@
 
 - [Multi-Source Refactor Metrics Snapshot (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_METRICS_SNAPSHOT_2026-02-22_LOCAL.md)
 
+- [Multi-Source Refactor Observability Dashboard (Grafana JSON)](../grafana/multi-source-refactor-observability-dashboard.json)
+
+- `monitoring/alerts/multi_source_refactor_alerts.yml` — Alert rules for verified-share degradation and promotion-failure spikes
+
 - [Multi-Source Refactor Runtime Tuning Runbook (2026-02-22)](./MULTI_SOURCE_REFACTOR_RUNTIME_TUNING_RUNBOOK_2026-02-22.md)
 
 - [Multi-Source Refactor M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md)

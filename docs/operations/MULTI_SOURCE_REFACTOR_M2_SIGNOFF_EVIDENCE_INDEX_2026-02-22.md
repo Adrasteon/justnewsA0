@@ -27,7 +27,7 @@ Provide one canonical location for all artifacts required to close M2 exit crite
 | Rollback drill proof | Apply/rollback JSON + before/after `owner_overrides` | [Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) + [Rollback Drill Artifact Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_TEMPLATE_2026-02-22.md) + commit `89bb1e8` | Ops | In progress | Local harness artifact attached; add real dev run artifact for M2 closure |
 | Lane behavior reversion | Sample lane decision before/apply/rollback | [Rollback Drill Artifact (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) + commit `89bb1e8` (`test_runtime_rollback_sla_and_lane_revert`) | QA/Ops | In progress | Includes observed `developing_brief -> verified_story -> developing_brief` |
 | Provenance field completeness | Sample records with required publication fields | [Provenance Sample Evidence (Local, 2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_2026-02-22_LOCAL.md) + [Provenance Sample Evidence Template (2026-02-22)](./MULTI_SOURCE_REFACTOR_PROVENANCE_SAMPLE_EVIDENCE_TEMPLATE_2026-02-22.md) | Data/Eng | In progress | Local sample pass attached; add dev/staging export for M2 closure |
-| Dashboard + alert readiness | Panel URLs + alert rule IDs | `<add link>` | Ops | Pending | Verified share + promotion failure alerts |
+| Dashboard + alert readiness | Panel URLs + alert rule IDs | Dashboard: `docs/grafana/multi-source-refactor-observability-dashboard.json` (UID `justnews-multi-source-refactor`, panels `101,102,103,104,105`); Alerts: `monitoring/alerts/multi_source_refactor_alerts.yml` (`MultiSourceVerifiedShareLow`, `MultiSourcePromotionFailuresSpike`) | Ops | In progress | Definition-level links attached; deploy/import URLs and environment screenshots still required for final closure |
 | M2 sign-off summary | Review note with approvers and decision | `<add link>` | Product/Ops | Pending | Final go/no-go for M2 closure |
 
 ## 4) Minimum Artifact Bundle Checklist
@@ -37,7 +37,7 @@ Provide one canonical location for all artifacts required to close M2 exit crite
 - [x] Rollback drill payloads attached (local harness)
 - [x] Metrics snapshot attached (local harness)
 - [x] Provenance sample snapshot attached (local harness)
-- [ ] Dashboard/alert links attached
+- [x] Dashboard/alert links attached
 - [ ] Approver sign-off note attached
 
 ## 5) Last Updated
@@ -78,12 +78,12 @@ The following items require non-local artifacts to complete M2 sign-off:
 
 ### 7.2 Dashboard and Alert Evidence
 
-- Environment: `<dev|staging|canary>`
-- Dashboard URL(s): `<paste URL(s)>`
-- Panel ID(s): `<paste panel IDs>`
-- Alert rule ID(s): `<paste alert IDs>`
-- Screenshot/export link(s): `<paste artifact links>`
-- Notes: `<optional notes>`
+- Environment: `repo definition (pending dev/staging import)`
+- Dashboard URL(s): `docs/grafana/multi-source-refactor-observability-dashboard.json`
+- Panel ID(s): `101, 102, 103, 104, 105`
+- Alert rule ID(s): `MultiSourceVerifiedShareLow`, `MultiSourcePromotionFailuresSpike`
+- Screenshot/export link(s): `<pending after dashboard import>`
+- Notes: `Alert definitions stored at monitoring/alerts/multi_source_refactor_alerts.yml`
 
 ### 7.3 M2 Approver Sign-Off
 

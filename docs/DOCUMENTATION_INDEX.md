@@ -100,6 +100,10 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Multi-Source Refactor Metrics Snapshot (Local, 2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_METRICS_SNAPSHOT_2026-02-22_LOCAL.md) — Seeded `/metrics` evidence confirming required lane observability series
 
+- [Multi-Source Refactor Observability Dashboard (Grafana JSON)](./grafana/multi-source-refactor-observability-dashboard.json) — Panel definitions for verified share, lane totals, promotion failures, and conversions
+
+- [Multi-Source Refactor Alert Rules](../monitoring/alerts/multi_source_refactor_alerts.yml) — Alert IDs for verified-share degradation and promotion-failure spikes
+
 - [Multi-Source Refactor Rollback Drill Artifact Template (2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_TEMPLATE_2026-02-22.md) — Standardized capture format for apply/rollback payloads, latency, and reversion proof
 
 - [Multi-Source Refactor Rollback Drill Artifact (Local, 2026-02-22)](./operations/MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_2026-02-22_LOCAL.md) — Seeded rollback evidence from local control-plane harness run

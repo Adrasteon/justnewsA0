@@ -1,0 +1,24 @@
+groups:
+  - name: multi_source_refactor.rules
+    rules:
+      - alert: MultiSourceVerifiedShareLow
+        expr: max(justnews_custom_gauge_published_verified_share{agent="workflow_orchestrator"}) < 0.30
+        for: 30m
+        labels:
+          severity: warning
+          service: workflow_orchestrator
+          refactor: multi_source_integrity
+        annotations:
+          summary: "Multi-source verified share below threshold"
+          description: "published_verified_share has remained below 0.30 for 30 minutes. Review lane thresholds and source diversity quality."
+
+      - alert: MultiSourcePromotionFailuresSpike
+        expr: sum(rate({__name__=~"justnews_custom_counter_cluster_promotion_failures_.*_total",agent="workflow_orchestrator"}[15m])) > 0.20
+        for: 15m
+        labels:
+          severity: warning
+          service: workflow_orchestrator
+          refactor: multi_source_integrity
+        annotations:
+          summary: "Cluster promotion failures elevated"
+          description: "Promotion failure rate exceeded 0.20/s over 15m window. Inspect reason-coded counters and recent policy changes."
