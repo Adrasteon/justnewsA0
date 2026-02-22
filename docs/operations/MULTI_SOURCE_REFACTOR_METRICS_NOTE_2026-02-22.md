@@ -78,6 +78,37 @@ sum(rate(justnews_custom_counter_singleton_to_verified_conversion_total_total{ag
 - [ ] Failure counters increase only for `developing_brief` decisions.
 - [ ] Conversion counter increments only on `developing_brief -> verified_story` transitions.
 
+## 3.1) Automated Contract Coverage (Current)
+
+The `/metrics` contract and control-plane behavior are now covered by targeted tests:
+
+- `tests/unit/test_workflow_orchestrator_runtime_control_plane_endpoints.py`
+  - `test_metrics_endpoint_exposes_lane_observability_contract`
+  - verifies required metric series are present after lane/failure/conversion emission.
+- `tests/unit/test_workflow_orchestrator_lane_metadata.py`
+  - verifies lane metric emission semantics and reason-coded failure counters.
+
+Focused local validation command:
+
+```bash
+pytest -q \
+  tests/unit/test_workflow_orchestrator_runtime_control_plane_endpoints.py \
+  tests/unit/test_workflow_orchestrator_runtime_examples.py \
+  tests/unit/test_workflow_orchestrator_runtime_examples_endpoint.py \
+  tests/unit/test_workflow_orchestrator_runtime_overrides.py \
+  tests/unit/test_workflow_orchestrator_lane_metadata.py
+```
+
+Latest focused result in this refactor stream: `22 passed` (then `24 passed` after rollback env-clearing fix additions).
+
+## 3.2) CI Enforcement
+
+Runtime control-plane + metrics contract coverage is enforced in CI workflow:
+
+- `.github/workflows/workflow-orchestrator-control-plane-tests.yml`
+
+This workflow runs on `push` and `pull_request` for orchestrator/runtime test paths and executes the focused suite including the metrics endpoint contract test.
+
 ## 4) Alert Starter Thresholds (Initial)
 
 - **Low verified share**: `published_verified_share < 0.30` for 30m
