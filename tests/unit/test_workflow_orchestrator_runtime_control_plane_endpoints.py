@@ -1,9 +1,12 @@
 import importlib
+import os
 import sys
+import time
 import types
 
 from fastapi.testclient import TestClient
 from agents.workflow_orchestrator.policies import (
+    _derive_publication_lane_metadata,
     _record_cluster_promotion_failure_metrics,
     _record_lane_metrics,
     _record_singleton_to_verified_conversion,
@@ -375,3 +378,114 @@ def test_metrics_endpoint_exposes_lane_observability_contract(monkeypatch, tmp_p
     assert "justnews_custom_gauge_median_unique_domains_per_story" in body
     assert "justnews_custom_counter_cluster_promotion_failures_insufficient_source_count" in body
     assert "justnews_custom_counter_singleton_to_verified_conversion_total" in body
+
+
+def test_runtime_rollback_sla_and_lane_revert(monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    main_mod = _load_main_with_stubs(monkeypatch)
+
+    monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_ENABLED", "1")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_ARTICLE_COUNT", "2")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_SOURCE_COUNT", "2")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_UNIQUE_DOMAINS", "2")
+    monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON", "")
+
+    lane_env_map = {
+        "orchestrator.lane_policy.enabled": "MULTI_SOURCE_LANE_POLICY_ENABLED",
+        "orchestrator.lane_policy.min_article_count": "MULTI_SOURCE_MIN_ARTICLE_COUNT",
+        "orchestrator.lane_policy.min_source_count": "MULTI_SOURCE_MIN_SOURCE_COUNT",
+        "orchestrator.lane_policy.min_unique_domains": "MULTI_SOURCE_MIN_UNIQUE_DOMAINS",
+        "orchestrator.lane_policy.version": "MULTI_SOURCE_LANE_POLICY_VERSION",
+        "orchestrator.lane_policy.topic_overrides_json": "MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON",
+    }
+
+    def _apply_runtime_overrides(overrides):
+        applied = {}
+        ignored = {}
+        for runtime_key, env_key in lane_env_map.items():
+            if runtime_key not in overrides:
+                os.environ.pop(env_key, None)
+        for key, value in overrides.items():
+            env_key = lane_env_map.get(key)
+            if env_key is None:
+                ignored[key] = value
+                continue
+            if isinstance(value, bool):
+                os.environ[env_key] = "1" if value else "0"
+            else:
+                os.environ[env_key] = str(value)
+            applied[key] = value
+        return {"applied": applied, "ignored": ignored}
+
+    main_mod.engine.apply_runtime_overrides = _apply_runtime_overrides
+
+    before = _derive_publication_lane_metadata(
+        cluster_id="CL-SLA-1",
+        article_count=1,
+        input_fingerprint="abcdef0123456789",
+        context_metrics={
+            "source_count": 1,
+            "unique_domain_count": 1,
+            "fact_quality_score": 0.7,
+        },
+        urgency_class="breaking",
+    )
+    assert before["publication_lane"] == "developing_brief"
+
+    with TestClient(main_mod.app) as client:
+        apply_start = time.monotonic()
+        apply_resp = client.patch(
+            "/runtime-config",
+            json={
+                "patch": {
+                    "orchestrator.lane_policy.enabled": True,
+                    "orchestrator.lane_policy.topic_overrides_json": '{"breaking":{"min_article_count":1,"min_source_count":1,"min_unique_domains":1}}',
+                },
+                "reason": "sla apply",
+                "actor": "test",
+            },
+        )
+        apply_duration_sec = time.monotonic() - apply_start
+        assert apply_resp.status_code == 200
+        assert apply_duration_sec <= 3.0
+        apply_payload = apply_resp.json()
+        assert apply_payload["status"] == "ok"
+
+        after_apply = _derive_publication_lane_metadata(
+            cluster_id="CL-SLA-1",
+            article_count=1,
+            input_fingerprint="abcdef0123456789",
+            context_metrics={
+                "source_count": 1,
+                "unique_domain_count": 1,
+                "fact_quality_score": 0.7,
+            },
+            urgency_class="breaking",
+        )
+        assert after_apply["publication_lane"] == "verified_story"
+
+        rollback_start = time.monotonic()
+        rollback_resp = client.post(
+            "/runtime-config/rollback",
+            json={
+                "target_version": 0,
+                "reason": "sla rollback",
+                "actor": "test",
+            },
+        )
+        rollback_duration_sec = time.monotonic() - rollback_start
+        assert rollback_resp.status_code == 200
+        assert rollback_duration_sec <= 3.0
+
+    after_rollback = _derive_publication_lane_metadata(
+        cluster_id="CL-SLA-1",
+        article_count=1,
+        input_fingerprint="abcdef0123456789",
+        context_metrics={
+            "source_count": 1,
+            "unique_domain_count": 1,
+            "fact_quality_score": 0.7,
+        },
+        urgency_class="breaking",
+    )
+    assert after_rollback["publication_lane"] == "developing_brief"

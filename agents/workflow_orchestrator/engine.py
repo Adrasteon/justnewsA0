@@ -281,6 +281,10 @@ class OrchestratorEngine:
             "orchestrator.lane_policy.topic_overrides_json": "MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON",
         }
 
+        for runtime_key, env_key in lane_policy_env_map.items():
+            if runtime_key not in overrides:
+                os.environ.pop(env_key, None)
+
         for key, value in overrides.items():
             if not key.startswith("orchestrator."):
                 ignored[key] = value

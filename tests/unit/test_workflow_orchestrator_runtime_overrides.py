@@ -54,6 +54,22 @@ def test_apply_runtime_overrides_ignores_non_orchestrator(monkeypatch):
     assert result["ignored"]["fact_checker.search.max_queries"] == 8
 
 
+def test_apply_runtime_overrides_clears_removed_lane_keys(monkeypatch):
+    monkeypatch.setattr(OrchestratorEngine, "_init_policies", lambda self: None)
+    monkeypatch.setattr(OrchestratorEngine, "_load_config", lambda self: setattr(self, "config", {}))
+    engine = OrchestratorEngine()
+
+    monkeypatch.setenv(
+        "MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON",
+        '{"breaking":{"min_article_count":1}}',
+    )
+
+    result = engine.apply_runtime_overrides({"orchestrator.lane_policy.enabled": True})
+
+    assert "orchestrator.lane_policy.enabled" in result["applied"]
+    assert "MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON" not in os.environ
+
+
 def test_runtime_override_changes_lane_decision(monkeypatch):
     monkeypatch.setattr(OrchestratorEngine, "_init_policies", lambda self: None)
     monkeypatch.setattr(OrchestratorEngine, "_load_config", lambda self: setattr(self, "config", {}))
