@@ -26,6 +26,22 @@ export ORCH_URL="http://<orchestrator-host>:8023"
 export ENV_TAG="<dev|staging>"
 ```
 
+Optional helper script (recommended):
+
+```bash
+python scripts/ops/capture_refactor_parity_artifacts.py \
+   --orch-url "$ORCH_URL" \
+   --env-tag "$ENV_TAG" \
+   --dashboard-url "https://<grafana-host>/d/<uid>/multi-source-refactor" \
+   --panel-id 101 --panel-id 102 --panel-id 103 --panel-id 104 --panel-id 105 \
+   --alert-id "multi_source_refactor_low_verified_share" \
+   --alert-id "multi_source_refactor_cluster_promotion_failures" \
+   --screenshot-link "https://<artifact-store>/<env>/dashboard-overview.png"
+```
+
+The helper writes JSON + Markdown artifacts to:
+- `logs/operations/refactor_parity/`
+
 ## 3) Dashboard/Alert Parity Capture
 
 1. Import dashboard definition from:
@@ -40,6 +56,10 @@ Evidence fields to record:
 
 ## 4) Metrics Snapshot (Dev/Staging)
 
+Preferred (helper-generated): use the `.json`/`.md` files under `logs/operations/refactor_parity/`.
+
+Manual fallback:
+
 ```bash
 curl -sS "$ORCH_URL/metrics" | grep -E "published_verified_share|published_total_|cluster_promotion_failures|singleton_to_verified_conversion" > "metrics_snapshot_${ENV_TAG}.txt"
 ```
@@ -47,6 +67,16 @@ curl -sS "$ORCH_URL/metrics" | grep -E "published_verified_share|published_total
 Attach output file and timestamp.
 
 ## 5) Rollback Drill (Dev/Staging)
+
+Preferred (helper-assisted): rerun the helper with `--run-rollback-drill` after confirming target rollback version:
+
+```bash
+python scripts/ops/capture_refactor_parity_artifacts.py \
+   --orch-url "$ORCH_URL" \
+   --env-tag "$ENV_TAG" \
+   --run-rollback-drill \
+   --rollback-target-version <known-good-version>
+```
 
 Use template:
 - `docs/operations/MULTI_SOURCE_REFACTOR_ROLLBACK_DRILL_ARTIFACT_TEMPLATE_2026-02-22.md`

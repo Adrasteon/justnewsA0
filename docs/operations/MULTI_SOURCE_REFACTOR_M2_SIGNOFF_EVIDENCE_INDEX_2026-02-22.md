@@ -64,6 +64,7 @@ The following items require non-local artifacts to complete M2 sign-off:
   - Dev/staging `/metrics` snapshot link.
   - Dev/staging rollback drill artifact link.
   - Dev/staging provenance sample export link.
+  - Optional automation helper: `scripts/ops/capture_refactor_parity_artifacts.py`.
   - Execute collection using [Dev/Staging Parity Runsheet (2026-02-22)](./MULTI_SOURCE_REFACTOR_DEV_STAGING_PARITY_RUNSHEET_2026-02-22.md).
 
 ## 7) Fill-In Blocks (External Artifacts)
@@ -97,3 +98,24 @@ The following items require non-local artifacts to complete M2 sign-off:
 - Decision: `go (current purposes)`
 - Timestamp (UTC): `2026-02-22`
 - Conditions/follow-ups: `Complete dev/staging parity artifacts as post-approval follow-up.`
+
+### 7.4 Automated Parity Capture (Dry Run)
+
+- Environment: `dev`
+- Orchestrator URL: `http://localhost:8023`
+- Capture helper: `scripts/ops/capture_refactor_parity_artifacts.py`
+- JSON artifact: [Parity Capture JSON (Dev, 2026-02-22)](../../logs/operations/refactor_parity/multi_source_refactor_dev_20260222T172207Z.json)
+- Markdown artifact: [Parity Capture Report (Dev, 2026-02-22)](../../logs/operations/refactor_parity/multi_source_refactor_dev_20260222T172207Z.md)
+- Notes: `/runtime-config` snapshot succeeded; `/metrics` returned `404` on this endpoint, so metric evidence extraction is pending environment with metrics exposure.
+
+### 7.5 Automated Parity Capture (Staging-Tagged Run)
+
+- Environment: `staging`
+- Orchestrator URL: `http://localhost:8023` (fallback from `ORCH_URL`; `STAGING_ORCH_URL` not set)
+- Capture helper: `scripts/ops/capture_refactor_parity_artifacts.py`
+- JSON artifact: [Parity Capture JSON (Staging, 2026-02-22)](../../logs/operations/refactor_parity/multi_source_refactor_staging_20260222T172315Z.json)
+- Markdown artifact: [Parity Capture Report (Staging, 2026-02-22)](../../logs/operations/refactor_parity/multi_source_refactor_staging_20260222T172315Z.md)
+- Dashboard metadata: `docs/grafana/multi-source-refactor-observability-dashboard.json`
+- Panel IDs: `101, 102, 103, 104, 105`
+- Alert IDs: `MultiSourceVerifiedShareLow`, `MultiSourcePromotionFailuresSpike`
+- Notes: `/runtime-config` snapshot succeeded; `/metrics` returned `404` on this endpoint. Re-run against true staging endpoint once `STAGING_ORCH_URL` is available and metrics exposure is confirmed.

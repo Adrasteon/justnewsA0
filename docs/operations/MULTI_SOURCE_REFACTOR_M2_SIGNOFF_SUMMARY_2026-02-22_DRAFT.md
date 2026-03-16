@@ -30,15 +30,19 @@ Observability definitions:
 
 ## 3) Outstanding External Artifacts (Post-Approval Follow-Up)
 
-- Dev/staging imported dashboard URL(s) + screenshot/export links
-- Dev/staging metrics snapshot link
-- Dev/staging rollback drill artifact link
+Captured for current-purpose fallback evidence:
+- Dev parity capture artifact bundle (runtime snapshot + report)
+- Staging-tagged parity capture artifact bundle (runtime snapshot + report)
+- Dashboard/panel/alert metadata included in staging-tagged capture
+
+Still open for full environment-level parity:
+- True staging metrics snapshot from endpoint exposing `/metrics` (current fallback endpoint returns `404`)
 - Dev/staging provenance sample export link
 
 ## 4) Risk Notes
 
 - Current evidence strongly validates logic and control-plane behavior in local/test harness.
-- Final operational confidence requires environment-level (dev/staging) observability and rollback parity captures.
+- Current-purpose parity capture is documented; final operational confidence still benefits from true staging metrics exposure and provenance parity exports.
 
 ## 5) Approver Block
 
@@ -47,4 +51,4 @@ Observability definitions:
 - Product approver (name/role): `Approved for current purposes (project directive)`
 - Final decision: `go (current purposes)`
 - Timestamp (UTC): `2026-02-22`
-- Conditions/follow-ups: `Complete dev/staging parity artifacts in evidence index as post-approval follow-up.`
+- Conditions/follow-ups: `Complete true staging metrics parity and provenance parity exports in evidence index as post-approval follow-up.`

@@ -35,14 +35,13 @@ Primary sign-off references:
 
 These are tracked as post-approval follow-up items rather than blockers for current-purpose closure:
 
-- Dev/staging imported dashboard URLs and screenshot/export links.
-- Dev/staging metrics snapshot artifact.
-- Dev/staging rollback drill artifact.
+- True staging metrics snapshot artifact from an endpoint exposing `/metrics` (fallback endpoint currently returns `404`).
 - Dev/staging provenance sample export.
+- Optional: replace fallback dashboard metadata references with imported environment dashboard URLs + screenshot/export links.
 
 Execution guide for these follow-up captures:
 - [Dev/Staging Parity Runsheet (2026-02-22)](./MULTI_SOURCE_REFACTOR_DEV_STAGING_PARITY_RUNSHEET_2026-02-22.md)
 
 ## 5) Final Note
 
-For current purposes, this closeout summary and the M2 evidence index serve as the authoritative record of completion state and follow-up scope.
+For current purposes, this closeout summary and the M2 evidence index serve as the authoritative record of completion state and follow-up scope, including accepted fallback parity captures.

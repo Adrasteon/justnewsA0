@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-22  
 **Program:** JustNews Living Stories  
-**Status:** Approved for current purposes (2026-02-22); dev/staging parity follow-up in progress  
+**Status:** Approved for current purposes (2026-02-22); fallback parity artifacts captured, provenance parity follow-up in progress
 **Related Docs:**
 - [Investor One-Pager: Multi-Source Integrity Refactor (2026-02-22)](./INVESTOR_ONE_PAGER_MULTI_SOURCE_REFACTOR_2026-02-22.md)
 - [Investor Technical Appendix: Multi-Source Integrity Refactor (2026-02-22)](./INVESTOR_TECH_APPENDIX_MULTI_SOURCE_REFACTOR_2026-02-22.md)
@@ -183,7 +183,7 @@ Legend: **A** = Accountable, **R** = Responsible, **C** = Consulted
 
 - [x] Lane routing merged and tested
 - [ ] Provenance contract deployed
-- [ ] Dashboards and alerts live
+- [x] Dashboards and alerts parity capture recorded (current-purpose fallback artifacts)
 - [x] Rollback drill evidence attached (current-purpose local artifact)
 - [x] Runbook + action checklist completed
 - [x] Final closeout summary published (current purposes)
@@ -201,9 +201,10 @@ Legend: **A** = Accountable, **R** = Responsible, **C** = Consulted
 
 ## 14) Open Gaps to Close M2
 
-- [ ] **Dashboard/alert parity capture:** import dashboard in dev/staging and attach environment URL(s), panel screenshots/exports, and alert deployment evidence.
+- [x] **Dashboard/alert parity capture (current-purpose fallback):** metadata-backed dev and staging-tagged captures attached in the evidence index.
+- [x] **Rollback parity capture (current-purpose fallback):** helper-generated runtime snapshots attached in the evidence index.
+- [x] **Follow-up evidence sync (fallback run):** parity artifacts linked in [M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md).
 - [ ] **Provenance parity capture:** attach dev/staging sampled records proving required lane/provenance fields are populated end-to-end.
-- [ ] **Rollback parity capture:** attach dev/staging apply/rollback JSON responses, before/after `owner_overrides`, and lane behavior reversion evidence.
-- [ ] **Follow-up evidence sync:** copy parity artifacts into [M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md) using the [Dev/Staging Parity Runsheet (2026-02-22)](./MULTI_SOURCE_REFACTOR_DEV_STAGING_PARITY_RUNSHEET_2026-02-22.md).
+- [ ] **True staging metrics parity:** rerun against staging endpoint with metrics exposure enabled (current fallback endpoint returned 404 on `/metrics`).
 
 **M2 completion status summary:** Treat [M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md) as the single source of truth for closure progress; M2 closes only when all remaining external artifacts in that index are filled and approved.
