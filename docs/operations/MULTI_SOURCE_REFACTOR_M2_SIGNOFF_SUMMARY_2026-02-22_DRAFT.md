@@ -35,9 +35,19 @@ Captured for current-purpose fallback evidence:
 - Staging-tagged parity capture artifact bundle (runtime snapshot + report)
 - Dashboard/panel/alert metadata included in staging-tagged capture
 
+Latest capture refresh:
+- Dev parity capture (2026-03-16): [Parity Capture Report (Dev, 2026-03-16)](../../logs/operations/refactor_parity/multi_source_refactor_dev_20260316T123130Z.md)
+- Staging-tagged parity capture (2026-03-16): [Parity Capture Report (Staging, 2026-03-16)](../../logs/operations/refactor_parity/multi_source_refactor_staging_20260316T123152Z.md)
+- Current local endpoint result: `/metrics` status `200` for both captures.
+
+Provenance capture refresh:
+- Dev provenance capture (2026-03-16): [Parity Provenance Report (Dev, 2026-03-16)](../../logs/operations/refactor_parity/multi_source_refactor_provenance_dev_20260316T123606Z.md)
+- Staging-tagged provenance capture (2026-03-16): [Parity Provenance Report (Staging-tagged, 2026-03-16)](../../logs/operations/refactor_parity/multi_source_refactor_provenance_staging_20260316T123625Z.md)
+- Current result: `10/10` required provenance fields complete in both captures.
+
 Still open for full environment-level parity:
-- True staging metrics snapshot from endpoint exposing `/metrics` (current fallback endpoint returns `404`)
-- Dev/staging provenance sample export link
+- True staging metrics snapshot from actual staging orchestrator endpoint (fallback captures currently target local orchestrator)
+- True staging provenance sample export from actual staging data plane
 
 ## 4) Risk Notes
 
