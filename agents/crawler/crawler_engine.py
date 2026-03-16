@@ -75,6 +75,64 @@ except (TypeError, ValueError):
     PAYWALL_SKIP_ACTIVATION_THRESHOLD = 3
 
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _load_testing_seed_priority_domains() -> list[str]:
+    """Load testing-only priority domains from a JSON seed file.
+
+    This is intended for prototype/testing phases only and should remain opt-in.
+    """
+    if not _env_bool("UNIFIED_CRAWLER_TEST_SEED_ENABLED", default=False):
+        return []
+
+    seed_path = str(
+        os.environ.get(
+            "UNIFIED_CRAWLER_TEST_SEED_FILE",
+            "/app/config/lane1_sources_seed_phase.json",
+        )
+    ).strip()
+    if not seed_path:
+        return []
+
+    try:
+        path_obj = Path(seed_path)
+        if not path_obj.exists():
+            logger.warning("Testing seed file not found: %s", seed_path)
+            return []
+
+        payload = json.loads(path_obj.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            return []
+        sources = payload.get("sources")
+        if not isinstance(sources, list):
+            return []
+
+        domains: list[str] = []
+        for source in sources:
+            if not isinstance(source, dict):
+                continue
+            domain = str(source.get("domain") or "").strip().lower()
+            if domain:
+                domains.append(domain)
+
+        deduped = list(dict.fromkeys(domains))
+        if deduped:
+            logger.info(
+                "Using testing-only seed priority domains from %s: %s",
+                seed_path,
+                ",".join(deduped),
+            )
+        return deduped
+    except Exception as exc:
+        logger.warning("Failed loading testing seed file %s: %s", seed_path, exc)
+        return []
+
+
 def call_analyst_tool(tool: str, *args, **kwargs) -> Any:
     payload = {"agent": "analyst", "tool": tool, "args": list(args), "kwargs": kwargs}
     resp = requests.post(f"{MCP_BUS_URL}/call", json=payload)
@@ -1558,7 +1616,10 @@ class CrawlerEngine:
                 except (TypeError, ValueError):
                     constrained_backfill_max_zero_streak = 4
 
-                priority_domains = [
+                # Testing-only override path:
+                # If enabled, pull domain priorities from the lane1 seed JSON.
+                testing_seed_domains = _load_testing_seed_priority_domains()
+                env_priority_domains = [
                     d.strip().lower()
                     for d in os.environ.get(
                         "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_PRIORITY_DOMAINS",
@@ -1566,6 +1627,7 @@ class CrawlerEngine:
                     ).split(",")
                     if d.strip()
                 ]
+                priority_domains = testing_seed_domains or env_priority_domains
                 priority_rank = {
                     domain: (len(priority_domains) - idx)
                     for idx, domain in enumerate(priority_domains)

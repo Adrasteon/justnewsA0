@@ -1,0 +1,50 @@
+{
+  "phase": "current_testing",
+  "testing_only": true,
+  "warning": "TESTING PURPOSES ONLY - not a production source policy",
+  "lane": "lane1_verified_story",
+  "description": "Seed sources for focused Lane 1 prototype testing",
+  "selection_criteria": {
+    "count": 4,
+    "include": [
+      "bbc.com/news",
+      "globally distributed",
+      "generally reputable",
+      "generally non-paywalled"
+    ]
+  },
+  "sources": [
+    {
+      "name": "BBC News",
+      "domain": "bbc.com",
+      "url": "https://www.bbc.com/news",
+      "region": "Europe (UK)",
+      "paywall": false,
+      "reputation": "high"
+    },
+    {
+      "name": "Reuters",
+      "domain": "reuters.com",
+      "url": "https://www.reuters.com/world/",
+      "region": "Global wire (HQ UK)",
+      "paywall": false,
+      "reputation": "high"
+    },
+    {
+      "name": "Al Jazeera English",
+      "domain": "aljazeera.com",
+      "url": "https://www.aljazeera.com/",
+      "region": "Middle East (Qatar)",
+      "paywall": false,
+      "reputation": "high"
+    },
+    {
+      "name": "NHK World-Japan",
+      "domain": "nhk.or.jp",
+      "url": "https://www3.nhk.or.jp/nhkworld/en/news/",
+      "region": "Asia (Japan)",
+      "paywall": false,
+      "reputation": "high"
+    }
+  ]
+}
