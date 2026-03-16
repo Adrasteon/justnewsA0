@@ -74,6 +74,18 @@ RUNTIME_KEY_REGISTRY: dict[str, dict[str, Any]] = {
         "owner": "workflow_orchestrator",
         "apply_mode": "next_tick",
     },
+    "orchestrator.lane_policy.lane1_enabled": {
+        "type": "bool",
+        "mutability": "hot",
+        "owner": "workflow_orchestrator",
+        "apply_mode": "next_tick",
+    },
+    "orchestrator.lane_policy.lane2_enabled": {
+        "type": "bool",
+        "mutability": "hot",
+        "owner": "workflow_orchestrator",
+        "apply_mode": "next_tick",
+    },
     "orchestrator.lane_policy.min_article_count": {
         "type": "int",
         "min": 1,
@@ -611,12 +623,34 @@ def get_lane_policy_runtime_examples() -> dict[str, Any]:
             "canary_tighten_thresholds": {
                 "patch": {
                     "orchestrator.lane_policy.enabled": True,
+                    "orchestrator.lane_policy.lane1_enabled": True,
+                    "orchestrator.lane_policy.lane2_enabled": True,
                     "orchestrator.lane_policy.min_article_count": 3,
                     "orchestrator.lane_policy.min_source_count": 3,
                     "orchestrator.lane_policy.min_unique_domains": 3,
                     "orchestrator.lane_policy.version": "v2-canary",
                 },
                 "reason": "canary threshold increase",
+                "actor": "ops",
+            },
+            "focus_lane1_verified_only": {
+                "patch": {
+                    "orchestrator.lane_policy.enabled": True,
+                    "orchestrator.lane_policy.lane1_enabled": True,
+                    "orchestrator.lane_policy.lane2_enabled": False,
+                    "orchestrator.lane_policy.version": "v-focus-lane1",
+                },
+                "reason": "prototype focus on lane1 only",
+                "actor": "ops",
+            },
+            "focus_lane2_developing_only": {
+                "patch": {
+                    "orchestrator.lane_policy.enabled": True,
+                    "orchestrator.lane_policy.lane1_enabled": False,
+                    "orchestrator.lane_policy.lane2_enabled": True,
+                    "orchestrator.lane_policy.version": "v-focus-lane2",
+                },
+                "reason": "prototype focus on lane2 only",
                 "actor": "ops",
             },
             "sparse_topic_relief": {

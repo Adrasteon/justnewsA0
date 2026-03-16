@@ -100,6 +100,50 @@ def test_lane_metadata_topic_override_applies(monkeypatch):
     assert result["policy_thresholds"]["min_unique_domains"] == 1
 
 
+def test_lane_metadata_lane1_disabled_bounces_verified_to_lane2(monkeypatch):
+    monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_ENABLED", "1")
+    monkeypatch.setenv("MULTI_SOURCE_LANE1_ENABLED", "0")
+    monkeypatch.setenv("MULTI_SOURCE_LANE2_ENABLED", "1")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_SOURCE_COUNT", "2")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_UNIQUE_DOMAINS", "2")
+
+    result = _derive_publication_lane_metadata(
+        cluster_id="CL-L1OFF",
+        article_count=4,
+        input_fingerprint="1234abcdef",
+        context_metrics={
+            "source_count": 4,
+            "unique_domain_count": 4,
+            "fact_quality_score": 0.9,
+        },
+    )
+
+    assert result["publication_lane"] == "developing_brief"
+    assert "lane1_disabled_bounced_to_lane2" in result["decision_reason_codes"]
+
+
+def test_lane_metadata_lane2_disabled_bounces_developing_to_lane1(monkeypatch):
+    monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_ENABLED", "1")
+    monkeypatch.setenv("MULTI_SOURCE_LANE1_ENABLED", "1")
+    monkeypatch.setenv("MULTI_SOURCE_LANE2_ENABLED", "0")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_SOURCE_COUNT", "2")
+    monkeypatch.setenv("MULTI_SOURCE_MIN_UNIQUE_DOMAINS", "2")
+
+    result = _derive_publication_lane_metadata(
+        cluster_id="CL-L2OFF",
+        article_count=1,
+        input_fingerprint="5678abcdef",
+        context_metrics={
+            "source_count": 1,
+            "unique_domain_count": 1,
+            "fact_quality_score": 0.5,
+        },
+    )
+
+    assert result["publication_lane"] == "verified_story"
+    assert "lane2_disabled_bounced_to_lane1" in result["decision_reason_codes"]
+
+
 def test_record_lane_metrics_updates_counters_and_share(monkeypatch):
     class _MetricSpy:
         def __init__(self):

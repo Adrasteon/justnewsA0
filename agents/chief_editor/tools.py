@@ -107,6 +107,41 @@ def _resolve_publication_summary(body: str, source_summary: str, title: str) -> 
     return "Developing story updates are being verified."
 
 
+def _apply_lane_caveat(
+    source: dict[str, Any],
+    title: str,
+    summary: str,
+    body: str,
+) -> tuple[str, str, str]:
+    lane = ""
+    try:
+        raw_meta = source.get("synth_metadata")
+        meta = (
+            json.loads(raw_meta)
+            if isinstance(raw_meta, str) and raw_meta.strip()
+            else (raw_meta if isinstance(raw_meta, dict) else {})
+        )
+        publication_meta = meta.get("publication") if isinstance(meta, dict) else {}
+        if isinstance(publication_meta, dict):
+            lane = str(publication_meta.get("publication_lane") or "").strip().lower()
+    except Exception:
+        lane = ""
+
+    if lane != "developing_brief":
+        return title, summary, body
+
+    caveat_title_prefix = "Developing: "
+    caveat_summary_prefix = "This is a developing brief and details may change as new reporting is verified. "
+
+    next_title = title if title.lower().startswith("developing:") else f"{caveat_title_prefix}{title}"
+    next_summary = (
+        summary
+        if caveat_summary_prefix.lower() in summary.lower()
+        else f"{caveat_summary_prefix}{summary}".strip()
+    )
+    return next_title, next_summary, body
+
+
 def _is_collapsed_publication_body(body: str, summary: str) -> bool:
     normalized_body = re.sub(r"\s+", " ", (body or "")).strip().lower()
     normalized_summary = re.sub(r"\s+", " ", (summary or "")).strip().lower()
@@ -895,6 +930,7 @@ def publish_story(story_id: str) -> dict[str, Any]:
                     )
 
                 title = _derive_publication_title(title, summary, body)
+                title, summary, body = _apply_lane_caveat(source, title, summary, body)
 
                 headline_input = "\n".join(
                     part

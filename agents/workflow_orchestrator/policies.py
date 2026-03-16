@@ -176,6 +176,15 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _env_bool_first(names: list[str], default: bool = False) -> bool:
+    for name in names:
+        raw_value = os.environ.get(name)
+        if raw_value is None:
+            continue
+        return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
+    return default
+
+
 def _safe_datetime(raw_value: Any) -> datetime | None:
     if raw_value is None:
         return None
@@ -589,6 +598,14 @@ def _derive_publication_lane_metadata(
     urgency_class: str | None = None,
 ) -> dict[str, Any]:
     policy_enabled = _env_bool("MULTI_SOURCE_LANE_POLICY_ENABLED", default=True)
+    lane_verified_enabled = _env_bool_first(
+        ["MULTI_SOURCE_LANE1_ENABLED", "MULTI_SOURCE_LANE_VERIFIED_ENABLED"],
+        default=True,
+    )
+    lane_developing_enabled = _env_bool_first(
+        ["MULTI_SOURCE_LANE2_ENABLED", "MULTI_SOURCE_LANE_DEVELOPING_ENABLED"],
+        default=True,
+    )
     min_article_count = max(_safe_int(os.environ.get("MULTI_SOURCE_MIN_ARTICLE_COUNT"), 2), 1)
     min_sources = max(_safe_int(os.environ.get("MULTI_SOURCE_MIN_SOURCE_COUNT"), 2), 1)
     min_unique_domains = max(_safe_int(os.environ.get("MULTI_SOURCE_MIN_UNIQUE_DOMAINS"), 2), 1)
@@ -629,6 +646,25 @@ def _derive_publication_lane_metadata(
             reason_codes.append("insufficient_domain_diversity")
 
     publication_lane = "verified_story" if not reason_codes else "developing_brief"
+
+    lane_bounce_reason: str | None = None
+    if publication_lane == "verified_story" and not lane_verified_enabled:
+        if lane_developing_enabled:
+            publication_lane = "developing_brief"
+            lane_bounce_reason = "lane1_disabled_bounced_to_lane2"
+        else:
+            publication_lane = "developing_brief"
+            lane_bounce_reason = "lane1_disabled_lane2_disabled_forced_fallback"
+    elif publication_lane == "developing_brief" and not lane_developing_enabled:
+        if lane_verified_enabled:
+            publication_lane = "verified_story"
+            lane_bounce_reason = "lane2_disabled_bounced_to_lane1"
+        else:
+            publication_lane = "developing_brief"
+            lane_bounce_reason = "lane1_disabled_lane2_disabled_forced_fallback"
+
+    if lane_bounce_reason:
+        reason_codes.append(lane_bounce_reason)
     confidence_tier = _derive_confidence_tier(
         source_count=source_count,
         unique_domain_count=unique_domain_count,
@@ -645,6 +681,8 @@ def _derive_publication_lane_metadata(
         "policy_version": policy_version,
         "policy_enabled": policy_enabled,
         "policy_override_source": override_source,
+        "lane1_enabled": lane_verified_enabled,
+        "lane2_enabled": lane_developing_enabled,
         "policy_decision_at": datetime.utcnow().isoformat() + "Z",
         "policy_thresholds": {
             "min_article_count": min_article_count,

@@ -85,6 +85,8 @@ def test_runtime_config_get_and_validate_endpoints(monkeypatch, tmp_path):
 
         assert payload["status"] == "ok"
         assert "orchestrator.lane_policy.min_article_count" in payload["registry"]
+        assert "orchestrator.lane_policy.lane1_enabled" in payload["registry"]
+        assert "orchestrator.lane_policy.lane2_enabled" in payload["registry"]
         assert payload["config_version"] == 0
         assert 0 in payload["available_versions"]
 
@@ -385,6 +387,8 @@ def test_runtime_rollback_sla_and_lane_revert(monkeypatch, tmp_path):
     main_mod = _load_main_with_stubs(monkeypatch)
 
     monkeypatch.setenv("MULTI_SOURCE_LANE_POLICY_ENABLED", "1")
+    monkeypatch.setenv("MULTI_SOURCE_LANE1_ENABLED", "1")
+    monkeypatch.setenv("MULTI_SOURCE_LANE2_ENABLED", "1")
     monkeypatch.setenv("MULTI_SOURCE_MIN_ARTICLE_COUNT", "2")
     monkeypatch.setenv("MULTI_SOURCE_MIN_SOURCE_COUNT", "2")
     monkeypatch.setenv("MULTI_SOURCE_MIN_UNIQUE_DOMAINS", "2")
@@ -392,6 +396,8 @@ def test_runtime_rollback_sla_and_lane_revert(monkeypatch, tmp_path):
 
     lane_env_map = {
         "orchestrator.lane_policy.enabled": "MULTI_SOURCE_LANE_POLICY_ENABLED",
+        "orchestrator.lane_policy.lane1_enabled": "MULTI_SOURCE_LANE1_ENABLED",
+        "orchestrator.lane_policy.lane2_enabled": "MULTI_SOURCE_LANE2_ENABLED",
         "orchestrator.lane_policy.min_article_count": "MULTI_SOURCE_MIN_ARTICLE_COUNT",
         "orchestrator.lane_policy.min_source_count": "MULTI_SOURCE_MIN_SOURCE_COUNT",
         "orchestrator.lane_policy.min_unique_domains": "MULTI_SOURCE_MIN_UNIQUE_DOMAINS",

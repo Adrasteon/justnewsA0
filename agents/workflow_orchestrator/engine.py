@@ -274,6 +274,8 @@ class OrchestratorEngine:
 
         lane_policy_env_map = {
             "orchestrator.lane_policy.enabled": "MULTI_SOURCE_LANE_POLICY_ENABLED",
+            "orchestrator.lane_policy.lane1_enabled": "MULTI_SOURCE_LANE1_ENABLED",
+            "orchestrator.lane_policy.lane2_enabled": "MULTI_SOURCE_LANE2_ENABLED",
             "orchestrator.lane_policy.min_article_count": "MULTI_SOURCE_MIN_ARTICLE_COUNT",
             "orchestrator.lane_policy.min_source_count": "MULTI_SOURCE_MIN_SOURCE_COUNT",
             "orchestrator.lane_policy.min_unique_domains": "MULTI_SOURCE_MIN_UNIQUE_DOMAINS",
