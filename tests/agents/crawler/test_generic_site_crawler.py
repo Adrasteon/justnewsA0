@@ -33,6 +33,18 @@ def make_site_config() -> SiteConfig:
     )
 
 
+def make_bbc_site_config() -> SiteConfig:
+    return SiteConfig(
+        {
+            "id": 7,
+            "name": "BBC News",
+            "domain": "bbc.co.uk",
+            "url": "https://feeds.bbci.co.uk/news/rss.xml",
+            "metadata": {"crawling_strategy": "generic"},
+        }
+    )
+
+
 def make_html() -> str:
     body = " ".join(["Informative" for _ in range(30)])
     return (
@@ -84,3 +96,59 @@ def test_build_article_respects_review_flags(monkeypatch, tmp_path):
     assert "word_count_below_threshold" in "".join(
         article["extraction_metadata"]["review_reasons"]
     )
+
+
+def test_extract_article_links_from_rss_feed_supports_bbc_domain_family():
+    crawler = GenericSiteCrawler(make_bbc_site_config(), enable_http_fetch=False)
+    rss_payload = """<?xml version='1.0' encoding='UTF-8'?>
+<rss version='2.0'>
+  <channel>
+    <item><link>https://www.bbc.com/news/articles/cn5w9w3x8d9o</link></item>
+    <item><link>https://www.bbc.co.uk/news/uk-12345678</link></item>
+    <item><link>https://www.bbc.com/news/articles/cn5w9w3x8d9o</link></item>
+  </channel>
+</rss>
+"""
+
+    links = crawler._extract_article_links(
+        rss_payload, "https://feeds.bbci.co.uk/news/rss.xml"
+    )
+
+    assert links == [
+        "https://www.bbc.com/news/articles/cn5w9w3x8d9o",
+        "https://www.bbc.co.uk/news/uk-12345678",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_crawl_site_rss_feed_ingests_individual_items(monkeypatch):
+    crawler = GenericSiteCrawler(make_bbc_site_config(), enable_http_fetch=True)
+
+    rss_payload = """<?xml version='1.0' encoding='UTF-8'?>
+<rss version='2.0'>
+  <channel>
+    <item><link>https://www.bbc.com/news/articles/cn5w9w3x8d9o</link></item>
+    <item><link>https://www.bbc.co.uk/news/uk-12345678</link></item>
+  </channel>
+</rss>
+"""
+
+    article_html = (
+        "<html><head><title>Item</title></head>"
+        "<body><p>" + ("content " * 200) + "</p></body></html>"
+    )
+
+    def fake_fetch(url: str) -> str:
+        if url.endswith("/rss.xml"):
+            return rss_payload
+        return article_html
+
+    monkeypatch.setattr(crawler, "_fetch_url", fake_fetch)
+
+    articles = await crawler.crawl_site(max_articles=10)
+
+    assert len(articles) == 2
+    assert {a["url"] for a in articles} == {
+        "https://www.bbc.com/news/articles/cn5w9w3x8d9o",
+        "https://www.bbc.co.uk/news/uk-12345678",
+    }

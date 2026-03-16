@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import xml.etree.ElementTree as ET
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import timezone, datetime
@@ -233,6 +234,12 @@ class GenericSiteCrawler:
         # Extract article links from homepage
         article_urls = self._extract_article_links(html, target_url)
         if not article_urls:
+            if self._looks_like_feed_document(html):
+                logger.warning(
+                    "Feed document returned no extractable article links for %s; skipping fallback blob ingestion",
+                    target_url,
+                )
+                return []
             logger.warning("No article links found on homepage %s", target_url)
             # Fallback: try to extract from homepage itself as a single article
             article = self._build_article(target_url, html)
@@ -482,6 +489,16 @@ class GenericSiteCrawler:
 
     def _extract_article_links(self, html: str, base_url: str) -> list[str]:
         """Extract article links from homepage HTML."""
+        if self._looks_like_feed_document(html):
+            feed_links = self._extract_feed_links(html, base_url)
+            if feed_links:
+                logger.debug(
+                    "Extracted %d feed item links from %s",
+                    len(feed_links),
+                    base_url,
+                )
+                return feed_links[:50]
+
         if lxml_html is None:
             logger.warning("lxml not available for link extraction")
             return []
@@ -526,6 +543,57 @@ class GenericSiteCrawler:
         )
         return unique_urls[:50]  # Limit to prevent excessive crawling
 
+    def _looks_like_feed_document(self, payload: str) -> bool:
+        if not payload:
+            return False
+        sample = payload.lstrip()[:400].lower()
+        if sample.startswith("<?xml"):
+            return "<rss" in sample or "<feed" in sample or "<rdf:rdf" in sample
+        return ("<rss" in sample and "<channel" in sample) or "<feed" in sample
+
+    def _extract_feed_links(self, payload: str, base_url: str) -> list[str]:
+        """Extract item links from RSS/Atom payloads."""
+        try:
+            root = ET.fromstring(payload)
+        except ET.ParseError as exc:
+            logger.debug("Failed to parse feed payload for %s: %s", base_url, exc)
+            return []
+
+        raw_links: list[str] = []
+
+        # RSS item links (<item><link>https://...)</link></item>)
+        for node in root.findall(".//item/link"):
+            if node.text and node.text.strip():
+                raw_links.append(node.text.strip())
+
+        # Atom links (<entry><link href="https://..." rel="alternate"/></entry>)
+        for entry in root.findall(".//{*}entry"):
+            for link_node in entry.findall("{*}link"):
+                href = (link_node.attrib.get("href") or "").strip()
+                rel = (link_node.attrib.get("rel") or "alternate").strip().lower()
+                if href and rel in {"", "alternate"}:
+                    raw_links.append(href)
+
+        if not raw_links:
+            return []
+
+        from urllib.parse import urljoin
+
+        normalised_links: list[str] = []
+        for link in raw_links:
+            absolute = urljoin(base_url, link)
+            if absolute and self._is_article_url(absolute):
+                normalised_links.append(absolute)
+
+        seen: set[str] = set()
+        unique_links: list[str] = []
+        for link in normalised_links:
+            if link in seen:
+                continue
+            seen.add(link)
+            unique_links.append(link)
+        return unique_links
+
     def _is_article_url(self, url: str) -> bool:
         """Determine if a URL likely points to an article."""
         try:
@@ -536,7 +604,13 @@ class GenericSiteCrawler:
             # Must be on the same domain (allow www. prefix)
             base_domain = self.site_config.domain.replace("www.", "")
             url_domain = parsed.netloc.replace("www.", "")
-            if base_domain not in url_domain:
+
+            # Domain-family allowlist for BBC feeds that mix bbc.co.uk and bbc.com hosts.
+            if "bbc" in base_domain:
+                bbc_family = {"bbc.co.uk", "bbc.com", "bbci.co.uk", "feeds.bbci.co.uk"}
+                if not any(url_domain.endswith(domain) for domain in bbc_family):
+                    return False
+            elif base_domain not in url_domain:
                 return False
 
             path = parsed.path.lower()
