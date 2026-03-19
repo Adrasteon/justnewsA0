@@ -3825,14 +3825,207 @@
       "timestamp": "2026-02-22T18:12:46.429032Z",
       "version": 360,
       "warnings": []
+    },
+    {
+      "actor": "ops",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 8,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "previous_version": 360,
+      "reason": "stabilize baseline post-timeout hardening",
+      "timestamp": "2026-03-16T14:57:23.922744Z",
+      "version": 361,
+      "warnings": []
+    },
+    {
+      "actor": "operator",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 9
+      },
+      "previous_version": 361,
+      "reason": "Step A backlog retune 2026-03-17",
+      "timestamp": "2026-03-17T23:32:03.669148Z",
+      "version": 362,
+      "warnings": []
+    },
+    {
+      "actor": "operator",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 10
+      },
+      "previous_version": 362,
+      "reason": "Step B backlog retune 2026-03-17",
+      "timestamp": "2026-03-17T23:50:10.484515Z",
+      "version": 363,
+      "warnings": []
+    },
+    {
+      "actor": "operator",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.polling_interval_seconds": 2
+      },
+      "previous_version": 363,
+      "reason": "Poll interval lever test 3->2 (15m gate)",
+      "timestamp": "2026-03-18T02:32:26.946999Z",
+      "version": 364,
+      "warnings": []
+    },
+    {
+      "actor": "operator",
+      "operation": "apply",
+      "patch": {
+        "fact_checker.search.deep_crawl_timeout_sec": 8.0,
+        "fact_checker.search.max_queries": 6
+      },
+      "previous_version": 364,
+      "reason": "Modest fact-check shaping gate (fanout+deep-timeout)",
+      "timestamp": "2026-03-18T02:58:07.397206Z",
+      "version": 365,
+      "warnings": []
+    },
+    {
+      "actor": "operator",
+      "operation": "rollback",
+      "reason": "Rollback modest fact-check shaping after throughput regression",
+      "rollback_target_version": 364,
+      "timestamp": "2026-03-18T03:15:10.440033Z",
+      "version": 366
+    },
+    {
+      "actor": "operator",
+      "operation": "apply",
+      "patch": {
+        "mcp_bus.call.max_retries": 1,
+        "mcp_bus.call.read_timeout_sec": 12.0
+      },
+      "previous_version": 366,
+      "reason": "Modest MCP fail-fast gate (timeout+retries)",
+      "timestamp": "2026-03-18T03:17:14.013916Z",
+      "version": 367,
+      "warnings": []
+    },
+    {
+      "actor": "operator",
+      "operation": "rollback",
+      "reason": "Rollback MCP fail-fast patch after no throughput gain",
+      "rollback_target_version": 366,
+      "timestamp": "2026-03-18T03:33:40.823628Z",
+      "version": 368
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 9,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "previous_version": 368,
+      "reason": "autonomic:resource_pressure",
+      "timestamp": "2026-03-18T15:18:00.043996Z",
+      "version": 369,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 8,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "previous_version": 369,
+      "reason": "autonomic:resource_pressure",
+      "timestamp": "2026-03-18T16:55:30.680185Z",
+      "version": 370,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 5
+      },
+      "previous_version": 370,
+      "reason": "autonomic:resource_pressure",
+      "timestamp": "2026-03-18T16:57:30.754971Z",
+      "version": 371,
+      "warnings": []
+    },
+    {
+      "actor": "ops_drill",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "previous_version": 371,
+      "reason": "e2_drill_apply_for_rollback_validation",
+      "timestamp": "2026-03-18T18:36:48.716645Z",
+      "version": 372,
+      "warnings": []
+    },
+    {
+      "actor": "ops_drill",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "previous_version": 372,
+      "reason": "e2_drill_apply_for_rollback_validation",
+      "timestamp": "2026-03-18T18:37:01.828560Z",
+      "version": 373,
+      "warnings": []
+    },
+    {
+      "actor": "ops_drill",
+      "operation": "rollback",
+      "reason": "e2_drill_cleanup_rollback_373",
+      "rollback_target_version": 372,
+      "timestamp": "2026-03-18T18:50:27.160339Z",
+      "version": 374
+    },
+    {
+      "actor": "ops_drill",
+      "operation": "rollback",
+      "reason": "e2_drill_cleanup_rollback_372",
+      "rollback_target_version": 371,
+      "timestamp": "2026-03-18T18:50:27.199495Z",
+      "version": 375
+    },
+    {
+      "actor": "ops_drill",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "previous_version": 375,
+      "reason": "e2_drill_apply_for_rollback_validation_clean",
+      "timestamp": "2026-03-18T18:50:27.287193Z",
+      "version": 376,
+      "warnings": []
+    },
+    {
+      "actor": "ops_drill",
+      "operation": "rollback",
+      "reason": "e2_drill_rollback_validation_clean",
+      "rollback_target_version": 375,
+      "timestamp": "2026-03-18T18:50:27.381509Z",
+      "version": 377
     }
   ],
   "overrides": {
     "orchestrator.lane_policy.lane1_enabled": true,
     "orchestrator.lane_policy.lane2_enabled": false,
     "orchestrator.lane_policy.version": "v-focus-lane1",
-    "orchestrator.max_concurrent_tasks": 30,
-    "orchestrator.polling_interval_seconds": 1
+    "orchestrator.max_concurrent_tasks": 7,
+    "orchestrator.polling_interval_seconds": 5
   },
   "timeline": [
     {
@@ -10995,8 +11188,435 @@
       ],
       "timestamp": "2026-02-22T18:12:46.429032Z",
       "version": 360
+    },
+    {
+      "actor": "ops",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 30,
+          "orchestrator.polling_interval_seconds": 1
+        },
+        "method": "rollback_to_version",
+        "target_version": 360
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 8,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 8,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "previous_version": 360,
+      "reason": "stabilize baseline post-timeout hardening",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-16T14:57:23.922744Z",
+      "version": 361
+    },
+    {
+      "actor": "operator",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 8
+        },
+        "method": "rollback_to_version",
+        "target_version": 361
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 9,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 9
+      },
+      "previous_version": 361,
+      "reason": "Step A backlog retune 2026-03-17",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-17T23:32:03.669148Z",
+      "version": 362
+    },
+    {
+      "actor": "operator",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 9
+        },
+        "method": "rollback_to_version",
+        "target_version": 362
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 10,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 10
+      },
+      "previous_version": 362,
+      "reason": "Step B backlog retune 2026-03-17",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-17T23:50:10.484515Z",
+      "version": 363
+    },
+    {
+      "actor": "operator",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.polling_interval_seconds": 3
+        },
+        "method": "rollback_to_version",
+        "target_version": 363
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 10,
+        "orchestrator.polling_interval_seconds": 2
+      },
+      "patch": {
+        "orchestrator.polling_interval_seconds": 2
+      },
+      "previous_version": 363,
+      "reason": "Poll interval lever test 3->2 (15m gate)",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-18T02:32:26.946999Z",
+      "version": 364
+    },
+    {
+      "actor": "operator",
+      "inverse_rollback": {
+        "inverse_patch": {},
+        "method": "rollback_to_version",
+        "target_version": 364
+      },
+      "operation": "apply",
+      "overrides": {
+        "fact_checker.search.deep_crawl_timeout_sec": 8.0,
+        "fact_checker.search.max_queries": 6,
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 10,
+        "orchestrator.polling_interval_seconds": 2
+      },
+      "patch": {
+        "fact_checker.search.deep_crawl_timeout_sec": 8.0,
+        "fact_checker.search.max_queries": 6
+      },
+      "previous_version": 364,
+      "reason": "Modest fact-check shaping gate (fanout+deep-timeout)",
+      "tiers": [
+        "tier3"
+      ],
+      "timestamp": "2026-03-18T02:58:07.397206Z",
+      "version": 365
+    },
+    {
+      "actor": "operator",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 10,
+        "orchestrator.polling_interval_seconds": 2
+      },
+      "reason": "Rollback modest fact-check shaping after throughput regression",
+      "rollback_target_version": 364,
+      "timestamp": "2026-03-18T03:15:10.440033Z",
+      "version": 366
+    },
+    {
+      "actor": "operator",
+      "inverse_rollback": {
+        "inverse_patch": {},
+        "method": "rollback_to_version",
+        "target_version": 366
+      },
+      "operation": "apply",
+      "overrides": {
+        "mcp_bus.call.max_retries": 1,
+        "mcp_bus.call.read_timeout_sec": 12.0,
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 10,
+        "orchestrator.polling_interval_seconds": 2
+      },
+      "patch": {
+        "mcp_bus.call.max_retries": 1,
+        "mcp_bus.call.read_timeout_sec": 12.0
+      },
+      "previous_version": 366,
+      "reason": "Modest MCP fail-fast gate (timeout+retries)",
+      "tiers": [
+        "tier2"
+      ],
+      "timestamp": "2026-03-18T03:17:14.013916Z",
+      "version": 367
+    },
+    {
+      "actor": "operator",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 10,
+        "orchestrator.polling_interval_seconds": 2
+      },
+      "reason": "Rollback MCP fail-fast patch after no throughput gain",
+      "rollback_target_version": 366,
+      "timestamp": "2026-03-18T03:33:40.823628Z",
+      "version": 368
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 10,
+          "orchestrator.polling_interval_seconds": 2
+        },
+        "method": "rollback_to_version",
+        "target_version": 368
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 9,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 9,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "previous_version": 368,
+      "reason": "autonomic:resource_pressure",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-18T15:18:00.043996Z",
+      "version": 369
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 9,
+          "orchestrator.polling_interval_seconds": 3
+        },
+        "method": "rollback_to_version",
+        "target_version": 369
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 8,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 8,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "previous_version": 369,
+      "reason": "autonomic:resource_pressure",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-18T16:55:30.680185Z",
+      "version": 370
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 8,
+          "orchestrator.polling_interval_seconds": 4
+        },
+        "method": "rollback_to_version",
+        "target_version": 370
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 5
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 5
+      },
+      "previous_version": 370,
+      "reason": "autonomic:resource_pressure",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-18T16:57:30.754971Z",
+      "version": 371
+    },
+    {
+      "actor": "ops_drill",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 7,
+          "orchestrator.polling_interval_seconds": 5
+        },
+        "method": "rollback_to_version",
+        "target_version": 371
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "previous_version": 371,
+      "reason": "e2_drill_apply_for_rollback_validation",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-18T18:36:48.716645Z",
+      "version": 372
+    },
+    {
+      "actor": "ops_drill",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 7,
+          "orchestrator.polling_interval_seconds": 4
+        },
+        "method": "rollback_to_version",
+        "target_version": 372
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 3
+      },
+      "previous_version": 372,
+      "reason": "e2_drill_apply_for_rollback_validation",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-18T18:37:01.828560Z",
+      "version": 373
+    },
+    {
+      "actor": "ops_drill",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "reason": "e2_drill_cleanup_rollback_373",
+      "rollback_target_version": 372,
+      "timestamp": "2026-03-18T18:50:27.160339Z",
+      "version": 374
+    },
+    {
+      "actor": "ops_drill",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 5
+      },
+      "reason": "e2_drill_cleanup_rollback_372",
+      "rollback_target_version": 371,
+      "timestamp": "2026-03-18T18:50:27.199495Z",
+      "version": 375
+    },
+    {
+      "actor": "ops_drill",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 7,
+          "orchestrator.polling_interval_seconds": 5
+        },
+        "method": "rollback_to_version",
+        "target_version": 375
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "previous_version": 375,
+      "reason": "e2_drill_apply_for_rollback_validation_clean",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-18T18:50:27.287193Z",
+      "version": 376
+    },
+    {
+      "actor": "ops_drill",
+      "operation": "rollback",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 7,
+        "orchestrator.polling_interval_seconds": 5
+      },
+      "reason": "e2_drill_rollback_validation_clean",
+      "rollback_target_version": 375,
+      "timestamp": "2026-03-18T18:50:27.381509Z",
+      "version": 377
     }
   ],
-  "updated_at": "2026-02-22T18:12:46.429032Z",
-  "version": 360
+  "updated_at": "2026-03-18T18:50:27.381509Z",
+  "version": 377
 }

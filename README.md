@@ -23,6 +23,7 @@ This includes Search Console/Bing submission, live-domain sitemap/feed verificat
 - **Operations**: [docs/operations/README.md](docs/operations/README.md)
 - **Live SEO Launch Checklist**: [docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md](docs/operations/LIVE_SEO_LAUNCH_CHECKLIST.md)
 - **Crawler Ingest Resiliency**: [docs/operations/CRAWLER_INGEST_RESILIENCY.md](docs/operations/CRAWLER_INGEST_RESILIENCY.md)
+- **Lane 2 Crawl Fallback (Ops)**: [docs/operations/MULTI_SOURCE_REFACTOR_LANE2_FALLBACK_RUNBOOK_2026-03-17.md](docs/operations/MULTI_SOURCE_REFACTOR_LANE2_FALLBACK_RUNBOOK_2026-03-17.md)
 - **Environment & Dependency Config**: [docs/operations/ENVIRONMENT_CONFIG.md](docs/operations/ENVIRONMENT_CONFIG.md)
 - **Documentation Index**: [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)
 

@@ -605,6 +605,14 @@ class TestCrawlerEngine:
             ) as _mock_crawl_site,
             patch.object(crawler_engine, "_ingest_articles") as mock_ingest,
             patch.object(crawler_engine, "_cleanup_orphaned_processes"),
+            patch.dict(
+                "os.environ",
+                {
+                    "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_ENABLED": "0",
+                    "UNIFIED_CRAWLER_ADAPTIVE_DEPTH_ENABLED": "0",
+                },
+                clear=False,
+            ),
         ):
             mock_ingest.return_value = {
                 "new_articles": 0,
@@ -676,6 +684,97 @@ class TestCrawlerEngine:
 
             assert result["total_articles"] == 1
             assert result["duplicates_skipped"] == 1
+            assert mock_ingest.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_crawl_multiple_sites_lane2_fallback_after_zero_ingest(
+        self, crawler_engine, mock_site_config
+    ):
+        """When lane1 yields zero new ingest, optional lane2 fallback should be attempted."""
+        site_configs = [mock_site_config]
+
+        async def _crawl_side_effect(site_config, _max_articles):
+            domain = site_config.domain or site_config.name
+            if domain == "testsite.com":
+                return [
+                    {
+                        "title": "Lane1 Duplicate",
+                        "url": "https://testsite.com/article-dup",
+                        "content": "dup",
+                    }
+                ]
+            return [
+                {
+                    "title": "Lane2 Fresh",
+                    "url": f"https://{domain}/article-new",
+                    "content": "new",
+                }
+            ]
+
+        with (
+            patch.object(crawler_engine, "crawl_site", side_effect=_crawl_side_effect),
+            patch.object(crawler_engine, "_cleanup_orphaned_processes"),
+            patch.object(crawler_engine, "_submit_hitl_candidates", return_value=None),
+            patch("agents.crawler.crawler_engine.get_sources_by_domain") as mock_get_sources,
+            patch.object(crawler_engine, "_ingest_articles") as mock_ingest,
+            patch.dict(
+                "os.environ",
+                {
+                    "UNIFIED_CRAWLER_LANE2_FALLBACK_ENABLED": "1",
+                    "UNIFIED_CRAWLER_LANE2_FALLBACK_DOMAINS": "lane2.com",
+                    "UNIFIED_CRAWLER_LANE2_MAX_SITES": "1",
+                    "UNIFIED_CRAWLER_LANE2_MAX_ARTICLES_PER_SITE": "1",
+                    "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_ENABLED": "0",
+                    "UNIFIED_CRAWLER_ADAPTIVE_DEPTH_ENABLED": "0",
+                },
+                clear=False,
+            ),
+        ):
+            mock_get_sources.side_effect = lambda domains: (
+                [
+                    {
+                        "id": 2,
+                        "name": "Lane2 Source",
+                        "domain": "lane2.com",
+                        "url": "https://lane2.com",
+                    }
+                ]
+                if domains == ["lane2.com"]
+                else []
+            )
+
+            mock_ingest.side_effect = [
+                {
+                    "new_articles": 0,
+                    "duplicates": 1,
+                    "errors": 0,
+                    "details": [
+                        {
+                            "url": "https://testsite.com/article-dup",
+                            "status": "duplicate",
+                        }
+                    ],
+                },
+                {
+                    "new_articles": 1,
+                    "duplicates": 0,
+                    "errors": 0,
+                    "details": [
+                        {
+                            "url": "https://lane2.com/article-new",
+                            "status": "new",
+                        }
+                    ],
+                },
+            ]
+
+            result = await crawler_engine.crawl_multiple_sites(
+                site_configs, max_articles_per_site=1
+            )
+
+            assert result["total_articles"] == 1
+            assert result["duplicates_skipped"] == 1
+            assert result["site_breakdown"]["lane2.com"] == 1
             assert mock_ingest.call_count == 2
 
     @pytest.mark.asyncio

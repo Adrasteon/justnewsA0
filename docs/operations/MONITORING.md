@@ -6,6 +6,8 @@
 
 ---
 
+Script-level operational checks are documented in [Monitoring Scripts Reference](./MONITORING_SCRIPTS_REFERENCE.md).
+
 ## 📊 Key Metrics to Monitor
 
 ### 1. Database (MariaDB)

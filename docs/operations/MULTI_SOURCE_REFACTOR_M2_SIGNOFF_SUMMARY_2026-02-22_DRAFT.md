@@ -45,6 +45,11 @@ Provenance capture refresh:
 - Staging-tagged provenance capture (2026-03-16): [Parity Provenance Report (Staging-tagged, 2026-03-16)](../../logs/operations/refactor_parity/multi_source_refactor_provenance_staging_20260316T123625Z.md)
 - Current result: `10/10` required provenance fields complete in both captures.
 
+Audit trace update (2026-03-17):
+- Lane 2 crawl fallback operations runbook added: [Multi-Source Refactor Lane 2 Crawl Fallback Runbook (2026-03-17)](./MULTI_SOURCE_REFACTOR_LANE2_FALLBACK_RUNBOOK_2026-03-17.md)
+- Lane 2 seed domain configuration added: [lane2_sources_seed_phase.json](../../config/lane2_sources_seed_phase.json)
+- Root documentation entrypoint updated with descriptor/link: [README.md](../../README.md)
+
 Still open for full environment-level parity:
 - True staging metrics snapshot from actual staging orchestrator endpoint (fallback captures currently target local orchestrator)
 - True staging provenance sample export from actual staging data plane

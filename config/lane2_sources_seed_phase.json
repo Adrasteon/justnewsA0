@@ -1,0 +1,31 @@
+{
+  "version": "2026-03-17",
+  "lane": "lane2_developing_brief",
+  "description": "Seed sources for lane2 fallback crawl when lane1 yields zero new ingest",
+  "sources": [
+    {
+      "domain": "reuters.com",
+      "priority": 1
+    },
+    {
+      "domain": "apnews.com",
+      "priority": 2
+    },
+    {
+      "domain": "aljazeera.com",
+      "priority": 3
+    },
+    {
+      "domain": "cnn.com",
+      "priority": 4
+    },
+    {
+      "domain": "nytimes.com",
+      "priority": 5
+    },
+    {
+      "domain": "theguardian.com",
+      "priority": 6
+    }
+  ]
+}

@@ -26,6 +26,10 @@
 
 - [Multi-Source Refactor Runtime Tuning Runbook (2026-02-22)](./MULTI_SOURCE_REFACTOR_RUNTIME_TUNING_RUNBOOK_2026-02-22.md)
 
+- [Autonomic Dynamic Orchestrator Implementation Plan (2026-03-18)](./AUTONOMIC_DYNAMIC_ORCHESTRATOR_IMPLEMENTATION_PLAN_2026-03-18.md)
+
+- [Multi-Source Refactor Lane 2 Crawl Fallback Runbook (2026-03-17)](./MULTI_SOURCE_REFACTOR_LANE2_FALLBACK_RUNBOOK_2026-03-17.md)
+
 - [Multi-Source Refactor M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md)
 
 - [Multi-Source Refactor M2 Sign-Off Summary (Draft, 2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_SUMMARY_2026-02-22_DRAFT.md)
@@ -65,6 +69,14 @@
 - [Crawler Maturity Checklist](./CRAWLER_MATURITY_CHECKLIST.md) — Phased roadmap and acceptance criteria to move toward enterprise-grade crawling
 
 - [Crawler Ingest Resiliency Runbook](./CRAWLER_INGEST_RESILIENCY.md) — Disk-backed deferred ingest spool, replay behavior, and outage recovery
+
+- [Monitoring Scripts Reference](./MONITORING_SCRIPTS_REFERENCE.md) — Script-level monitoring checks, technical signals, and recommended run sequence
+
+- [Autonomic Dynamic Orchestrator Implementation Plan (2026-03-18)](./AUTONOMIC_DYNAMIC_ORCHESTRATOR_IMPLEMENTATION_PLAN_2026-03-18.md) — Concrete backlog and canary rollout defaults for real-time dynamic orchestration
+
+- [Lane 2 Crawl Fallback Runbook](./MULTI_SOURCE_REFACTOR_LANE2_FALLBACK_RUNBOOK_2026-03-17.md) — Enables secondary-lane crawl attempt when primary lane yields zero new ingest
+
+- [Dev Data Reset (Preserve Sources)](../../scripts/maintenance/reset_dev_data_preserve_sources.py) — Clears crawl/article/embedding/synthesis runtime data and always resets `sources.last_crawl_at` to `NULL` while preserving `sources` rows
 
 **Infrastructure**:
 
@@ -400,6 +412,8 @@ synthesizer
 ## Monitoring & Alerting
 
 ### Health Checks
+
+- Monitoring script catalog: [MONITORING_SCRIPTS_REFERENCE.md](./MONITORING_SCRIPTS_REFERENCE.md)
 
 #### Service Health
 

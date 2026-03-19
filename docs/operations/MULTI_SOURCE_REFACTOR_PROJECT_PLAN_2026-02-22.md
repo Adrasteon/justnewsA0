@@ -9,6 +9,8 @@
 - [M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md)
 - [Multi-Source Refactor Closeout Summary (2026-02-22)](./MULTI_SOURCE_REFACTOR_CLOSEOUT_SUMMARY_2026-02-22.md)
 - [Multi-Source Refactor Dev/Staging Parity Runsheet (2026-02-22)](./MULTI_SOURCE_REFACTOR_DEV_STAGING_PARITY_RUNSHEET_2026-02-22.md)
+- [Multi-Source Refactor Lane 2 Crawl Fallback Runbook (2026-03-17)](./MULTI_SOURCE_REFACTOR_LANE2_FALLBACK_RUNBOOK_2026-03-17.md)
+- [Monitoring Scripts Reference](./MONITORING_SCRIPTS_REFERENCE.md)
 
 ## 1) Objective
 

@@ -133,6 +133,46 @@ def _load_testing_seed_priority_domains() -> list[str]:
         return []
 
 
+def _load_lane2_seed_priority_domains() -> list[str]:
+    """Load optional lane2 fallback domains from a JSON seed file."""
+    if not _env_bool("UNIFIED_CRAWLER_LANE2_SEED_ENABLED", default=True):
+        return []
+
+    seed_path = str(
+        os.environ.get(
+            "UNIFIED_CRAWLER_LANE2_SEED_FILE",
+            "/app/config/lane2_sources_seed_phase.json",
+        )
+    ).strip()
+    if not seed_path:
+        return []
+
+    try:
+        path_obj = Path(seed_path)
+        if not path_obj.exists():
+            return []
+
+        payload = json.loads(path_obj.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            return []
+        sources = payload.get("sources")
+        if not isinstance(sources, list):
+            return []
+
+        domains: list[str] = []
+        for source in sources:
+            if not isinstance(source, dict):
+                continue
+            domain = str(source.get("domain") or "").strip().lower()
+            if domain:
+                domains.append(domain)
+
+        return list(dict.fromkeys(domains))
+    except Exception as exc:
+        logger.warning("Failed loading lane2 seed file %s: %s", seed_path, exc)
+        return []
+
+
 def call_analyst_tool(tool: str, *args, **kwargs) -> Any:
     payload = {"agent": "analyst", "tool": tool, "args": list(args), "kwargs": kwargs}
     resp = requests.post(f"{MCP_BUS_URL}/call", json=payload)
@@ -335,6 +375,11 @@ class CrawlerEngine:
             )
         )
         self._ingest_spool_lock = asyncio.Lock()
+        self.dedupe_articles = _env_bool("DEDUPE_ARTICLES", default=True)
+        if not self.dedupe_articles:
+            logger.warning(
+                "DEDUPE_ARTICLES=false: crawler ingest will bypass duplicate checks for stress testing"
+            )
         if self.ingest_spool_enabled:
             try:
                 self.ingest_spool_dir.mkdir(parents=True, exist_ok=True)
@@ -1544,6 +1589,88 @@ class CrawlerEngine:
         tasks = [crawl_site_with_limit(config) for config in site_configs]
         await asyncio.gather(*tasks, return_exceptions=True)
 
+        lane2_fallback_enabled = _env_bool(
+            "UNIFIED_CRAWLER_LANE2_FALLBACK_ENABLED", default=False
+        )
+        if lane2_fallback_enabled and site_configs and total_successful == 0:
+            try:
+                lane2_max_sites = max(
+                    1,
+                    int(os.environ.get("UNIFIED_CRAWLER_LANE2_MAX_SITES", "4")),
+                )
+            except (TypeError, ValueError):
+                lane2_max_sites = 4
+            try:
+                lane2_budget_per_site = max(
+                    1,
+                    int(
+                        os.environ.get(
+                            "UNIFIED_CRAWLER_LANE2_MAX_ARTICLES_PER_SITE", "6"
+                        )
+                    ),
+                )
+            except (TypeError, ValueError):
+                lane2_budget_per_site = 6
+
+            lane2_seed_domains = _load_lane2_seed_priority_domains()
+            lane2_env_domains = [
+                d.strip().lower()
+                for d in os.environ.get(
+                    "UNIFIED_CRAWLER_LANE2_FALLBACK_DOMAINS",
+                    "reuters.com,apnews.com,aljazeera.com,cnn.com,nytimes.com,theguardian.com",
+                ).split(",")
+                if d.strip()
+            ]
+            lane2_domains = lane2_seed_domains or lane2_env_domains
+            attempted_domains = {
+                (cfg.domain or cfg.name or "").strip().lower()
+                for cfg in site_configs
+                if (cfg.domain or cfg.name)
+            }
+
+            lane2_added = 0
+            for domain in lane2_domains:
+                if lane2_added >= lane2_max_sites:
+                    break
+                if not domain or domain in attempted_domains:
+                    continue
+
+                sources = get_sources_by_domain([domain])
+                if sources:
+                    source = sources[0]
+                    replacement_config = SiteConfig(source)
+                else:
+                    replacement_config = SiteConfig(
+                        {
+                            "id": None,
+                            "name": domain,
+                            "domain": domain,
+                            "url": f"https://{domain}",
+                            "crawling_strategy": "generic",
+                        }
+                    )
+
+                attempted_domains.add(domain)
+                lane2_added += 1
+                logger.info(
+                    "🛟 Lane2 fallback triggered after zero-ingest lane1 run: domain=%s budget=%s",
+                    domain,
+                    lane2_budget_per_site,
+                )
+                await crawl_site_with_limit(
+                    replacement_config,
+                    site_budget=lane2_budget_per_site,
+                )
+                if total_successful > 0:
+                    break
+
+            if lane2_added > 0:
+                logger.info(
+                    "🛟 Lane2 fallback summary: attempted_sites=%s total_ingested=%s",
+                    lane2_added,
+                    total_successful,
+                )
+
         constrained_backfill_enabled = (
             str(
                 os.environ.get(
@@ -1973,6 +2100,7 @@ class CrawlerEngine:
                     logger.warning("Failed to persist deferred article to spool: %s", spool_error)
 
         def _build_ingest_payload(article: dict[str, Any]) -> dict[str, Any]:
+            disable_dedupe = bool(article.get("disable_dedupe")) or (not self.dedupe_articles)
             article_payload = {
                 "url": article.get("url", ""),
                 "normalized_url": article.get("normalized_url"),
@@ -1999,7 +2127,7 @@ class CrawlerEngine:
                 "review_reasons": article.get("extraction_metadata", {}).get(
                     "review_reasons", []
                 ),
-                "disable_dedupe": article.get("disable_dedupe"),
+                "disable_dedupe": disable_dedupe,
             }
 
             source_sql = """

@@ -6,7 +6,7 @@ for data pipeline transitions.
 """
 
 from abc import ABC, abstractmethod
-from typing import List, Any
+from typing import List, Any, Awaitable, Callable
 import requests
 import asyncio
 import os
@@ -1151,6 +1151,15 @@ class WorkflowPolicy(ABC):
     def __init__(self, mcp_bus_url: str):
         self.mcp_bus_url = mcp_bus_url
         self.db_service = create_database_service()
+        default_timeout = _safe_float(os.environ.get("MCP_CALL_READ_TIMEOUT"), 120.0) + 5.0
+        self.mcp_call_timeout_seconds = max(
+            1.0,
+            _safe_float(os.environ.get("ORCH_MCP_CALL_TIMEOUT_SECONDS"), default_timeout),
+        )
+        self.execution_parallel_default = max(
+            1,
+            _safe_int(os.environ.get("ORCH_POLICY_EXECUTION_PARALLELISM_DEFAULT"), 2),
+        )
 
     @abstractmethod
     def name(self) -> str:
@@ -1176,8 +1185,11 @@ class WorkflowPolicy(ABC):
                 "kwargs": kwargs,
                 "args": []
             }
-            # Increase timeout for synthesis operations
-            response = requests.post(f"{self.mcp_bus_url}/call", json=payload, timeout=300)
+            response = requests.post(
+                f"{self.mcp_bus_url}/call",
+                json=payload,
+                timeout=self.mcp_call_timeout_seconds,
+            )
             response.raise_for_status()
             
             result = response.json()
@@ -1189,6 +1201,62 @@ class WorkflowPolicy(ABC):
         except Exception as e:
             logger.error(f"Failed to call {agent}.{tool}: {e}")
             return {"status": "error", "error": str(e)}
+
+    def _execution_parallelism(self, default: int | None = None) -> int:
+        """Return per-policy execution parallelism from env with safe fallback."""
+        base_default = (
+            self.execution_parallel_default
+            if default is None
+            else max(1, int(default))
+        )
+        per_policy_key = f"ORCH_POLICY_EXECUTION_PARALLELISM_{self.name().upper()}"
+        return max(1, _safe_int(os.environ.get(per_policy_key), base_default))
+
+    async def _execute_bounded(
+        self,
+        items: List[Any],
+        worker: Callable[[Any], Awaitable[Any]],
+        stage_label: str,
+        default_parallelism: int | None = None,
+    ) -> int:
+        """Execute policy worker with bounded concurrency to avoid burst overload."""
+        if not items:
+            logger.info(f"{stage_label} skipped (0 items).")
+            return 0
+
+        parallelism = self._execution_parallelism(default=default_parallelism)
+        semaphore = asyncio.Semaphore(parallelism)
+
+        async def _run_one(item: Any) -> Any:
+            async with semaphore:
+                return await worker(item)
+
+        results = await asyncio.gather(
+            *(_run_one(item) for item in items),
+            return_exceptions=True,
+        )
+
+        success_count = 0
+        for res in results:
+            if isinstance(res, Exception):
+                logger.error(f"{stage_label} task failed: {res}")
+                continue
+            if isinstance(res, dict):
+                if res.get("status") == "success" or bool(res.get("success")):
+                    success_count += 1
+                elif res.get("error"):
+                    logger.error(f"{stage_label} task returned error: {res.get('error')}")
+            else:
+                success_count += 1
+
+        logger.info(
+            "%s batch complete. Success: %s/%s (parallelism=%s)",
+            stage_label,
+            success_count,
+            len(items),
+            parallelism,
+        )
+        return success_count
 
     async def _call_mcp_tool(self, agent: str, tool: str, kwargs: dict):
         """Async wrapper for MCP tool call."""
@@ -1238,38 +1306,14 @@ class IngestionToAnalysisPolicy(WorkflowPolicy):
 
     async def execute(self, items: List[int]):
         logger.info(f"Triggering analysis for {len(items)} articles.")
-        tasks = []
-        for article_id in items:
-            # We call the analyst agent via MCP Bus
-            # Based on previous investigation, Analyst expects a ToolCall wrapped payload if called directly,
-            # but via MCP bus, we send standard args/kwargs.
-            # The MCP Bus 'call' endpoint takes: agent, tool, args, kwargs.
-            # The Analyst 'analyze_article' tool expects a 'call: ToolCall' object if hitting the endpoint directly,
-            # BUT wait.
-            # Let's verify how MCP Bus calls the agent.
-            # MCP Bus calls `{agent_address}/{tool_name}` with `{"args": ..., "kwargs": ...}`.
-            # Analyst `analyze_article` endpoint expects `ToolCall` which has `args` and `kwargs`.
-            # So MCP Bus payload matches Analyst expectation exactly.
-            
-            # Param: article_id via kwargs
-            tasks.append(
-                self._call_mcp_tool(
-                    agent="analyst",
-                    tool="analyze_article",
-                    kwargs={"article_id": article_id}
-                )
+        async def _worker(article_id: int):
+            return await self._call_mcp_tool(
+                agent="analyst",
+                tool="analyze_article",
+                kwargs={"article_id": article_id},
             )
-        
-        # Run concurrent triggers
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        success_count = 0
-        for res in results:
-            if isinstance(res, dict) and res.get("status") == "success":
-                success_count += 1
-            elif isinstance(res, Exception):
-                logger.error(f"Task failed: {res}")
-        
-        logger.info(f"Triggered batch complete. Success: {success_count}/{len(items)}")
+
+        await self._execute_bounded(items, _worker, "analysis")
 
 
 class AnalysisToEmbeddingPolicy(WorkflowPolicy):
@@ -1313,25 +1357,14 @@ class AnalysisToEmbeddingPolicy(WorkflowPolicy):
 
     async def execute(self, items: List[int]):
         logger.info(f"Triggering embedding for {len(items)} articles.")
-        tasks = []
-        for article_id in items:
-            tasks.append(
-                self._call_mcp_tool(
-                    agent="memory",
-                    tool="embed_article",
-                    kwargs={"article_id": article_id}
-                )
+        async def _worker(article_id: int):
+            return await self._call_mcp_tool(
+                agent="memory",
+                tool="embed_article",
+                kwargs={"article_id": article_id},
             )
-        
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        success_count = 0
-        for res in results:
-            if isinstance(res, dict) and res.get("status") == "success":
-                success_count += 1
-            elif isinstance(res, Exception):
-                logger.error(f"Embedding task failed: {res}")
-        
-        logger.info(f"Embedding batch complete. Success: {success_count}/{len(items)}")
+
+        await self._execute_bounded(items, _worker, "embedding")
 
 
 class AnalysisToSummaryPolicy(WorkflowPolicy):
@@ -1375,25 +1408,14 @@ class AnalysisToSummaryPolicy(WorkflowPolicy):
 
     async def execute(self, items: List[int]):
         logger.info(f"Triggering summarization for {len(items)} articles.")
-        tasks = []
-        for article_id in items:
-            tasks.append(
-                self._call_mcp_tool(
-                    agent="synthesizer",
-                    tool="summarize_article",
-                    kwargs={"article_id": article_id}
-                )
+        async def _worker(article_id: int):
+            return await self._call_mcp_tool(
+                agent="synthesizer",
+                tool="summarize_article",
+                kwargs={"article_id": article_id},
             )
-        
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        success_count = 0
-        for res in results:
-            if isinstance(res, dict) and res.get("status") == "success":
-                success_count += 1
-            elif isinstance(res, Exception):
-                logger.error(f"Summarization task failed: {res}")
-        
-        logger.info(f"Summarization batch complete. Success: {success_count}/{len(items)}")
+
+        await self._execute_bounded(items, _worker, "summarization")
 
 
 class AnalysisToFactCheckPolicy(WorkflowPolicy):
@@ -1436,25 +1458,14 @@ class AnalysisToFactCheckPolicy(WorkflowPolicy):
 
     async def execute(self, items: List[int]):
         logger.info(f"Triggering fact check for {len(items)} articles.")
-        tasks = []
-        for article_id in items:
-            tasks.append(
-                self._call_mcp_tool(
-                    agent="fact_checker",
-                    tool="verify_article",
-                    kwargs={"article_id": article_id}
-                )
+        async def _worker(article_id: int):
+            return await self._call_mcp_tool(
+                agent="fact_checker",
+                tool="verify_article",
+                kwargs={"article_id": article_id},
             )
-        
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        success_count = 0
-        for res in results:
-            if isinstance(res, dict) and res.get("status") == "success":
-                success_count += 1
-            elif isinstance(res, Exception):
-                logger.error(f"Fact check task failed: {res}")
-        
-        logger.info(f"Fact check batch complete. Success: {success_count}/{len(items)}")
+
+        await self._execute_bounded(items, _worker, "fact_check")
 
 
 

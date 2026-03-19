@@ -105,6 +105,38 @@ def check_status():
         embeddings_document_count = cursor.fetchone()[0]
 
     embeddings = max(article_embedded, embeddings_document_count)
+
+    # Fact-check progression (article-level is authoritative for current shim persistence)
+    cursor.execute("SELECT COUNT(*) FROM articles WHERE fact_check_status IS NOT NULL")
+    fact_checked_status = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM articles WHERE fact_check_details IS NOT NULL")
+    fact_checked_details = cursor.fetchone()[0]
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM articles
+        WHERE fact_check_status IS NOT NULL
+          AND updated_at >= (NOW() - INTERVAL 60 MINUTE)
+        """
+    )
+    fact_checked_status_last60m = cursor.fetchone()[0]
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM articles
+        WHERE fact_check_details IS NOT NULL
+          AND updated_at >= (NOW() - INTERVAL 60 MINUTE)
+        """
+    )
+    fact_checked_details_last60m = cursor.fetchone()[0]
+
+    # Legacy/reference metric only.
+    cursor.execute("SHOW TABLES LIKE 'fact_checks'")
+    has_fact_checks_table = cursor.fetchone() is not None
+    fact_checks_table_total = None
+    if has_fact_checks_table:
+        cursor.execute("SELECT COUNT(*) FROM fact_checks")
+        fact_checks_table_total = cursor.fetchone()[0]
     
     # Check articles table schema readiness
     cursor.execute("""
@@ -128,6 +160,14 @@ def check_status():
     
     print(f"\n🔍 EMBEDDINGS PHASE:")
     print(f"   Documents Embedded:       {embeddings:>8}")
+
+    print(f"\n✅ FACT-CHECK PHASE:")
+    print(f"   Articles Status Set:      {fact_checked_status:>8}")
+    print(f"   Articles Details Set:     {fact_checked_details:>8}")
+    print(f"   Status Updates Last 60m:  {fact_checked_status_last60m:>8}")
+    print(f"   Detail Updates Last 60m:  {fact_checked_details_last60m:>8}")
+    if fact_checks_table_total is not None:
+        print(f"   Legacy fact_checks rows:  {fact_checks_table_total:>8} (reference)")
     
     print(f"\n📈 PIPELINE FLOW:")
     if crawl_tasks > 0:

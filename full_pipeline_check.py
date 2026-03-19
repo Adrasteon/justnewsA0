@@ -32,6 +32,14 @@ def check_status():
         cursor.execute("SELECT count(*) FROM articles WHERE fact_check_status IS NOT NULL AND fact_check_status != '' AND fact_check_status != 'pending'")
         fact_checked = cursor.fetchone()[0]
         print(f"Fact Checked articles: {fact_checked}")
+
+        cursor.execute("SELECT count(*) FROM articles WHERE fact_check_status IS NOT NULL AND updated_at >= (NOW() - INTERVAL 60 MINUTE)")
+        fact_checked_last60m = cursor.fetchone()[0]
+        print(f"Fact Checked (status) Last 60m: {fact_checked_last60m}")
+
+        cursor.execute("SELECT count(*) FROM articles WHERE fact_check_details IS NOT NULL AND updated_at >= (NOW() - INTERVAL 60 MINUTE)")
+        fact_checked_details_last60m = cursor.fetchone()[0]
+        print(f"Fact Checked (details) Last 60m: {fact_checked_details_last60m}")
         
         # Fact Check Status breakdown
         cursor.execute("SELECT fact_check_status, count(*) FROM articles GROUP BY fact_check_status")

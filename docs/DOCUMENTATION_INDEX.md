@@ -128,6 +128,10 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Monitoring Infrastructure](./operations/MONITORING_INFRASTRUCTURE.md) — Prometheus/Grafana deployment
 
+- [Monitoring Scripts Reference](./operations/MONITORING_SCRIPTS_REFERENCE.md) — Script-by-script operational guide for workflow, crawl, DB, embedding, and clustering diagnostics
+
+- [Autonomic Dynamic Orchestrator Implementation Plan (2026-03-18)](./operations/AUTONOMIC_DYNAMIC_ORCHESTRATOR_IMPLEMENTATION_PLAN_2026-03-18.md) — File-level implementation backlog and canary defaults for real-time dynamic control
+
 - [Crawler Ingest Resiliency Runbook](./operations/CRAWLER_INGEST_RESILIENCY.md) — Disk-backed deferred ingest spool, replay tuning, and outage recovery
 
 **Deployment & Infrastructure**:
@@ -147,6 +151,10 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 - [Hardware Safety & Constraints](./operations/hardware_safety.md) — Power limits and memory constraints
 
 - [Monitoring Infrastructure](./operations/MONITORING_INFRASTRUCTURE.md) — Prometheus and Grafana setup
+
+- [Monitoring Scripts Reference](./operations/MONITORING_SCRIPTS_REFERENCE.md) — Detailed usage and technical signals for monitoring/status scripts
+
+- [Autonomic Dynamic Orchestrator Implementation Plan (2026-03-18)](./operations/AUTONOMIC_DYNAMIC_ORCHESTRATOR_IMPLEMENTATION_PLAN_2026-03-18.md) — Execution roadmap for autonomous real-time orchestration
 
 - [Dashboard Quick Reference](./operations/dashboard-quick-reference.md) — Analytics dashboard
 
@@ -272,6 +280,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Systemd Monitoring](./operations/systemd-monitoring.md) — Service health
 
+- [Monitoring Scripts Reference](./operations/MONITORING_SCRIPTS_REFERENCE.md) — Script catalog and operational run sequence
+
 - [Dashboard Reference](./operations/dashboard-quick-reference.md) — Analytics
 
 ### Deployment
@@ -340,6 +350,8 @@ infrastructure/
 
 → Read [Monitoring Infrastructure](./operations/MONITORING_INFRASTRUCTURE.md)
 
+→ Use [Monitoring Scripts Reference](./operations/MONITORING_SCRIPTS_REFERENCE.md) for script-level checks and signal interpretation
+
 ### "How do I run a test locally?"
 
 → Activate conda environment, then see [Development Guide](./developer/)
@@ -359,6 +371,8 @@ infrastructure/
 ### "How do I monitor system health?"
 
 → See [Troubleshooting - Monitoring](./operations/TROUBLESHOOTING.md#monitoring- and-observability)
+
+→ See [Monitoring Scripts Reference](./operations/MONITORING_SCRIPTS_REFERENCE.md)
 
 ### "What are all the environment variables?"
 
