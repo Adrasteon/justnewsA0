@@ -165,3 +165,79 @@ def test_crawl_depth_limits_follow_up_pages(monkeypatch):
     assert "https://example.com/seed" in calls
     assert "https://example.com/a" in calls
     assert "https://example.com/b" not in calls
+
+
+def test_offsite_follow_kill_switch_overrides_follow_external(monkeypatch):
+    from agents.crawler import crawl4ai_adapter as adapter
+
+    calls = []
+
+    fake_module = types.SimpleNamespace()
+
+    class AsyncWebCrawler:
+        def __init__(self, config=None):
+            self.config = config
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def arun(self, url, config=None):
+            calls.append(url)
+
+            class Res:
+                pass
+
+            res = Res()
+            res.url = url
+            res.html = "<html><head><title>t</title></head><body>content</body></html>"
+            res.markdown = None
+            if url.endswith('/seed'):
+                # Present an external candidate in the internal list to exercise
+                # adapter-level follow_external enforcement logic.
+                res.links = {
+                    'internal': [
+                        {'href': 'https://evil.com/x', 'total_score': 1.0},
+                    ]
+                }
+            else:
+                res.links = {'internal': []}
+            res.status_code = 200
+            res.success = True
+            return res
+
+    fake_module.AsyncWebCrawler = AsyncWebCrawler
+    fake_module.CacheMode = types.SimpleNamespace(BYPASS=object())
+
+    class CrawlerRunConfig:
+        def __init__(self, **kwargs):
+            pass
+
+    fake_module.CrawlerRunConfig = CrawlerRunConfig
+
+    monkeypatch.setattr(adapter, 'crawl4ai', fake_module)
+    monkeypatch.setenv('UNIFIED_CRAWLER_DISCOVERY_ENABLED', '1')
+    monkeypatch.setenv('UNIFIED_CRAWLER_OFFSITE_FOLLOW_ENABLED', '0')
+
+    site_config = SiteConfig(
+        {'domain': 'example.com', 'start_url': 'https://example.com/seed'}
+    )
+    profile = {
+        'start_urls': ['https://example.com/seed'],
+        'follow_internal_links': True,
+        'max_pages': 5,
+    }
+
+    asyncio.run(
+        adapter.crawl_site_with_crawl4ai(
+            site_config,
+            profile,
+            max_articles=5,
+            follow_external=True,
+        )
+    )
+
+    assert 'https://example.com/seed' in calls
+    assert 'https://evil.com/x' not in calls

@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import asyncio
 import importlib
+import json
 import os
+import random
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -19,6 +21,7 @@ from types import SimpleNamespace
 from typing import Any
 from urllib.parse import urljoin, urlparse
 
+from agents.common.triage_adapter import TriageAdapter
 from agents.sites.generic_site_crawler import GenericSiteCrawler, SiteConfig
 from common.json_utils import make_json_safe
 from common.observability import get_logger
@@ -29,6 +32,378 @@ except ImportError:  # pragma: no cover - metrics disabled in some environments
     get_metrics = None  # type: ignore
 
 logger = get_logger(__name__)
+
+_TRIAGE_ADAPTER = TriageAdapter(name="crawler_ingestion_triage")
+
+
+_NON_NEWS_URL_RE = re.compile(
+    r"/(contact|about|mission|corporate|careers|jobs|privacy|terms|cookies|help|support|faq|about-us|company)(/|$)",
+    re.IGNORECASE,
+)
+_INDEX_URL_RE = re.compile(
+    r"/(category|categories|tag|tags|topic|topics|section|sections|latest|most-read|editorial|opinion)(/|$)",
+    re.IGNORECASE,
+)
+_OVERLAY_TEXT_RE = re.compile(
+    r"cookie|consent|accept all|reject all|privacy settings|manage preferences|sign in|subscribe",
+    re.IGNORECASE,
+)
+_NAV_TEXT_RE = re.compile(
+    r"home\s+news|editor'?s picks|most read|top stories|latest news|breaking news|newsletter|advertis",
+    re.IGNORECASE,
+)
+
+
+@dataclass
+class IngestionTriageDecision:
+    decision: str
+    confidence: float
+    reason_codes: list[str]
+    source: str
+    page_type: str | None = None
+
+
+def _triage_enabled() -> bool:
+    return _env_bool("CRAWL4AI_INGESTION_TRIAGE_ENABLED", default=False)
+
+
+def _ai_triage_enabled() -> bool:
+    return _env_bool("CRAWL4AI_AI_TRIAGE_ENABLED", default=False)
+
+
+def _ai_triage_ambiguous_only() -> bool:
+    return _env_bool("CRAWL4AI_AI_TRIAGE_AMBIGUOUS_ONLY", default=True)
+
+
+def _ai_triage_reject_confidence() -> float:
+    raw = os.environ.get("CRAWL4AI_AI_TRIAGE_REJECT_CONFIDENCE", "0.78")
+    try:
+        return min(1.0, max(0.0, float(raw)))
+    except (TypeError, ValueError):
+        return 0.78
+
+
+def _ai_triage_domain_thresholds() -> dict[str, float]:
+    raw = os.environ.get("CRAWL4AI_AI_TRIAGE_DOMAIN_THRESHOLDS_JSON", "")
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except Exception:
+        logger.warning("Invalid CRAWL4AI_AI_TRIAGE_DOMAIN_THRESHOLDS_JSON value")
+        return {}
+    if not isinstance(parsed, dict):
+        return {}
+    out: dict[str, float] = {}
+    for key, value in parsed.items():
+        domain = str(key or "").strip().lower()
+        if not domain:
+            continue
+        try:
+            threshold = min(1.0, max(0.0, float(value)))
+        except (TypeError, ValueError):
+            continue
+        out[domain] = threshold
+    return out
+
+
+def _ai_triage_reject_confidence_for_domain(domain: str | None) -> float:
+    base = _ai_triage_reject_confidence()
+    if not domain:
+        return base
+    d = str(domain).strip().lower()
+    if not d:
+        return base
+    thresholds = _ai_triage_domain_thresholds()
+    if d in thresholds:
+        return thresholds[d]
+    # Suffix match for subdomains, preferring the longest key.
+    matched: list[tuple[int, float]] = []
+    for candidate, threshold in thresholds.items():
+        if d == candidate or d.endswith("." + candidate):
+            matched.append((len(candidate), threshold))
+    if not matched:
+        return base
+    matched.sort(key=lambda item: item[0], reverse=True)
+    return matched[0][1]
+
+
+def _record_triage_metrics(
+    decision: IngestionTriageDecision,
+    site_config: SiteConfig,
+) -> None:
+    if get_metrics is None:
+        return
+    try:
+        metrics = get_metrics("crawler")
+    except Exception:
+        return
+
+    domain = (site_config.domain or "unknown").strip().lower() or "unknown"
+    safe_domain = re.sub(r"[^a-z0-9_]+", "_", domain)
+    source = (decision.source or "unknown").strip().lower() or "unknown"
+    final_decision = (decision.decision or "unknown").strip().lower() or "unknown"
+
+    metrics.increment(f"triage_decision_{final_decision}_total")
+    metrics.increment(f"triage_source_{source}_total")
+    metrics.increment(f"triage_domain_{safe_domain}_{final_decision}_total")
+    metrics.gauge("triage_last_confidence", float(decision.confidence))
+
+    for code in decision.reason_codes[:5]:
+        safe = re.sub(r"[^a-z0-9_]+", "_", str(code).strip().lower())
+        if not safe:
+            continue
+        metrics.increment(f"triage_reason_{safe}_total")
+
+
+def _heuristic_triage_decision(url: str, title: str, content: str) -> IngestionTriageDecision:
+    text = content or ""
+    text_l = text.lower()
+    word_count = len(text.split())
+    overlay_hits = len(_OVERLAY_TEXT_RE.findall(text_l))
+    nav_hits = len(_NAV_TEXT_RE.findall(text_l))
+    reason_codes: list[str] = []
+
+    parsed = urlparse(url or "")
+    path = (parsed.path or "").lower()
+
+    if _NON_NEWS_URL_RE.search(path):
+        reason_codes.append("non_news_utility_url")
+    if _INDEX_URL_RE.search(path):
+        reason_codes.append("index_or_navigation_url")
+    if overlay_hits >= 3:
+        reason_codes.append("overlay_heavy_text")
+    if nav_hits >= 4:
+        reason_codes.append("navigation_heavy_text")
+    if word_count < 80:
+        reason_codes.append("insufficient_article_length")
+
+    # Deterministic hard reject for clear non-news utility pages.
+    if "non_news_utility_url" in reason_codes:
+        return IngestionTriageDecision(
+            decision="reject",
+            confidence=0.98,
+            reason_codes=reason_codes,
+            source="heuristic",
+            page_type="utility",
+        )
+
+    # Deterministic reject for clear index/overlay pages with low narrative density.
+    if (
+        "index_or_navigation_url" in reason_codes
+        and (overlay_hits >= 2 or nav_hits >= 5)
+        and word_count < 700
+    ):
+        return IngestionTriageDecision(
+            decision="reject",
+            confidence=0.9,
+            reason_codes=reason_codes,
+            source="heuristic",
+            page_type="index",
+        )
+
+    # Clear accept path for article-like long-form content.
+    article_cues = bool(
+        re.search(r"\b(published|updated|by\s+[A-Z][a-z]+|according to)\b", text)
+    )
+    if word_count >= 220 and overlay_hits <= 1 and nav_hits <= 2 and (article_cues or len(title) > 20):
+        return IngestionTriageDecision(
+            decision="accept",
+            confidence=0.85,
+            reason_codes=["article_like_content"],
+            source="heuristic",
+            page_type="article",
+        )
+
+    return IngestionTriageDecision(
+        decision="ambiguous",
+        confidence=0.5,
+        reason_codes=reason_codes or ["ambiguous_page_shape"],
+        source="heuristic",
+        page_type=None,
+    )
+
+
+def _extract_json_payload(text: str) -> dict[str, Any] | None:
+    if not text:
+        return None
+    clean = text.replace("```json", "```").strip()
+    if clean.startswith("```") and clean.endswith("```"):
+        clean = clean[3:-3].strip()
+    try:
+        parsed = json.loads(clean)
+        return parsed if isinstance(parsed, dict) else None
+    except Exception:
+        match = re.search(r"\{[\s\S]*\}", clean)
+        if not match:
+            return None
+        try:
+            parsed = json.loads(match.group(0))
+            return parsed if isinstance(parsed, dict) else None
+        except Exception:
+            return None
+
+
+def _triage_training_enabled() -> bool:
+    return _env_bool("CRAWL4AI_TRIAGE_TRAINING_FEEDBACK_ENABLED", default=False)
+
+
+def _triage_training_sample_rate() -> float:
+    raw = os.environ.get("CRAWL4AI_TRIAGE_TRAINING_SAMPLE_RATE", "1.0")
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return 1.0
+    return min(1.0, max(0.0, value))
+
+
+def _forward_triage_prediction_for_training(
+    *,
+    url: str,
+    title: str,
+    content: str,
+    decision: IngestionTriageDecision,
+) -> None:
+    if not _triage_training_enabled():
+        return
+    if random.random() > _triage_training_sample_rate():
+        return
+
+    snippet = (content or "")[:1200]
+    training_input = f"URL: {url}\nTitle: {title}\nContent snippet:\n{snippet}"
+    prediction_payload = {
+        "decision": decision.decision,
+        "reason_codes": list(decision.reason_codes),
+        "source": decision.source,
+        "page_type": decision.page_type,
+    }
+    training_agent = (
+        os.environ.get("CRAWL4AI_TRIAGE_TRAINING_AGENT", "crawler_triage").strip()
+        or "crawler_triage"
+    )
+
+    try:
+        from training_system.core.system_manager import collect_prediction
+
+        collect_prediction(
+            agent_name=training_agent,
+            task_type="ingestion_triage",
+            input_text=training_input,
+            prediction=prediction_payload,
+            confidence=float(decision.confidence),
+            ground_truth=None,
+            source_url=url,
+        )
+    except Exception as exc:
+        logger.debug("Failed to forward triage prediction for training: %s", exc)
+
+
+def _run_ai_triage(url: str, title: str, content: str) -> IngestionTriageDecision | None:
+    parsed = _TRIAGE_ADAPTER.classify_page(url=url, title=title, content=content)
+    if not isinstance(parsed, dict):
+        return None
+
+    decision = str(parsed.get("decision") or "").strip().lower()
+    if decision not in {"accept", "reject", "quarantine"}:
+        return None
+    try:
+        confidence = float(parsed.get("confidence", 0.5))
+    except (TypeError, ValueError):
+        confidence = 0.5
+    confidence = min(1.0, max(0.0, confidence))
+    reason_codes = [
+        str(item).strip().lower().replace(" ", "_")
+        for item in (parsed.get("reason_codes") or [])
+        if str(item).strip()
+    ]
+    return IngestionTriageDecision(
+        decision=decision,
+        confidence=confidence,
+        reason_codes=reason_codes or ["ai_triage_no_reason"],
+        source="ai",
+        page_type=str(parsed.get("page_type") or "").strip().lower() or None,
+    )
+
+
+async def _apply_ingestion_triage(
+    article: dict[str, Any],
+    site_config: SiteConfig,
+    profile: dict[str, Any],
+) -> dict[str, Any]:
+    if not _triage_enabled():
+        return article
+
+    url = str(article.get("url") or "")
+    title = str(article.get("title") or "")
+    content = str(article.get("content") or article.get("extracted_text") or "")
+    if not content:
+        return article
+
+    heuristic = _heuristic_triage_decision(url=url, title=title, content=content)
+    final_decision = heuristic
+
+    if _ai_triage_enabled():
+        should_call_ai = (not _ai_triage_ambiguous_only()) or heuristic.decision == "ambiguous"
+        if should_call_ai:
+            ai_decision = await asyncio.to_thread(_run_ai_triage, url, title, content)
+            if ai_decision is not None:
+                reject_threshold = _ai_triage_reject_confidence_for_domain(
+                    site_config.domain
+                )
+                if ai_decision.decision == "accept":
+                    final_decision = ai_decision
+                elif ai_decision.decision in {"reject", "quarantine"}:
+                    if ai_decision.confidence >= reject_threshold:
+                        final_decision = ai_decision
+                elif heuristic.decision == "ambiguous":
+                    final_decision = ai_decision
+
+    metadata = article.setdefault("extraction_metadata", {})
+    triage_meta = metadata.setdefault("ingestion_triage", {})
+    triage_meta.update(
+        {
+            "enabled": True,
+            "decision": final_decision.decision,
+            "confidence": float(final_decision.confidence),
+            "reason_codes": list(final_decision.reason_codes),
+            "source": final_decision.source,
+            "page_type": final_decision.page_type,
+            "domain": site_config.domain,
+            "profile_slug": profile.get("profile_slug"),
+            "reject_confidence_threshold": _ai_triage_reject_confidence_for_domain(
+                site_config.domain
+            ),
+        }
+    )
+
+    _record_triage_metrics(final_decision, site_config)
+
+    await asyncio.to_thread(
+        _forward_triage_prediction_for_training,
+        url=url,
+        title=title,
+        content=content,
+        decision=final_decision,
+    )
+
+    if final_decision.decision in {"reject", "quarantine"}:
+        article["skip_ingest"] = True
+        article["ingestion_status"] = (
+            "triage_quarantined"
+            if final_decision.decision == "quarantine"
+            else "triage_rejected"
+        )
+        article["skip_reason"] = "ingestion_triage"
+        article["triage_reason"] = ",".join(final_decision.reason_codes[:3])
+
+    return article
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
 
 try:  # Optional dependency, resolved at runtime when available
     crawl4ai = importlib.import_module("crawl4ai")  # type: ignore
@@ -638,6 +1013,11 @@ async def _run_adaptive_crawl(
                     builder, doc, profile, adaptive, state
                 )
                 if article:
+                    article = await _apply_ingestion_triage(
+                        article,
+                        builder.site_config,
+                        profile,
+                    )
                     seen_urls.add(article.get("url") or doc_url)
                     articles.append(article)
                 if len(articles) >= max_articles:
@@ -702,6 +1082,15 @@ async def crawl_site_with_crawl4ai(
             follow_external = os.getenv(
                 "CRAWL4AI_FOLLOW_EXTERNAL", "false"
             ).lower() in ("1", "true", "yes")
+
+    discovery_enabled = _env_bool("UNIFIED_CRAWLER_DISCOVERY_ENABLED", default=True)
+    offsite_follow_enabled = _env_bool(
+        "UNIFIED_CRAWLER_OFFSITE_FOLLOW_ENABLED", default=False
+    )
+    whitelist_only_mode = _env_bool("UNIFIED_CRAWLER_WHITELIST_ONLY_MODE", default=False)
+    if whitelist_only_mode or not discovery_enabled or not offsite_follow_enabled:
+        follow_external = False
+
     page_budget = int(profile.get("max_pages") or article_limit or len(unique_urls))
     page_budget = max(page_budget, len(unique_urls))
     configured_depth = (profile.get("extra") or {}).get("crawl_depth")
@@ -842,6 +1231,7 @@ async def crawl_site_with_crawl4ai(
                     links_followed=max(0, len(visited) - len(unique_urls)),
                 )
                 if article:
+                    article = await _apply_ingestion_triage(article, site_config, profile)
                     crawl_meta = article.setdefault("extraction_metadata", {}).setdefault(
                         "crawl4ai", {}
                     )

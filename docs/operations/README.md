@@ -28,6 +28,16 @@
 
 - [Autonomic Dynamic Orchestrator Implementation Plan (2026-03-18)](./AUTONOMIC_DYNAMIC_ORCHESTRATOR_IMPLEMENTATION_PLAN_2026-03-18.md)
 
+- [Two-Lane Traceability Implementation Plan (2026-03-20)](./TWO_LANE_TRACEABILITY_IMPLEMENTATION_PLAN_2026-03-20.md) — File-by-file implementation backlog for BBC-seed Lane 1, DDG expansion, structured attribution, and hybrid balance enforcement
+
+- [Hybrid Whitelist + Discovery Implementation Tickets (2026-03-21)](./HYBRID_WHITELIST_DISCOVERY_IMPLEMENTATION_TICKETS_2026-03-21.md) — Implementation-ready epics and tickets for controlled global discovery with anti-flood guardrails and constrained self-learning
+
+- [Hybrid Whitelist + Discovery Execution Checklist (2026-03-21)](./HYBRID_WHITELIST_DISCOVERY_EXECUTION_CHECKLIST_2026-03-21.md) — Phase gates, stop conditions, rollback checks, and sign-off tracking template
+
+- [Crawl Ingestion Triage Decisions (2026-03-21)](./CRAWL_INGESTION_TRIAGE_DECISIONS_2026-03-21.md) — Prompt experiment findings, decisions, and the implemented deterministic+AI triage approach
+
+- [Crawl Ingestion Triage System Guide (2026-03-21)](./CRAWL_INGESTION_TRIAGE_SYSTEM_GUIDE_2026-03-21.md) — Full technical and operational reference for triage functionality, runtime controls, metadata contract, user interaction, and troubleshooting
+
 - [Multi-Source Refactor Lane 2 Crawl Fallback Runbook (2026-03-17)](./MULTI_SOURCE_REFACTOR_LANE2_FALLBACK_RUNBOOK_2026-03-17.md)
 
 - [Multi-Source Refactor M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md)
@@ -54,6 +64,8 @@
 
 - [Setup Guide](./SETUP_GUIDE.md) — Complete end-to-end installation (Python, Vault, MariaDB, ChromaDB, systemd)
 
+- [Roo Code Gemma 3 + Indexing Setup Guide](./ROO_CODE_GEMMA3_INDEXING_SETUP.md) — Full dev-container configuration for LM Studio, Qdrant, and Roo workspace indexing
+
 - [Environment Configuration](./ENVIRONMENT_CONFIG.md) — Global configuration, environment variables, secrets management
 
 - [Troubleshooting](./TROUBLESHOOTING.md) — Diagnostics and recovery procedures
@@ -73,6 +85,12 @@
 - [Monitoring Scripts Reference](./MONITORING_SCRIPTS_REFERENCE.md) — Script-level monitoring checks, technical signals, and recommended run sequence
 
 - [Autonomic Dynamic Orchestrator Implementation Plan (2026-03-18)](./AUTONOMIC_DYNAMIC_ORCHESTRATOR_IMPLEMENTATION_PLAN_2026-03-18.md) — Concrete backlog and canary rollout defaults for real-time dynamic orchestration
+
+- [Two-Lane Traceability Implementation Plan (2026-03-20)](./TWO_LANE_TRACEABILITY_IMPLEMENTATION_PLAN_2026-03-20.md) — Planned rollout for BBC-seed comparative retrieval, attributed speech traceability, and hybrid balance governance
+
+- [Hybrid Whitelist + Discovery Implementation Tickets (2026-03-21)](./HYBRID_WHITELIST_DISCOVERY_IMPLEMENTATION_TICKETS_2026-03-21.md) — Delivery backlog for lifecycle states, discovery sandboxing, score-based promotion, and learning-loop guardrails
+
+- [Hybrid Whitelist + Discovery Execution Checklist (2026-03-21)](./HYBRID_WHITELIST_DISCOVERY_EXECUTION_CHECKLIST_2026-03-21.md) — Operator checklist for rollout readiness, canary gates, and emergency rollback
 
 - [Lane 2 Crawl Fallback Runbook](./MULTI_SOURCE_REFACTOR_LANE2_FALLBACK_RUNBOOK_2026-03-17.md) — Enables secondary-lane crawl attempt when primary lane yields zero new ingest
 

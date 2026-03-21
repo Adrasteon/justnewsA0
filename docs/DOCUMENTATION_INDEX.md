@@ -6,6 +6,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 ## 🚀 For New Operators (Start Here!)
 
+- [Roo Gemma 3 Indexing Quickstart](../ROO_GEMMA3_INDEXING_QUICKSTART.md) — Fast path for Roo + LM Studio + Qdrant in dev-container
+
 **Essential Reading** (in order):
 
 1. [Setup Guide](./operations/SETUP_GUIDE.md) — Complete installation from scratch
@@ -131,6 +133,16 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 - [Monitoring Scripts Reference](./operations/MONITORING_SCRIPTS_REFERENCE.md) — Script-by-script operational guide for workflow, crawl, DB, embedding, and clustering diagnostics
 
 - [Autonomic Dynamic Orchestrator Implementation Plan (2026-03-18)](./operations/AUTONOMIC_DYNAMIC_ORCHESTRATOR_IMPLEMENTATION_PLAN_2026-03-18.md) — File-level implementation backlog and canary defaults for real-time dynamic control
+
+- [Two-Lane Traceability Implementation Plan (2026-03-20)](./operations/TWO_LANE_TRACEABILITY_IMPLEMENTATION_PLAN_2026-03-20.md) — File-level backlog for BBC-seed Lane 1, DDG comparative retrieval, structured attribution, and balance governance
+
+- [Hybrid Whitelist + Discovery Implementation Tickets (2026-03-21)](./operations/HYBRID_WHITELIST_DISCOVERY_IMPLEMENTATION_TICKETS_2026-03-21.md) — Implementation-ready epics and ticket-level acceptance criteria for global discovery with strict guardrails
+
+- [Hybrid Whitelist + Discovery Execution Checklist (2026-03-21)](./operations/HYBRID_WHITELIST_DISCOVERY_EXECUTION_CHECKLIST_2026-03-21.md) — Phase-gated rollout checklist with stop conditions and rollback controls
+
+- [Crawl Ingestion Triage Decisions (2026-03-21)](./operations/CRAWL_INGESTION_TRIAGE_DECISIONS_2026-03-21.md) — Summary of prompt experiment evidence, architectural decisions, and implemented deterministic+AI triage path
+
+- [Crawl Ingestion Triage System Guide (2026-03-21)](./operations/CRAWL_INGESTION_TRIAGE_SYSTEM_GUIDE_2026-03-21.md) — Complete guide to triage architecture, decision flow, operator controls, metadata, and failure handling
 
 - [Crawler Ingest Resiliency Runbook](./operations/CRAWLER_INGEST_RESILIENCY.md) — Disk-backed deferred ingest spool, replay tuning, and outage recovery
 

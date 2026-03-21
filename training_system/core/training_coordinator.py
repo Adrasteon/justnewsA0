@@ -124,6 +124,7 @@ class OnTheFlyTrainingCoordinator:
             "analyst": deque(maxlen=max_buffer_size),
             "critic": deque(maxlen=max_buffer_size),
             "fact_checker": deque(maxlen=max_buffer_size),
+            "crawler_triage": deque(maxlen=max_buffer_size),
             # "newsreader": deque(maxlen=max_buffer_size), # Deprecated in favor of Qwen2-VL
             "synthesizer": deque(maxlen=max_buffer_size),
             "chief_editor": deque(maxlen=max_buffer_size),
@@ -412,6 +413,8 @@ class OnTheFlyTrainingCoordinator:
                 return self._update_critic_models(training_examples)
             elif agent_name == "fact_checker":
                 return self._update_fact_checker_models(training_examples)
+            elif agent_name == "crawler_triage":
+                return self._update_crawler_triage_models(training_examples)
             elif agent_name == "newsreader":
                 # return self._update_newsreader_models(training_examples)
                 logger.warning("NewsReader model update requested but agent is deprecated.")
@@ -479,6 +482,44 @@ class OnTheFlyTrainingCoordinator:
         """DEPRECATED: NewsReader agent retired."""
         logger.warning("NewsReader model update called on deprecated agent.")
         return True
+
+    def _update_crawler_triage_models(self, examples: list[TrainingExample]) -> bool:
+        """Update crawler triage adapter via MCP Bus."""
+        try:
+            from training_system.mcp_integration import mcp_client
+
+            training_data = {
+                "examples": [
+                    {
+                        "task_type": ex.task_type,
+                        "input_text": ex.input_text,
+                        "expected_output": ex.expected_output,
+                        "importance_score": ex.importance_score,
+                    }
+                    for ex in examples
+                ]
+            }
+
+            response = mcp_client.call_agent_tool(
+                agent="crawler", tool="update_triage_adapter", kwargs=training_data
+            )
+
+            success = response.get("status") == "success"
+            if success:
+                logger.info(
+                    "✅ Crawler triage adapter update dispatched with %s examples",
+                    len(examples),
+                )
+            else:
+                logger.warning(
+                    "❌ Crawler triage adapter update failed: %s",
+                    response.get("message", "Unknown error"),
+                )
+            return success
+
+        except Exception as e:
+            logger.error(f"Crawler triage model update error: {e}")
+            return False
 
     def _update_analyst_models(self, examples: list[TrainingExample]) -> bool:
         """Update Analyst V2 models with new training data via MCP Bus"""
@@ -789,6 +830,7 @@ class OnTheFlyTrainingCoordinator:
                 "analyst": 0.82,
                 "critic": 0.78,
                 "fact_checker": 0.80,
+                "crawler_triage": 0.79,
                 "synthesizer": 0.75,
                 "chief_editor": 0.77,
                 "memory": 0.88,
@@ -811,6 +853,7 @@ class OnTheFlyTrainingCoordinator:
             "analyst": "spacy-ner-en_core_web_sm",
             "critic": "nltk-pattern-analysis",
             "fact_checker": "distilbert-fact-verification",
+            "crawler_triage": "qwen2-crawler-triage-lora",
             "synthesizer": "bart-news-summarization",
             "chief_editor": "bert-task-classification",
             "memory": "sentence-transformers-semantic-search",

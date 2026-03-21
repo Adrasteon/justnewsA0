@@ -210,6 +210,17 @@ class SystemWideTrainingManager:
                     "content_deduplication",
                 ],
             },
+            "crawler_triage": {
+                "update_threshold": 40,
+                "models": [
+                    "qwen2_ingestion_triage_adapter",
+                    "triage_reason_classifier",
+                ],
+                "tasks": [
+                    "ingestion_triage",
+                    "triage_reasoning",
+                ],
+            },
         }
 
         logger.info("🎯 System-Wide Training Manager initialized")

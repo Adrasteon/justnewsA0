@@ -140,6 +140,7 @@ def validate_training_example(example: dict[str, Any]) -> bool:
             "analyst",
             "critic",
             "fact_checker",
+            "crawler_triage",
             "synthesizer",
             "chief_editor",
             "memory",

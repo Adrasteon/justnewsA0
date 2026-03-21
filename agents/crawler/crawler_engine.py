@@ -56,6 +56,7 @@ from .crawler_utils import (
     get_source_performance_history,
     get_sources_by_domain,
     initialize_connection_pool,
+    is_source_row_eligible_for_crawl,
     record_crawling_performance,
     record_paywall_detection,
 )
@@ -80,6 +81,13 @@ def _env_bool(name: str, default: bool = False) -> bool:
     if raw is None:
         return default
     return str(raw).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _safe_int(value: Any, default: int) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
 
 
 def _load_testing_seed_priority_domains() -> list[str]:
@@ -171,6 +179,20 @@ def _load_lane2_seed_priority_domains() -> list[str]:
     except Exception as exc:
         logger.warning("Failed loading lane2 seed file %s: %s", seed_path, exc)
         return []
+
+
+def _is_discovery_enabled() -> bool:
+    # Keep existing behavior by default; this flag acts as a runtime kill switch.
+    return _env_bool("UNIFIED_CRAWLER_DISCOVERY_ENABLED", default=True)
+
+
+def _is_whitelist_only_mode() -> bool:
+    return _env_bool("UNIFIED_CRAWLER_WHITELIST_ONLY_MODE", default=False)
+
+
+def _is_provisional_ingest_enabled() -> bool:
+    # Preserve current behavior unless explicitly disabled.
+    return _env_bool("UNIFIED_CRAWLER_PROVISIONAL_INGEST_ENABLED", default=True)
 
 
 def call_analyst_tool(tool: str, *args, **kwargs) -> Any:
@@ -375,6 +397,18 @@ class CrawlerEngine:
             )
         )
         self._ingest_spool_lock = asyncio.Lock()
+        self.triage_quarantine_enabled = _env_bool(
+            "UNIFIED_CRAWLER_TRIAGE_QUARANTINE_ENABLED", default=True
+        )
+        self.triage_quarantine_dir = Path(
+            os.environ.get(
+                "UNIFIED_CRAWLER_TRIAGE_QUARANTINE_DIR",
+                "/tmp/justnews_triage_quarantine",
+            )
+        )
+        self.triage_quarantine_max_items = _parse_int(
+            "UNIFIED_CRAWLER_TRIAGE_QUARANTINE_MAX_ITEMS", 5000, 100
+        )
         self.dedupe_articles = _env_bool("DEDUPE_ARTICLES", default=True)
         if not self.dedupe_articles:
             logger.warning(
@@ -390,6 +424,17 @@ class CrawlerEngine:
                     spool_error,
                 )
                 self.ingest_spool_enabled = False
+
+        if self.triage_quarantine_enabled:
+            try:
+                self.triage_quarantine_dir.mkdir(parents=True, exist_ok=True)
+            except Exception as quarantine_error:
+                logger.warning(
+                    "Failed to create triage quarantine dir %s: %s",
+                    self.triage_quarantine_dir,
+                    quarantine_error,
+                )
+                self.triage_quarantine_enabled = False
 
     def _spool_depth(self) -> int:
         if not self.ingest_spool_enabled:
@@ -425,6 +470,44 @@ class CrawlerEngine:
             self.ingest_spool_max_items,
             overflow,
         )
+
+    def _triage_quarantine_depth(self) -> int:
+        if not self.triage_quarantine_enabled:
+            return 0
+        try:
+            return sum(1 for _ in self.triage_quarantine_dir.glob("*.json"))
+        except Exception:
+            return 0
+
+    def _triage_quarantine_prune_oldest(self) -> None:
+        files = sorted(self.triage_quarantine_dir.glob("*.json"), key=lambda p: p.name)
+        overflow = len(files) - self.triage_quarantine_max_items
+        if overflow <= 0:
+            return
+        for path in files[:overflow]:
+            try:
+                path.unlink(missing_ok=True)
+            except Exception:
+                pass
+        logger.warning(
+            "Triage quarantine exceeded %s items; pruned %s oldest entries",
+            self.triage_quarantine_max_items,
+            overflow,
+        )
+
+    def _write_triage_quarantine_item(self, article: dict[str, Any]) -> None:
+        if not self.triage_quarantine_enabled:
+            return
+        self.triage_quarantine_dir.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "article": make_json_safe(article),
+            "quarantined_at": time.time(),
+            "reason": article.get("triage_reason") or article.get("skip_reason"),
+        }
+        filename = f"{int(time.time() * 1000)}_{uuid4().hex}.json"
+        path = self.triage_quarantine_dir / filename
+        path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        self._triage_quarantine_prune_oldest()
 
     def _spool_read_replay_batch(self, batch_size: int) -> list[dict[str, Any]]:
         files = sorted(self.ingest_spool_dir.glob("*.json"), key=lambda p: p.name)[
@@ -962,6 +1045,7 @@ class CrawlerEngine:
         Main entry point for unified crawling - converts domains to SiteConfig objects and runs crawl
         """
         logger.info(f"🚀 Starting unified crawl for domains: {domains}")
+        whitelist_only_mode = _is_whitelist_only_mode()
 
         # Convert domains to SiteConfig objects
         site_configs = []
@@ -973,9 +1057,26 @@ class CrawlerEngine:
                 sources = get_sources_by_domain([domain])  # Pass as list
                 if sources:
                     source = sources[0]  # Use first match
+                    if not is_source_row_eligible_for_crawl(
+                        source,
+                        whitelist_only_mode=whitelist_only_mode,
+                        discovery_enabled=_is_discovery_enabled(),
+                        provisional_ingest_enabled=_is_provisional_ingest_enabled(),
+                    ):
+                        logger.warning(
+                            "Source %s skipped by lifecycle eligibility policy",
+                            domain,
+                        )
+                        continue
                     config = SiteConfig(source)
                     site_configs.append(config)
                 else:
+                    if whitelist_only_mode:
+                        logger.warning(
+                            "Whitelist-only mode enabled; skipping unknown domain %s",
+                            domain,
+                        )
+                        continue
                     # Create basic config for unknown domains
                     logger.warning(
                         f"No database entry for {domain}, creating basic config"
@@ -1033,7 +1134,11 @@ class CrawlerEngine:
             "duplicates": 0,
             "errors": 0,
             "paywalls": 0,
+            "triage_quarantined": 0,
         }
+        whitelist_only_mode = _is_whitelist_only_mode()
+        discovery_enabled = _is_discovery_enabled()
+        provisional_ingest_enabled = _is_provisional_ingest_enabled()
         total_successful = 0
         total_candidates = 0
         all_articles: list[dict[str, Any]] = []
@@ -1073,6 +1178,7 @@ class CrawlerEngine:
                 site_duplicates = 0
                 site_errors = 0
                 site_paywalls = 0
+                site_quarantined = 0
                 site_articles_local: list[dict[str, Any]] = []
                 site_details: list[dict[str, Any]] = []
                 seen_keys: set[str] = set()
@@ -1248,35 +1354,61 @@ class CrawlerEngine:
 
                     return total_new_articles
 
-                def _filter_paywall_skips(
+                def _filter_skipped_candidates(
                     batch: list[dict[str, Any]],
                 ) -> tuple[list[dict[str, Any]], int]:
-                    """Separate paywalled articles from the batch and record skip metadata."""
-                    nonlocal site_articles_local, site_details, site_paywalls
+                    """Separate skip-marked candidates and record reason-aware metadata."""
+                    nonlocal site_articles_local, site_details, site_paywalls, site_quarantined
                     if not batch:
                         return batch, 0
 
-                    paywall_skips = [
+                    skipped_candidates = [
                         article for article in batch if article.get("skip_ingest")
                     ]
-                    if paywall_skips:
-                        for article in paywall_skips:
+                    if skipped_candidates:
+                        for article in skipped_candidates:
                             metadata = article.setdefault("extraction_metadata", {})
-                            paywall_meta = metadata.setdefault("paywall_detection", {})
-                            paywall_meta["skipped"] = True
-                            article["paywall_flag"] = True
-                            article["ingestion_status"] = "paywall_skipped"
-                        site_articles_local.extend(paywall_skips)
-                        site_details.extend(
-                            {"url": article.get("url"), "status": "paywall_skipped"}
-                            for article in paywall_skips
-                        )
-                        site_paywalls += len(paywall_skips)
+                            status = str(
+                                article.get("ingestion_status")
+                                or article.get("skip_reason")
+                                or "candidate_skipped"
+                            )
+                            if article.get("paywall_flag"):
+                                paywall_meta = metadata.setdefault(
+                                    "paywall_detection", {}
+                                )
+                                paywall_meta["skipped"] = True
+                                article["ingestion_status"] = "paywall_skipped"
+                                status = "paywall_skipped"
+                                site_paywalls += 1
+
+                            if status == "triage_quarantined":
+                                self._write_triage_quarantine_item(article)
+                                site_quarantined += 1
+
+                            triage_meta = metadata.get("ingestion_triage")
+                            triage_reason = article.get("triage_reason")
+
+                            detail = {"url": article.get("url"), "status": status}
+                            if triage_reason:
+                                detail["reason"] = triage_reason
+                            elif isinstance(triage_meta, dict) and triage_meta.get(
+                                "reason_codes"
+                            ):
+                                detail["reason"] = ",".join(
+                                    [
+                                        str(code)
+                                        for code in triage_meta.get("reason_codes", [])
+                                    ][:3]
+                                )
+                            site_details.append(detail)
+
+                        site_articles_local.extend(skipped_candidates)
 
                     remaining = [
                         article for article in batch if not article.get("skip_ingest")
                     ]
-                    return remaining, len(paywall_skips)
+                    return remaining, len(skipped_candidates)
 
                 try:
                     if (
@@ -1317,12 +1449,12 @@ class CrawlerEngine:
                                 exhaustion_reason = "no_new_candidates"
                                 break
 
-                            filtered_batch, paywall_skipped = _filter_paywall_skips(
+                            filtered_batch, skipped_count = _filter_skipped_candidates(
                                 filtered_batch
                             )
 
                             if not filtered_batch:
-                                if paywall_skipped:
+                                if skipped_count:
                                     if (
                                         remaining_budget is not None
                                         and remaining_budget <= 0
@@ -1373,12 +1505,12 @@ class CrawlerEngine:
                                     seen_keys.add(key)
                                 filtered_batch.append(article)
 
-                            filtered_batch, paywall_skipped = _filter_paywall_skips(
+                            filtered_batch, skipped_count = _filter_skipped_candidates(
                                 filtered_batch
                             )
 
                             if not filtered_batch:
-                                if paywall_skipped:
+                                if skipped_count:
                                     if (
                                         remaining_budget is not None
                                         and remaining_budget <= 0
@@ -1468,11 +1600,11 @@ class CrawlerEngine:
                                     exhaustion_reason = "adaptive_no_new_candidates"
                                     break
 
-                                filtered_batch, paywall_skipped = _filter_paywall_skips(
+                                filtered_batch, skipped_count = _filter_skipped_candidates(
                                     filtered_batch
                                 )
                                 if not filtered_batch:
-                                    if paywall_skipped:
+                                    if skipped_count:
                                         exhaustion_reason = "adaptive_paywalls_only"
                                     else:
                                         exhaustion_reason = "adaptive_no_new_candidates"
@@ -1548,6 +1680,7 @@ class CrawlerEngine:
                             "duplicates": site_duplicates,
                             "errors": site_errors,
                             "paywalls": site_paywalls,
+                            "triage_quarantined": site_quarantined,
                             "exhaustion_reason": exhaustion_reason,
                             "details": site_details,
                         }
@@ -1555,6 +1688,7 @@ class CrawlerEngine:
                         ingestion_totals["duplicates"] += site_duplicates
                         ingestion_totals["errors"] += site_errors
                         ingestion_totals["paywalls"] += site_paywalls
+                        ingestion_totals["triage_quarantined"] += site_quarantined
                         total_successful += site_ingested
                         total_candidates += site_candidates
                         all_articles.extend(site_articles_local)
@@ -1592,6 +1726,8 @@ class CrawlerEngine:
         lane2_fallback_enabled = _env_bool(
             "UNIFIED_CRAWLER_LANE2_FALLBACK_ENABLED", default=False
         )
+        if whitelist_only_mode:
+            lane2_fallback_enabled = False
         if lane2_fallback_enabled and site_configs and total_successful == 0:
             try:
                 lane2_max_sites = max(
@@ -1638,6 +1774,13 @@ class CrawlerEngine:
                 sources = get_sources_by_domain([domain])
                 if sources:
                     source = sources[0]
+                    if not is_source_row_eligible_for_crawl(
+                        source,
+                        whitelist_only_mode=whitelist_only_mode,
+                        discovery_enabled=discovery_enabled,
+                        provisional_ingest_enabled=provisional_ingest_enabled,
+                    ):
+                        continue
                     replacement_config = SiteConfig(source)
                 else:
                     replacement_config = SiteConfig(
@@ -1868,6 +2011,102 @@ class CrawlerEngine:
                         target_total_articles,
                     )
 
+        lane1_plan: dict[str, Any] | None = None
+        lane1_expansion_stats: dict[str, Any] | None = None
+
+        lane1_plan_enabled = _env_bool(
+            "UNIFIED_CRAWLER_LANE1_COMPARATIVE_PLAN_ENABLED", default=True
+        )
+        if lane1_plan_enabled and all_articles:
+            try:
+                from agents.workflow_orchestrator.lane1_workflow import (
+                    Lane1Config,
+                    Lane1Workflow,
+                )
+
+                seed_count = max(
+                    1,
+                    _safe_int(
+                        os.environ.get("LANE1_BBC_SEED_COUNT")
+                        or os.environ.get("UNIFIED_CRAWLER_LANE1_SEED_COUNT"),
+                        10,
+                    ),
+                )
+                max_related = max(
+                    1,
+                    _safe_int(
+                        os.environ.get("LANE1_MAX_RELATED_PER_SEED")
+                        or os.environ.get("UNIFIED_CRAWLER_LANE1_MAX_RELATED_PER_SEED"),
+                        5,
+                    ),
+                )
+                max_queries = max(
+                    1,
+                    _safe_int(
+                        os.environ.get("LANE1_DDG_MAX_QUERIES_PER_SEED")
+                        or os.environ.get(
+                            "UNIFIED_CRAWLER_LANE1_DDG_MAX_QUERIES_PER_SEED"
+                        ),
+                        3,
+                    ),
+                )
+
+                lane1_config = Lane1Config(
+                    seed_count=seed_count,
+                    max_related_per_seed=max_related,
+                    ddg_max_queries_per_seed=max_queries,
+                    require_bbc_first=_env_bool("LANE1_REQUIRE_BBC_FIRST", default=True),
+                )
+
+                lane1_workflow = Lane1Workflow(config=lane1_config)
+                lane1_plan = lane1_workflow.build_seed_expansion_plan(all_articles)
+
+                lane1_ingest_enabled = _env_bool(
+                    "UNIFIED_CRAWLER_LANE1_EXPANSION_INGEST_ENABLED", default=True
+                )
+                if (
+                    whitelist_only_mode
+                    or not discovery_enabled
+                    or not provisional_ingest_enabled
+                ):
+                    lane1_ingest_enabled = False
+                lane1_candidates = self._build_lane1_expansion_candidates(lane1_plan)
+
+                if lane1_ingest_enabled and lane1_candidates:
+                    await self._submit_hitl_candidates(lane1_candidates, None)
+                    lane1_ingest = await self._ingest_articles(lane1_candidates)
+
+                    ingestion_totals["new_articles"] += lane1_ingest.get(
+                        "new_articles", 0
+                    )
+                    ingestion_totals["duplicates"] += lane1_ingest.get(
+                        "duplicates", 0
+                    )
+                    ingestion_totals["errors"] += lane1_ingest.get("errors", 0)
+                    total_successful += lane1_ingest.get("new_articles", 0)
+                    total_candidates += len(lane1_candidates)
+                    all_articles.extend(lane1_candidates)
+
+                    lane1_expansion_stats = {
+                        "enabled": True,
+                        "candidate_count": len(lane1_candidates),
+                        "new_articles": lane1_ingest.get("new_articles", 0),
+                        "duplicates": lane1_ingest.get("duplicates", 0),
+                        "errors": lane1_ingest.get("errors", 0),
+                        "deferred": lane1_ingest.get("deferred", 0),
+                    }
+                else:
+                    lane1_expansion_stats = {
+                        "enabled": bool(lane1_ingest_enabled),
+                        "candidate_count": len(lane1_candidates),
+                        "new_articles": 0,
+                        "duplicates": 0,
+                        "errors": 0,
+                        "deferred": 0,
+                    }
+            except Exception as exc:
+                logger.warning("Lane1 comparative plan generation failed: %s", exc)
+
         total_time = time.time() - start_time
         total_ingested = ingestion_totals["new_articles"]
         articles_per_second = total_ingested / total_time if total_time > 0 else 0
@@ -1928,6 +2167,12 @@ class CrawlerEngine:
         if adaptive_summary:
             summary["adaptive_summary"] = adaptive_summary
 
+        if lane1_plan:
+            summary["lane1_comparative_plan"] = lane1_plan
+            summary["lane1_seed_count"] = lane1_plan.get("seed_count", 0)
+        if lane1_expansion_stats is not None:
+            summary["lane1_expansion_ingest"] = lane1_expansion_stats
+
         logger.info(
             "✅ Unified crawl completed: %s ingested out of %s candidates in %.2fs (%.2f new articles/sec)",
             total_ingested,
@@ -1936,6 +2181,85 @@ class CrawlerEngine:
             articles_per_second,
         )
         return summary
+
+    def _build_lane1_expansion_candidates(
+        self, lane1_plan: dict[str, Any] | None
+    ) -> list[dict[str, Any]]:
+        """Transform lane1 plan results into ingest-ready article payloads."""
+        if not isinstance(lane1_plan, dict):
+            return []
+
+        seed_runs = lane1_plan.get("seed_runs")
+        if not isinstance(seed_runs, list):
+            return []
+
+        candidates: list[dict[str, Any]] = []
+        seen_urls: set[str] = set()
+
+        for run in seed_runs:
+            if not isinstance(run, dict):
+                continue
+            results = run.get("results")
+            if not isinstance(results, list):
+                continue
+
+            seed_source = run.get("seed_source")
+            seed_article_id = None
+            seed_domain = None
+            if isinstance(seed_source, dict):
+                seed_article_id = seed_source.get("article_id")
+                seed_domain = seed_source.get("source_domain")
+
+            for result in results:
+                if not isinstance(result, dict):
+                    continue
+                url = str(result.get("url") or "").strip()
+                if not url or url in seen_urls:
+                    continue
+                seen_urls.add(url)
+
+                parsed = urlparse(url)
+                domain = (parsed.netloc or "").lower()
+                if not domain:
+                    continue
+
+                title = str(result.get("title") or "").strip() or url
+                snippet = str(result.get("snippet") or "").strip()
+                candidates.append(
+                    {
+                        "url": url,
+                        "title": title,
+                        "content": snippet,
+                        "domain": domain,
+                        "source_name": domain,
+                        "publisher_meta": {
+                            "lane": "lane1",
+                            "retrieval_mode": "ddg_comparative_expansion",
+                            "seed_article_id": seed_article_id,
+                            "seed_source_domain": seed_domain,
+                        },
+                        "extraction_metadata": {
+                            "lane": "lane1",
+                            "comparative_expansion": True,
+                            "seed_article_id": seed_article_id,
+                            "seed_source_domain": seed_domain,
+                            "queries": run.get("queries", []),
+                        },
+                    }
+                )
+
+        try:
+            max_candidates = max(
+                1,
+                int(
+                    os.environ.get(
+                        "UNIFIED_CRAWLER_LANE1_EXPANSION_MAX_CANDIDATES", "200"
+                    )
+                ),
+            )
+        except (TypeError, ValueError):
+            max_candidates = 200
+        return candidates[:max_candidates]
 
     def _build_hitl_candidate_payload(
         self, article: dict, site_config: SiteConfig | None

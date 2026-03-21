@@ -6,9 +6,12 @@ Unified production crawling agent with MCP integration.
 
 import asyncio
 import concurrent.futures
+import json
 import os
 import uuid
 from contextlib import asynccontextmanager
+from datetime import timezone, datetime
+from pathlib import Path
 from typing import Any
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException
@@ -60,6 +63,12 @@ cancel_requested_jobs: set[str] = set()
 # Environment variables
 CRAWLER_AGENT_PORT = int(os.environ.get("CRAWLER_AGENT_PORT", 8015))
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
+TRIAGE_TRAINING_DATA_PATH = Path(
+    os.environ.get(
+        "CRAWL4AI_TRIAGE_TRAINING_DATA_PATH",
+        "/tmp/justnews_crawler_triage_training_data.jsonl",
+    )
+)
 
 
 def require_api_token(
@@ -85,6 +94,29 @@ def require_api_token(
     if token != expected:
         raise HTTPException(status_code=403, detail="Invalid API token")
     return None
+
+
+def _persist_triage_training_examples(examples: list[dict[str, Any]]) -> int:
+    if not examples:
+        return 0
+
+    TRIAGE_TRAINING_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+    written = 0
+    with TRIAGE_TRAINING_DATA_PATH.open("a", encoding="utf-8") as fh:
+        for item in examples:
+            if not isinstance(item, dict):
+                continue
+            record = {
+                "received_at": datetime.now(timezone.utc).isoformat(),
+                "source": "training_system",
+                "task_type": item.get("task_type") or "ingestion_triage",
+                "input_text": item.get("input_text") or "",
+                "expected_output": item.get("expected_output"),
+                "importance_score": item.get("importance_score", 0.5),
+            }
+            fh.write(json.dumps(record, separators=(",", ":")) + "\n")
+            written += 1
+    return written
 
 
 # Security configuration
@@ -196,6 +228,7 @@ async def lifespan(app: FastAPI):
             agent_address=f"http://localhost:{CRAWLER_AGENT_PORT}",
             tools=[
                 "unified_production_crawl",
+                "update_triage_adapter",
                 "get_crawler_info",
                 "get_performance_metrics",
                 "get_jobs",
@@ -481,6 +514,29 @@ def get_performance_metrics_endpoint(call: ToolCall):
     except Exception as e:
         logger.error(f"An error occurred in get_performance_metrics: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/update_triage_adapter")
+def update_triage_adapter_endpoint(call: ToolCall, token_ok: None = Depends(require_api_token)):
+    """Accept triage training examples from training_system and persist for adapter training."""
+    try:
+        examples = call.kwargs.get("examples")
+        if not isinstance(examples, list):
+            return {
+                "status": "error",
+                "message": "Missing or invalid examples list",
+                "accepted": 0,
+            }
+
+        accepted = _persist_triage_training_examples(examples)
+        return {
+            "status": "success",
+            "accepted": accepted,
+            "training_data_path": str(TRIAGE_TRAINING_DATA_PATH),
+        }
+    except Exception as e:
+        logger.error("update_triage_adapter failed: %s", e)
+        return {"status": "error", "message": str(e), "accepted": 0}
 
 
 @app.get("/health")

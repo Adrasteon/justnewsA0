@@ -5,7 +5,10 @@
       "model_store_agent": "base_models",
       "model_store_version": "v20251123-mistral-v0.3",
       "variant_preference": "bnb-int8",
-      "quantized_variants": ["bnb-int8", "fp16"],
+      "quantized_variants": [
+        "bnb-int8",
+        "fp16"
+      ],
       "approx_vram_mb": 23540,
       "peft_support": true
     },
@@ -14,7 +17,10 @@
       "model_store_agent": "base_models",
       "model_store_version": "v20251216-qwen2.5-14b",
       "variant_preference": "awq",
-      "quantized_variants": ["awq", "fp16"],
+      "quantized_variants": [
+        "awq",
+        "fp16"
+      ],
       "inference_mode": "vllm",
       "vllm_endpoint": "http://127.0.0.1:8010/v1"
     },
@@ -22,7 +28,10 @@
       "hf_id": "Qwen/Qwen2-VL-2B-Instruct",
       "model_store_agent": "base_models",
       "variant_preference": "fp16",
-      "quantized_variants": ["fp16", "awq"],
+      "quantized_variants": [
+        "fp16",
+        "awq"
+      ],
       "approx_vram_mb": 4096,
       "inference_mode": "local",
       "peft_support": true
@@ -31,7 +40,10 @@
       "hf_id": "Systran/faster-distil-whisper-large-v3",
       "model_store_agent": "base_models",
       "variant_preference": "default",
-      "quantized_variants": ["int8", "float16"],
+      "quantized_variants": [
+        "int8",
+        "float16"
+      ],
       "approx_vram_mb": 2048,
       "inference_mode": "local",
       "peft_support": false
@@ -114,6 +126,15 @@
         "adapter_model_store_path": "analyst/adapters/mistral_analyst_v1",
         "variant_preference": "bnb-int8"
       }
+    ],
+    "crawler_triage": [
+      {
+        "base_ref": "qwen2-14b-awq",
+        "adapter_name": "qwen2_crawler_triage_v1",
+        "adapter_model_store_path": "crawler_triage/adapters/qwen2_crawler_triage_v1",
+        "variant_preference": "awq",
+        "inference_mode": "vllm"
+      }
     ]
   },
   "vllm_agents": {
@@ -192,6 +213,15 @@
         "base_ref": "qwen2-14b-awq",
         "adapter_name": "qwen2_analyst_v1",
         "adapter_model_store_path": "analyst/adapters/qwen2_analyst_v1",
+        "variant_preference": "awq",
+        "inference_mode": "vllm"
+      }
+    ],
+    "crawler_triage": [
+      {
+        "base_ref": "qwen2-14b-awq",
+        "adapter_name": "qwen2_crawler_triage_v1",
+        "adapter_model_store_path": "crawler_triage/adapters/qwen2_crawler_triage_v1",
         "variant_preference": "awq",
         "inference_mode": "vllm"
       }

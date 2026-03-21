@@ -48,6 +48,12 @@
     "fallbacks": [],
     "notes": "Uses ModelStore adapter qwen_analyst_v1 by default."
   },
+  "crawler_triage": {
+    "default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "vllm_default": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "fallbacks": [],
+    "notes": "Uses ModelStore adapter qwen2_crawler_triage_v1 for Crawl4AI ingestion triage classification."
+  },
   "scout": {
     "default": "sentence-transformers/all-MiniLM-L6-v2",
     "fallbacks": [],
