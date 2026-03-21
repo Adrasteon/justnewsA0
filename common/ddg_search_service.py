@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from common.observability import get_logger
 
 try:
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
 except Exception:  # pragma: no cover
     DDGS = None
 
@@ -171,7 +171,7 @@ class DdgSearchService:
 
     def _run_ddg_text(self, query: str, max_results: int) -> list[dict[str, Any]]:
         if DDGS is None:
-            raise RuntimeError("duckduckgo_search is unavailable")
+            raise RuntimeError("ddgs is unavailable")
         with DDGS(timeout=int(self.timeout_seconds)) as ddgs:
             return list(ddgs.text(query, max_results=max_results))
 

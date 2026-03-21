@@ -10,6 +10,24 @@ Companion: `HYBRID_WHITELIST_DISCOVERY_IMPLEMENTATION_TICKETS_2026-03-21.md`
 2. Do not advance canary stages unless all mandatory gates are green.
 3. If any critical gate fails, execute rollback and open an incident artifact.
 
+## Current Implementation Snapshot (2026-03-21)
+
+This section records the latest engineering validation run and should be updated
+at each phase checkpoint.
+
+- Validation command executed in UV venv (revalidated at 20:38 UTC):
+	`python -m pytest -q tests/agents/crawler/test_crawl4ai_ingestion_triage.py agents/crawler/tests/test_endpoints.py tests/agents/test_runtime_config_traceability.py tests/common/test_ddg_search_service.py tests/agents/test_crawler_engine.py -k "whitelist_only or provisional or discovery_disabled or lane2_fallback or triage or runtime_config_accepts_discovery_kill_switch_keys or update_triage_adapter_endpoint_persists_examples or ddg"`
+- Result: 18 passed, 38 deselected, 0 failed.
+- Status summary:
+	- Gate A foundations present (runtime kill-switch keys, audit log, rollback API).
+	- Gate B core lifecycle enforcement present (state schema + transition history + eligibility checks).
+	- Gate C partially implemented (domain filtering and whitelist/provisional gating validated; discovery guardrails still require explicit execution artifacts).
+	- Gates D-I remain open pending staged implementation and operations evidence.
+- Known warnings from run:
+	- OpenTelemetry trace export warning seen in test environment (`127.0.0.1:4317` unavailable).
+- Migration status:
+	- DDG client dependency migration completed (`duckduckgo_search` -> `ddgs`) in runtime code and dependency manifests.
+
 ## Phase Gate A: Safety Baseline (Must Pass Before Any Discovery Enablement)
 
 - [ ] Kill switches implemented and validated under active crawl load.

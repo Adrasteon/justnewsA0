@@ -722,6 +722,7 @@ class TestCrawlerEngine:
                 {
                     "UNIFIED_CRAWLER_LANE2_FALLBACK_ENABLED": "1",
                     "UNIFIED_CRAWLER_LANE2_SEED_ENABLED": "0",
+                    "UNIFIED_CRAWLER_LANE1_COMPARATIVE_PLAN_ENABLED": "0",
                     "UNIFIED_CRAWLER_LANE2_FALLBACK_DOMAINS": "lane2.com",
                     "UNIFIED_CRAWLER_LANE2_MAX_SITES": "1",
                     "UNIFIED_CRAWLER_LANE2_MAX_ARTICLES_PER_SITE": "1",

@@ -65,7 +65,6 @@ playwright
 # NOTE: Browser binaries are NOT installed by pip.
 # After install, run:
 #   python -m playwright install --with-deps chromium
-duckduckgo-search>=5.0
 ddgs>=9.10.0
 faster-whisper>=1.0
 qwen-vl-utils

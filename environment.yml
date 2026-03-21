@@ -53,7 +53,7 @@ dependencies:
   - websockets
 
   # Enterprise Research Stack (Recommended)
-  # - duckduckgo-search>=5.0  # Privacy-friendly search
+  # - ddgs>=9.10.0  # Privacy-friendly search
   # - faster-whisper>=1.0     # Traceable audio transcription (for AV support)
 
   # Browser Automation
@@ -105,7 +105,7 @@ dependencies:
     - playwright
     # After environment creation, install browser binaries:
     #   python -m playwright install --with-deps chromium
-    - duckduckgo-search>=5.0
+    - ddgs>=9.10.0
     - faster-whisper>=1.0
     - qwen-vl-utils
     - datasets
