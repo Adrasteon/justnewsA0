@@ -1,0 +1,79 @@
+{
+  "cluster_id": "CL-75e4a978",
+  "variant": "strict_t02",
+  "temperature": 0.2,
+  "elapsed_seconds": 2.421,
+  "request_error": null,
+  "request_payload": {
+    "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "temperature": 0.2,
+    "max_tokens": 1400,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a neutral news synthesis editor. Use only facts in provided snippets. If snippets conflict, report conflict explicitly and do not guess. If evidence is insufficient, state insufficient evidence. Do not invent names, numbers, quotes, dates, or locations. Output valid JSON only with keys: title, summary, body, key_points, conflicts, cautions, source_attribution."
+      },
+      {
+        "role": "user",
+        "content": "Context: cluster\nYou are given indexed sources. Use source indices in source_attribution.\nSOURCES:\n[0] How MBS’s bet on Iran backfired Subscribe to unlock this article Try unlimited access Only £1 for 4 weeksThen £59 per month. Complete digital access to quality FT journalism on any device. Cancel anytime during your trial. - Global news & analysis - Expert opinion - FT App on Android & iOS - First FT: the day’s biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 10 additional monthly gift articles to share - Lex: FT’s flagship investment column - 15+ Premium newsletters from leading experts - FT Digital Edition: our digitised print edition Explore more offers. Standard Digital £39 per month Essential digital access to quality FT journalism on any device. Pay a year upfront and save 20%. - Global news & analysis - Expert opinion - FT App on Android & iOS - FT Edit: Access on iOS and web - FirstFT: the day's biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 10 monthly gift articles to share Premium Digital Complete coverage £59 per month Complete digital access to quality FT journalism with expert analysis from industry leaders. Pay a year upfront and save 20%. - Global news & analysis - Expert opinion - FT App on Android & iOS - FT Edit: Access on iOS and web - FirstFT: the day's biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 20 monthly gift articles to share - Lex: FT's flagship investment column - 15+ Premium newsletters by leading experts - FT Digital Edition: our digitised print edition Premium & FT Weekend Print £65 per month FT Weekend newspaper delivered Saturday plus complete digital access. - FT Weekend Print delivery - Plus - Everything in Premium Digital Check whether you already have access via your university or organisation. Terms & Conditions apply Explore our full range of subscriptions. For individuals Discover all the plans currently available in your country For multiple readers Digital access for organisations. Includes exclusive features and content. Why the FT? See why over a million readers pay to read the Financial Times.\n[1] Who is winning the Middle East war? Try unlimited access Only £1 for 4 weeksThen £59 per month. Complete digital access to quality FT journalism on any device. Cancel anytime during your trial. Explore more offers. FT Edit Access to eight surprising articles a day, hand-picked by FT editors. For seamless reading, access content via the FT Edit page on FT.com and receive the FT Edit newsletter. - FT Edit: Access on iOS and web Standard Digital Essential digital access to quality FT journalism on any device. Pay a year upfront and save 20%. - Global news & analysis - Expert opinion - FT App on Android & iOS - FT Edit: Access on iOS and web - FirstFT: the day's biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 10 monthly gift articles to share Premium Digital Complete digital access to quality FT journalism with expert analysis from industry leaders. Pay a year upfront and save 20%. - Global news & analysis - Expert opinion - FT App on Android & iOS - FT Edit: Access on iOS and web - FirstFT: the day's biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 20 monthly gift articles to share - Lex: FT's flagship investment column - 15+ Premium newsletters by leading experts - FT Digital Edition: our digitised print edition Check whether you already have access via your university or organisation. Terms & Conditions apply Explore our full range of subscriptions. For individuals Discover all the plans currently available in your country For multiple readers Digital access for organisations. Includes exclusive features and content. Why the FT? See why over a million readers pay to read the Financial Times.\n[2] China is not going to bail Trump out Subscribe to unlock this article Try unlimited access Only £1 for 4 weeksThen £59 per month. Complete digital access to quality FT journalism on any device. Cancel anytime during your trial. - Global news & analysis - Expert opinion - FT App on Android & iOS - First FT: the day’s biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 10 additional monthly gift articles to share - Lex: FT’s flagship investment column - 15+ Premium newsletters from leading experts - FT Digital Edition: our digitised print edition Explore more offers. Standard Digital £39 per month Essential digital access to quality FT journalism on any device. Pay a year upfront and save 20%. - Global news & analysis - Expert opinion - FT App on Android & iOS - FT Edit: Access on iOS and web - FirstFT: the day's biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 10 monthly gift articles to share Premium Digital Complete coverage £59 per month Complete digital access to quality FT journalism with expert analysis from industry leaders. Pay a year upfront and save 20%. - Global news & analysis - Expert opinion - FT App on Android & iOS - FT Edit: Access on iOS and web - FirstFT: the day's biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 20 monthly gift articles to share - Lex: FT's flagship investment column - 15+ Premium newsletters by leading experts - FT Digital Edition: our digitised print edition Premium & FT Weekend Print £65 per month FT Weekend newspaper delivered Saturday plus complete digital access. - FT Weekend Print delivery - Plus - Everything in Premium Digital Check whether you already have access via your university or organisation. Terms & Conditions apply Explore our full range of subscriptions. For individuals Discover all the plans currently available in your country For multiple readers Digital access for organisations. Includes exclusive features and content. Why the FT? See why over a million readers pay to read the Financial Times.\n[3] Donald Trump says he will have the ‘honour’ of ‘taking Cuba in some form’ Subscribe to unlock this article Try unlimited access Only £1 for 4 weeksThen £59 per month. Complete digital access to quality FT journalism on any device. Cancel anytime during your trial. - Global news & analysis - Expert opinion - FT App on Android & iOS - First FT: the day’s biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 10 additional monthly gift articles to share - Lex: FT’s flagship investment column - 15+ Premium newsletters from leading experts - FT Digital Edition: our digitised print edition Explore more offers. Standard Digital £39 per month Essential digital access to quality FT journalism on any device. Pay a year upfront and save 20%. - Global news & analysis - Expert opinion - FT App on Android & iOS - FT Edit: Access on iOS and web - FirstFT: the day's biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 10 monthly gift articles to share Premium Digital Complete coverage £59 per month Complete digital access to quality FT journalism with expert analysis from industry leaders. Pay a year upfront and save 20%. - Global news & analysis - Expert opinion - FT App on Android & iOS - FT Edit: Access on iOS and web - FirstFT: the day's biggest stories - 20+ curated newsletters - Follow topics & set alerts with myFT - FT Videos & Podcasts - 20 monthly gift articles to share - Lex: FT's flagship investment column - 15+ Premium newsletters by leading experts - FT Digital Edition: our digitised print edition Premium & FT Weekend Print £65 per month FT Weekend newspaper delivered Saturday plus complete digital access. - FT Weekend Print delivery - Plus - Everything in Premium Digital Check whether you already have access via your university or organisation. Terms & Conditions apply Explore our full range of subscriptions. For individuals Discover all the plans currently available in your country For multiple readers Digital access for organisations. Includes exclusive features and content. Why the FT? See why over a million readers pay to read the Financial Times.\nFocus on confirmed facts, conflicts, and uncertainties.\nReturn valid JSON only."
+      }
+    ]
+  },
+  "response": {
+    "status_code": 200,
+    "body": {
+      "id": "chatcmpl-8f50fb1703b74832",
+      "object": "chat.completion",
+      "created": 1774114327,
+      "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "{\n  \"title\": \"Cluster Analysis on Selected Articles\",\n  \"summary\": \"The selected articles discuss various geopolitical scenarios involving different world leaders and regions without providing specific factual claims that can be synthesized into a cohesive narrative.\",\n  \"body\": \"\",\n  \"key_points\": [],\n  \"conflicts\": [],\n  \"cautions\": [\"Insufficient factual information provided to draw conclusions or identify conflicts.\"],\n  \"source_attribution\": [0, 1, 2, 3]\n}",
+            "refusal": null,
+            "annotations": null,
+            "audio": null,
+            "function_call": null,
+            "tool_calls": [],
+            "reasoning": null,
+            "reasoning_content": null
+          },
+          "logprobs": null,
+          "finish_reason": "stop",
+          "stop_reason": null,
+          "token_ids": null
+        }
+      ],
+      "service_tier": null,
+      "system_fingerprint": null,
+      "usage": {
+        "prompt_tokens": 1859,
+        "total_tokens": 1959,
+        "completion_tokens": 100,
+        "prompt_tokens_details": null
+      },
+      "prompt_logprobs": null,
+      "prompt_token_ids": null,
+      "kv_transfer_params": null
+    }
+  },
+  "model_text": "{\n  \"title\": \"Cluster Analysis on Selected Articles\",\n  \"summary\": \"The selected articles discuss various geopolitical scenarios involving different world leaders and regions without providing specific factual claims that can be synthesized into a cohesive narrative.\",\n  \"body\": \"\",\n  \"key_points\": [],\n  \"conflicts\": [],\n  \"cautions\": [\"Insufficient factual information provided to draw conclusions or identify conflicts.\"],\n  \"source_attribution\": [0, 1, 2, 3]\n}",
+  "parsed_json": {
+    "title": "Cluster Analysis on Selected Articles",
+    "summary": "The selected articles discuss various geopolitical scenarios involving different world leaders and regions without providing specific factual claims that can be synthesized into a cohesive narrative.",
+    "body": "",
+    "key_points": [],
+    "conflicts": [],
+    "cautions": [
+      "Insufficient factual information provided to draw conclusions or identify conflicts."
+    ],
+    "source_attribution": [
+      0,
+      1,
+      2,
+      3
+    ]
+  }
+}

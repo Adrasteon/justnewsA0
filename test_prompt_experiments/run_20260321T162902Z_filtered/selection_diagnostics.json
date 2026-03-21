@@ -1,0 +1,3557 @@
+[
+  {
+    "cluster_id": "CL-ce8ed64b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:46",
+    "overlay_hits": 0,
+    "corrupt_hits": 156,
+    "avg_article_len": 600.0,
+    "quality_score": 0.0
+  },
+  {
+    "cluster_id": "CL-0e6fb6ee",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:46",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6271.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e1e1f50f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:46",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 138.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-4f53f254",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:45",
+    "overlay_hits": 0,
+    "corrupt_hits": 1922,
+    "avg_article_len": 4092.0,
+    "quality_score": 0.0
+  },
+  {
+    "cluster_id": "CL-cf03e8f8",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:45",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2156.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-722b64bf",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:45",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3597.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-35c8f6eb",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:45",
+    "overlay_hits": 0,
+    "corrupt_hits": 2796,
+    "avg_article_len": 5788.0,
+    "quality_score": 0.0
+  },
+  {
+    "cluster_id": "CL-d9a0d450",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:45",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5328.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-90726eba",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:45",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6389.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-88925911",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:44",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5489.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6259c88e",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:44",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f5f1e3c2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:44",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1377.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1bfede7f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:44",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5818.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c2e15edf",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:43",
+    "overlay_hits": 0,
+    "corrupt_hits": 161,
+    "avg_article_len": 375.0,
+    "quality_score": 0.0
+  },
+  {
+    "cluster_id": "CL-77feba61",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:43",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4585.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b5cfa973",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:43",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7438.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-9e7b0053",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:43",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6692.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-059f9489",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:43",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4605.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-61e629a4",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:42",
+    "overlay_hits": 0,
+    "corrupt_hits": 232,
+    "avg_article_len": 522.0,
+    "quality_score": 0.0
+  },
+  {
+    "cluster_id": "CL-b22751d5",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:42",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7169790f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1502.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-4ae76bad",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2596.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2f835640",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1965.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-35e77509",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2248.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3897d226",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1295.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b24deaee",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:30",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3959.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a8af78a7",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:30",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 1560.0,
+    "quality_score": 0.9375
+  },
+  {
+    "cluster_id": "CL-9df62a75",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:30",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1778.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-082f9203",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:30",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 460.0,
+    "quality_score": 0.875
+  },
+  {
+    "cluster_id": "CL-fa00dcfa",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:29",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 559.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-ac0dee75",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:29",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 157.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e798f080",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 21:24:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3601.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-653a28af",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2298.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-64444183",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1076.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3cef661c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2944.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-70cfc059",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 372.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-ebcf8426",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2805.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-df462e16",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:24:27",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 1241.0,
+    "quality_score": 0.9375
+  },
+  {
+    "cluster_id": "CL-6e045525",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:15",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 106.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2eb03ace",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:14",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 102.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-bef2c4a7",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:14",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 139.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3d934203",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:14",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 198.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d52913ad",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:14",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 157.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7ba60988",
+    "article_count": 4,
+    "latest_created_at": "2026-03-20 21:19:13",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1359.2,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-116cf338",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:13",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1543.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1c01f7b7",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:13",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 196.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-cb1d8f5d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:13",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 117.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7aad2917",
+    "article_count": 15,
+    "latest_created_at": "2026-03-20 21:19:12",
+    "overlay_hits": 2,
+    "corrupt_hits": 0,
+    "avg_article_len": 2708.9,
+    "quality_score": 0.9954
+  },
+  {
+    "cluster_id": "CL-cf4fc857",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:12",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1425.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-8f4ad788",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:12",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 826.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-20c9644d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:12",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6177.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c114cdfc",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:12",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 726.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1187ffe5",
+    "article_count": 3,
+    "latest_created_at": "2026-03-20 21:19:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1851.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-97127e00",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2249.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e466c84b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 452.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b1299a15",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1311.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-99a5e53c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1440.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6a6cd945",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2770.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7947faa5",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 439.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-43bf7a6c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2668.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-ef1e5882",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2345.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-461a0bf8",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2753.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-74a10b92",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 265.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-deb75b29",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:19:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1031.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c40ba070",
+    "article_count": 9,
+    "latest_created_at": "2026-03-20 21:18:53",
+    "overlay_hits": 44,
+    "corrupt_hits": 0,
+    "avg_article_len": 1219.3,
+    "quality_score": 0.6944
+  },
+  {
+    "cluster_id": "CL-81846042",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:53",
+    "overlay_hits": 2,
+    "corrupt_hits": 0,
+    "avg_article_len": 367.0,
+    "quality_score": 0.75
+  },
+  {
+    "cluster_id": "CL-b3766808",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2800.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-eadaf2d2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1116.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-33161723",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 8172.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2ea09260",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-bb5ed082",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5867.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-08f7d4c4",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3707.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f8b3ea83",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:51",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-29d5e3d9",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:51",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3513.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-70fdb56a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:51",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 958.0,
+    "quality_score": 0.875
+  },
+  {
+    "cluster_id": "CL-75c950cc",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:51",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3752.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c1899a73",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:51",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 0.9922
+  },
+  {
+    "cluster_id": "CL-da8b9fbd",
+    "article_count": 5,
+    "latest_created_at": "2026-03-20 21:18:50",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6375.6,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1d696008",
+    "article_count": 5,
+    "latest_created_at": "2026-03-20 21:18:50",
+    "overlay_hits": 2,
+    "corrupt_hits": 0,
+    "avg_article_len": 3321.0,
+    "quality_score": 0.9907
+  },
+  {
+    "cluster_id": "CL-c4b2038e",
+    "article_count": 3,
+    "latest_created_at": "2026-03-20 21:18:50",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3943.7,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-699b7a3c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:50",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3445.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7c41b622",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:49",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 4949.0,
+    "quality_score": 0.9844
+  },
+  {
+    "cluster_id": "CL-acea355e",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:49",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 9283.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6f8906dd",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 21:18:49",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 4658.0,
+    "quality_score": 0.9821
+  },
+  {
+    "cluster_id": "CL-5bb0b7dd",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:52:00",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 297.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-76262be2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:52:00",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 353.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-20e8b73e",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:52:00",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 377.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-29bc4ffc",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:52:00",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 523.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-fec395d6",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:52:00",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 500.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-037fa6f7",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:52:00",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 621.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-49d70f9b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:52:00",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1911.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a79d1598",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:52:00",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 611.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2d1e52fb",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:51:59",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-970ac26b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:59",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f9bd5039",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:59",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e2f12320",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:59",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 3908.0,
+    "quality_score": 0.9792
+  },
+  {
+    "cluster_id": "CL-a099a51f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:59",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 231.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-59440da6",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:59",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2689.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a7506349",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:59",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 492.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-9defe9bb",
+    "article_count": 3,
+    "latest_created_at": "2026-03-20 20:51:58",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4552.3,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7dd0eb2b",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:51:58",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-63b43416",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:58",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-bea359ea",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:58",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-900a6efb",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:58",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-0cc87787",
+    "article_count": 3,
+    "latest_created_at": "2026-03-20 20:51:57",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6500.3,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-ca5545c4",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:57",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-87ed5c72",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:57",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-11d58b63",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:57",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f48b52a2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:51:56",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6157f81f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:29",
+    "overlay_hits": 3,
+    "corrupt_hits": 0,
+    "avg_article_len": 114.0,
+    "quality_score": 0.625
+  },
+  {
+    "cluster_id": "CL-76f4db76",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:29",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 86.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7690fb28",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:29",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 97.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-8b16fc23",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-fd8b4eeb",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a836b3e3",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-ce7f3584",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-df317fa5",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 90.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-051672fa",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 88.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b29c0895",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:27",
+    "overlay_hits": 12,
+    "corrupt_hits": 0,
+    "avg_article_len": 1958.0,
+    "quality_score": 0.5
+  },
+  {
+    "cluster_id": "CL-7be4651f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-5bce85be",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-60444e7d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2edb700a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-8854bded",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 443.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f6b555a5",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 329.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-caa7c041",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 476.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-ec88c0a7",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4378.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d2166ac5",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:26",
+    "overlay_hits": 3,
+    "corrupt_hits": 0,
+    "avg_article_len": 298.0,
+    "quality_score": 0.625
+  },
+  {
+    "cluster_id": "CL-641f0adf",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1760.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-0466efd6",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 9504.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-9259a362",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 409.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c130f53a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3221.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3cd31b8f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 690.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-4d7365af",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 365.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-34e6a510",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 486.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d7fe3cfa",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:19",
+    "overlay_hits": 3,
+    "corrupt_hits": 0,
+    "avg_article_len": 7595.0,
+    "quality_score": 0.9688
+  },
+  {
+    "cluster_id": "CL-84a7035d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:19",
+    "overlay_hits": 3,
+    "corrupt_hits": 0,
+    "avg_article_len": 4157.0,
+    "quality_score": 0.9375
+  },
+  {
+    "cluster_id": "CL-98e2fab8",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:18",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5559.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-276278db",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:18",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4753.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d1c8ff2b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:18",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6668.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-10a1966b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:18",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6366.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-5c862de6",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:18",
+    "overlay_hits": 11,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 0.9141
+  },
+  {
+    "cluster_id": "CL-be59232e",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:18",
+    "overlay_hits": 3,
+    "corrupt_hits": 0,
+    "avg_article_len": 8427.0,
+    "quality_score": 0.9732
+  },
+  {
+    "cluster_id": "CL-6f09525b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:17",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7447120d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:17",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-5747cf3d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:17",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3423.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7eea2f51",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:17",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6173.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d1bdd9fa",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:17",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6398.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c3ff8375",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:16",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-15a02c89",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:38:15",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b55869ac",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:38:15",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6765.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-716c3600",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:15",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2273.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2f3cb37c",
+    "article_count": 3,
+    "latest_created_at": "2026-03-20 20:38:14",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 9056.3,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-057ae259",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:14",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5370.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-395805b0",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:14",
+    "overlay_hits": 2,
+    "corrupt_hits": 0,
+    "avg_article_len": 7909.0,
+    "quality_score": 0.9808
+  },
+  {
+    "cluster_id": "CL-c354f05f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:14",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4810.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f519f373",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:38:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1756.5,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-79f62d7d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1823.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2b2dc00c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1651.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-473c2143",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1741.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-8eaf6641",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1562.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-fa4e7d3a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1929.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-aeba56e2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1671.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e7b72663",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1738.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-cfa3b4d4",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:09",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1802.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e4a772dc",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:09",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1906.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d3738780",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:09",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 447.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7784b6b0",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:38:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2936.5,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-78687c8f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3135.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a55c56ab",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3950.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e5f61a12",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:07",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 405.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-11624bd1",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:07",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4018.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-48f2eac0",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1872.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-bce40b75",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-daa70f6f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2486.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d3e98481",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 510.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d10a2cd8",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 9877.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e3b8fcac",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1131.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-daab4508",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4716.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d3678136",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:05",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2823.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f9ea10ce",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:05",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 376.0,
+    "quality_score": 0.875
+  },
+  {
+    "cluster_id": "CL-9944de8f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:05",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1123.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-fe266d6b",
+    "article_count": 8,
+    "latest_created_at": "2026-03-20 20:38:04",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3954.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-af1b0616",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:04",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 8129.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-102fe3fe",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:04",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-100df2c9",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:04",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1743.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-44d61385",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:03",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 915.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e0e7e097",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:03",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-cb00ab19",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:03",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 9412.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2f167d6c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:01",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 977.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-5e1b8655",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:00",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 680.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-db888f83",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:38:00",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1452.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-887e6d85",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4071.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6dd2e818",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7764.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-fc0ef62c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2624.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-64947eea",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3715.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c8713b86",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7024.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-cb8bbac0",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4103.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-decacd3e",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6082.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3fd0227e",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2802.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-19fdc64b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4714.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-151daec9",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:24",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 430.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-059f754c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:24",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2509.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-0b70f311",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:24",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 580.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2e5be777",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:24",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1141.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-bbd01872",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:24",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7765.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-54d893d8",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:24",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2749.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-af06e0a9",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:23",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 198.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3c511fde",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:23",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 455.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-4ad30203",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:23",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 348.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e917a2b0",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:23",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 249.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d9bfa990",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:23",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 363.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-21cda9ee",
+    "article_count": 9,
+    "latest_created_at": "2026-03-20 20:33:22",
+    "overlay_hits": 29,
+    "corrupt_hits": 1,
+    "avg_article_len": 8268.1,
+    "quality_score": 0.9698
+  },
+  {
+    "cluster_id": "CL-2a51bc74",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:22",
+    "overlay_hits": 3,
+    "corrupt_hits": 1,
+    "avg_article_len": 6810.0,
+    "quality_score": 0.9545
+  },
+  {
+    "cluster_id": "CL-7cd3dac8",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:22",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1279.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-96f938cd",
+    "article_count": 15,
+    "latest_created_at": "2026-03-20 20:33:21",
+    "overlay_hits": 252,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 0.8425
+  },
+  {
+    "cluster_id": "CL-eff10959",
+    "article_count": 19,
+    "latest_created_at": "2026-03-20 20:33:15",
+    "overlay_hits": 78,
+    "corrupt_hits": 0,
+    "avg_article_len": 9233.0,
+    "quality_score": 0.947
+  },
+  {
+    "cluster_id": "CL-0180bb34",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:15",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 6591.0,
+    "quality_score": 0.9875
+  },
+  {
+    "cluster_id": "CL-7ac1fe70",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:12",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 186.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3ef38b3b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:12",
+    "overlay_hits": 3,
+    "corrupt_hits": 0,
+    "avg_article_len": 7225.0,
+    "quality_score": 0.9688
+  },
+  {
+    "cluster_id": "CL-81cf5f98",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2041.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3171d469",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f1531049",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1981.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-247b469a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 596.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3b3ca15c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:11",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1750.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-5a08dedb",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:33:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 1,
+    "avg_article_len": 203.5,
+    "quality_score": 0.875
+  },
+  {
+    "cluster_id": "CL-c31d3c38",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:33:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2549.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-0c3e09cd",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:33:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 176.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6cbe21f4",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:33:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 2,
+    "avg_article_len": 399.5,
+    "quality_score": 0.75
+  },
+  {
+    "cluster_id": "CL-52e3aadd",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 1,
+    "avg_article_len": 110.0,
+    "quality_score": 0.875
+  },
+  {
+    "cluster_id": "CL-ec12fda6",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 1,
+    "avg_article_len": 293.0,
+    "quality_score": 0.875
+  },
+  {
+    "cluster_id": "CL-0ddf845c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 142.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e891d470",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:10",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 706.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-fad9464d",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:33:09",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4123.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-4261745a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:09",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3608.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2bc02ad0",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 1,
+    "avg_article_len": 413.0,
+    "quality_score": 0.875
+  },
+  {
+    "cluster_id": "CL-e324f4d9",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2586.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7534a0c2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 227.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-df391791",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 157.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f01011ff",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:08",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3781.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a21f08c1",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3069.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-def3f7c8",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:33:05",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5673.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-235cd2d5",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:05",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 363.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e8a744e4",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:33:05",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3919.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6749b83e",
+    "article_count": 6,
+    "latest_created_at": "2026-03-20 20:30:56",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4200.3,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7fdb04a4",
+    "article_count": 7,
+    "latest_created_at": "2026-03-20 20:30:54",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 3061.7,
+    "quality_score": 0.9964
+  },
+  {
+    "cluster_id": "CL-74e02554",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:30:54",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2461.5,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-353b412f",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:30:54",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7959.5,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-45e20cd0",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:54",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1370.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-4fb5ea7f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:54",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1577.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3365bb02",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:54",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1031.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e635347a",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:30:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1703.5,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1e15fccd",
+    "article_count": 3,
+    "latest_created_at": "2026-03-20 20:30:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5745.7,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-84945d90",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1269.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b2e353e0",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6930.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e1e8497e",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1605.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-fa67ee3d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5759.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-748572fc",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1324.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1b1e43a2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1824.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-deeb369a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1212.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6fb408cd",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1508.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e76a9440",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:30:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7094.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6450a648",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:27:35",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2988.5,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-75e4a978",
+    "article_count": 4,
+    "latest_created_at": "2026-03-20 20:27:35",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2055.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-921bfa61",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:27:35",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2200.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-4df9c096",
+    "article_count": 18,
+    "latest_created_at": "2026-03-20 20:27:34",
+    "overlay_hits": 36,
+    "corrupt_hits": 0,
+    "avg_article_len": 6680.0,
+    "quality_score": 0.9662
+  },
+  {
+    "cluster_id": "CL-ecfbad40",
+    "article_count": 3,
+    "latest_created_at": "2026-03-20 20:27:34",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5037.7,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-03b711ee",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:27:34",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2346.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a2ef2711",
+    "article_count": 5,
+    "latest_created_at": "2026-03-20 20:27:34",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 128.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6ccccff0",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:27:34",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2646.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-878682f2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:27:33",
+    "overlay_hits": 4,
+    "corrupt_hits": 0,
+    "avg_article_len": 917.0,
+    "quality_score": 0.5
+  },
+  {
+    "cluster_id": "CL-2a4bb34e",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:27:33",
+    "overlay_hits": 3,
+    "corrupt_hits": 0,
+    "avg_article_len": 6265.0,
+    "quality_score": 0.9625
+  },
+  {
+    "cluster_id": "CL-b4be8f8b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:27:33",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 224.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-511600df",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:27:32",
+    "overlay_hits": 6,
+    "corrupt_hits": 0,
+    "avg_article_len": 6779.5,
+    "quality_score": 0.9659
+  },
+  {
+    "cluster_id": "CL-529ffff4",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:27:32",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 288.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-36e72f5f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:27:32",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1950.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-96bd698a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:23:38",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 128.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-5a280db8",
+    "article_count": 3,
+    "latest_created_at": "2026-03-20 20:23:38",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 119.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d1a090db",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:23:37",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1669.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-047f1892",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:23:37",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 189.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1c43d1c3",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:23:36",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1678.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-bb8ac296",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:23:36",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2432.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-ab410397",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:23:36",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2538.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a9eb69f1",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:23:36",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1085.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2853af02",
+    "article_count": 3,
+    "latest_created_at": "2026-03-20 20:23:34",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2735.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-29ca7ab5",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:23:34",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2555.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-dd6e05ca",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:15:07",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4442.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-ce1d5777",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:07",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1357.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-6c7d831b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:07",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 261.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-aadbfb57",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:07",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2552.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c22ca47f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:07",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 590.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-5e43c108",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:15:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2783.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c36f8f2b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1418.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b493186a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2287.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-edc37356",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1596.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-866f8207",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1655.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-32ef8429",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:06",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3313.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-94fd99f4",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:15:05",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2796.5,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e29c4e78",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:15:05",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2281.5,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-0f301deb",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:05",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2824.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-49cbe39a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:05",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1497.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-71f709fd",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:05",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1595.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-107421fe",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:04",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1655.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-0f3c13f2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:04",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2519.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-9dca4bec",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:15:04",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2553.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-bfd6fd2c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:54",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1065.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b35dd0d3",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:54",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 818.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-31c8f2f9",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:54",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1260.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2dff32aa",
+    "article_count": 2,
+    "latest_created_at": "2026-03-20 20:10:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-edf99560",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1590.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-eeaa67ff",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1712.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f6ec1c4f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:53",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 141.0,
+    "quality_score": 0.875
+  },
+  {
+    "cluster_id": "CL-cedf2eda",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1396.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-0f332510",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:53",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1699.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-15eb717c",
+    "article_count": 7,
+    "latest_created_at": "2026-03-20 20:10:52",
+    "overlay_hits": 24,
+    "corrupt_hits": 0,
+    "avg_article_len": 5742.7,
+    "quality_score": 0.9552
+  },
+  {
+    "cluster_id": "CL-35103cf0",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 629.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-19c6505c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 680.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a5ca295f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-20 20:10:52",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1639.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-86430eee",
+    "article_count": 18,
+    "latest_created_at": "2026-03-20 20:10:51",
+    "overlay_hits": 24,
+    "corrupt_hits": 0,
+    "avg_article_len": 784.0,
+    "quality_score": 0.8
+  },
+  {
+    "cluster_id": "CL-fed0beb5",
+    "article_count": 5,
+    "latest_created_at": "2026-03-20 20:10:51",
+    "overlay_hits": 10,
+    "corrupt_hits": 0,
+    "avg_article_len": 871.0,
+    "quality_score": 0.8214
+  },
+  {
+    "cluster_id": "CL-f9941f53",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:17:26",
+    "overlay_hits": 2,
+    "corrupt_hits": 0,
+    "avg_article_len": 784.0,
+    "quality_score": 0.75
+  },
+  {
+    "cluster_id": "CL-e3a7870b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:17:26",
+    "overlay_hits": 2,
+    "corrupt_hits": 0,
+    "avg_article_len": 784.0,
+    "quality_score": 0.75
+  },
+  {
+    "cluster_id": "CL-20084a77",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:17:25",
+    "overlay_hits": 2,
+    "corrupt_hits": 0,
+    "avg_article_len": 784.0,
+    "quality_score": 0.75
+  },
+  {
+    "cluster_id": "CL-8f256c91",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:17:24",
+    "overlay_hits": 1,
+    "corrupt_hits": 0,
+    "avg_article_len": 578.0,
+    "quality_score": 0.875
+  },
+  {
+    "cluster_id": "CL-32f77ca7",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:17:23",
+    "overlay_hits": 4,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 0.9688
+  },
+  {
+    "cluster_id": "CL-39ca50bf",
+    "article_count": 3,
+    "latest_created_at": "2026-03-17 21:16:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 8317.7,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f6eb0bb3",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7054.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-ab0e1892",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6298.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-59915a7b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 8943.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-96c5874d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7487.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a15617dd",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 8281.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1db63b61",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 488.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2d8e78b5",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3278.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a4190f9c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7870.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-49deaeb5",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7578.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c6c7ef21",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:24",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 7202.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c8f34af1",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:24",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 5638.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d4dae82d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:24",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2882.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-4decf10f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:24",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2445.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d4a6998f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:16:23",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6169.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-8f2cf676",
+    "article_count": 2,
+    "latest_created_at": "2026-03-17 21:15:29",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 450.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-bff0b755",
+    "article_count": 11,
+    "latest_created_at": "2026-03-17 21:15:28",
+    "overlay_hits": 68,
+    "corrupt_hits": 0,
+    "avg_article_len": 8263.5,
+    "quality_score": 0.9437
+  },
+  {
+    "cluster_id": "CL-cc72576b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 9448.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-aad6cc8f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4643.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-9807c864",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6182.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1ef4f6de",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4892.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-8bf1e16b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:28",
+    "overlay_hits": 5,
+    "corrupt_hits": 0,
+    "avg_article_len": 2223.0,
+    "quality_score": 0.7917
+  },
+  {
+    "cluster_id": "CL-a9e414b8",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:28",
+    "overlay_hits": 4,
+    "corrupt_hits": 0,
+    "avg_article_len": 320.0,
+    "quality_score": 0.5
+  },
+  {
+    "cluster_id": "CL-0da3a675",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4733.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-fdd46e63",
+    "article_count": 3,
+    "latest_created_at": "2026-03-17 21:15:27",
+    "overlay_hits": 3,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 0.9925
+  },
+  {
+    "cluster_id": "CL-92741e8d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2792.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-bb504ef2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 1,
+    "avg_article_len": 10000.0,
+    "quality_score": 0.9922
+  },
+  {
+    "cluster_id": "CL-5fc7cb1f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2823.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b2402d77",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6534.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b62fcaf2",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1798.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1b88b0e7",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3947.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a7123e0c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 1,
+    "avg_article_len": 3037.0,
+    "quality_score": 0.975
+  },
+  {
+    "cluster_id": "CL-35ddb739",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1240.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2a110220",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 939.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f3bb0285",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1239.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-af8da044",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 6461.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-3c5b1062",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2938.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-205e23d5",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 9967.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-681f780d",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:15:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4816.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-44fb5ddf",
+    "article_count": 2,
+    "latest_created_at": "2026-03-17 21:14:33",
+    "overlay_hits": 12,
+    "corrupt_hits": 0,
+    "avg_article_len": 8633.0,
+    "quality_score": 0.9464
+  },
+  {
+    "cluster_id": "CL-7384d166",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:33",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2095.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7f0c7068",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:33",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 8848.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c038f7df",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:32",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 374.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-831929ef",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:32",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 10000.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-a5256174",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:32",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4915.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f3bb814e",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:32",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 203.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-ae7bd126",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3997.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-27bf8dc8",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1031.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-42065dcf",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 8517.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-4a579aaa",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1952.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-bbd0ba5a",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2446.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-1c510adc",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:28",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 3178.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-d5c593e6",
+    "article_count": 6,
+    "latest_created_at": "2026-03-17 21:14:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2280.7,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-cfa5b60f",
+    "article_count": 2,
+    "latest_created_at": "2026-03-17 21:14:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1257.5,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-b388644f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:27",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1812.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-c9d2e252",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 847.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-e4504330",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:26",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1850.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-5d8a412c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 164.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-7beabb6b",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 4235.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-2e04b073",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:14:25",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 949.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f4a7bc8e",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:13:33",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1080.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-99a64bbf",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:13:32",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2398.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-f16ff97c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:13:32",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1866.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-95f15a6c",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:13:32",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2352.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-661cd7ad",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:13:32",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2481.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-221212d9",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:13:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 388.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-255cd98f",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:13:31",
+    "overlay_hits": 6,
+    "corrupt_hits": 0,
+    "avg_article_len": 1025.0,
+    "quality_score": 0.25
+  },
+  {
+    "cluster_id": "CL-4164acaa",
+    "article_count": 1,
+    "latest_created_at": "2026-03-17 21:13:31",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 2744.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-107b6033",
+    "article_count": 4,
+    "latest_created_at": "2026-03-17 21:13:29",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 1442.0,
+    "quality_score": 1.0
+  },
+  {
+    "cluster_id": "CL-608bab7f",
+    "article_count": 2,
+    "latest_created_at": "2026-03-17 21:11:39",
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "avg_article_len": 11.0,
+    "quality_score": 1.0
+  }
+]

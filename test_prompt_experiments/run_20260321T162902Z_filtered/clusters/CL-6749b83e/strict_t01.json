@@ -1,0 +1,83 @@
+{
+  "cluster_id": "CL-6749b83e",
+  "variant": "strict_t01",
+  "temperature": 0.1,
+  "elapsed_seconds": 2.834,
+  "request_error": null,
+  "request_payload": {
+    "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "temperature": 0.1,
+    "max_tokens": 1400,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a neutral news synthesis editor. Use only facts in provided snippets. If snippets conflict, report conflict explicitly and do not guess. If evidence is insufficient, state insufficient evidence. Do not invent names, numbers, quotes, dates, or locations. Output valid JSON only with keys: title, summary, body, key_points, conflicts, cautions, source_attribution."
+      },
+      {
+        "role": "user",
+        "content": "Context: cluster\nYou are given indexed sources. Use source indices in source_attribution.\nSOURCES:\n[0] Advertisement Advertisement China + FOLLOW Military Diplomacy Politics Science China Future Tech US Trump confirms delay of Beijing meeting with Xi amid Iran conflict Visit with Chinese leader pushed back by up to six weeks as Trump stays in Washington during escalating US-Israeli war with Iran. 50 minutes ago videocam Why Trump’s China trip delay could open the door for ‘more substantive’ results 5 hours ago 12 China, Russia look to boost transport links amid Middle East disruption 6 hours ago Politics Will delay in Trump-Xi summit affect US arms sales to Taiwan? Possible US$14 billion package said to be on track but broader concerns loom as US depletes ammunition stockpiles in war on Iran. 17 Mar 2026 - 9:06PM videocam Taiwanese military personnel line up before the activation of a Patriot Advanced Capability-3 (PAC-3) missile launcher during a drill in Taichung, Taiwan, in January 2025. Photo: EPA-EFE Military China, Vietnam agree to live-fire drills in naval exercise boost Agreement between naval commanders ahead of 40th joint exercise comes as Vietnamese leader To Lam hails ties with China as ‘top priority’. 17 Mar 2026 - 7:24PM videocam Politics Former banker and Hubei party boss indicted for accepting ‘huge’ bribes Jiang Chaoliang, who was party chief when Covid-19 first hit the province, is accused of illicit activity dating back to the 1990s. 17 Mar 2026 - 8:07PM videocam Advertisement Advertisement Advertisement Science A rare earth ‘China solution’ that leaves US defence agency in the cold ‘China solution’ delivers helium‑3‑free cooling tech for quantum chips, offers stable, portable system to support space exploration. 17 Mar 2026 - 7:03PM videocam A mini-fridge built with the alloy has achieved temperatures extremely close to absolute zero using no moving parts. Photo: Shutterstock Science China and Chile wrap up Atacama Trench mission as US pressure mounts Scientists on Chinese research ship aimed to uncover mysteries of the trench in ‘most ambitious’ deep-sea expedition in the eastern Pacific. 17 Mar 2026 - 12:00PM videocam Global Economy As shipping risks mount, Xi pushes international port alliance as fail-safe A speech last year highlights Beijing’s focus on maritime rights – a concern analysts say will only intensify as threats to global shipping increase. 17 Mar 2026 - 12:22PM China Business South Korea and Japan bear brunt of global stock sell-offs amid oil shock South Korea and Japan lead global market declines – with losses steeper than in Europe – as oil shock underscores their reliance on imports. 17 Mar 2026 - 7:30AM Science How China gets more bang for its military buck than the US The country’s military modernisation integrates civilian scientific and industrial capabilities into defence innovation allowing rapid developme\n[1] Why Trump’s China trip delay could open the door for ‘more substantive’ results Analysts say postponement of US president’s trip to Beijing is a strategic opportunity and unlikely to derail momentum in stabilising ties Chinese analysts characterised the delay as a strategic opportunity to ensure more substantive results. They also suggested the shift in timing was unlikely to derail the momentum towards stabilising ties between the two global powers. The White House previously announced that the trip – the first by a US president since 2017 – would take place from March 31 to April 2. But Trump said on Monday he had to postpone it. Asked to comment on the remarks, Beijing said it was “still in communication” with the US, without further elaboration. “China and the US are in communication on the timing of President Trump’s visit to China,” foreign ministry spokesman Lin Jian said on Tuesday.\n[2] China: we’re still talking to US about Trump trip after threat to delay over Iran crisis Two sides still ‘in communication’, foreign ministry says, after US leader hints he could postpone visit unless Beijing helps reopen Strait of Hormuz On Sunday, he told the Financial Times “it’s only appropriate that people who are the beneficiaries of the strait will help to make sure that nothing bad happens there”. He also said he would prefer to know Beijing’s position before he travelled there, adding “we may delay”. When asked about Trump’s comments, Chinese foreign ministry spokesman Lin Jian said the two countries were “in communication” over the visit and described head-of-state diplomacy as playing an “irreplaceable role” in their relationship. China has yet to make a formal announcement about the trip but the White House has said it will run from March 31 to April 2.\n[3] Advertisement Advertisement China / Politics Related Topics: US-China relations South Korea North Korea Xi Jinping's anti-corruption campaign Xi Jinping China’s military Taiwan 2026 Trump-Xi summit Will delay in Trump-Xi summit affect US arms sales to Taiwan? Possible US$14 billion package said to be on track but broader concerns loom as US depletes ammunition stockpiles in war on Iran. 6 hours ago videocam Corruption in China Former banker and Hubei party boss indicted for accepting ‘huge’ bribes 17 Mar 2026 - 8:07PM videocam Taiwan Swing and a miss? Taiwan’s premier under fire over baseball trip to Tokyo 14 Mar 2026 - 12:00PM videocam Two Sessions 2026 China codifies ethnic assimilation with new ‘unity’ law as it counters the West Legal safeguards heed Xi Jinping’s call to foster ‘shared spiritual home’ with an eye on staving off ‘domestic friction’, analysts say. 13 Mar 2026 - 11:02AM videocam 25 Ethnic minority delegates leave a plenary session of the National People’s Congress (NPC) held at the Great Hall of the People in Beijing on Monday. Photo: AP China’s Communist Party What China’s OpenClaw divide reveals about local and central priorities Urgent security warnings from Beijing as local authorities rush to ride the boom expose familiar priority gaps, observers say. 12 Mar 2026 - 8:01PM videocam Taiwan Taiwan scrambles to sign US arms deals before deadline amid budget gridlock Taipei receives formal US offer for 82 Himars while agreements for howitzers and missiles also await sign-off by island’s legislature. 11 Mar 2026 - 9:00AM Advertisement Advertisement Advertisement Two Sessions 2026 China looks to foreign judges to build global legal expertise The country’s arbitration bodies are not plugged into the international system, a former justice official says. 10 Mar 2026 - 4:44PM videocam 6 Framed by Beijing as a public good for the Global South, IOMed aims to “fill an institutional gap” in global governance. Photo: Dickson Lee China’s Communist Party Why China’s cadres must master rare earths as economic security becomes a KPI Beijing’s decision to instruct promising cadres on logistics and resources reflects a sober outlook on trade relations, observers say. 10 Mar 2026 - 10:04AM videocam 4 Two Sessions 2026 China eyes cross-border corruption law. Will it blunt the ‘long arm’ of the US? Beijing to pass law aimed at preventing corruption by Chinese companies operating overseas after courts recover billions in illegal gains. 9 Mar 2026 - 9:30PM videocam 2026 Trump-Xi summit Exclusive | Trump’s China visit confined to Beijing due to schedule, security needs: sources ‘Given the situation [in the Middle East], the visit’s security arrangements must be extremely careful’. 9 Mar 2026 - 8:02PM videocam 25 Two Sessions 2026 China’s top court says it\n[4] Advertisement Will delay in Trump-Xi summit affect US arms sales to Taiwan? Possible US$14 billion package said to be on track but broader concerns loom as US depletes ammunition stockpiles in war on Iran 3-MIN READ3-MIN 3 Listen Lawrence Chungin Taipei A possible delay in the planned summit between Donald Trump and Xi Jinping later this month has raised concerns about a pending record US arms sale to Taiwan, though officials in Taipei insist the deal remains on track. Reuters reported on Friday that the US$14 billion arms package – possibly the largest ever for Taiwan – was ready for the US president’s approval and could be announced after his visit to Beijing. The package is expected to include advanced air-defence systems such as Patriot PAC-3 missiles and the National Advanced Surface-to-Air Missile System or Nasams, as well as an added US$6 billion in “asymmetric” capabilities. Advertisement However, uncertainty is growing after Trump said on Monday that he had asked Beijing to delay the summit – originally scheduled for March 31 to April 2 – by “a month or so” because of the US-Israel war on Iran. Taiwan’s defence minister, Wellington Koo Li-hsiung, sought to reassure the public on Tuesday, saying Taipei had not received any indication of a sales delay. Advertisement Advertisement Select Voice Select Speed 1.00x\n[5] Advertisement Advertisement TOPIC 2026 Trump-Xi summit + FOLLOW 2026 Trump-Xi summit In March 2026, President Xi Jinping and US President Donald Trump are expected to begin a long-awaited meeting to talk about a number of factors affecting China and America, in particular Trump's trade war tariffs. Tawian and the US-Israel war on Iran are also likely to be discussed. SHOW FULL PROFILE Israel Why Trump’s China trip delay could open the door for ‘more substantive’ results Analysts say postponement of US president’s trip to Beijing is a strategic opportunity and unlikely to derail momentum in stabilising ties. 4 hours ago 10 Taiwan Will delay in Trump-Xi summit affect US arms sales to Taiwan? 6 hours ago videocam US-China relations Trump-Xi summit delay may suit China amid Iran war 17 Mar 2026 - 5:40PM Mainland China China under pressure as Trump ties high-stakes summit to Strait of Hormuz crisis Beijing is being forced to weigh its reliance on stable energy routes against its tradition of non-interference, analysts say. 16 Mar 2026 - 11:00PM videocam 55 Mainland China China says it’s still talking to US about Trump trip after threat to delay Two sides still ‘in communication’, foreign ministry says, after US leader hints he could postpone visit unless Beijing helps reopen Strait of Hormuz. 16 Mar 2026 - 8:04PM videocam 17 US-China relations China may snub Trump plea for help in Strait of Hormuz Beijing will probably see few reasons to help the US reopen a waterway that was closed in response to US-Israeli attacks on Iran. 16 Mar 2026 - 8:22PM Advertisement Advertisement Advertisement US-China trade war China and US begin fresh round of trade talks in Paris Discussions expected to focus on trade, investment and rare earths ahead of US President Donald Trump’s visit to China later this month. 15 Mar 2026 - 7:10PM Taiwan Beijing warns US over Jimmy Lai and Taiwan arms sales ahead of Trump visit Foreign ministry urges US to ‘safeguard the stable development of China-US relations and peace and stability in the Taiwan Strait’. 13 Mar 2026 - 9:50PM videocam 13 US-China trade war Trade talks, ‘raising lobsters’, tech earnings This week: US-China trade negotiators ready for talks in Paris, AI agent OpenClaw sweeps China, the ‘two sessions’ ends and exports surge. Next week: Tencent and Alibaba post earnings, retail sales leads data rush, Japan’s Takaichi visits the White House and more. 13 Mar 2026 - 5:00PM Two Sessions 2025 ‘Two sessions’ webinar Experts from the Asia Society Policy Institute’s Center for China Analysis joined an SCMP Plus website to discuss China’s biggest political event of the year. 13 Mar 2026 - 1:18PM videocam Taiwan US Navy patrols Taiwan Strait before Xi-Trump summit, triggering PLA manoeuvres Passage signals US’ commitment to ‘free and\nFocus on confirmed facts, conflicts, and uncertainties.\nReturn valid JSON only."
+      }
+    ]
+  },
+  "response": {
+    "status_code": 200,
+    "body": {
+      "id": "chatcmpl-a013a3bb04830f4b",
+      "object": "chat.completion",
+      "created": 1774110652,
+      "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "{\n  \"title\": \"Trump's Delayed Trip to China Amidst Iran Conflict\",\n  \"summary\": \"US President Donald Trump has confirmed a delay in his planned meeting with Chinese President Xi Jinping, originally scheduled for March 31 to April 2. The delay is attributed to the ongoing US-Israel war with Iran. Analysts suggest that the delay could provide a strategic opportunity for more substantive discussions.\",\n  \"body\": \"\",\n  \"key_points\": [\n    \"President Trump has delayed his trip to China originally scheduled for March 31 to April 2.\",\n    \"The delay is due to the ongoing US-Israel war with Iran.\",\n    \"Analysts view the delay as a strategic opportunity for more substantive discussions.\"\n  ],\n  \"conflicts\": [],\n  \"cautions\": [\"Insufficient information to determine the exact duration of the delay.\"],\n  \"source_attribution\": [0, 1, 2, 4]\n}",
+            "refusal": null,
+            "annotations": null,
+            "audio": null,
+            "function_call": null,
+            "tool_calls": [],
+            "reasoning": null,
+            "reasoning_content": null
+          },
+          "logprobs": null,
+          "finish_reason": "stop",
+          "stop_reason": null,
+          "token_ids": null
+        }
+      ],
+      "service_tier": null,
+      "system_fingerprint": null,
+      "usage": {
+        "prompt_tokens": 2793,
+        "total_tokens": 2986,
+        "completion_tokens": 193,
+        "prompt_tokens_details": null
+      },
+      "prompt_logprobs": null,
+      "prompt_token_ids": null,
+      "kv_transfer_params": null
+    }
+  },
+  "model_text": "{\n  \"title\": \"Trump's Delayed Trip to China Amidst Iran Conflict\",\n  \"summary\": \"US President Donald Trump has confirmed a delay in his planned meeting with Chinese President Xi Jinping, originally scheduled for March 31 to April 2. The delay is attributed to the ongoing US-Israel war with Iran. Analysts suggest that the delay could provide a strategic opportunity for more substantive discussions.\",\n  \"body\": \"\",\n  \"key_points\": [\n    \"President Trump has delayed his trip to China originally scheduled for March 31 to April 2.\",\n    \"The delay is due to the ongoing US-Israel war with Iran.\",\n    \"Analysts view the delay as a strategic opportunity for more substantive discussions.\"\n  ],\n  \"conflicts\": [],\n  \"cautions\": [\"Insufficient information to determine the exact duration of the delay.\"],\n  \"source_attribution\": [0, 1, 2, 4]\n}",
+  "parsed_json": {
+    "title": "Trump's Delayed Trip to China Amidst Iran Conflict",
+    "summary": "US President Donald Trump has confirmed a delay in his planned meeting with Chinese President Xi Jinping, originally scheduled for March 31 to April 2. The delay is attributed to the ongoing US-Israel war with Iran. Analysts suggest that the delay could provide a strategic opportunity for more substantive discussions.",
+    "body": "",
+    "key_points": [
+      "President Trump has delayed his trip to China originally scheduled for March 31 to April 2.",
+      "The delay is due to the ongoing US-Israel war with Iran.",
+      "Analysts view the delay as a strategic opportunity for more substantive discussions."
+    ],
+    "conflicts": [],
+    "cautions": [
+      "Insufficient information to determine the exact duration of the delay."
+    ],
+    "source_attribution": [
+      0,
+      1,
+      2,
+      4
+    ]
+  }
+}

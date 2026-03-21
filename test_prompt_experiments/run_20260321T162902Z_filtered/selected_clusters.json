@@ -1,0 +1,40 @@
+{
+  "generated_at_utc": "2026-03-21T16:29:08.592586+00:00",
+  "target_count": 5,
+  "control_clusters": [
+    "CL-e2dae2b2",
+    "CL-c3ceed21"
+  ],
+  "excluded_clusters": [
+    "CL-49033fea",
+    "CL-a837c3ae",
+    "CL-de3798e2"
+  ],
+  "selected": [
+    {
+      "cluster_id": "CL-e2dae2b2",
+      "article_count": 2,
+      "latest_created_at": "2026-03-20 21:24:46"
+    },
+    {
+      "cluster_id": "CL-c3ceed21",
+      "article_count": 8,
+      "latest_created_at": "2026-03-20 21:24:42"
+    },
+    {
+      "cluster_id": "CL-fe266d6b",
+      "article_count": 8,
+      "latest_created_at": "2026-03-20 20:38:04"
+    },
+    {
+      "cluster_id": "CL-6749b83e",
+      "article_count": 6,
+      "latest_created_at": "2026-03-20 20:30:56"
+    },
+    {
+      "cluster_id": "CL-d5c593e6",
+      "article_count": 6,
+      "latest_created_at": "2026-03-17 21:14:27"
+    }
+  ]
+}

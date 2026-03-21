@@ -1,0 +1,20 @@
+{
+  "cluster_id": "CL-de3798e2",
+  "article_count": 2,
+  "articles": [
+    {
+      "id": 6993,
+      "title": "Environment",
+      "url": "https://www.france24.com/en/environment",
+      "created_at": "2026-03-20 21:24:29",
+      "content": "We and our partners do the following data processing based on your consent:\n\nstore and/or access information on a device, personalised advertising and content, advertising and content measurement, audience research and services development"
+    },
+    {
+      "id": 6994,
+      "title": "Business / Tech",
+      "url": "https://www.france24.com/en/business-tech",
+      "created_at": "2026-03-20 21:24:29",
+      "content": "We and our partners do the following data processing based on your consent:\n\nstore and/or access information on a device, personalised advertising and content, advertising and content measurement, audience research and services development"
+    }
+  ]
+}

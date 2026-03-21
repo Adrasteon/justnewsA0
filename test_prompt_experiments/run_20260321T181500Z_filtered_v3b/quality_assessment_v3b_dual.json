@@ -1,0 +1,227 @@
+[
+  {
+    "cluster": "CL-0cc87787",
+    "variant": "baseline_t03",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 5,
+      "cautions": 2,
+      "pull_quotes": 2,
+      "conflicts": 0
+    },
+    "article_path": "clusters/CL-0cc87787/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-0cc87787",
+    "variant": "strict_t01",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 5,
+      "cautions": 1,
+      "pull_quotes": 0,
+      "conflicts": 1
+    },
+    "article_path": "clusters/CL-0cc87787/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-0cc87787",
+    "variant": "strict_t02",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 4,
+      "cautions": 1,
+      "pull_quotes": 0,
+      "conflicts": 1
+    },
+    "article_path": "clusters/CL-0cc87787/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-1e15fccd",
+    "variant": "baseline_t03",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 3,
+      "cautions": 2,
+      "pull_quotes": 2,
+      "conflicts": 0
+    },
+    "article_path": "clusters/CL-1e15fccd/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-1e15fccd",
+    "variant": "strict_t01",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 3,
+      "cautions": 1,
+      "pull_quotes": 0,
+      "conflicts": 1
+    },
+    "article_path": "clusters/CL-1e15fccd/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-1e15fccd",
+    "variant": "strict_t02",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 2,
+      "cautions": 2,
+      "pull_quotes": 0,
+      "conflicts": 1
+    },
+    "article_path": "clusters/CL-1e15fccd/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-2f3cb37c",
+    "variant": "baseline_t03",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 4,
+      "cautions": 2,
+      "pull_quotes": 2,
+      "conflicts": 0
+    },
+    "article_path": "clusters/CL-2f3cb37c/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-2f3cb37c",
+    "variant": "strict_t01",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 4,
+      "cautions": 1,
+      "pull_quotes": 0,
+      "conflicts": 1
+    },
+    "article_path": "clusters/CL-2f3cb37c/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-2f3cb37c",
+    "variant": "strict_t02",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 4,
+      "cautions": 1,
+      "pull_quotes": 0,
+      "conflicts": 1
+    },
+    "article_path": "clusters/CL-2f3cb37c/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-9defe9bb",
+    "variant": "baseline_t03",
+    "format_status": "FAIL",
+    "format_reason": "unstructured_output",
+    "utility_status": "PASS",
+    "utility_reason": "format_fail_but_high_utility_signal",
+    "salient_items": {
+      "key_points": 3,
+      "cautions": 2,
+      "pull_quotes": 2,
+      "conflicts": 0
+    },
+    "article_path": "clusters/CL-9defe9bb/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-9defe9bb",
+    "variant": "strict_t01",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 3,
+      "cautions": 1,
+      "pull_quotes": 0,
+      "conflicts": 1
+    },
+    "article_path": "clusters/CL-9defe9bb/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-9defe9bb",
+    "variant": "strict_t02",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 3,
+      "cautions": 1,
+      "pull_quotes": 0,
+      "conflicts": 1
+    },
+    "article_path": "clusters/CL-9defe9bb/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-c4b2038e",
+    "variant": "baseline_t03",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 4,
+      "cautions": 2,
+      "pull_quotes": 2,
+      "conflicts": 0
+    },
+    "article_path": "clusters/CL-c4b2038e/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-c4b2038e",
+    "variant": "strict_t01",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 3,
+      "cautions": 1,
+      "pull_quotes": 0,
+      "conflicts": 1
+    },
+    "article_path": "clusters/CL-c4b2038e/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-c4b2038e",
+    "variant": "strict_t02",
+    "format_status": "PASS",
+    "format_reason": "valid_structured_json",
+    "utility_status": "PASS",
+    "utility_reason": "salient_structured_signal",
+    "salient_items": {
+      "key_points": 4,
+      "cautions": 1,
+      "pull_quotes": 0,
+      "conflicts": 1
+    },
+    "article_path": "clusters/CL-c4b2038e/strict_t02.article.md"
+  }
+]

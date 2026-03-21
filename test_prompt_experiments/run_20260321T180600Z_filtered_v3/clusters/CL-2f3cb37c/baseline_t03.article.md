@@ -1,0 +1,7 @@
+# [no title]
+
+## Summary
+The U.S. war with Iran has incurred substantial costs, with initial estimates suggesting a weekly expenditure of around $11.3 billion. Experts and insiders, however, argue that the actual daily cost ranges from $1 billion to $2 billion, potentially rising to a quarter trillion dollars or more in the coming months. Critics contend that these funds could be better allocated to domestic needs like healthcare and education.
+
+## Body
+The U.S. war with Iran, initiated under the Trump administration, has seen significant expenditures. Initial estimates from Pentagon officials indicate a cost of around $11.3 billion within the first week of the conflict. However, these figures are considered conservative by experts and government insiders, who suggest the daily expenditure ranges from $1 billion to $2 billion, translating to approximately $11,500 to $23,000 per second. Over the coming months, the total cost could escalate to a quarter trillion dollars or more, with long-term expenses potentially reaching into the trillions of dollars over several decades. Critics argue that these funds could be better utilized for domestic programs such as healthcare and education. The Pentagon plans to submit a supplemental budget request to the White House and Congress, with Democratic lawmakers expecting the request to exceed $50 billion. The lack of transparency regarding the war's objectives and costs has drawn criticism, with some lawmakers questioning the necessity and scope of the conflict.

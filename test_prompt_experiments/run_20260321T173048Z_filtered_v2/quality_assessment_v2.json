@@ -1,0 +1,107 @@
+[
+  {
+    "cluster": "CL-75e4a978",
+    "variant": "baseline_t03",
+    "status": "PASS",
+    "reason": "reasonable",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-75e4a978/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-75e4a978",
+    "variant": "strict_t01",
+    "status": "FAIL",
+    "reason": "too_short_or_empty_body",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-75e4a978/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-75e4a978",
+    "variant": "strict_t02",
+    "status": "FAIL",
+    "reason": "too_short_or_empty_body",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-75e4a978/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-7ba60988",
+    "variant": "baseline_t03",
+    "status": "PASS",
+    "reason": "reasonable",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-7ba60988/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-7ba60988",
+    "variant": "strict_t01",
+    "status": "FAIL",
+    "reason": "too_short_or_empty_body",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-7ba60988/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-7ba60988",
+    "variant": "strict_t02",
+    "status": "FAIL",
+    "reason": "too_short_or_empty_body",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-7ba60988/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-c3ceed21",
+    "variant": "baseline_t03",
+    "status": "PASS",
+    "reason": "reasonable",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-c3ceed21/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-c3ceed21",
+    "variant": "strict_t01",
+    "status": "FAIL",
+    "reason": "too_short_or_empty_body",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-c3ceed21/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-c3ceed21",
+    "variant": "strict_t02",
+    "status": "FAIL",
+    "reason": "too_short_or_empty_body",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-c3ceed21/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-c4b2038e",
+    "variant": "baseline_t03",
+    "status": "PASS",
+    "reason": "reasonable",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-c4b2038e/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-c4b2038e",
+    "variant": "strict_t01",
+    "status": "FAIL",
+    "reason": "too_short_or_empty_body",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-c4b2038e/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-c4b2038e",
+    "variant": "strict_t02",
+    "status": "FAIL",
+    "reason": "too_short_or_empty_body",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-c4b2038e/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-e2dae2b2",
+    "variant": "baseline_t03",
+    "status": "FAIL",
+    "reason": "unstructured_output",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-e2dae2b2/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-e2dae2b2",
+    "variant": "strict_t01",
+    "status": "FAIL",
+    "reason": "input_corrupt_or_binary",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-e2dae2b2/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-e2dae2b2",
+    "variant": "strict_t02",
+    "status": "FAIL",
+    "reason": "too_short_or_empty_body",
+    "article_path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/clusters/CL-e2dae2b2/strict_t02.article.md"
+  }
+]

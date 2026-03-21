@@ -1,0 +1,9 @@
+{
+  "total": 15,
+  "pass": 6,
+  "fail": 9,
+  "by_reason": {
+    "reasonable": 6,
+    "too_short_or_empty_body": 9
+  }
+}

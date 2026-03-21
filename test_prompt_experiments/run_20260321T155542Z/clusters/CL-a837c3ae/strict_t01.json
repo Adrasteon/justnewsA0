@@ -1,0 +1,83 @@
+{
+  "cluster_id": "CL-a837c3ae",
+  "variant": "strict_t01",
+  "temperature": 0.1,
+  "elapsed_seconds": 3.958,
+  "request_error": null,
+  "request_payload": {
+    "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "temperature": 0.1,
+    "max_tokens": 1400,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a neutral news synthesis editor. Use only facts in provided snippets. If snippets conflict, report conflict explicitly and do not guess. If evidence is insufficient, state insufficient evidence. Do not invent names, numbers, quotes, dates, or locations. Output valid JSON only with keys: title, summary, body, key_points, conflicts, cautions, source_attribution."
+      },
+      {
+        "role": "user",
+        "content": "Context: cluster\nYou are given indexed sources. Use source indices in source_attribution.\nSOURCES:\n[0] Your personal data, your options, our responsibility We and our partners use cookies or similar technologies to access and store non-sensitive information such as your IP address. The processing of your personal data allows us, for example, to improve your user experience, monitor audience ratings, offer social networks features, or display personalized advertisements. By clicking \"Accept\", you consent to the use of cookies or similar technologies by France Médias Monde and its partners. You can change your choice or withdraw your consent anytime by clicking \"Customize\" below or the \"Manage my privacy settings\" link available in the menu. See our 236 partners We and our partners do the following data processing based on your consent: store and/or access information on a device , personalised advertising and content, advertising and content measurement, audience research and services development Accept Deny Customize Newsletters Français English Español العربية Subscription Personal account Email * required fields My subscriptions The Daily newsletter Receive your essential international news brief every morning. War in the Middle East Stay informed about the war in the Middle East and its regional impacts thanks to our correspondents on the ground. Editor's picks At the end of every day, get a selection of stories and videos that mattered. By submitting this form, I agree to the processing of my personal data for the purpose of sending me the selected newsletters. You must agree to the terms of use! Terms of use of your personal data: The information collected by France Médias Monde is intended to be used to send you contents and information by e-mail. All in relation to the shows, events and news of the France Médias Monde channels linked to the subscription choices you have made, as well as to monitor the audiences for this service. You can unsubscribe at any time via the unsubscribe link located in each newsletter. France Médias Monde will keep your data until you have unsubscribed or been automatically unsubscribed after thirteen (13) months of inactivity The information collected is intended for France Médias Monde and the users purposes. In accordance with the French Data Protection Act n°78-17 of 6 January 1978 as amended, as well as the European Regulation n°2016-679 on the protection of personal data, you have the right to access, rectify, delete, oppose and port your personal data, as well as the right to limit the processing. To exercise your rights, please send a letter to the following address: France Médias Monde, Data Protection Officer, 80 rue Camille Desmoulins, 92130 Issy-les-Moulineaux, France or an email to: dpd@francemm.com, specifying the subject of your request. You have the option of filing a complaint with a supervisory autho\n[1] Your personal data, your options, our responsibility We and our partners use cookies or similar technologies to access and store non-sensitive information such as your IP address. The processing of your personal data allows us, for example, to improve your user experience, monitor audience ratings, offer social networks features, or display personalized advertisements. By clicking \"Accept\", you consent to the use of cookies or similar technologies by France Médias Monde and its partners. You can change your choice or withdraw your consent anytime by clicking \"Customize\" below or the \"Manage my privacy settings\" link available in the menu. See our 236 partners We and our partners do the following data processing based on your consent: store and/or access information on a device , personalised advertising and content, advertising and content measurement, audience research and services development Accept Deny Customize Skip to main content France 24 - International breaking news, top stories and headlines Home Shows Newsfeed Live en Français English Español عربي Settings Sign up for newsletters Manage subscription to notifications Manage my privacy settings Menu Home Shows Live Newsfeed Menu Close Ukraine Mideast conflict France France 24 live See all shows Latest Newscast Closed-captioned Newscast TV guide Headings Topics Environment Business / Tech Sport Culture The Bright Side Infographics Fight the Fake The Observers Sponsored contents By region France Africa Middle East Americas Europe Asia-Pacific Previous Next France Africa Middle East Americas Europe Asia-Pacific Advertising France France’s ex-president Sarkozy maintains innocence in Libya funding appeal trial 17/03/2026 'Misguided' military operation: Trump’s appeal for Hormuz support draws no commitments from allies 17/03/2026 Entre Nous France's second homes: The price of a place in the sun 17/03/2026 'Macron alone in his tower': No candidates defending his govt or mandate in France's local elections 17/03/2026 French mayoral elections: Fractured vote reshapes alliances ahead of runoff 16/03/2026 Analysis Trump laments US allies' lack of 'enthusiasm' to help secure Strait of Hormuz 16/03/2026 France seeing a 're-polarization and reorganization' of the two poles, left and right 16/03/2026 Lava flows reach Indian Ocean on France's Réunion Island 16/03/2026 France in focus Why French mayors are throwing in the towel 16/03/2026 44% abstention: French local elections 'poorly attended dress rehearsal' for 2027 presidential race 16/03/2026 Nicolas Sarkozy back in court over alleged Libyan funding for 2007 presidential campaign 16/03/2026 Socialist leads Paris mayoral race but leftist rival threatens to split vote 15/03/2026 French far right eyes Marseille upset after strong showing in mayoral electi\n[2] Your personal data, your options, our responsibility We and our partners use cookies or similar technologies to access and store non-sensitive information such as your IP address. The processing of your personal data allows us, for example, to improve your user experience, monitor audience ratings, offer social networks features, or display personalized advertisements. By clicking \"Accept\", you consent to the use of cookies or similar technologies by France Médias Monde and its partners. You can change your choice or withdraw your consent anytime by clicking \"Customize\" below or the \"Manage my privacy settings\" link available in the menu. See our 236 partners We and our partners do the following data processing based on your consent: store and/or access information on a device , personalised advertising and content, advertising and content measurement, audience research and services development Accept Deny Customize Skip to main content France 24 - International breaking news, top stories and headlines Home Shows Newsfeed Live en Français English Español عربي Settings Sign up for newsletters Manage subscription to notifications Manage my privacy settings Menu Home Shows Live Newsfeed Menu Close Ukraine Mideast conflict France France 24 live See all shows Latest Newscast Closed-captioned Newscast TV guide Headings Topics Environment Business / Tech Sport Culture The Bright Side Infographics Fight the Fake The Observers Sponsored contents By region France Africa Middle East Americas Europe Asia-Pacific Previous Next France Africa Middle East Americas Europe Asia-Pacific Advertising Home Sport Previous Next Football Tennis Swimming Advertising Page not found The content you requested does not exist or is not available anymore.\n[3] Your personal data, your options, our responsibility We and our partners use cookies or similar technologies to access and store non-sensitive information such as your IP address. The processing of your personal data allows us, for example, to improve your user experience, monitor audience ratings, offer social networks features, or display personalized advertisements. By clicking \"Accept\", you consent to the use of cookies or similar technologies by France Médias Monde and its partners. You can change your choice or withdraw your consent anytime by clicking \"Customize\" below or the \"Manage my privacy settings\" link available in the menu. See our 236 partners We and our partners do the following data processing based on your consent: store and/or access information on a device , personalised advertising and content, advertising and content measurement, audience research and services development Accept Deny Customize Skip to main content France 24 - International breaking news, top stories and headlines Home Shows Newsfeed Live en Français English Español عربي Settings Sign up for newsletters Manage subscription to notifications Manage my privacy settings Menu Home Shows Live Newsfeed Menu Close Ukraine Mideast conflict France France 24 live See all shows Latest Newscast Closed-captioned Newscast TV guide Headings Topics Environment Business / Tech Sport Culture The Bright Side Infographics Fight the Fake The Observers Sponsored contents By region France Africa Middle East Americas Europe Asia-Pacific Previous Next France Africa Middle East Americas Europe Asia-Pacific Advertising Home Culture Previous Next Cinema Music Festivals Art Theatre Literature Photography Advertising Page not found The content you requested does not exist or is not available anymore.\nFocus on confirmed facts, conflicts, and uncertainties.\nReturn valid JSON only."
+      }
+    ]
+  },
+  "response": {
+    "status_code": 200,
+    "body": {
+      "id": "chatcmpl-a8be2dd5aefb1766",
+      "object": "chat.completion",
+      "created": 1774109029,
+      "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "{\n  \"title\": \"Cluster: Personal Data Usage and Privacy Settings\",\n  \"summary\": \"The sources discuss the usage of personal data by France Médias Monde and its partners, including the use of cookies and similar technologies to improve user experience, monitor audience ratings, and display personalized advertisements.\",\n  \"body\": \"\",\n  \"key_points\": [\n    \"France Médias Monde and its partners use cookies or similar technologies to access and store non-sensitive information like IP addresses.\",\n    \"Personal data processing includes improving user experience, monitoring audience ratings, offering social network features, and displaying personalized advertisements.\",\n    \"Users can customize their privacy settings and manage their consent for data processing.\"\n  ],\n  \"conflicts\": [],\n  \"cautions\": [\"The provided text is repetitive and lacks specific details or unique information beyond the general statement of data usage practices.\"],\n  \"source_attribution\": [0, 1, 2, 3]\n}",
+            "refusal": null,
+            "annotations": null,
+            "audio": null,
+            "function_call": null,
+            "tool_calls": [],
+            "reasoning": null,
+            "reasoning_content": null
+          },
+          "logprobs": null,
+          "finish_reason": "stop",
+          "stop_reason": null,
+          "token_ids": null
+        }
+      ],
+      "service_tier": null,
+      "system_fingerprint": null,
+      "usage": {
+        "prompt_tokens": 1967,
+        "total_tokens": 2160,
+        "completion_tokens": 193,
+        "prompt_tokens_details": null
+      },
+      "prompt_logprobs": null,
+      "prompt_token_ids": null,
+      "kv_transfer_params": null
+    }
+  },
+  "model_text": "{\n  \"title\": \"Cluster: Personal Data Usage and Privacy Settings\",\n  \"summary\": \"The sources discuss the usage of personal data by France Médias Monde and its partners, including the use of cookies and similar technologies to improve user experience, monitor audience ratings, and display personalized advertisements.\",\n  \"body\": \"\",\n  \"key_points\": [\n    \"France Médias Monde and its partners use cookies or similar technologies to access and store non-sensitive information like IP addresses.\",\n    \"Personal data processing includes improving user experience, monitoring audience ratings, offering social network features, and displaying personalized advertisements.\",\n    \"Users can customize their privacy settings and manage their consent for data processing.\"\n  ],\n  \"conflicts\": [],\n  \"cautions\": [\"The provided text is repetitive and lacks specific details or unique information beyond the general statement of data usage practices.\"],\n  \"source_attribution\": [0, 1, 2, 3]\n}",
+  "parsed_json": {
+    "title": "Cluster: Personal Data Usage and Privacy Settings",
+    "summary": "The sources discuss the usage of personal data by France Médias Monde and its partners, including the use of cookies and similar technologies to improve user experience, monitor audience ratings, and display personalized advertisements.",
+    "body": "",
+    "key_points": [
+      "France Médias Monde and its partners use cookies or similar technologies to access and store non-sensitive information like IP addresses.",
+      "Personal data processing includes improving user experience, monitoring audience ratings, offering social network features, and displaying personalized advertisements.",
+      "Users can customize their privacy settings and manage their consent for data processing."
+    ],
+    "conflicts": [],
+    "cautions": [
+      "The provided text is repetitive and lacks specific details or unique information beyond the general statement of data usage practices."
+    ],
+    "source_attribution": [
+      0,
+      1,
+      2,
+      3
+    ]
+  }
+}

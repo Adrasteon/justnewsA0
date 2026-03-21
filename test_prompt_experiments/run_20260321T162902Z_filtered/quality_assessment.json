@@ -1,0 +1,195 @@
+[
+  {
+    "cluster": "CL-6749b83e",
+    "variant": "baseline_t03",
+    "status": "PASS",
+    "reasons": [],
+    "words": 131,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# [no title]",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-6749b83e/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-6749b83e",
+    "variant": "strict_t01",
+    "status": "FAIL",
+    "reasons": [
+      "no_model_text",
+      "too_short"
+    ],
+    "words": 2,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# Trump's Delayed Trip to China Amidst Iran Conflict",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-6749b83e/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-6749b83e",
+    "variant": "strict_t02",
+    "status": "FAIL",
+    "reasons": [
+      "no_model_text",
+      "too_short"
+    ],
+    "words": 2,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# Trump's Delayed Trip to China Amidst Iran Conflict",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-6749b83e/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-c3ceed21",
+    "variant": "baseline_t03",
+    "status": "PASS",
+    "reasons": [],
+    "words": 230,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# [no title]",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-c3ceed21/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-c3ceed21",
+    "variant": "strict_t01",
+    "status": "PASS",
+    "reasons": [],
+    "words": 1072,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "{",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-c3ceed21/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-c3ceed21",
+    "variant": "strict_t02",
+    "status": "FAIL",
+    "reasons": [
+      "too_short"
+    ],
+    "words": 59,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# Top US Counterterrorism Official Resigns Amid Controversy Over War in Iran",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-c3ceed21/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-d5c593e6",
+    "variant": "baseline_t03",
+    "status": "PASS",
+    "reasons": [],
+    "words": 134,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# [no title]",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-d5c593e6/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-d5c593e6",
+    "variant": "strict_t01",
+    "status": "FAIL",
+    "reasons": [
+      "no_model_text",
+      "too_short"
+    ],
+    "words": 2,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# Cluster Analysis on News Articles",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-d5c593e6/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-d5c593e6",
+    "variant": "strict_t02",
+    "status": "FAIL",
+    "reasons": [
+      "no_model_text",
+      "too_short"
+    ],
+    "words": 2,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# Cluster Analysis on News Articles",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-d5c593e6/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-e2dae2b2",
+    "variant": "baseline_t03",
+    "status": "FAIL",
+    "reasons": [
+      "too_short"
+    ],
+    "words": 93,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "It seems that the provided text snippets are not readable or contain corrupted data. Therefore, I am unable to synthesize a coherent news report from these inputs. Here is the JSON response indicating this issue:",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-e2dae2b2/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-e2dae2b2",
+    "variant": "strict_t01",
+    "status": "FAIL",
+    "reasons": [
+      "no_model_text",
+      "too_short"
+    ],
+    "words": 2,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# Cluster",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-e2dae2b2/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-e2dae2b2",
+    "variant": "strict_t02",
+    "status": "FAIL",
+    "reasons": [
+      "no_model_text",
+      "too_short"
+    ],
+    "words": 2,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# Cluster",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-e2dae2b2/strict_t02.article.md"
+  },
+  {
+    "cluster": "CL-fe266d6b",
+    "variant": "baseline_t03",
+    "status": "PASS",
+    "reasons": [],
+    "words": 135,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# [no title]",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-fe266d6b/baseline_t03.article.md"
+  },
+  {
+    "cluster": "CL-fe266d6b",
+    "variant": "strict_t01",
+    "status": "FAIL",
+    "reasons": [
+      "no_model_text",
+      "too_short"
+    ],
+    "words": 2,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# Cluster of Articles from SPIEGEL",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-fe266d6b/strict_t01.article.md"
+  },
+  {
+    "cluster": "CL-fe266d6b",
+    "variant": "strict_t02",
+    "status": "FAIL",
+    "reasons": [
+      "no_model_text",
+      "too_short"
+    ],
+    "words": 2,
+    "overlay_hits": 0,
+    "corrupt_hits": 0,
+    "title": "# Cluster of Articles",
+    "path": "test_prompt_experiments/run_20260321T162902Z_filtered/clusters/CL-fe266d6b/strict_t02.article.md"
+  }
+]

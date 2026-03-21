@@ -1,0 +1,47 @@
+{
+  "run_generated_at_utc": "2026-03-21T17:31:17.199218+00:00",
+  "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+  "base_url": "http://vllm:8010/v1",
+  "chat_url": "http://vllm:8010/v1/chat/completions",
+  "clusters": [
+    {
+      "cluster_id": "CL-e2dae2b2",
+      "article_count": 2,
+      "latest_created_at": "2026-03-20 21:24:46"
+    },
+    {
+      "cluster_id": "CL-c3ceed21",
+      "article_count": 8,
+      "latest_created_at": "2026-03-20 21:24:42"
+    },
+    {
+      "cluster_id": "CL-7ba60988",
+      "article_count": 4,
+      "latest_created_at": "2026-03-20 21:19:13"
+    },
+    {
+      "cluster_id": "CL-75e4a978",
+      "article_count": 4,
+      "latest_created_at": "2026-03-20 20:27:35"
+    },
+    {
+      "cluster_id": "CL-c4b2038e",
+      "article_count": 3,
+      "latest_created_at": "2026-03-20 21:18:50"
+    }
+  ],
+  "variants": [
+    {
+      "name": "baseline_t03",
+      "temperature": 0.3
+    },
+    {
+      "name": "strict_t02",
+      "temperature": 0.2
+    },
+    {
+      "name": "strict_t01",
+      "temperature": 0.1
+    }
+  ]
+}

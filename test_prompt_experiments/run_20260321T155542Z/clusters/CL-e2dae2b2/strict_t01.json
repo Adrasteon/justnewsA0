@@ -1,0 +1,76 @@
+{
+  "cluster_id": "CL-e2dae2b2",
+  "variant": "strict_t01",
+  "temperature": 0.1,
+  "elapsed_seconds": 1.38,
+  "request_error": null,
+  "request_payload": {
+    "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "temperature": 0.1,
+    "max_tokens": 1400,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are a neutral news synthesis editor. Use only facts in provided snippets. If snippets conflict, report conflict explicitly and do not guess. If evidence is insufficient, state insufficient evidence. Do not invent names, numbers, quotes, dates, or locations. Output valid JSON only with keys: title, summary, body, key_points, conflicts, cautions, source_attribution."
+      },
+      {
+        "role": "user",
+        "content": "Context: cluster\nYou are given indexed sources. Use source indices in source_attribution.\nSOURCES:\n[0] ID3 #TSSE Lavf58.56.100 ���d #QD(��3 � \" ԝ!f$i�$�p ����` B�vN��d�ɧ����Ҁ\"S'~��9�y]],M������O��+������&\\[�� �^\"�A� �ٟ�p<�G�:GX=ߞ� �]������� �ʎ|�˼@u���l�A�//а��4���V�9��.��H�C�v���60@p��X���:-�t����e�P�.�wG��Rk ����0����x?<\\�?���Z�{��J��ߛ�[c��N���1gQE�\"��P�:M~U3�I��T��40.�2]��Is�*��(�N�\"@�j��wSR���$e���bFЭ� ��� �P���ЪNƤXHA@02Nt={nE74沙�]f��ʅ8��}=�]*���dE>���BA�9, & E?�$k ��00�������r���Kҗ�O�g�ϸ�5D��HOyR�Mn��e�/ U�}���,J����I�LE� �X��h�gY/>}�'$�!�����S��X��/�w)��gS����M�R�#�����5R� �?&�d)Pش� 8Ĥ��6��_e��;�l�!�.�_7��-v�k����+c_36wc��\"��#R��V\\;ò{��m�1�gpS]�\n[1] ID3 #TSSE Lavf58.56.100 ���d ��>���4r �A�sȟ @ �#� Ð{m��V�� �̐͂2C�C$�2O΍���m?�������|���Z�����-WQu���)-�,�r)'?�#��M�G��/��<���]�DS\"���ȥ0L��93�Q��'�=�J�=#�Y�Od�羧�͈���������Njt�yw����8~ �!�u����/��;/R�G@��8�'M�s ,� �BÂH�����$�����2I��~!�󐃪����ʤ��ͮ�/ql�}��z>����A}�3� #�3L�����~���fmOG�K'T�w������<����V�8,�T�j���dC�V�A�0�0� # �u�)�� \" �x�{��68я[��������O��p��@�6���!�s�7m���LH ��|��R#�*Q��Η��Ι��q(�e��(���vM-�1Ze�] &���`���V�ؘ��1Ѱ�1��UE�crY I��+.j�ʹd�]Z1VSJ��;�M�qU�E�+�.��R�CE�Qu�AQ�5ԕ�靓��a%��-C��D7�Q'(�Oj�֍��n�8�����r��ϻN�Vթ��4謸ʑw��U� a ��N��#P�1W��S�D9��D��I3c�쑋��(�\"��D���7��rD.�?�k�t�<N��� �*��0�Aݚ���5,|+���j��:�:*ri�8��ٱ����#y���P����@)m�ge��?���dD�ZG��2 *��\"^ �k#g�n�� \"$ �\"~�g�9��n:�����j�U/?�^)�K}*�1�2�I$K��1;B�&��{Bp���t���N���d kU��:T�H�o���e(fM����Q*9�)�;φ�?T�C���\\3�̸��8��/(�3'a ���d��¢��[VD|Hy�ݱ�#�����.��ֽ\\S���Pc�����j&�� �����*1B(�G(_��N���� 7��<�ŋ�t�A�!r-f�yfA��JNf1���y&�x})M=qD�{M܄�A?�\"R�)�3hu�!�!�Z^$�m��0n== ̆F�DR.�3�T݋A��|��B굲����E�eT��Ds�罬_%�EÆ���[�B/P 6� ��ǉp4�U�cI��i� �� ���da���\\�A�`.`` qw �� � \"� \\#���v\"�FD�C�A�8����6�b��� �i�U��Pd�A'xщ5WL�K �,$�1�^%u>����d�4zM�21���{_�ױ�sP����GFBkB�5X���ꎚ�Rl���\\�|�KR���W�LZ��8�}���;Ń᲏qK&�ۿ'`+���C�e�&��,�kTkV z�<8�ih.�X��1\"��?˸�,�ChF�*�!4��L�i/�'B��q��f9���|��/UG}k ׀�T.����.��p+'ngo}�{�/%�s��J�3&������|�֘q�1B� v�I�:{3��m���l{�E��� �X���?�,����<�~5����_���[ʞ��?�d�����y�1� a����do �d��e�!� �� u�I<��� &�� q�� z\":�w�c�(�����������O���/$�r6@.Z � �X�'$\\�`n�,+w\"(LG0��m�aB<�`�Q�H����XQ \"�=�� (,����p9|Lr�é,AQ�/s���Úۊ�B��w阱�S�SF���L�-��j��K��1�D%�ߦ��W�փ��a�ڦ���i����2�۫�{�U�ßIK��KlV���3Rռ�MR��ii��L��zjݥ���v��f-P؜ƾV��U 3��N�@�M�}F�������������,*.� ��� �N��,ڕLN:؜�; i�j�m\"pT�m�z<sw�� �ǃ!-m\"lt�x���ԌN��{���;l�,]B�5�-ߐ���d-��=T�XKp.�X� 0�S��W- \\�ñ%h�y�s���W �Ǿ��5��k��ѥ�Ta��b��X� ��ś^���D�e�;���V��}a� rÔ�y���?����������_��������\\!�PZ����0;ɲ PS �0d4���f\\U��W���h�ϫ��X�/a -9���������/�:�!��'|�fZ��A���1���o$y��4�����n�ޟ����U)0�^�WV!,�)t�\"��)eg���Ds� ��\"�fV�_~R4�j2*��;X�BN�R)� �WMI`Hْ%$\\�%�,�����2�����_�����������p@� j� 6U0 q;�P�4^D�$$L���\"�j�j��Իk4wb1|�N�����A��+�Y�=�%6?���[�����d �EcY{F.B/�%~V�Q �\\Ȉ ��p@ �[�z����k�]���?־Z؂Tvy�ֽ�P%S0Ӝa �WZ����Jl�e�Ո�38�H�L��g0p�&� e��~ 9�����#�?��_���'��������������@P��� ��I��������p\"a���儕��C���Ӿ��A PeyB,�^�X}2RbP�A���H\" �_�q�Ķ3�F�(�t@2s�����m�����B8�y��e�>y�[U)ps3Z%�r��h�^CB�2���#����zs_=>�=?�����mk=���U� �,|F��9�?�{[����K?�}���`Cma4{_���(e���� [ʏI h\"�\\*��?'D���{�?uہ0m�El���%f�: �����d�UaT�/\"*�(� \"L��'a�-&H�$����v�҄ ��@l儣S{j��r�w{W�qy��/�L���u �� ���O�;t��bP�b�^��:r��Sޤ���c,��?@��(���8�H(��MEo��Қ�y?�z�fYGâ��� �{��u�u��������_�O���@�)OK������� h r@��d;������ 8D2���\\�̂��F�L6B�hep%���!�k,�OD��<����&+�� �0��N��Fڑm�!'��h@������l4��������]� ���0|����a�����{ӧ};����o�U}�O��޿��T��V>�X�yq$��2���?��C}�YwA ُd}�N�(�«�l0�R�=Z�����d ��h�y�K�.�H� '���u�5�5�� �;�[��~d5* r0M���Eyh E�HA��Ԣ�0\nFocus on confirmed facts, conflicts, and uncertainties.\nReturn valid JSON only."
+      }
+    ]
+  },
+  "response": {
+    "status_code": 200,
+    "body": {
+      "id": "chatcmpl-8901e13e2be042f1",
+      "object": "chat.completion",
+      "created": 1774108951,
+      "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "{\n  \"title\": \"Cluster\",\n  \"summary\": \"Insufficient evidence to provide a summary.\",\n  \"body\": \"\",\n  \"key_points\": [],\n  \"conflicts\": [],\n  \"cautions\": [\"The provided sources contain no readable text and appear to be binary data or corrupted files, making it impossible to extract any meaningful information about a cluster.\"],\n  \"source_attribution\": [1]\n}",
+            "refusal": null,
+            "annotations": null,
+            "audio": null,
+            "function_call": null,
+            "tool_calls": [],
+            "reasoning": null,
+            "reasoning_content": null
+          },
+          "logprobs": null,
+          "finish_reason": "stop",
+          "stop_reason": null,
+          "token_ids": null
+        }
+      ],
+      "service_tier": null,
+      "system_fingerprint": null,
+      "usage": {
+        "prompt_tokens": 2566,
+        "total_tokens": 2651,
+        "completion_tokens": 85,
+        "prompt_tokens_details": null
+      },
+      "prompt_logprobs": null,
+      "prompt_token_ids": null,
+      "kv_transfer_params": null
+    }
+  },
+  "model_text": "{\n  \"title\": \"Cluster\",\n  \"summary\": \"Insufficient evidence to provide a summary.\",\n  \"body\": \"\",\n  \"key_points\": [],\n  \"conflicts\": [],\n  \"cautions\": [\"The provided sources contain no readable text and appear to be binary data or corrupted files, making it impossible to extract any meaningful information about a cluster.\"],\n  \"source_attribution\": [1]\n}",
+  "parsed_json": {
+    "title": "Cluster",
+    "summary": "Insufficient evidence to provide a summary.",
+    "body": "",
+    "key_points": [],
+    "conflicts": [],
+    "cautions": [
+      "The provided sources contain no readable text and appear to be binary data or corrupted files, making it impossible to extract any meaningful information about a cluster."
+    ],
+    "source_attribution": [
+      1
+    ]
+  }
+}

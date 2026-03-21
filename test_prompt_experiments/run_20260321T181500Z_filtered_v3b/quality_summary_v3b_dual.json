@@ -1,0 +1,12 @@
+{
+  "total": 15,
+  "format_pass": 14,
+  "format_fail": 1,
+  "utility_pass": 15,
+  "utility_fail": 0,
+  "format_fail_utility_pass": 1,
+  "by_utility_reason": {
+    "salient_structured_signal": 14,
+    "format_fail_but_high_utility_signal": 1
+  }
+}

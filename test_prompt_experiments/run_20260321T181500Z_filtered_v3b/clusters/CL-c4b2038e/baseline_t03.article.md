@@ -1,0 +1,7 @@
+# [no title]
+
+## Summary
+The conflict between the US and Israel against Iran continues, resulting in over 1,500 deaths, mostly in Iran. President Trump has sought international support to secure the Strait of Hormuz but faced rejection from several countries, including Australia, Japan, and France, which prefers a diplomatic approach.
+
+## Body
+The ongoing conflict between the United States and Israel against Iran has intensified, leading to significant casualties primarily in Iran. Over 1,500 individuals have been confirmed dead, with more than 1,400 fatalities occurring within Iran. Additionally, the number of US soldiers wounded in the conflict has risen to approximately 200, with most sustaining minor injuries and about 180 having returned to duty. Ten soldiers have sustained severe injuries, and thirteen have lost their lives. Meanwhile, President Donald Trump has sought international support to secure the Strait of Hormuz from Iran's control, emphasizing the strategic importance of the waterway. However, many countries, including Australia, Japan, Poland, Sweden, and Spain, have declined to send military ships to the region. European leaders, such as Germany and Italy, have also rejected the request, advocating for diplomatic solutions instead. Trump has criticized these countries for their reluctance, citing past assistance provided by the US. Despite the pushback, some nations, like France, have indicated a willingness to participate in an escort system once the situation stabilizes.
