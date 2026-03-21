@@ -1,0 +1,3 @@
+# Exclude files that currently trigger Roo indexer wasm parser crashes.
+AGENT_MODEL_RECOMMENDED.json
+AGENT_MODEL_MAP.json

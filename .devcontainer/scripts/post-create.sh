@@ -579,7 +579,7 @@ fi
 log_info ""
 log_info "Step 4: Checking vLLM accessibility (non-blocking)..."
 VLLM_HOST="${VLLM_HOST:-vllm}"
-VLLM_PORT="${VLLM_PORT:-8001}"
+VLLM_PORT="${VLLM_PORT:-8010}"
 VLLM_MAX_WAIT=20
 VLLM_WAIT=0
 

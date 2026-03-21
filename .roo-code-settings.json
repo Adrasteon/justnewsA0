@@ -1,0 +1,67 @@
+{
+  "providerProfiles": {
+    "currentApiConfigName": "desktop-openai-lmstudio-gemma",
+    "apiConfigs": {
+      "desktop-ollama-coder": {
+        "id": "desktop-ollama-coder",
+        "apiProvider": "ollama",
+        "ollamaBaseUrl": "http://host.docker.internal:11434",
+        "ollamaModelId": "qwen2.5-coder:32b",
+        "ollamaNumCtx": 8192,
+        "modelTemperature": 0,
+        "enableReasoningEffort": false
+      },
+      "desktop-ollama-python": {
+        "id": "desktop-ollama-python",
+        "apiProvider": "ollama",
+        "ollamaBaseUrl": "http://host.docker.internal:11434",
+        "ollamaModelId": "hf.co/Nerdsking/Nerdsking-python-coder-7B-i:Q8_0_I",
+        "ollamaNumCtx": 8192
+      },
+      "desktop-lmstudio-gemma": {
+        "id": "desktop-lmstudio-gemma",
+        "apiProvider": "lmstudio",
+        "lmStudioBaseUrl": "http://host.docker.internal:1234/v1",
+        "lmStudioModelId": "google/gemma-3-12b",
+        "lmStudioNumCtx": 8192,
+        "modelTemperature": 0
+      },
+      "desktop-openai-lmstudio-gemma": {
+        "id": "desktop-openai-lmstudio-gemma",
+        "apiProvider": "openai",
+        "openAiBaseUrl": "http://host.docker.internal:1234/v1",
+        "openAiApiKey": "lm-studio",
+        "openAiModelId": "google/gemma-3-12b",
+        "modelTemperature": 0,
+        "openAiStreamingEnabled": true
+      }
+    },
+    "modeApiConfigs": {
+      "code": "desktop-openai-lmstudio-gemma",
+      "architect": "desktop-openai-lmstudio-gemma",
+      "ask": "desktop-openai-lmstudio-gemma",
+      "debug": "desktop-openai-lmstudio-gemma"
+    }
+  },
+  "globalSettings": {
+    "autoApprovalEnabled": true,
+    "alwaysAllowReadOnly": true,
+    "alwaysAllowWrite": true,
+    "alwaysAllowExecute": true,
+    "alwaysAllowMcp": true,
+    "alwaysAllowModeSwitch": true,
+    "includeDiagnosticMessages": true,
+    "maxDiagnosticMessages": 200
+  },
+  "codebaseIndexConfig": {
+    "codebaseIndexEnabled": true,
+    "codebaseIndexQdrantUrl": "http://host.docker.internal:6333",
+    "codebaseIndexEmbedderProvider": "openai-compatible",
+    "codebaseIndexEmbedderBaseUrl": "http://host.docker.internal:1234/v1",
+    "codebaseIndexOpenAiCompatibleBaseUrl": "http://host.docker.internal:1234/v1",
+    "codebaseIndexEmbedderModelId": "text-embedding-nomic-embed-text-v1.5",
+    "codebaseIndexEmbedderModelDimension": 768,
+    "codebaseIndexSearchMaxResults": 20,
+    "codebaseIndexSearchMinScore": 0.2
+  }
+}
