@@ -721,6 +721,7 @@ class TestCrawlerEngine:
                 "os.environ",
                 {
                     "UNIFIED_CRAWLER_LANE2_FALLBACK_ENABLED": "1",
+                    "UNIFIED_CRAWLER_LANE2_SEED_ENABLED": "0",
                     "UNIFIED_CRAWLER_LANE2_FALLBACK_DOMAINS": "lane2.com",
                     "UNIFIED_CRAWLER_LANE2_MAX_SITES": "1",
                     "UNIFIED_CRAWLER_LANE2_MAX_ARTICLES_PER_SITE": "1",
@@ -776,6 +777,238 @@ class TestCrawlerEngine:
             assert result["duplicates_skipped"] == 1
             assert result["site_breakdown"]["lane2.com"] == 1
             assert mock_ingest.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_crawl_multiple_sites_lane2_fallback_skips_blocked_source(
+        self, crawler_engine, mock_site_config
+    ):
+        """Lane2 replacement sources in blocked state should be skipped."""
+        site_configs = [mock_site_config]
+
+        async def _crawl_side_effect(site_config, _max_articles):
+            domain = site_config.domain or site_config.name
+            if domain == "testsite.com":
+                return [
+                    {
+                        "title": "Lane1 Duplicate",
+                        "url": "https://testsite.com/article-dup",
+                        "content": "dup",
+                    }
+                ]
+            return [
+                {
+                    "title": "Lane2 Fresh",
+                    "url": f"https://{domain}/article-new",
+                    "content": "new",
+                }
+            ]
+
+        with (
+            patch.object(crawler_engine, "crawl_site", side_effect=_crawl_side_effect),
+            patch.object(crawler_engine, "_cleanup_orphaned_processes"),
+            patch.object(crawler_engine, "_submit_hitl_candidates", return_value=None),
+            patch("agents.crawler.crawler_engine.get_sources_by_domain") as mock_get_sources,
+            patch.object(crawler_engine, "_ingest_articles") as mock_ingest,
+            patch.dict(
+                "os.environ",
+                {
+                    "UNIFIED_CRAWLER_LANE2_FALLBACK_ENABLED": "1",
+                    "UNIFIED_CRAWLER_LANE2_SEED_ENABLED": "0",
+                    "UNIFIED_CRAWLER_LANE2_FALLBACK_DOMAINS": "lane2-blocked.com",
+                    "UNIFIED_CRAWLER_LANE2_MAX_SITES": "1",
+                    "UNIFIED_CRAWLER_LANE2_MAX_ARTICLES_PER_SITE": "1",
+                    "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_ENABLED": "0",
+                    "UNIFIED_CRAWLER_ADAPTIVE_DEPTH_ENABLED": "0",
+                },
+                clear=False,
+            ),
+        ):
+            mock_get_sources.side_effect = lambda domains: (
+                [
+                    {
+                        "id": 2,
+                        "name": "Lane2 Blocked Source",
+                        "domain": "lane2-blocked.com",
+                        "url": "https://lane2-blocked.com",
+                        "source_state": "blocked",
+                    }
+                ]
+                if domains == ["lane2-blocked.com"]
+                else []
+            )
+
+            mock_ingest.side_effect = [
+                {
+                    "new_articles": 0,
+                    "duplicates": 1,
+                    "errors": 0,
+                    "details": [
+                        {
+                            "url": "https://testsite.com/article-dup",
+                            "status": "duplicate",
+                        }
+                    ],
+                }
+            ]
+
+            result = await crawler_engine.crawl_multiple_sites(
+                site_configs, max_articles_per_site=1
+            )
+
+            assert result["total_articles"] == 0
+            assert result["duplicates_skipped"] == 1
+            assert mock_ingest.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_crawl_multiple_sites_lane2_fallback_skips_provisional_when_discovery_disabled(
+        self, crawler_engine, mock_site_config
+    ):
+        """Lane2 provisional replacement should be skipped when discovery is disabled."""
+        site_configs = [mock_site_config]
+
+        async def _crawl_side_effect(site_config, _max_articles):
+            domain = site_config.domain or site_config.name
+            if domain == "testsite.com":
+                return [
+                    {
+                        "title": "Lane1 Duplicate",
+                        "url": "https://testsite.com/article-dup",
+                        "content": "dup",
+                    }
+                ]
+            return [
+                {
+                    "title": "Lane2 Fresh",
+                    "url": f"https://{domain}/article-new",
+                    "content": "new",
+                }
+            ]
+
+        with (
+            patch.object(crawler_engine, "crawl_site", side_effect=_crawl_side_effect),
+            patch.object(crawler_engine, "_cleanup_orphaned_processes"),
+            patch.object(crawler_engine, "_submit_hitl_candidates", return_value=None),
+            patch("agents.crawler.crawler_engine.get_sources_by_domain") as mock_get_sources,
+            patch.object(crawler_engine, "_ingest_articles") as mock_ingest,
+            patch.dict(
+                "os.environ",
+                {
+                    "UNIFIED_CRAWLER_LANE2_FALLBACK_ENABLED": "1",
+                    "UNIFIED_CRAWLER_LANE2_SEED_ENABLED": "0",
+                    "UNIFIED_CRAWLER_LANE2_FALLBACK_DOMAINS": "lane2-provisional.com",
+                    "UNIFIED_CRAWLER_LANE2_MAX_SITES": "1",
+                    "UNIFIED_CRAWLER_LANE2_MAX_ARTICLES_PER_SITE": "1",
+                    "UNIFIED_CRAWLER_DISCOVERY_ENABLED": "0",
+                    "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_ENABLED": "0",
+                    "UNIFIED_CRAWLER_ADAPTIVE_DEPTH_ENABLED": "0",
+                },
+                clear=False,
+            ),
+        ):
+            mock_get_sources.side_effect = lambda domains: (
+                [
+                    {
+                        "id": 2,
+                        "name": "Lane2 Provisional Source",
+                        "domain": "lane2-provisional.com",
+                        "url": "https://lane2-provisional.com",
+                        "source_state": "provisional_discovered",
+                    }
+                ]
+                if domains == ["lane2-provisional.com"]
+                else []
+            )
+
+            mock_ingest.side_effect = [
+                {
+                    "new_articles": 0,
+                    "duplicates": 1,
+                    "errors": 0,
+                    "details": [
+                        {
+                            "url": "https://testsite.com/article-dup",
+                            "status": "duplicate",
+                        }
+                    ],
+                }
+            ]
+
+            result = await crawler_engine.crawl_multiple_sites(
+                site_configs, max_articles_per_site=1
+            )
+
+            assert result["total_articles"] == 0
+            assert result["duplicates_skipped"] == 1
+            assert mock_ingest.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_crawl_multiple_sites_whitelist_only_disables_lane2_fallback(
+        self, crawler_engine, mock_site_config
+    ):
+        """Whitelist-only mode should disable lane2 fallback even when enabled by env."""
+        site_configs = [mock_site_config]
+
+        async def _crawl_side_effect(site_config, _max_articles):
+            domain = site_config.domain or site_config.name
+            if domain == "testsite.com":
+                return [
+                    {
+                        "title": "Lane1 Duplicate",
+                        "url": "https://testsite.com/article-dup",
+                        "content": "dup",
+                    }
+                ]
+            return [
+                {
+                    "title": "Lane2 Fresh",
+                    "url": f"https://{domain}/article-new",
+                    "content": "new",
+                }
+            ]
+
+        with (
+            patch.object(crawler_engine, "crawl_site", side_effect=_crawl_side_effect),
+            patch.object(crawler_engine, "_cleanup_orphaned_processes"),
+            patch.object(crawler_engine, "_submit_hitl_candidates", return_value=None),
+            patch("agents.crawler.crawler_engine.get_sources_by_domain") as mock_get_sources,
+            patch.object(crawler_engine, "_ingest_articles") as mock_ingest,
+            patch.dict(
+                "os.environ",
+                {
+                    "UNIFIED_CRAWLER_LANE2_FALLBACK_ENABLED": "1",
+                    "UNIFIED_CRAWLER_LANE2_SEED_ENABLED": "0",
+                    "UNIFIED_CRAWLER_LANE2_FALLBACK_DOMAINS": "lane2.com",
+                    "UNIFIED_CRAWLER_LANE2_MAX_SITES": "1",
+                    "UNIFIED_CRAWLER_LANE2_MAX_ARTICLES_PER_SITE": "1",
+                    "UNIFIED_CRAWLER_WHITELIST_ONLY_MODE": "1",
+                    "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_ENABLED": "0",
+                    "UNIFIED_CRAWLER_ADAPTIVE_DEPTH_ENABLED": "0",
+                },
+                clear=False,
+            ),
+        ):
+            mock_ingest.side_effect = [
+                {
+                    "new_articles": 0,
+                    "duplicates": 1,
+                    "errors": 0,
+                    "details": [
+                        {
+                            "url": "https://testsite.com/article-dup",
+                            "status": "duplicate",
+                        }
+                    ],
+                }
+            ]
+
+            result = await crawler_engine.crawl_multiple_sites(
+                site_configs, max_articles_per_site=1
+            )
+
+            assert result["total_articles"] == 0
+            assert result["duplicates_skipped"] == 1
+            assert mock_ingest.call_count == 1
+            mock_get_sources.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_ingest_articles_success(self, crawler_engine):
@@ -975,6 +1208,109 @@ class TestCrawlerEngine:
         result = await crawler_engine.run_unified_crawl(domains)
 
         assert result == {"error": "No valid domains provided"}
+
+    @pytest.mark.asyncio
+    async def test_run_unified_crawl_skips_blocked_source(self, crawler_engine):
+        """Blocked sources should be excluded from crawl eligibility."""
+        domains = ["blockedsite.com"]
+
+        with (
+            patch.dict("os.environ", {}, clear=False),
+            patch(
+                "agents.crawler.crawler_engine.get_sources_by_domain",
+                return_value=[
+                    {
+                        "id": 11,
+                        "name": "Blocked Site",
+                        "domain": "blockedsite.com",
+                        "url": "https://blockedsite.com",
+                        "source_state": "blocked",
+                    }
+                ],
+            ) as mock_get_sources,
+            patch.object(crawler_engine, "crawl_multiple_sites") as mock_crawl_multiple,
+        ):
+            result = await crawler_engine.run_unified_crawl(domains)
+
+            assert result == {"error": "No valid domains provided"}
+            mock_get_sources.assert_called_once_with(["blockedsite.com"])
+            mock_crawl_multiple.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_run_unified_crawl_skips_provisional_when_discovery_disabled(
+        self, crawler_engine
+    ):
+        """Provisional sources should be skipped when discovery is disabled."""
+        domains = ["provisionalsite.com"]
+
+        with (
+            patch.dict(
+                "os.environ",
+                {"UNIFIED_CRAWLER_DISCOVERY_ENABLED": "0"},
+                clear=False,
+            ),
+            patch(
+                "agents.crawler.crawler_engine.get_sources_by_domain",
+                return_value=[
+                    {
+                        "id": 12,
+                        "name": "Provisional Site",
+                        "domain": "provisionalsite.com",
+                        "url": "https://provisionalsite.com",
+                        "source_state": "provisional_discovered",
+                    }
+                ],
+            ) as mock_get_sources,
+            patch.object(crawler_engine, "crawl_multiple_sites") as mock_crawl_multiple,
+        ):
+            result = await crawler_engine.run_unified_crawl(domains)
+
+            assert result == {"error": "No valid domains provided"}
+            mock_get_sources.assert_called_once_with(["provisionalsite.com"])
+            mock_crawl_multiple.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_run_unified_crawl_allows_probation_in_whitelist_only_mode(
+        self, crawler_engine
+    ):
+        """Probation sources remain crawl-eligible in whitelist-only mode."""
+        domains = ["probationsite.com"]
+
+        with (
+            patch.dict(
+                "os.environ",
+                {"UNIFIED_CRAWLER_WHITELIST_ONLY_MODE": "1"},
+                clear=False,
+            ),
+            patch(
+                "agents.crawler.crawler_engine.get_sources_by_domain",
+                return_value=[
+                    {
+                        "id": 13,
+                        "name": "Probation Site",
+                        "domain": "probationsite.com",
+                        "url": "https://probationsite.com",
+                        "source_state": "probation",
+                    }
+                ],
+            ) as mock_get_sources,
+            patch.object(crawler_engine, "crawl_multiple_sites") as mock_crawl_multiple,
+        ):
+            mock_crawl_multiple.return_value = {
+                "unified_crawl": True,
+                "sites_crawled": 1,
+                "total_articles": 0,
+                "articles": [],
+            }
+
+            result = await crawler_engine.run_unified_crawl(
+                domains,
+                max_articles_per_site=1,
+            )
+
+            assert result["unified_crawl"] is True
+            mock_get_sources.assert_called_once_with(["probationsite.com"])
+            mock_crawl_multiple.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_get_performance_report(self, crawler_engine):

@@ -195,7 +195,7 @@ async def process_analysis_request(
 
     try:
         logger.info(
-            f"🔄 Processing {analysis_type} analysis for {len(text)} characters"
+            f"Processing {analysis_type} analysis for {len(text)} characters"
         )
 
         if analysis_type == "entities":
@@ -239,7 +239,7 @@ async def process_analysis_request(
                 ],
             }
 
-        logger.info(f"✅ {analysis_type.capitalize()} analysis completed")
+        logger.info(f"{analysis_type.capitalize()} analysis completed")
 
         # Collect prediction for training
         try:
@@ -260,7 +260,7 @@ async def process_analysis_request(
         return result
 
     except Exception as e:
-        logger.error(f"❌ {analysis_type} analysis failed: {e}")
+        logger.error(f"{analysis_type} analysis failed: {e}")
         return {
             "error": str(e),
             "details": f"Analysis type: {analysis_type}. Exception: {str(e)}",
@@ -455,7 +455,7 @@ def analyze_sentiment_and_bias(text: str) -> dict[str, Any]:
 
 def extract_claims(text: str) -> list[dict[str, Any]]:
     """
-    Extract claims from the given text using the analyst engine’s heuristics.
+    Extract claims from the given text using the analyst engine's heuristics.
     """
     if not text or not text.strip():
         return []
@@ -587,11 +587,11 @@ async def health_check() -> dict[str, Any]:
                 f"Component {comp} is unhealthy" for comp in unhealthy_components
             ]
 
-        logger.info(f"🏥 Analyst health check: {health_status['overall_status']}")
+        logger.info(f"Analyst health check: {health_status['overall_status']}")
         return health_status
 
     except Exception as e:
-        logger.error(f"🏥 Analyst health check failed: {e}")
+        logger.error(f"Analyst health check failed: {e}")
         return {
             "timestamp": time.time(),
             "overall_status": "unhealthy",

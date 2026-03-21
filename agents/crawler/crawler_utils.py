@@ -37,6 +37,16 @@ load_global_env(logger=logger)
 
 _POOL_LOCK = threading.Lock()
 _CONNECTION_POOL: pooling.MySQLConnectionPool | None = None
+_SOURCE_STATE_COLUMN_SUPPORTED: bool | None = None
+
+SOURCE_LIFECYCLE_STATES: set[str] = {
+    "trusted_whitelist",
+    "provisional_discovered",
+    "candidate_review",
+    "trusted_promoted",
+    "probation",
+    "blocked",
+}
 
 
 def _env(name: str, default: str | None = None) -> str | None:
@@ -64,6 +74,77 @@ def _db_config() -> dict[str, Any]:
         "charset": charset,
         "use_pure": True,
     }
+
+
+def _normalize_source_state(state: Any) -> str:
+    value = str(state or "").strip().lower()
+    if value in SOURCE_LIFECYCLE_STATES:
+        return value
+    return "trusted_whitelist"
+
+
+def _supports_source_state_column(conn: Any) -> bool:
+    global _SOURCE_STATE_COLUMN_SUPPORTED
+    if _SOURCE_STATE_COLUMN_SUPPORTED is not None:
+        return _SOURCE_STATE_COLUMN_SUPPORTED
+
+    try:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SHOW COLUMNS FROM sources LIKE 'source_state'")
+            row = cursor.fetchone()
+            _SOURCE_STATE_COLUMN_SUPPORTED = bool(row)
+        finally:
+            cursor.close()
+    except Exception:
+        _SOURCE_STATE_COLUMN_SUPPORTED = False
+
+    return bool(_SOURCE_STATE_COLUMN_SUPPORTED)
+
+
+def is_source_row_eligible_for_crawl(
+    source_row: dict[str, Any],
+    *,
+    whitelist_only_mode: bool | None = None,
+    discovery_enabled: bool | None = None,
+    provisional_ingest_enabled: bool | None = None,
+) -> bool:
+    """Evaluate whether a source row is eligible for crawl under lifecycle controls."""
+    state = _normalize_source_state(source_row.get("source_state"))
+    if state == "blocked":
+        return False
+
+    whitelist_only = (
+        bool(whitelist_only_mode)
+        if whitelist_only_mode is not None
+        else _env_bool("UNIFIED_CRAWLER_WHITELIST_ONLY_MODE", default=False)
+    )
+    discovery_on = (
+        bool(discovery_enabled)
+        if discovery_enabled is not None
+        else _env_bool("UNIFIED_CRAWLER_DISCOVERY_ENABLED", default=True)
+    )
+    provisional_on = (
+        bool(provisional_ingest_enabled)
+        if provisional_ingest_enabled is not None
+        else _env_bool("UNIFIED_CRAWLER_PROVISIONAL_INGEST_ENABLED", default=True)
+    )
+
+    trusted_states = {"trusted_whitelist", "trusted_promoted", "probation"}
+    provisional_states = {"provisional_discovered", "candidate_review"}
+
+    if whitelist_only:
+        return state in trusted_states
+    if not discovery_on or not provisional_on:
+        return state in trusted_states
+    return state in (trusted_states | provisional_states)
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return str(raw).strip().lower() in {"1", "true", "yes", "on"}
 
 
 def initialize_connection_pool(
@@ -292,20 +373,38 @@ def get_active_sources(
     if not include_paywalled:
         conditions.append("COALESCE(paywall, 0) = 0")
 
-    sql = "SELECT * FROM sources"
-    if conditions:
-        sql += " WHERE " + " AND ".join(conditions)
-    sql += " ORDER BY last_verified IS NULL, last_verified DESC"
-
-    params: tuple[Any, ...] = ()
-    if limit is not None:
-        sql += " LIMIT %s"
-        params = (limit,)
     try:
         with _get_conn() as conn:
+            state_supported = _supports_source_state_column(conn)
+
+            eligible_states = [
+                "trusted_whitelist",
+                "trusted_promoted",
+                "probation",
+            ]
+            if _env_bool("UNIFIED_CRAWLER_DISCOVERY_ENABLED", default=True) and _env_bool(
+                "UNIFIED_CRAWLER_PROVISIONAL_INGEST_ENABLED", default=True
+            ) and not _env_bool("UNIFIED_CRAWLER_WHITELIST_ONLY_MODE", default=False):
+                eligible_states.extend(["provisional_discovered", "candidate_review"])
+
+            sql = "SELECT * FROM sources"
+            params_list: list[Any] = []
+            if state_supported:
+                state_placeholders = ", ".join(["%s"] * len(eligible_states))
+                conditions.append(f"COALESCE(source_state, 'trusted_whitelist') IN ({state_placeholders})")
+                params_list.extend(eligible_states)
+
+            if conditions:
+                sql += " WHERE " + " AND ".join(conditions)
+            sql += " ORDER BY last_verified IS NULL, last_verified DESC"
+
+            if limit is not None:
+                sql += " LIMIT %s"
+                params_list.append(limit)
+
             cursor = conn.cursor(dictionary=True)
             try:
-                cursor.execute(sql, params)
+                cursor.execute(sql, tuple(params_list))
                 rows = cursor.fetchall()
                 return [_normalize_row(row) for row in rows]
             finally:

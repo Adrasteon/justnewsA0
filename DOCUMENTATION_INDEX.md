@@ -20,6 +20,22 @@
 - Troubleshooting guide
 - What's preserved
 
+### Roo Code Local LLM + Indexing
+👉 **Quickstart**: [`ROO_GEMMA3_INDEXING_QUICKSTART.md`](ROO_GEMMA3_INDEXING_QUICKSTART.md)
+- Fast setup for Roo chat + workspace indexing in dev-container
+- Uses LM Studio (OpenAI-compatible) + Qdrant
+
+### Two-Lane Crawl + Traceability Planning
+👉 **Implementation Plan**: [`docs/operations/TWO_LANE_TRACEABILITY_IMPLEMENTATION_PLAN_2026-03-20.md`](docs/operations/TWO_LANE_TRACEABILITY_IMPLEMENTATION_PLAN_2026-03-20.md)
+- File-by-file rollout plan for BBC-seed Lane 1, DDG expansion, structured attribution, and hybrid balance governance
+
+### Hybrid Whitelist + Discovery Rollout
+👉 **Implementation Tickets**: [`docs/operations/HYBRID_WHITELIST_DISCOVERY_IMPLEMENTATION_TICKETS_2026-03-21.md`](docs/operations/HYBRID_WHITELIST_DISCOVERY_IMPLEMENTATION_TICKETS_2026-03-21.md)
+- Implementation-ready epics and ticket details for controlled global discovery, anti-flood safeguards, and constrained self-learning
+
+👉 **Execution Checklist**: [`docs/operations/HYBRID_WHITELIST_DISCOVERY_EXECUTION_CHECKLIST_2026-03-21.md`](docs/operations/HYBRID_WHITELIST_DISCOVERY_EXECUTION_CHECKLIST_2026-03-21.md)
+- Phase gates, stop conditions, rollback steps, and final sign-off template
+
 ---
 
 ## 📖 Complete Documentation Set

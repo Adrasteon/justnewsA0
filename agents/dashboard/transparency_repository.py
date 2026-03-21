@@ -207,7 +207,40 @@ class TransparencyRepository:
             "article": article_payload,
             "related_facts": facts,
             "related_clusters": clusters,
+            "traceability": self._load_article_traceability(article_id),
         }
+
+    def _load_article_traceability(self, article_id: str) -> dict[str, Any] | None:
+        """Best-effort traceability hydration from DB-backed statement/quote tables."""
+        try:
+            numeric_article_id = int(article_id)
+        except Exception:
+            return None
+
+        try:
+            from database.utils.migrated_database_utils import (
+                create_database_service,
+                get_article_quotes,
+                get_article_statements,
+            )
+
+            db_service = create_database_service()
+            statements = get_article_statements(db_service, numeric_article_id)
+            quotes = get_article_quotes(db_service, numeric_article_id)
+            return {
+                "article_id": numeric_article_id,
+                "statements": statements,
+                "quotes": quotes,
+                "statement_count": len(statements),
+                "quote_count": len(quotes),
+            }
+        except Exception as exc:
+            logger.debug(
+                "Traceability DB payload unavailable for article %s: %s",
+                article_id,
+                exc,
+            )
+            return None
 
     # ------------------------------------------------------------------
     # Internal helpers

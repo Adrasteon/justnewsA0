@@ -62,7 +62,7 @@ JustNews Canonical System Status Check
   ✓ Docker Containers
   ✓ Port MariaDB (3306) [0.1s]
   ✓ Port ChromaDB (3307) [0.1s]
-  ✓ Port vLLM (8000) [0.2s]
+  ✓ Port vLLM (8010) [0.2s]
 
 🔌 SERVICE HEALTH CHECKS
 ------------------------------------------------------------
@@ -207,7 +207,7 @@ CHROMADB_PORT=3307                # Default: 3307
 
 # ML Model
 VLLM_HOST=vllm                     # Default: "vllm"
-VLLM_PORT=8000                     # Default: 8000
+VLLM_PORT=8010                     # Default: 8010
 
 # App
 APP_HOST=localhost                 # Default: "localhost"

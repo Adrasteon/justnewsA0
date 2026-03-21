@@ -895,6 +895,41 @@ def upsert_living_story_record(
         urgency_class=urgency_class,
     )
 
+    try:
+        from agents.critic.tools import evaluate_traceability_balance
+
+        traceability_report = {}
+        if isinstance(generation_audit, dict):
+            candidate_report = generation_audit.get("analysis_report")
+            if isinstance(candidate_report, dict):
+                traceability_report = candidate_report
+
+        balance_gate = evaluate_traceability_balance(
+            traceability_report,
+            min_distinct_sides=max(
+                1,
+                _safe_int(os.environ.get("BALANCE_POLICY_MIN_DISTINCT_SIDES"), 2),
+            ),
+            disputed_topic_hard_gate=_env_bool(
+                "BALANCE_POLICY_DISPUTED_TOPICS_HARD_GATE", default=False
+            ),
+            allow_opinion_as_factual_corroboration=_env_bool(
+                "BALANCE_POLICY_ALLOW_OPINION_AS_FACTUAL_CORROBORATION",
+                default=False,
+            ),
+        )
+        lane_metadata["traceability_balance"] = balance_gate
+
+        if balance_gate.get("gate_result") == "fail":
+            lane_metadata["publication_lane"] = "developing_brief"
+            reason_codes = lane_metadata.get("decision_reason_codes")
+            if not isinstance(reason_codes, list):
+                reason_codes = []
+            reason_codes.append("traceability_balance_gate_failed")
+            lane_metadata["decision_reason_codes"] = sorted(set(reason_codes))
+    except Exception as exc:
+        logger.debug("Traceability balance evaluation unavailable: %s", exc)
+
     if not existing:
         story_id = f"STORY-{uuid.uuid4().hex[:8]}"
         synth_metadata = {

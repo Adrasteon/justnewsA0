@@ -18,16 +18,27 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 
 from database.utils.migrated_database_utils import (
+    add_quote,
+    add_statement,
     check_database_connections,
     create_database_service,
     execute_mariadb_query,
     execute_query_async,
     execute_transaction,
     get_articles_by_source,
+    get_article_quotes,
+    get_article_statements,
     get_database_stats,
     get_db_config,
+    get_entity_quotes,
+    get_entity_statements,
+    link_quote_to_entity,
+    link_statement_to_entity,
     get_recent_articles,
+    get_source_lifecycle_state,
+    list_sources_by_lifecycle_state,
     search_articles_by_text,
+    set_source_lifecycle_state,
     semantic_search,
 )
 
@@ -312,6 +323,173 @@ class TestExecuteMariaDBQuery:
         mock_cursor.fetchall.return_value = [("result1",), ("result2",)]
         mock_service.mb_conn.cursor.return_value = mock_cursor
 
+
+class TestTraceabilityHelpers:
+    def test_add_statement_inserts_and_returns_id(self):
+        service = MagicMock()
+        cursor = MagicMock()
+        cursor.fetchone.return_value = (321,)
+        service.mb_conn.cursor.return_value = cursor
+
+        result = add_statement(
+            service,
+            article_id=10,
+            statement_text="A minister said policy changed",
+            story_id="story-1",
+            confidence=0.91,
+            is_opinion=False,
+        )
+
+        assert result == 321
+        assert service.mb_conn.commit.called
+
+    def test_add_quote_rejects_empty_text(self):
+        service = MagicMock()
+        assert add_quote(service, article_id=10, quote_text="") is None
+
+    def test_link_statement_to_entity_success(self):
+        service = MagicMock()
+        service.mb_conn.cursor.return_value = MagicMock()
+
+        assert (
+            link_statement_to_entity(
+                service,
+                statement_id=1,
+                entity_id=2,
+                relation_type="speaker",
+                confidence=0.8,
+            )
+            is True
+        )
+
+    def test_link_quote_to_entity_success(self):
+        service = MagicMock()
+        service.mb_conn.cursor.return_value = MagicMock()
+
+        assert (
+            link_quote_to_entity(
+                service,
+                quote_id=1,
+                entity_id=2,
+                relation_type="subject",
+                confidence=0.7,
+            )
+            is True
+        )
+
+    def test_get_article_statements_returns_rows(self):
+        service = MagicMock()
+        cursor = MagicMock()
+        cursor.fetchall.return_value = [
+            (
+                1,
+                10,
+                "story-1",
+                "https://bbc.com/a",
+                "bbc.com",
+                5,
+                "said",
+                "Statement text",
+                3,
+                8,
+                "rule",
+                0.9,
+                "pro",
+                0,
+                1,
+                '{"k":"v"}',
+                "2026-03-20 00:00:00",
+                "2026-03-20 00:00:00",
+            )
+        ]
+        service.mb_conn.cursor.return_value = cursor
+
+        rows = get_article_statements(service, article_id=10)
+
+        assert len(rows) == 1
+        assert rows[0]["statement_text"] == "Statement text"
+        assert rows[0]["metadata"] == {"k": "v"}
+
+    def test_get_article_quotes_returns_rows(self):
+        service = MagicMock()
+        cursor = MagicMock()
+        cursor.fetchall.return_value = [
+            (
+                1,
+                10,
+                "story-1",
+                "https://bbc.com/a",
+                "bbc.com",
+                5,
+                "said",
+                "Quoted text",
+                3,
+                8,
+                "rule",
+                0.9,
+                "neutral",
+                1,
+                0,
+                "{}",
+                "2026-03-20 00:00:00",
+                "2026-03-20 00:00:00",
+            )
+        ]
+        service.mb_conn.cursor.return_value = cursor
+
+        rows = get_article_quotes(service, article_id=10)
+
+        assert len(rows) == 1
+        assert rows[0]["quote_text"] == "Quoted text"
+        assert rows[0]["is_opinion"] is True
+
+    def test_get_entity_statement_and_quote_rows(self):
+        service = MagicMock()
+        cursor = MagicMock()
+        cursor.fetchall.side_effect = [
+            [
+                (
+                    1,
+                    10,
+                    "story-1",
+                    "Statement",
+                    "https://bbc.com/a",
+                    "bbc.com",
+                    2,
+                    "speaker",
+                    0.8,
+                    "pro",
+                    0,
+                    1,
+                    "{}",
+                )
+            ],
+            [
+                (
+                    2,
+                    10,
+                    "story-1",
+                    "Quote",
+                    "https://bbc.com/a",
+                    "bbc.com",
+                    2,
+                    "speaker",
+                    0.9,
+                    "pro",
+                    0,
+                    1,
+                    "{}",
+                )
+            ],
+        ]
+        service.mb_conn.cursor.return_value = cursor
+
+        statements = get_entity_statements(service, entity_id=2)
+        quotes = get_entity_quotes(service, entity_id=2)
+
+        assert statements[0]["relation_type"] == "speaker"
+        assert quotes[0]["quote_text"] == "Quote"
+
         results = execute_mariadb_query(
             mock_service, "SELECT * FROM test", ("param1",), fetch=True
         )
@@ -517,6 +695,86 @@ class TestSearchFunctions:
 
         assert results == expected_results
         mock_service.get_articles_by_source.assert_called_once_with(5, 10)
+
+
+class TestSourceLifecycleHelpers:
+    def test_get_source_lifecycle_state_returns_normalized_payload(self):
+        service = MagicMock()
+        cursor = MagicMock()
+        cursor.fetchone.return_value = (
+            7,
+            "example.com",
+            "blocked",
+            "policy_violation",
+            "2026-03-21 00:00:00",
+            "v1",
+            "ops",
+        )
+        service.mb_conn.cursor.return_value = cursor
+
+        payload = get_source_lifecycle_state(service, source_id=7)
+
+        assert payload is not None
+        assert payload["id"] == 7
+        assert payload["domain"] == "example.com"
+        assert payload["source_state"] == "blocked"
+        assert payload["source_state_reason"] == "policy_violation"
+        assert payload["source_state_score_version"] == "v1"
+        assert payload["source_owner_group"] == "ops"
+        cursor.close.assert_called_once()
+
+    def test_list_sources_by_lifecycle_state_filters_invalid_input(self):
+        service = MagicMock()
+        cursor = MagicMock()
+        cursor.fetchall.return_value = []
+        service.mb_conn.cursor.return_value = cursor
+
+        rows = list_sources_by_lifecycle_state(
+            service,
+            states=["blocked", "INVALID_STATE"],
+            limit=5,
+        )
+
+        assert rows == []
+        assert cursor.execute.call_count == 1
+        execute_query, execute_params = cursor.execute.call_args[0]
+        assert "WHERE source_state IN (%s)" in execute_query
+        assert execute_params == ("blocked", 5)
+
+    def test_set_source_lifecycle_state_rejects_invalid_new_state(self):
+        service = MagicMock()
+
+        updated = set_source_lifecycle_state(
+            service,
+            source_id=42,
+            new_state="definitely-not-valid",
+        )
+
+        assert updated is False
+        service.mb_conn.cursor.assert_not_called()
+        service.mb_conn.commit.assert_not_called()
+
+    def test_set_source_lifecycle_state_success_writes_transition(self):
+        service = MagicMock()
+        cursor = MagicMock()
+        cursor.fetchone.return_value = ("trusted_whitelist",)
+        service.mb_conn.cursor.return_value = cursor
+
+        updated = set_source_lifecycle_state(
+            service,
+            source_id=99,
+            new_state="blocked",
+            actor="policy-bot",
+            reason_code="manual_review",
+            details={"ticket": "INC-123"},
+            score_version="v3",
+            owner_group="trust-safety",
+        )
+
+        assert updated is True
+        assert cursor.execute.call_count == 3
+        service.mb_conn.commit.assert_called_once()
+        cursor.close.assert_called_once()
 
 
 @pytest.mark.parametrize(

@@ -143,6 +143,7 @@ class AnalystEngine:
         self.mistral_adapter: MistralAdapter | None = None
         self._mistral_cache_key: str | None = None
         self._mistral_cache_result: AdapterResult | None = None
+        self._traceability_db_service: Any | None = None
 
         # Processing stats
         self.processing_stats = {
@@ -464,6 +465,196 @@ class AnalystEngine:
             logger.warning(f"Claim extraction failed: {e}")
             return []
 
+    def extract_quotes(self, text: str) -> list[dict[str, Any]]:
+        """Extract direct quotes with lightweight attribution hints."""
+        if not text:
+            return []
+
+        quote_pattern = re.compile(r'"([^"\n]{8,500})"')
+        attribution_pattern = re.compile(
+            r"([A-Z][A-Za-z]+(?:\s+[A-Z][A-Za-z]+){0,3})\s+(said|stated|argued|claimed|told|according to)",
+            re.IGNORECASE,
+        )
+
+        results: list[dict[str, Any]] = []
+        for match in quote_pattern.finditer(text):
+            quote_text = match.group(1).strip()
+            if not quote_text:
+                continue
+
+            window_start = max(0, match.start() - 180)
+            window_end = min(len(text), match.end() + 180)
+            window = text[window_start:window_end]
+            speaker_name = None
+            attribution_text = None
+            attribution_match = attribution_pattern.search(window)
+            if attribution_match:
+                speaker_name = attribution_match.group(1).strip()
+                attribution_text = attribution_match.group(0).strip()
+
+            results.append(
+                {
+                    "quote_text": quote_text,
+                    "start": int(match.start()),
+                    "end": int(match.end()),
+                    "speaker_name": speaker_name,
+                    "attribution_text": attribution_text,
+                    "confidence": 0.72 if attribution_text else 0.55,
+                }
+            )
+
+        return results
+
+    def extract_attributed_speech(self, text: str) -> dict[str, Any]:
+        """Extract statements and quotes with minimal structured attribution."""
+        claim_items = self.extract_claims(text)
+        quote_items = self.extract_quotes(text)
+
+        statements: list[dict[str, Any]] = []
+        for claim in claim_items:
+            claim_text = str(claim.get("claim_text") or "").strip()
+            if not claim_text:
+                continue
+            statements.append(
+                {
+                    "statement_text": claim_text,
+                    "start": claim.get("start"),
+                    "end": claim.get("end"),
+                    "confidence": float(claim.get("confidence", 0.5) or 0.5),
+                    "claim_type": claim.get("claim_type"),
+                    "is_opinion": bool(claim.get("claim_type") == "opinion"),
+                }
+            )
+
+        attributed_count = sum(
+            1 for quote in quote_items if quote.get("attribution_text")
+        ) + sum(1 for statement in statements if statement.get("claim_type") == "attributed")
+
+        total_items = len(quote_items) + len(statements)
+        return {
+            "statements": statements,
+            "quotes": quote_items,
+            "attribution_coverage": {
+                "total_items": total_items,
+                "attributed_items": attributed_count,
+                "coverage_ratio": (attributed_count / total_items) if total_items else 0.0,
+            },
+        }
+
+    def _traceability_persistence_enabled(self) -> bool:
+        return (
+            str(os.environ.get("ANALYST_TRACEABILITY_PERSIST_ENABLED", "false"))
+            .strip()
+            .lower()
+            in {"1", "true", "yes", "on"}
+        )
+
+    def _get_traceability_db_service(self) -> Any | None:
+        if self._traceability_db_service is not None:
+            return self._traceability_db_service
+        try:
+            from database.utils.migrated_database_utils import create_database_service
+
+            self._traceability_db_service = create_database_service()
+            return self._traceability_db_service
+        except Exception as exc:
+            logger.warning("Traceability DB service unavailable: %s", exc)
+            self._traceability_db_service = None
+            return None
+
+    def _persist_traceability_for_article(
+        self,
+        *,
+        article_id: str | None,
+        entities: list[dict[str, Any]] | None,
+        statements: list[Any],
+        quotes: list[Any],
+    ) -> None:
+        if not self._traceability_persistence_enabled():
+            return
+        if not article_id:
+            return
+
+        try:
+            numeric_article_id = int(article_id)
+        except Exception:
+            logger.debug("Skipping traceability persistence for non-numeric article id: %s", article_id)
+            return
+
+        service = self._get_traceability_db_service()
+        if service is None:
+            return
+
+        try:
+            from database.utils.migrated_database_utils import (
+                add_quote,
+                add_statement,
+                link_quote_to_entity,
+                link_statement_to_entity,
+            )
+
+            linked_entity_ids = [
+                int(entity.get("id"))
+                for entity in (entities or [])
+                if isinstance(entity, dict) and entity.get("id") is not None
+            ]
+
+            for statement in statements:
+                statement_id = add_statement(
+                    service,
+                    article_id=numeric_article_id,
+                    statement_text=statement.statement_text,
+                    source_url=statement.source_url,
+                    source_domain=statement.source_domain,
+                    speaker_entity_id=statement.speaker_entity_id,
+                    attribution_text=statement.attribution_text,
+                    span_start=statement.span.start if statement.span else None,
+                    span_end=statement.span.end if statement.span else None,
+                    extraction_method="analyst_engine",
+                    confidence=statement.confidence,
+                    perspective_label=statement.perspective_label,
+                    is_opinion=statement.is_opinion,
+                    counts_as_factual_corroboration=statement.counts_as_factual_corroboration,
+                    metadata=statement.metadata,
+                )
+                if statement_id:
+                    for entity_id in linked_entity_ids:
+                        link_statement_to_entity(
+                            service,
+                            statement_id=int(statement_id),
+                            entity_id=entity_id,
+                            relation_type="mentioned",
+                        )
+
+            for quote in quotes:
+                quote_id = add_quote(
+                    service,
+                    article_id=numeric_article_id,
+                    quote_text=quote.quote_text,
+                    source_url=quote.source_url,
+                    source_domain=quote.source_domain,
+                    speaker_entity_id=quote.speaker_entity_id,
+                    attribution_text=quote.attribution_text,
+                    span_start=quote.span.start if quote.span else None,
+                    span_end=quote.span.end if quote.span else None,
+                    extraction_method="analyst_engine",
+                    confidence=quote.confidence,
+                    perspective_label=quote.perspective_label,
+                    is_opinion=quote.is_opinion,
+                    counts_as_factual_corroboration=quote.counts_as_factual_corroboration,
+                    metadata=quote.metadata,
+                )
+                if quote_id:
+                    for entity_id in linked_entity_ids:
+                        link_quote_to_entity(
+                            service,
+                            quote_id=int(quote_id),
+                            entity_id=entity_id,
+                            relation_type="mentioned",
+                        )
+        except Exception as exc:
+            logger.warning("Traceability persistence failed for article %s: %s", article_id, exc)
+
     def generate_analysis_report(
         self,
         texts: list[str],
@@ -486,6 +677,10 @@ class AnalystEngine:
         try:
             from .schemas import (
                 AnalysisReport,
+                AttributionSpan,
+                AttributedQuote,
+                AttributedStatement,
+                BalanceAssessment,
                 Claim,
                 PerArticleAnalysis,
             )
@@ -495,6 +690,8 @@ class AnalystEngine:
             biases = []
             all_entities = []
             source_fact_checks = []
+            all_statements: list[AttributedStatement] = []
+            all_quotes: list[AttributedQuote] = []
 
             for i, text in enumerate(texts or []):
                 article_id = (
@@ -506,6 +703,7 @@ class AnalystEngine:
                 bias = self.detect_bias(text)
                 entities = self.extract_entities(text).get("entities", [])
                 claim_dicts = self.extract_claims(text)
+                speech = self.extract_attributed_speech(text)
                 claims = [
                     Claim(
                         **{
@@ -523,6 +721,55 @@ class AnalystEngine:
                     )
                     for c in claim_dicts
                 ]
+
+                statements = [
+                    AttributedStatement(
+                        statement_text=item.get("statement_text", ""),
+                        attribution_text=item.get("claim_type"),
+                        source_url=article_id,
+                        confidence=float(item.get("confidence", 0.5) or 0.5),
+                        is_opinion=bool(item.get("is_opinion", False)),
+                        counts_as_factual_corroboration=not bool(
+                            item.get("is_opinion", False)
+                        ),
+                        span=AttributionSpan(
+                            start=item.get("start"),
+                            end=item.get("end"),
+                        ),
+                        metadata={"claim_type": item.get("claim_type")},
+                    )
+                    for item in speech.get("statements", [])
+                    if item.get("statement_text")
+                ]
+
+                quotes = [
+                    AttributedQuote(
+                        quote_text=item.get("quote_text", ""),
+                        speaker_name=item.get("speaker_name"),
+                        attribution_text=item.get("attribution_text"),
+                        source_url=article_id,
+                        confidence=float(item.get("confidence", 0.5) or 0.5),
+                        counts_as_factual_corroboration=bool(
+                            item.get("attribution_text")
+                        ),
+                        span=AttributionSpan(
+                            start=item.get("start"),
+                            end=item.get("end"),
+                        ),
+                    )
+                    for item in speech.get("quotes", [])
+                    if item.get("quote_text")
+                ]
+
+                all_statements.extend(statements)
+                all_quotes.extend(quotes)
+
+                self._persist_traceability_for_article(
+                    article_id=article_id,
+                    entities=entities,
+                    statements=statements,
+                    quotes=quotes,
+                )
 
                 # Per-article fact-checking (mandatory per feature doc)
                 source_fact_check = None
@@ -543,6 +790,9 @@ class AnalystEngine:
                         bias=bias,
                         entities=entities,
                         claims=claims,
+                        statements=statements,
+                        quotes=quotes,
+                        attribution_coverage=speech.get("attribution_coverage"),
                         source_fact_check=source_fact_check,
                         processing_time_seconds=processing_time,
                     )
@@ -595,6 +845,27 @@ class AnalystEngine:
                     source_fact_checks
                 )
 
+            total_speech_items = len(all_statements) + len(all_quotes)
+            opinion_items_count = sum(1 for statement in all_statements if statement.is_opinion)
+            corroborating_items_count = sum(
+                1 for statement in all_statements if statement.counts_as_factual_corroboration
+            ) + sum(
+                1 for quote in all_quotes if quote.counts_as_factual_corroboration
+            )
+
+            balance_assessment = BalanceAssessment(
+                disputed_topic=False,
+                min_distinct_sides=2,
+                distinct_sides_found=min(2, len({(s.perspective_label or "unknown") for s in all_statements}) if all_statements else 0),
+                policy_result="warning" if total_speech_items == 0 else "pass",
+                opinion_items_count=opinion_items_count,
+                corroborating_items_count=corroborating_items_count,
+                details={
+                    "generated_by": "analyst_engine",
+                    "total_speech_items": total_speech_items,
+                },
+            )
+
             report = AnalysisReport(
                 cluster_id=cluster_id,
                 language="en",
@@ -603,6 +874,14 @@ class AnalystEngine:
                 aggregate_bias=avg_bias,
                 entities=unique_entities,
                 primary_claims=primary_claims,
+                attributed_statements=all_statements,
+                attributed_quotes=all_quotes,
+                balance_assessment=balance_assessment,
+                attribution_summary={
+                    "total_statements": len(all_statements),
+                    "total_quotes": len(all_quotes),
+                    "total_speech_items": total_speech_items,
+                },
                 per_article=per_article_results,
                 source_fact_checks=source_fact_checks,
                 cluster_fact_check_summary=cluster_fact_check_summary,

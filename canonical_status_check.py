@@ -21,6 +21,7 @@ from typing import Dict, List, Tuple, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 import socket
+from pathlib import Path
 
 # Optional imports with graceful degradation
 try:
@@ -78,27 +79,71 @@ class CheckResult:
 class CanonicalStatusChecker:
     """Main status checking orchestrator."""
 
+    @staticmethod
+    def _load_global_env_defaults() -> Dict[str, str]:
+        """Load key/value defaults from global.env when present.
+
+        The startup stack treats global.env as canonical. Runtime environment
+        variables still override these defaults.
+        """
+        candidates = [
+            Path("/app/global.env"),
+            Path.cwd() / "global.env",
+        ]
+        env_path = next((p for p in candidates if p.exists()), None)
+        if env_path is None:
+            return {}
+
+        loaded: Dict[str, str] = {}
+        try:
+            for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+                line = raw_line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, value = line.split("=", 1)
+                key = key.strip()
+                if not key:
+                    continue
+                loaded[key] = value.strip().strip('"').strip("'")
+        except Exception:
+            return {}
+        return loaded
+
+    @staticmethod
+    def _parse_int(value: Optional[str], default: int) -> int:
+        try:
+            return int(str(value))
+        except (TypeError, ValueError):
+            return default
+
     def __init__(self, verbose: bool = False):
         """Initialize checker."""
         self.verbose = verbose
         self.results: List[CheckResult] = []
+        defaults = self._load_global_env_defaults()
         self.env = os.environ.copy()
+
+        def _cfg(key: str, fallback: str) -> str:
+            # Canonical startup uses global.env; prefer it when present.
+            if key in defaults and defaults.get(key):
+                return str(defaults[key])
+            return str(self.env.get(key, fallback))
         
         # Configuration from environment
-        self.mariadb_host = self.env.get("MARIADB_HOST", "mariadb")
-        self.mariadb_port = int(self.env.get("MARIADB_PORT", "3306"))
-        self.mariadb_user = self.env.get("MARIADB_USER", "justnews")
-        self.mariadb_password = self.env.get("MARIADB_PASSWORD", "dev_justnews_password")
-        self.mariadb_db = self.env.get("MARIADB_DB", "justnews")
+        self.mariadb_host = _cfg("MARIADB_HOST", "mariadb")
+        self.mariadb_port = self._parse_int(_cfg("MARIADB_PORT", "3306"), 3306)
+        self.mariadb_user = _cfg("MARIADB_USER", "justnews")
+        self.mariadb_password = _cfg("MARIADB_PASSWORD", "dev_justnews_password")
+        self.mariadb_db = _cfg("MARIADB_DB", "justnews")
         
-        self.chromadb_host = self.env.get("CHROMADB_HOST", "chromadb")
-        self.chromadb_port = int(self.env.get("CHROMADB_PORT", "3307"))
+        self.chromadb_host = _cfg("CHROMADB_HOST", "chromadb")
+        self.chromadb_port = self._parse_int(_cfg("CHROMADB_PORT", "3307"), 3307)
         
-        self.vllm_host = self.env.get("VLLM_HOST", "vllm")
-        self.vllm_port = int(self.env.get("VLLM_PORT", "8000"))
+        self.vllm_host = _cfg("VLLM_HOST", "vllm")
+        self.vllm_port = self._parse_int(_cfg("VLLM_PORT", "8010"), 8010)
         
-        self.app_host = self.env.get("APP_HOST", "localhost")
-        self.app_port = int(self.env.get("APP_PORT", "8000"))
+        self.app_host = _cfg("APP_HOST", "localhost")
+        self.app_port = self._parse_int(_cfg("APP_PORT", "8000"), 8000)
 
     def run_all_checks(self) -> int:
         """Execute all status checks and return exit code."""

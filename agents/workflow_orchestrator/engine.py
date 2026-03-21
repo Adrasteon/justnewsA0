@@ -956,6 +956,20 @@ class OrchestratorEngine:
             "orchestrator.lane_policy.min_unique_domains": "MULTI_SOURCE_MIN_UNIQUE_DOMAINS",
             "orchestrator.lane_policy.version": "MULTI_SOURCE_LANE_POLICY_VERSION",
             "orchestrator.lane_policy.topic_overrides_json": "MULTI_SOURCE_LANE_POLICY_TOPIC_OVERRIDES_JSON",
+            "orchestrator.lane1.seed_count": "LANE1_BBC_SEED_COUNT",
+            "orchestrator.lane1.max_related_per_seed": "LANE1_MAX_RELATED_PER_SEED",
+            "orchestrator.lane1.ddg_enabled": "LANE1_DDG_ENABLED",
+            "orchestrator.lane1.ddg_max_queries_per_seed": "LANE1_DDG_MAX_QUERIES_PER_SEED",
+            "orchestrator.lane1.require_bbc_first": "LANE1_REQUIRE_BBC_FIRST",
+            "orchestrator.balance_policy.enabled": "BALANCE_POLICY_ENABLED",
+            "orchestrator.balance_policy.disputed_topics_hard_gate": "BALANCE_POLICY_DISPUTED_TOPICS_HARD_GATE",
+            "orchestrator.balance_policy.min_distinct_sides": "BALANCE_POLICY_MIN_DISTINCT_SIDES",
+            "orchestrator.balance_policy.allow_opinion_as_perspective": "BALANCE_POLICY_ALLOW_OPINION_AS_PERSPECTIVE",
+            "orchestrator.balance_policy.allow_opinion_as_factual_corroboration": "BALANCE_POLICY_ALLOW_OPINION_AS_FACTUAL_CORROBORATION",
+            "orchestrator.discovery.enabled": "UNIFIED_CRAWLER_DISCOVERY_ENABLED",
+            "orchestrator.discovery.offsite_follow_enabled": "UNIFIED_CRAWLER_OFFSITE_FOLLOW_ENABLED",
+            "orchestrator.discovery.provisional_ingest_enabled": "UNIFIED_CRAWLER_PROVISIONAL_INGEST_ENABLED",
+            "orchestrator.discovery.whitelist_only_mode": "UNIFIED_CRAWLER_WHITELIST_ONLY_MODE",
         }
 
         for runtime_key, env_key in lane_policy_env_map.items():

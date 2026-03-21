@@ -1261,6 +1261,699 @@ def log_kg_operation(
         return False
 
 
+def log_traceability_operation(
+    service: MigratedDatabaseService,
+    operation: str,
+    actor: str | None = None,
+    target_type: str | None = None,
+    target_id: int | None = None,
+    details: dict[str, Any] | None = None,
+) -> bool:
+    """Record traceability operations in the existing KG audit stream."""
+    payload = details or {}
+    payload.setdefault("domain", "traceability")
+    return log_kg_operation(
+        service=service,
+        operation=operation,
+        actor=actor,
+        target_type=target_type,
+        target_id=target_id,
+        details=payload,
+    )
+
+
+def add_statement(
+    service: MigratedDatabaseService,
+    *,
+    article_id: int,
+    statement_text: str,
+    story_id: str | None = None,
+    source_url: str | None = None,
+    source_domain: str | None = None,
+    speaker_entity_id: int | None = None,
+    attribution_text: str | None = None,
+    span_start: int | None = None,
+    span_end: int | None = None,
+    extraction_method: str | None = None,
+    confidence: float | None = None,
+    perspective_label: str | None = None,
+    is_opinion: bool = False,
+    counts_as_factual_corroboration: bool = True,
+    metadata: dict[str, Any] | None = None,
+) -> int | None:
+    """Insert a normalized attributed statement and return its id."""
+    if not statement_text or not statement_text.strip():
+        return None
+
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO statements (
+                article_id,
+                story_id,
+                source_url,
+                source_domain,
+                speaker_entity_id,
+                attribution_text,
+                statement_text,
+                span_start,
+                span_end,
+                extraction_method,
+                confidence,
+                perspective_label,
+                is_opinion,
+                counts_as_factual_corroboration,
+                metadata
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                article_id,
+                story_id,
+                source_url,
+                source_domain,
+                speaker_entity_id,
+                attribution_text,
+                statement_text.strip(),
+                span_start,
+                span_end,
+                extraction_method,
+                confidence,
+                perspective_label,
+                is_opinion,
+                counts_as_factual_corroboration,
+                json.dumps(metadata or {}),
+            ),
+        )
+        service.mb_conn.commit()
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        row = cursor.fetchone()
+        cursor.close()
+        statement_id = row[0] if row else None
+        if statement_id:
+            log_traceability_operation(
+                service,
+                operation="create_statement",
+                target_type="statement",
+                target_id=int(statement_id),
+                details={"article_id": article_id, "story_id": story_id},
+            )
+        return statement_id
+    except Exception as e:
+        logger.warning(f"add_statement failed: {e}")
+        try:
+            service.mb_conn.rollback()
+        except Exception:
+            pass
+        return None
+
+
+def add_quote(
+    service: MigratedDatabaseService,
+    *,
+    article_id: int,
+    quote_text: str,
+    story_id: str | None = None,
+    source_url: str | None = None,
+    source_domain: str | None = None,
+    speaker_entity_id: int | None = None,
+    attribution_text: str | None = None,
+    span_start: int | None = None,
+    span_end: int | None = None,
+    extraction_method: str | None = None,
+    confidence: float | None = None,
+    perspective_label: str | None = None,
+    is_opinion: bool = False,
+    counts_as_factual_corroboration: bool = True,
+    metadata: dict[str, Any] | None = None,
+) -> int | None:
+    """Insert a normalized direct quote and return its id."""
+    if not quote_text or not quote_text.strip():
+        return None
+
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO quotes (
+                article_id,
+                story_id,
+                source_url,
+                source_domain,
+                speaker_entity_id,
+                attribution_text,
+                quote_text,
+                span_start,
+                span_end,
+                extraction_method,
+                confidence,
+                perspective_label,
+                is_opinion,
+                counts_as_factual_corroboration,
+                metadata
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                article_id,
+                story_id,
+                source_url,
+                source_domain,
+                speaker_entity_id,
+                attribution_text,
+                quote_text.strip(),
+                span_start,
+                span_end,
+                extraction_method,
+                confidence,
+                perspective_label,
+                is_opinion,
+                counts_as_factual_corroboration,
+                json.dumps(metadata or {}),
+            ),
+        )
+        service.mb_conn.commit()
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        row = cursor.fetchone()
+        cursor.close()
+        quote_id = row[0] if row else None
+        if quote_id:
+            log_traceability_operation(
+                service,
+                operation="create_quote",
+                target_type="quote",
+                target_id=int(quote_id),
+                details={"article_id": article_id, "story_id": story_id},
+            )
+        return quote_id
+    except Exception as e:
+        logger.warning(f"add_quote failed: {e}")
+        try:
+            service.mb_conn.rollback()
+        except Exception:
+            pass
+        return None
+
+
+def link_statement_to_entity(
+    service: MigratedDatabaseService,
+    *,
+    statement_id: int,
+    entity_id: int,
+    relation_type: str | None = None,
+    confidence: float | None = None,
+) -> bool:
+    """Create normalized statement-to-entity linkage."""
+    relation_value = relation_type or "mentioned"
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            """
+            INSERT IGNORE INTO statement_entities (statement_id, entity_id, relation_type, confidence)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (statement_id, entity_id, relation_value, confidence),
+        )
+        service.mb_conn.commit()
+        cursor.close()
+        log_traceability_operation(
+            service,
+            operation="link_statement_entity",
+            target_type="statement_entity",
+            details={
+                "statement_id": statement_id,
+                "entity_id": entity_id,
+                "relation_type": relation_value,
+            },
+        )
+        return True
+    except Exception as e:
+        logger.warning(f"link_statement_to_entity failed: {e}")
+        try:
+            service.mb_conn.rollback()
+        except Exception:
+            pass
+        return False
+
+
+def link_quote_to_entity(
+    service: MigratedDatabaseService,
+    *,
+    quote_id: int,
+    entity_id: int,
+    relation_type: str | None = None,
+    confidence: float | None = None,
+) -> bool:
+    """Create normalized quote-to-entity linkage."""
+    relation_value = relation_type or "mentioned"
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            """
+            INSERT IGNORE INTO quote_entities (quote_id, entity_id, relation_type, confidence)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (quote_id, entity_id, relation_value, confidence),
+        )
+        service.mb_conn.commit()
+        cursor.close()
+        log_traceability_operation(
+            service,
+            operation="link_quote_entity",
+            target_type="quote_entity",
+            details={
+                "quote_id": quote_id,
+                "entity_id": entity_id,
+                "relation_type": relation_value,
+            },
+        )
+        return True
+    except Exception as e:
+        logger.warning(f"link_quote_to_entity failed: {e}")
+        try:
+            service.mb_conn.rollback()
+        except Exception:
+            pass
+        return False
+
+
+def _decode_json_payload(raw_value: Any) -> dict[str, Any]:
+    if raw_value is None:
+        return {}
+    if isinstance(raw_value, dict):
+        return raw_value
+    try:
+        return json.loads(raw_value)
+    except Exception:
+        return {}
+
+
+SOURCE_LIFECYCLE_STATES: set[str] = {
+    "trusted_whitelist",
+    "provisional_discovered",
+    "candidate_review",
+    "trusted_promoted",
+    "probation",
+    "blocked",
+}
+
+
+def _normalize_source_state(state: str | None) -> str:
+    normalized = str(state or "").strip().lower()
+    if normalized in SOURCE_LIFECYCLE_STATES:
+        return normalized
+    return "trusted_whitelist"
+
+
+def get_source_lifecycle_state(
+    service: MigratedDatabaseService,
+    *,
+    source_id: int,
+) -> dict[str, Any] | None:
+    """Return lifecycle state metadata for a source id."""
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                id,
+                domain,
+                source_state,
+                source_state_reason,
+                source_state_updated_at,
+                source_state_score_version,
+                source_owner_group
+            FROM sources
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (source_id,),
+        )
+        row = cursor.fetchone()
+        cursor.close()
+        if not row:
+            return None
+        return {
+            "id": row[0],
+            "domain": row[1],
+            "source_state": _normalize_source_state(row[2]),
+            "source_state_reason": row[3],
+            "source_state_updated_at": str(row[4]) if row[4] is not None else None,
+            "source_state_score_version": row[5],
+            "source_owner_group": row[6],
+        }
+    except Exception as e:
+        logger.warning(f"get_source_lifecycle_state failed: {e}")
+        return None
+
+
+def list_sources_by_lifecycle_state(
+    service: MigratedDatabaseService,
+    *,
+    states: list[str] | tuple[str, ...],
+    limit: int = 200,
+) -> list[dict[str, Any]]:
+    """List sources that belong to any of the provided lifecycle states."""
+    normalized_states = [
+        str(state).strip().lower()
+        for state in states
+        if state and str(state).strip().lower() in SOURCE_LIFECYCLE_STATES
+    ]
+    normalized_states = list(dict.fromkeys(normalized_states))
+    if not normalized_states:
+        return []
+
+    placeholders = ", ".join(["%s"] * len(normalized_states))
+    bounded_limit = max(1, int(limit))
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            f"""
+            SELECT
+                id,
+                domain,
+                source_state,
+                source_state_reason,
+                source_state_updated_at,
+                source_state_score_version,
+                source_owner_group
+            FROM sources
+            WHERE source_state IN ({placeholders})
+            ORDER BY source_state_updated_at DESC, id DESC
+            LIMIT %s
+            """,
+            tuple(normalized_states + [bounded_limit]),
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+        return [
+            {
+                "id": row[0],
+                "domain": row[1],
+                "source_state": _normalize_source_state(row[2]),
+                "source_state_reason": row[3],
+                "source_state_updated_at": str(row[4]) if row[4] is not None else None,
+                "source_state_score_version": row[5],
+                "source_owner_group": row[6],
+            }
+            for row in rows
+        ]
+    except Exception as e:
+        logger.warning(f"list_sources_by_lifecycle_state failed: {e}")
+        return []
+
+
+def set_source_lifecycle_state(
+    service: MigratedDatabaseService,
+    *,
+    source_id: int,
+    new_state: str,
+    actor: str | None = "system",
+    reason_code: str | None = None,
+    details: dict[str, Any] | None = None,
+    score_version: str | None = None,
+    owner_group: str | None = None,
+) -> bool:
+    """Update source lifecycle state and append immutable transition history."""
+    raw_new_state = str(new_state or "").strip().lower()
+    if raw_new_state not in SOURCE_LIFECYCLE_STATES:
+        return False
+    normalized_new_state = raw_new_state
+
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            """
+            SELECT source_state
+            FROM sources
+            WHERE id = %s
+            LIMIT 1
+            """,
+            (source_id,),
+        )
+        state_row = cursor.fetchone()
+        if not state_row:
+            cursor.close()
+            return False
+
+        previous_state = _normalize_source_state(state_row[0])
+        if previous_state == normalized_new_state:
+            cursor.close()
+            return True
+
+        cursor.execute(
+            """
+            UPDATE sources
+            SET
+                source_state = %s,
+                source_state_reason = %s,
+                source_state_updated_at = NOW(),
+                source_state_score_version = COALESCE(%s, source_state_score_version),
+                source_owner_group = COALESCE(%s, source_owner_group),
+                updated_at = NOW()
+            WHERE id = %s
+            """,
+            (
+                normalized_new_state,
+                reason_code,
+                score_version,
+                owner_group,
+                source_id,
+            ),
+        )
+        cursor.execute(
+            """
+            INSERT INTO source_state_transitions (
+                source_id,
+                previous_state,
+                new_state,
+                reason_code,
+                actor,
+                details
+            )
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                source_id,
+                previous_state,
+                normalized_new_state,
+                reason_code,
+                actor,
+                json.dumps(details or {}),
+            ),
+        )
+        service.mb_conn.commit()
+        cursor.close()
+        return True
+    except Exception as e:
+        logger.warning(f"set_source_lifecycle_state failed: {e}")
+        try:
+            service.mb_conn.rollback()
+        except Exception:
+            pass
+        return False
+
+
+def get_article_statements(
+    service: MigratedDatabaseService, article_id: int
+) -> list[dict[str, Any]]:
+    """Return normalized statements for an article."""
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                id, article_id, story_id, source_url, source_domain, speaker_entity_id,
+                attribution_text, statement_text, span_start, span_end, extraction_method,
+                confidence, perspective_label, is_opinion, counts_as_factual_corroboration,
+                metadata, created_at, updated_at
+            FROM statements
+            WHERE article_id = %s
+            ORDER BY id ASC
+            """,
+            (article_id,),
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+        return [
+            {
+                "id": r[0],
+                "article_id": r[1],
+                "story_id": r[2],
+                "source_url": r[3],
+                "source_domain": r[4],
+                "speaker_entity_id": r[5],
+                "attribution_text": r[6],
+                "statement_text": r[7],
+                "span_start": r[8],
+                "span_end": r[9],
+                "extraction_method": r[10],
+                "confidence": float(r[11]) if r[11] is not None else None,
+                "perspective_label": r[12],
+                "is_opinion": bool(r[13]),
+                "counts_as_factual_corroboration": bool(r[14]),
+                "metadata": _decode_json_payload(r[15]),
+                "created_at": str(r[16]) if r[16] is not None else None,
+                "updated_at": str(r[17]) if r[17] is not None else None,
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        logger.warning(f"get_article_statements failed: {e}")
+        return []
+
+
+def get_article_quotes(
+    service: MigratedDatabaseService, article_id: int
+) -> list[dict[str, Any]]:
+    """Return normalized quotes for an article."""
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                id, article_id, story_id, source_url, source_domain, speaker_entity_id,
+                attribution_text, quote_text, span_start, span_end, extraction_method,
+                confidence, perspective_label, is_opinion, counts_as_factual_corroboration,
+                metadata, created_at, updated_at
+            FROM quotes
+            WHERE article_id = %s
+            ORDER BY id ASC
+            """,
+            (article_id,),
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+        return [
+            {
+                "id": r[0],
+                "article_id": r[1],
+                "story_id": r[2],
+                "source_url": r[3],
+                "source_domain": r[4],
+                "speaker_entity_id": r[5],
+                "attribution_text": r[6],
+                "quote_text": r[7],
+                "span_start": r[8],
+                "span_end": r[9],
+                "extraction_method": r[10],
+                "confidence": float(r[11]) if r[11] is not None else None,
+                "perspective_label": r[12],
+                "is_opinion": bool(r[13]),
+                "counts_as_factual_corroboration": bool(r[14]),
+                "metadata": _decode_json_payload(r[15]),
+                "created_at": str(r[16]) if r[16] is not None else None,
+                "updated_at": str(r[17]) if r[17] is not None else None,
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        logger.warning(f"get_article_quotes failed: {e}")
+        return []
+
+
+def get_entity_statements(
+    service: MigratedDatabaseService, entity_id: int
+) -> list[dict[str, Any]]:
+    """Return statements linked to an entity."""
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                s.id, s.article_id, s.story_id, s.statement_text, s.source_url,
+                s.source_domain, s.speaker_entity_id, se.relation_type, se.confidence,
+                s.perspective_label, s.is_opinion, s.counts_as_factual_corroboration,
+                s.metadata
+            FROM statements s
+            JOIN statement_entities se ON se.statement_id = s.id
+            WHERE se.entity_id = %s
+            ORDER BY s.id ASC
+            """,
+            (entity_id,),
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+        return [
+            {
+                "id": r[0],
+                "article_id": r[1],
+                "story_id": r[2],
+                "statement_text": r[3],
+                "source_url": r[4],
+                "source_domain": r[5],
+                "speaker_entity_id": r[6],
+                "relation_type": r[7],
+                "relation_confidence": float(r[8]) if r[8] is not None else None,
+                "perspective_label": r[9],
+                "is_opinion": bool(r[10]),
+                "counts_as_factual_corroboration": bool(r[11]),
+                "metadata": _decode_json_payload(r[12]),
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        logger.warning(f"get_entity_statements failed: {e}")
+        return []
+
+
+def get_entity_quotes(
+    service: MigratedDatabaseService, entity_id: int
+) -> list[dict[str, Any]]:
+    """Return quotes linked to an entity."""
+    try:
+        service.ensure_conn()
+        cursor = service.mb_conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                q.id, q.article_id, q.story_id, q.quote_text, q.source_url,
+                q.source_domain, q.speaker_entity_id, qe.relation_type, qe.confidence,
+                q.perspective_label, q.is_opinion, q.counts_as_factual_corroboration,
+                q.metadata
+            FROM quotes q
+            JOIN quote_entities qe ON qe.quote_id = q.id
+            WHERE qe.entity_id = %s
+            ORDER BY q.id ASC
+            """,
+            (entity_id,),
+        )
+        rows = cursor.fetchall()
+        cursor.close()
+        return [
+            {
+                "id": r[0],
+                "article_id": r[1],
+                "story_id": r[2],
+                "quote_text": r[3],
+                "source_url": r[4],
+                "source_domain": r[5],
+                "speaker_entity_id": r[6],
+                "relation_type": r[7],
+                "relation_confidence": float(r[8]) if r[8] is not None else None,
+                "perspective_label": r[9],
+                "is_opinion": bool(r[10]),
+                "counts_as_factual_corroboration": bool(r[11]),
+                "metadata": _decode_json_payload(r[12]),
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        logger.warning(f"get_entity_quotes failed: {e}")
+        return []
+
+
 def get_article_entities(
     service: MigratedDatabaseService, article_id: int
 ) -> list[dict[str, Any]]:

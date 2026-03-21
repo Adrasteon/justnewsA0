@@ -85,6 +85,32 @@ python scripts/deploy/init_database.py --dry-run
 
 ## With options (varies by script)
 ./scripts/ops/start_services_daemon.sh --help
+
+## Roo Code workspace indexing helper (Qdrant)
+
+```bash
+## Start and health-check Roo indexing backend
+bash scripts/roo_qdrant.sh start
+
+## Show backend status
+bash scripts/roo_qdrant.sh status
+
+## Stop backend
+bash scripts/roo_qdrant.sh stop
+```
+
+## Roo Code indexing preflight verifier
+
+```bash
+## Validate LM Studio models + embeddings and Qdrant health from dev-container
+bash scripts/verify_roo_index_setup.sh
+
+## Override URLs or model IDs if needed
+LM_BASE_URL=http://host.docker.internal:1234/v1 \
+QDRANT_URL=http://host.docker.internal:6333 \
+CHAT_MODEL_ID=google/gemma-3-12b \
+EMBED_MODEL_ID=text-embedding-nomic-embed-text-v1.5 \
+bash scripts/verify_roo_index_setup.sh
 ```
 
 ## Common Options

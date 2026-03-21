@@ -1258,6 +1258,84 @@ def _get_word_context(text: str, word: str, context_chars: int = 50) -> str:
         return ""
 
 
+def evaluate_traceability_balance(
+    analysis_report: dict[str, Any],
+    *,
+    min_distinct_sides: int = 2,
+    disputed_topic_hard_gate: bool = False,
+    allow_opinion_as_factual_corroboration: bool = False,
+) -> dict[str, Any]:
+    """Evaluate perspective and attribution coverage from structured traceability payloads."""
+    statements = analysis_report.get("attributed_statements") or []
+    quotes = analysis_report.get("attributed_quotes") or []
+
+    attributed_statement_count = sum(
+        1
+        for item in statements
+        if isinstance(item, dict) and (item.get("speaker_entity_id") or item.get("speaker_name") or item.get("attribution_text"))
+    )
+    attributed_quote_count = sum(
+        1
+        for item in quotes
+        if isinstance(item, dict) and (item.get("speaker_entity_id") or item.get("speaker_name") or item.get("attribution_text"))
+    )
+
+    side_labels = {
+        str(item.get("perspective_label") or "unknown").strip().lower()
+        for item in statements
+        if isinstance(item, dict)
+    }
+    side_labels.discard("")
+
+    opinion_items = [
+        item for item in statements if isinstance(item, dict) and bool(item.get("is_opinion"))
+    ]
+    factual_items = [
+        item
+        for item in statements + quotes
+        if isinstance(item, dict)
+        and bool(item.get("counts_as_factual_corroboration"))
+    ]
+
+    if not allow_opinion_as_factual_corroboration:
+        factual_items = [
+            item
+            for item in factual_items
+            if not bool(item.get("is_opinion", False))
+        ]
+
+    missing_reasons: list[str] = []
+    if len(side_labels) < min_distinct_sides:
+        missing_reasons.append("insufficient_distinct_sides")
+    if attributed_statement_count + attributed_quote_count == 0:
+        missing_reasons.append("missing_attribution")
+    if len(factual_items) == 0:
+        missing_reasons.append("missing_factual_corroboration")
+
+    gate_result = "pass"
+    if missing_reasons and disputed_topic_hard_gate:
+        gate_result = "fail"
+    elif missing_reasons:
+        gate_result = "warning"
+
+    return {
+        "gate_result": gate_result,
+        "missing_reasons": missing_reasons,
+        "metrics": {
+            "distinct_sides_found": len(side_labels),
+            "min_distinct_sides": int(min_distinct_sides),
+            "attributed_statement_count": attributed_statement_count,
+            "attributed_quote_count": attributed_quote_count,
+            "opinion_items_count": len(opinion_items),
+            "factual_items_count": len(factual_items),
+        },
+        "policy": {
+            "disputed_topic_hard_gate": disputed_topic_hard_gate,
+            "allow_opinion_as_factual_corroboration": allow_opinion_as_factual_corroboration,
+        },
+    }
+
+
 # Export main functions
 __all__ = [
     "critique_synthesis",
@@ -1269,5 +1347,6 @@ __all__ = [
     "health_check",
     "validate_critique_result",
     "format_critique_output",
+    "evaluate_traceability_balance",
     "get_critic_engine",
 ]

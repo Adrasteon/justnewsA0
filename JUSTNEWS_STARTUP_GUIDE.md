@@ -215,7 +215,7 @@ Before running a full pipeline:
 - [ ] All 14 core agents are running: `/tmp/check_agents.sh`
 - [ ] MariaDB is accessible: `mysql -h mariadb -u justnews -pdev_justnews_password justnews -e "SHOW TABLES;"`
 - [ ] ChromaDB is responsive: `curl -s http://localhost:3307/api/v2/heartbeat`
-- [ ] vLLM is ready: `curl -s http://localhost:8001/v1/models`
+- [ ] vLLM is ready: `curl -s http://localhost:8010/v1/models`
 
 ---
 
