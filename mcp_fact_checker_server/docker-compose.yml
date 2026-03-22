@@ -8,7 +8,12 @@ services:
     environment:
       - FACT_CHECKER_API_KEY=dev_key_123
       - VLLM_BASE_URL=http://gpu-orchestrator:8000/v1
+      - MODEL_STORE_ROOT=/app/model_store
+      - MODEL_STORE_EMBEDDING_AGENT=fact_checker
+      - STRICT_MODEL_STORE=1
       - LOG_LEVEL=INFO
+    volumes:
+      - ../model_store:/app/model_store
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health", "||", "exit", "1"]

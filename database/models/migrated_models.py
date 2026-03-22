@@ -21,8 +21,71 @@ SentenceTransformer = None
 
 from common.observability import get_logger
 import os
+from pathlib import Path
 
 logger = get_logger(__name__)
+
+
+def _resolve_snapshot_candidate(model_root: Path, model_id: str) -> Path | None:
+    """Resolve a HF-style snapshot path under a model root if present."""
+    normalized = model_id.replace("/", "--")
+    candidate = model_root / f"models--{normalized}"
+    if not candidate.exists():
+        return None
+    snapshots = candidate / "snapshots"
+    if snapshots.exists():
+        dirs = sorted([p for p in snapshots.iterdir() if p.is_dir()])
+        if dirs:
+            return dirs[0]
+    return candidate
+
+
+def _resolve_embedding_model_source(model_id: str) -> str:
+    """Resolve embedding model source, preferring central ModelStore paths."""
+    # Highest-priority explicit override.
+    explicit_path = os.environ.get("EMBEDDING_MODEL_PATH")
+    if explicit_path:
+        p = Path(explicit_path).expanduser()
+        if p.exists():
+            return str(p)
+        logger.warning("EMBEDDING_MODEL_PATH set but missing on disk: %s", p)
+
+    root_env = os.environ.get("MODEL_STORE_ROOT")
+    if not root_env:
+        return model_id
+
+    root = Path(root_env).expanduser()
+    if not root.exists():
+        logger.warning("MODEL_STORE_ROOT does not exist: %s", root)
+        return model_id
+
+    # Prefer explicit embedding agent; default to fact_checker.
+    # Operators can set MODEL_STORE_EMBEDDING_AGENT to route to another namespace
+    # such as "base_models" if that's how the store is populated.
+    agent_name = os.environ.get("MODEL_STORE_EMBEDDING_AGENT", "fact_checker")
+
+    # Prefer current symlink style layout: <root>/<agent>/current
+    current_dir = root / agent_name / "current"
+    if current_dir.exists():
+        try:
+            resolved_current = current_dir.resolve()
+            snap = _resolve_snapshot_candidate(resolved_current, model_id)
+            if snap and snap.exists():
+                return str(snap)
+            if (resolved_current / "modules.json").exists() or (resolved_current / "config.json").exists():
+                return str(resolved_current)
+        except Exception as e:
+            logger.debug("Failed to resolve current model-store directory %s: %s", current_dir, e)
+
+    # Fallback explicit path hint under model store.
+    relative_hint = os.environ.get("MODEL_STORE_EMBEDDING_PATH")
+    if relative_hint:
+        hinted = (root / relative_hint).resolve()
+        if hinted.exists():
+            return str(hinted)
+        logger.warning("MODEL_STORE_EMBEDDING_PATH set but missing on disk: %s", hinted)
+
+    return model_id
 
 
 class Source:
@@ -573,8 +636,26 @@ class MigratedDatabaseService:
             self.embedding_model = None
         else:
             try:
-                self.embedding_model = _SentenceTransformer(embedding_config.get('model'))
-                logger.info(f"Loaded embedding model: {embedding_config.get('model')}")
+                embedding_model_id = embedding_config.get('model')
+                resolved_model_source = _resolve_embedding_model_source(embedding_model_id)
+                strict_store = str(os.environ.get("STRICT_MODEL_STORE", "0")).lower() in (
+                    "1",
+                    "true",
+                    "yes",
+                )
+                if strict_store and resolved_model_source == embedding_model_id and os.environ.get("MODEL_STORE_ROOT"):
+                    raise RuntimeError(
+                        "STRICT_MODEL_STORE is enabled but no embedding model path could be resolved from MODEL_STORE_ROOT"
+                    )
+
+                self.embedding_model = _SentenceTransformer(resolved_model_source)
+                if resolved_model_source != embedding_model_id:
+                    logger.info(
+                        "Loaded embedding model from model store path: %s",
+                        resolved_model_source,
+                    )
+                else:
+                    logger.info(f"Loaded embedding model: {embedding_model_id}")
             except Exception as e:
                 logger.warning(f"Failed to load embedding model '{embedding_config.get('model')}': {e}")
 

@@ -19,6 +19,7 @@ Architecture:
 
 import json
 import os
+import threading
 
 import requests
 
@@ -41,6 +42,8 @@ class MemoryEngine:
         self.db_initialized = False
         self.db_service = None
         self.embedding_model = None
+        # Guard against concurrent save operations touching shared DB/chroma state.
+        self._save_article_lock = threading.Lock()
 
     def _acquire_cursor(
         self, *, per_call: bool = True, dictionary: bool = False, buffered: bool = True
@@ -322,13 +325,15 @@ class MemoryEngine:
     def save_article(self, content: str, metadata: dict) -> dict:
         """Saves an article to the database and generates an embedding"""
         try:
-            # Use the shared save_article function from tools
-            result = save_article(
-                content,
-                metadata,
-                embedding_model=self.embedding_model,
-                db_service=self.db_service,
-            )
+            # Use the shared save_article function from tools.
+            # This is serialized to avoid thread-unsafe connector/chroma interactions.
+            with self._save_article_lock:
+                result = save_article(
+                    content,
+                    metadata,
+                    embedding_model=self.embedding_model,
+                    db_service=self.db_service,
+                )
             return result
         except Exception as e:
             logger.error(f"Error saving article in memory engine: {e}")
@@ -795,12 +800,13 @@ class MemoryEngine:
                 }
 
                 if content:  # Only save if there's actual content
-                    save_result = save_article(
-                        content,
-                        metadata,
-                        embedding_model=self.embedding_model,
-                        db_service=self.db_service,
-                    )
+                    with self._save_article_lock:
+                        save_result = save_article(
+                            content,
+                            metadata,
+                            embedding_model=self.embedding_model,
+                            db_service=self.db_service,
+                        )
                     if save_result.get("status") == "duplicate":
                         logger.info(
                             f"Article already exists, skipping: {article_payload.get('url')}"

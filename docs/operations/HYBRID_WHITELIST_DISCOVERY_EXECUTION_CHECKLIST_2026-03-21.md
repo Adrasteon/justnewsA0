@@ -28,6 +28,27 @@ at each phase checkpoint.
 - Migration status:
 	- DDG client dependency migration completed (`duckduckgo_search` -> `ddgs`) in runtime code and dependency manifests.
 
+## Repository Working Tree Context (2026-03-22)
+
+The following non-checklist file changes were already present in the working tree
+during this documentation update cycle. They are tracked here for operator
+context and are not checklist gate-completion evidence.
+
+- `agents/memory/memory_engine.py`
+	- Added a threading lock and serialized article-save paths to reduce concurrent
+	  DB/Chroma write contention risk.
+- `config/gpu/optimization_history.json`
+	- Timestamp metadata updated (`last_updated`, `saved_at`).
+- `config/runtime/runtime_config_state.json`
+	- Runtime overrides/version timeline updated by autonomic controller.
+	- `orchestrator.max_concurrent_tasks`: 10 -> 9
+	- `orchestrator.polling_interval_seconds`: 4 -> 5
+	- Version advanced from 385 -> 386.
+- Model-store root scope clarification and strict-consistency recommendations were added to:
+	- `docs/operations/ENVIRONMENT_CONFIG.md`
+	- `mcp_fact_checker_server/README.md`
+	- Note: current devcontainer flow uses workspace-scoped `/app/model_store`; canonical host deployments may use a host-global `MODEL_STORE_ROOT` path.
+
 ## Completion Constraints (External Dependencies)
 
 The remaining unchecked items cannot be fully completed from repository-only
@@ -45,6 +66,124 @@ changes. They require live environment execution and organizational sign-off.
 Completion policy for this checklist:
 - Mark a line item complete only when evidence artifacts are attached from the
 	corresponding live run, report export, or approval record.
+
+## Dev Cycle Plan: Living Story Update-First Clustering
+
+Scope note:
+- This plan is for active development only.
+- It explicitly excludes production rollout stages and multi-party sign-off gates.
+
+### 1) Baseline and Instrumentation
+
+- [ ] Capture current baseline metrics for 24h dev traffic:
+	- attach-to-existing-story rate
+	- singleton cluster creation rate
+	- false-merge sample rate
+	- time-to-correct-cluster (for initially wrong assignment)
+- [ ] Add per-article clustering decision logs with:
+	- selected cluster
+	- top-k candidates
+	- confidence band
+	- reason codes and score components
+- [ ] Add a small comparison report script to diff old vs new clustering decisions over the same input set.
+
+Evidence links:
+- [ ] Baseline metric snapshot
+- [ ] Decision log sample export
+- [ ] Old-vs-new comparison output
+
+### 2) Story-First Candidate Retrieval
+
+- [ ] Add first-pass matching against existing living story clusters (published + recently active).
+- [ ] Keep current article-neighbor matching as second-pass fallback.
+- [ ] Create a story profile cache (or materialized view) containing:
+	- centroid embedding
+	- key entities/event terms
+	- recency/activity metadata
+	- source diversity signals
+
+Evidence links:
+- [ ] Unit tests for story-first candidate retrieval
+- [ ] Dev run logs showing first-pass story matching events
+
+### 3) Confidence-Banded Assignment
+
+- [ ] Implement confidence bands for assignment decisions:
+	- high: immediate attach
+	- medium: provisional attach candidate
+	- low: create new cluster with retained alternatives
+- [ ] Make thresholds runtime-configurable in dev.
+- [ ] Add reason-code telemetry for every confidence-band decision.
+
+Evidence links:
+- [ ] Config key snapshot
+- [ ] Threshold behavior test results
+- [ ] Decision telemetry sample
+
+### 4) Non-Exclusion Candidate Persistence
+
+- [ ] Persist top-k candidate clusters per article with score breakdown and timestamp.
+- [ ] Add scheduled re-evaluation policy for:
+	- medium-confidence assignments
+	- fresh singleton clusters
+	- recently published stories with potential related arrivals
+- [ ] Ensure re-evaluation can reassign when confidence improves.
+
+Evidence links:
+- [ ] Candidate persistence schema/code reference
+- [ ] Re-evaluation policy test output
+- [ ] Reassignment example from dev logs
+
+### 5) Composite Scoring Upgrade
+
+- [ ] Move from single distance threshold to weighted composite score:
+	- semantic similarity
+	- entity overlap
+	- event phrase overlap
+	- temporal coherence
+	- source-pattern compatibility
+- [ ] Add adaptive threshold profiles by topic/lane.
+- [ ] Add hard-negative checks for known false-merge patterns.
+
+Evidence links:
+- [ ] Score component validation tests
+- [ ] Adaptive profile config snapshot
+- [ ] False-merge guardrail test report
+
+### 6) Living Story Update Flow Enforcement
+
+- [ ] Ensure cluster attach to existing story defaults to update path.
+- [ ] Preserve stable story lineage across updates (same story identity continuity).
+- [ ] Record update rationale in synthesis metadata for each revision.
+
+Evidence links:
+- [ ] End-to-end test showing update of existing story
+- [ ] Metadata sample showing update rationale and revision increment
+
+### 7) Dev Validation Loop (Fast Iteration)
+
+- [ ] Run shadow-mode comparison for at least 3 consecutive dev cycles.
+- [ ] Review sampled decisions daily and tune thresholds.
+- [ ] Track convergence trend:
+	- rising attach-to-existing-story
+	- falling singleton creation without rising false merges
+- [ ] Keep feature flags available for immediate fallback during experiments.
+
+Evidence links:
+- [ ] Shadow-mode daily reports
+- [ ] Threshold tuning changelog
+- [ ] Weekly trend snapshot
+
+### 8) Dev Completion Criteria
+
+- [ ] Attach-to-existing-story improves by agreed dev target.
+- [ ] Singleton rate drops by agreed dev target.
+- [ ] False-merge sample rate remains within agreed dev guardrail.
+- [ ] At least 10 representative stories show healthy multi-update Living Story progression.
+
+Evidence links:
+- [ ] Final dev metric summary
+- [ ] Story progression sample set
 
 ## Phase Gate A: Safety Baseline (Must Pass Before Any Discovery Enablement)
 

@@ -31,6 +31,51 @@ Recommended:
 - Use conda for primary runtime provisioning.
 - Use UV/pip bootstrap only where conda is not used, while keeping parity with `environment.yml`.
 
+### Decision note (2026-03-22): Docker builds remain pip-based
+
+For clarity and operational stability, Docker image builds remain on `pip install -r requirements.txt` for now.
+
+Rationale:
+
+- Existing Dockerfiles across services are consistently pip-based.
+- The current priority is system stability and output accuracy, not dependency-tool migration risk.
+- UV migration for Docker remains a planned future improvement once the platform is more stable.
+
+Fact-checker model loading alignment (2026-03-22):
+
+- Build-time Hugging Face pre-download was removed from the fact-checker image.
+- Fact-checker embedding initialization now prefers central model-store paths when `MODEL_STORE_ROOT` is set.
+- Optional controls for strictness and path pinning:
+	- `STRICT_MODEL_STORE=1` to fail fast when model-store resolution is required but unavailable.
+	- `MODEL_STORE_EMBEDDING_AGENT` to select model-store namespace (default: `fact_checker`).
+	- `MODEL_STORE_EMBEDDING_PATH` (relative under model store) or `EMBEDDING_MODEL_PATH` (absolute path) for explicit targeting.
+
+Fact-checker strict-mode bootstrap (pre-start):
+
+```bash
+mkdir -p model_store
+MODEL_STORE_ROOT=$PWD/model_store \
+	/app/.venv/bin/python scripts/publish_hf_to_model_store.py \
+	--agent fact_checker \
+	--model BAAI/bge-large-en-v1.5 \
+	--version v_fact_checker_embedding_bge_large_en_v1_5
+```
+
+Model-store root note (devcontainer vs canonical host):
+
+- In this workspace/devcontainer flow, fact-checker currently uses a workspace-scoped model store root (`/app/model_store`) mounted from the repository.
+- In canonical host deployments, `MODEL_STORE_ROOT` is typically a host-global path (for example `${SERVICE_DIR}/model_store`).
+- This is the same model-store system and layout, but with a different root path scope.
+
+Recommendation for strict consistency later:
+
+- Standardize a single `MODEL_STORE_ROOT` convention per environment tier (dev, staging, prod) and apply it uniformly across all agents/services.
+- Add a pre-start validation check that fails startup if `STRICT_MODEL_STORE=1` and required model-store payloads are missing.
+- Use `MODEL_STORE_EMBEDDING_PATH` for deterministic path pinning when reproducibility is required across rollouts.
+- Keep environment documentation and compose/systemd manifests aligned whenever root paths change.
+
+Related context: the current non-checklist working-tree changes are documented in `docs/operations/HYBRID_WHITELIST_DISCOVERY_EXECUTION_CHECKLIST_2026-03-21.md` under "Repository Working Tree Context (2026-03-22)".
+
 ## The `/etc/justnews/global.env` File
 
 ### Purpose

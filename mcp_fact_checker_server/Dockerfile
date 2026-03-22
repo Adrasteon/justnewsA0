@@ -17,19 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN python -m spacy download en_core_web_sm
 
-# Pre-download HF models to cache
-RUN python -c "from transformers import AutoModel, AutoTokenizer; \
-    print('Downloading DistilBERT...'); \
-    AutoModel.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english'); \
-    AutoTokenizer.from_pretrained('distilbert-base-uncased-finetuned-sst-2-english'); \
-    print('Downloading RoBERTa...'); \
-    AutoModel.from_pretrained('roberta-base'); \
-    AutoTokenizer.from_pretrained('roberta-base'); \
-    print('Downloading Sentence Transformer...'); \
-    from sentence_transformers import SentenceTransformer; \
-    SentenceTransformer('BAAI/bge-large-en-v1.5'); \
-    print('Models downloaded successfully.')"
-
 COPY ./app /app/app
 
 ENV PYTHONPATH=/app

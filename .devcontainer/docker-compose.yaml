@@ -32,6 +32,9 @@ services:
       - FACT_CHECKER_API_KEY=dev_key_123
       - VLLM_BASE_URL=http://vllm:8010/v1
       - VLLM_FACT_CHECKER_MODEL=Qwen/Qwen2.5-14B-Instruct-AWQ
+      - MODEL_STORE_ROOT=/app/model_store
+      - MODEL_STORE_EMBEDDING_AGENT=fact_checker
+      - STRICT_MODEL_STORE=1
       - LOG_LEVEL=INFO
       - FACT_CHECKER_AGENT_PORT=8003
       - PYTHONPATH=/app:/app/fact_checker_lib
@@ -41,6 +44,7 @@ services:
       - ../common:/app/common
       - ../global.env:/app/global.env
       - ../config:/app/config
+      - ../model_store:/app/model_store
       - justnews_deps:/deps
     ports:
       - "8003:8000"

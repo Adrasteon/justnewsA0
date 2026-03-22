@@ -65,6 +65,8 @@ python -m playwright install --with-deps chromium
 
 **Note:** The deprecated `requirements.txt` should not be used; use `requirements-bootstrap.txt` or `environment.yml` instead.
 
+**Docker build policy (2026-03-22):** Docker images currently remain pip-based (`pip install -r requirements.txt`) for operational stability. UV remains the preferred developer environment path, and Docker UV migration is deferred until the overall system is more stable and accurate.
+
 Build local MariaDB image (used for tests / local dev)
 
 ```bash

@@ -796,12 +796,26 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
         # Factual Audit (Async)
         audit_result = {}
         factual_score = None
+        fact_check_status = "pending"
         try:
             from .audit import audit_text
             audit_result = await audit_text(content)
             factual_score = audit_result.get("score")
         except Exception as e:
             logger.warning(f"Factual Audit failed for {article_id}: {e}")
+
+        # Persist a stable status so downstream queue selectors can progress.
+        if factual_score is not None:
+            try:
+                score_value = float(factual_score)
+                if score_value >= 0.8:
+                    fact_check_status = "passed"
+                elif score_value >= 0.6:
+                    fact_check_status = "needs_review"
+                else:
+                    fact_check_status = "failed"
+            except (TypeError, ValueError):
+                fact_check_status = "pending"
         
         # Construct Metadata Update
         try:
@@ -826,6 +840,7 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
             SET analyzed = 1, 
                 structured_metadata = %s,
                 factual_accuracy_score = %s,
+                fact_check_status = %s,
                 fact_check_details = %s,
                 updated_at = NOW()
             WHERE id = %s
@@ -837,7 +852,7 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
         _execute_update_with_retry(
             db,
             update_query,
-            (json.dumps(current_struct), factual_score, audit_json, article_id),
+            (json.dumps(current_struct), factual_score, fact_check_status, audit_json, article_id),
             article_id,
         )
 
@@ -906,8 +921,15 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
                 f"Failed to collect training data for analyze_article {article_id}: {e}"
             )
         
-        logger.info(f"Article {article_id} analyzed successfully (Score: {factual_score})")
-        return {"status": "success", "article_id": article_id, "factual_score": factual_score}
+        logger.info(
+            f"Article {article_id} analyzed successfully (Score: {factual_score}, Status: {fact_check_status})"
+        )
+        return {
+            "status": "success",
+            "article_id": article_id,
+            "factual_score": factual_score,
+            "fact_check_status": fact_check_status,
+        }
         
     except Exception as e:
         logger.error(f"Error analyzing article {article_id}: {e}")
