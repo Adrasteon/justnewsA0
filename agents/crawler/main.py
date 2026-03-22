@@ -341,6 +341,7 @@ async def stop_job(job_id: str):
     if job_id in crawl_task_map:
         task = crawl_task_map[job_id]
         cancel_requested_jobs.add(job_id)
+        crawl_jobs[job_id] = {"status": "cancelled"}
         logger.info(f"Cancelling running crawl job {job_id}")
         task.cancel()
         try:
@@ -392,6 +393,9 @@ async def stop_job(job_id: str):
 @app.get("/job_status/{job_id}")
 def job_status(job_id: str, token_ok: None = Depends(require_api_token)):
     """Retrieve status and result (if completed) for a crawl job."""
+    if job_id in cancel_requested_jobs:
+        return {"status": "cancelled", "job_id": job_id}
+
     cached = crawl_jobs.get(job_id)
     if isinstance(cached, dict):
         cached_status = str(cached.get("status", "")).strip().lower()

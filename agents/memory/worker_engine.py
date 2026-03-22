@@ -39,7 +39,15 @@ class WorkerEngine:
             logger.debug("Worker engine already initialized")
             return
 
-        max_workers = int(os.environ.get("MEMORY_WORKER_THREADS", "4"))
+        configured_workers = os.environ.get("MEMORY_WORKER_THREADS", "1")
+        try:
+            max_workers = max(1, int(configured_workers))
+        except ValueError:
+            logger.warning(
+                "Invalid MEMORY_WORKER_THREADS=%r; falling back to 1",
+                configured_workers,
+            )
+            max_workers = 1
         self._executor = ThreadPoolExecutor(
             max_workers=max_workers, thread_name_prefix="memory-worker"
         )

@@ -4083,14 +4083,53 @@
       "timestamp": "2026-03-21T17:52:23.591081Z",
       "version": 382,
       "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 3,
+        "orchestrator.polling_interval_seconds": 9
+      },
+      "previous_version": 382,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-03-21T21:53:14.086429Z",
+      "version": 383,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 4,
+        "orchestrator.polling_interval_seconds": 8
+      },
+      "previous_version": 383,
+      "reason": "autonomic:downstream_stall_recovery",
+      "timestamp": "2026-03-21T21:55:14.451618Z",
+      "version": 384,
+      "warnings": []
+    },
+    {
+      "actor": "copilot-ops",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 10,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "previous_version": 384,
+      "reason": "increase flow-control freedom to test analysis drain speed",
+      "timestamp": "2026-03-21T23:46:06.678040Z",
+      "version": 385,
+      "warnings": []
     }
   ],
   "overrides": {
     "orchestrator.lane_policy.lane1_enabled": true,
     "orchestrator.lane_policy.lane2_enabled": false,
     "orchestrator.lane_policy.version": "v-focus-lane1",
-    "orchestrator.max_concurrent_tasks": 2,
-    "orchestrator.polling_interval_seconds": 10
+    "orchestrator.max_concurrent_tasks": 10,
+    "orchestrator.polling_interval_seconds": 4
   },
   "timeline": [
     {
@@ -11830,8 +11869,98 @@
       ],
       "timestamp": "2026-03-21T17:52:23.591081Z",
       "version": 382
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 2,
+          "orchestrator.polling_interval_seconds": 10
+        },
+        "method": "rollback_to_version",
+        "target_version": 382
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 3,
+        "orchestrator.polling_interval_seconds": 9
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 3,
+        "orchestrator.polling_interval_seconds": 9
+      },
+      "previous_version": 382,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-21T21:53:14.086429Z",
+      "version": 383
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 3,
+          "orchestrator.polling_interval_seconds": 9
+        },
+        "method": "rollback_to_version",
+        "target_version": 383
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 4,
+        "orchestrator.polling_interval_seconds": 8
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 4,
+        "orchestrator.polling_interval_seconds": 8
+      },
+      "previous_version": 383,
+      "reason": "autonomic:downstream_stall_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-21T21:55:14.451618Z",
+      "version": 384
+    },
+    {
+      "actor": "copilot-ops",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 4,
+          "orchestrator.polling_interval_seconds": 8
+        },
+        "method": "rollback_to_version",
+        "target_version": 384
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 10,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 10,
+        "orchestrator.polling_interval_seconds": 4
+      },
+      "previous_version": 384,
+      "reason": "increase flow-control freedom to test analysis drain speed",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-21T23:46:06.678040Z",
+      "version": 385
     }
   ],
-  "updated_at": "2026-03-21T17:52:23.591081Z",
-  "version": 382
+  "updated_at": "2026-03-21T23:46:06.678040Z",
+  "version": 385
 }

@@ -1298,6 +1298,26 @@ class WorkflowPolicy(ABC):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self._call_mcp_tool_sync, agent, tool, kwargs)
 
+    def _cleanup_pending_pool_for_article_ids(self, article_ids: List[int]) -> int:
+        """Best-effort cleanup of pending pool rows for finalized article IDs."""
+        if not article_ids:
+            return 0
+        try:
+            self.db_service.ensure_conn()
+            cursor = self.db_service.mb_conn.cursor()
+            try:
+                placeholders = ", ".join(["%s"] * len(article_ids))
+                cursor.execute(
+                    f"DELETE FROM pending_articles_pool WHERE article_id IN ({placeholders})",
+                    tuple(article_ids),
+                )
+                return int(cursor.rowcount or 0)
+            finally:
+                cursor.close()
+        except Exception as e:
+            logger.warning("Pending pool cleanup failed: %s", e)
+            return 0
+
 
 class IngestionToAnalysisPolicy(WorkflowPolicy):
     """
@@ -1655,6 +1675,14 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
                     "UPDATE articles SET input_cluster_ids = %s WHERE id = %s",
                     (input_cluster_json, article_id)
                 )
+
+                removed = self._cleanup_pending_pool_for_article_ids([article_id])
+                if removed > 0:
+                    logger.info(
+                        "Removed %s pending pool row(s) for clustered article %s",
+                        removed,
+                        article_id,
+                    )
                 self.db_service.mb_conn.commit()
                 cursor.close()
                 
@@ -1887,6 +1915,14 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                     format_strings = ','.join(['%s'] * len(article_ids))
                     update_query = f"UPDATE articles SET is_synthesized = 1 WHERE id IN ({format_strings})"
                     cursor.execute(update_query, tuple(article_ids))
+
+                    removed = self._cleanup_pending_pool_for_article_ids(article_ids)
+                    if removed > 0:
+                        logger.info(
+                            "Removed %s pending pool row(s) for synthesized cluster %s",
+                            removed,
+                            cid,
+                        )
                     
                     self.db_service.mb_conn.commit()
                     cursor.close()
@@ -2096,6 +2132,14 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                     format_strings = ','.join(['%s'] * len(article_ids))
                     update_query = f"UPDATE articles SET is_synthesized = 1 WHERE id IN ({format_strings})"
                     cursor.execute(update_query, tuple(article_ids))
+
+                    removed = self._cleanup_pending_pool_for_article_ids(article_ids)
+                    if removed > 0:
+                        logger.info(
+                            "Removed %s pending pool row(s) for heavy cluster %s",
+                            removed,
+                            cid,
+                        )
                     
                     self.db_service.mb_conn.commit()
                     cursor.close()

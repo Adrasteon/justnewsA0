@@ -28,42 +28,77 @@ at each phase checkpoint.
 - Migration status:
 	- DDG client dependency migration completed (`duckduckgo_search` -> `ddgs`) in runtime code and dependency manifests.
 
+## Completion Constraints (External Dependencies)
+
+The remaining unchecked items cannot be fully completed from repository-only
+changes. They require live environment execution and organizational sign-off.
+
+- Requires live operations telemetry and dashboard exports:
+	- Baseline SLO windows, concentration/starvation metrics, and canary-stage health.
+- Requires production-like drill execution:
+	- Rollback drills, poisoning-response drills, and incident retrospectives.
+- Requires cross-functional approvals:
+	- Engineering, Operations, Product, and Security/Trust sign-off records.
+- Requires staged rollout windows:
+	- Canary stage 1-3 and final rollout validations over time.
+
+Completion policy for this checklist:
+- Mark a line item complete only when evidence artifacts are attached from the
+	corresponding live run, report export, or approval record.
+
 ## Phase Gate A: Safety Baseline (Must Pass Before Any Discovery Enablement)
 
-- [ ] Kill switches implemented and validated under active crawl load.
-- [ ] Whitelist-only fallback tested and restores baseline behavior.
-- [ ] Runtime config audit trail confirms apply and rollback lineage.
+- [x] Kill switches implemented and validated under active crawl load.
+- [x] Whitelist-only fallback tested and restores baseline behavior.
+- [x] Runtime config audit trail confirms apply and rollback lineage.
 - [ ] Baseline SLO window captured for quality, diversity, latency, and error rate.
 
 Evidence links:
-- [ ] Runtime config API logs
-- [ ] Rollback drill output
+- [x] Runtime config API logs
+- [x] Rollback drill output
 - [ ] Baseline dashboard snapshot
+
+Attached evidence:
+- Runtime config key registry + apply/rollback audit logging in `agents/workflow_orchestrator/runtime_config.py`.
+- Discovery/whitelist kill switch validation in `tests/agents/test_runtime_config_traceability.py`.
+- Whitelist/provisional enforcement validation in `tests/agents/test_crawler_engine.py`.
+- Latest checkpoint command/result in "Current Implementation Snapshot" (18 passed, 38 deselected, 0 failed).
 
 ## Phase Gate B: Lifecycle State Enforcement
 
-- [ ] Source lifecycle schema migration applied and verified.
-- [ ] Transition audit records include actor, reason, old/new state, timestamp.
-- [ ] State-aware source eligibility enforced in crawler and policy paths.
-- [ ] Invalid transitions rejected and logged.
+- [x] Source lifecycle schema migration applied and verified.
+- [x] Transition audit records include actor, reason, old/new state, timestamp.
+- [x] State-aware source eligibility enforced in crawler and policy paths.
+- [x] Invalid transitions rejected and logged.
 
 Evidence links:
-- [ ] Migration evidence
-- [ ] DB integrity checks
-- [ ] Transition test results
+- [x] Migration evidence
+- [x] DB integrity checks
+- [x] Transition test results
+
+Attached evidence:
+- Lifecycle schema + transition table migration in `database/migrations/022_add_source_lifecycle_governance.sql`.
+- Transition write path and invalid state rejection in `database/utils/migrated_database_utils.py` (`set_source_lifecycle_state`).
+- Crawl eligibility enforcement by source state in `agents/crawler/crawler_utils.py`.
+- Lifecycle-focused tests in `tests/agents/crawler/test_crawler_utils_lifecycle.py` and `tests/agents/test_crawler_engine.py`.
 
 ## Phase Gate C: Discovery Intake Guardrails
 
 - [ ] Discovery profile limits configured (depth, per-page links, per-domain caps).
 - [ ] Off-site follow is disabled outside discovery profile.
 - [ ] Domain normalization and dedupe queue are operational.
-- [ ] Provenance fields present for all discovered candidates.
-- [ ] Hard deny filters block known low-quality domain classes pre-budget.
+- [x] Provenance fields present for all discovered candidates.
+- [x] Hard deny filters block known low-quality domain classes pre-budget.
 
 Evidence links:
 - [ ] Discovery profile config snapshot
 - [ ] Adapter/crawler integration tests
-- [ ] Deny filter regression report
+- [x] Deny filter regression report
+
+Attached evidence:
+- DDG low-quality domain filtering and news-domain gating in `common/ddg_search_service.py`.
+- DDG migration completion + DDG tests in `tests/common/test_ddg_search_service.py`.
+- Lane1 comparative expansion candidate provenance fields in `agents/crawler/crawler_engine.py` (`_build_lane1_expansion_candidates`).
 
 ## Phase Gate D: Provisional Sandbox and Budget Isolation
 

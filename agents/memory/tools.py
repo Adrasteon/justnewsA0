@@ -18,6 +18,7 @@ Architecture:
 
 import json
 import os
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
@@ -52,6 +53,10 @@ MEMORY_AGENT_PORT = int(os.environ.get("MEMORY_AGENT_PORT", 8007))
 DEFAULT_MODEL_CACHE = os.environ.get("MEMORY_MODEL_CACHE") or str(
     Path("./agents/memory/models").resolve()
 )
+
+# Sentence-transformers + vector store operations may invoke native code paths
+# that are unstable under high concurrent access in this environment.
+EMBEDDING_OP_LOCK = threading.Lock()
 
 
 def log_feedback(event: str, details: dict):
@@ -336,7 +341,8 @@ def save_article(
         # encode may return numpy array; convert later to list of floats
         encode_start = perf_counter()
         try:
-            embedding = embedding_model.encode(content)
+            with EMBEDDING_OP_LOCK:
+                embedding = embedding_model.encode(content)
             encode_duration = perf_counter() - encode_start
             metrics.observe_embedding_latency(cache_label, encode_duration)
             metrics.record_embedding("success")
@@ -493,12 +499,13 @@ def save_article(
                 chroma_metadata = _make_chroma_metadata_safe(
                     _ensure_embedding_metadata(metadata)
                 )
-                db_service.collection.add(
-                    ids=[str(next_id)],
-                    embeddings=[embedding_list],
-                    metadatas=[chroma_metadata],
-                    documents=[content],
-                )
+                with EMBEDDING_OP_LOCK:
+                    db_service.collection.add(
+                        ids=[str(next_id)],
+                        embeddings=[embedding_list],
+                        metadatas=[chroma_metadata],
+                        documents=[content],
+                    )
                 logger.debug(f"Added embedding to ChromaDB for article {next_id}")
             else:
                 logger.warning(
@@ -550,11 +557,12 @@ def save_article(
                         # embedding is a list of floats, ensure it's compatible
                         embedding_query = list(map(float, embedding))
 
-                        results = ls_collection.query(
-                            query_embeddings=[embedding_query],
-                            n_results=1,
-                            include=["embeddings", "distances", "metadatas"]
-                        )
+                        with EMBEDDING_OP_LOCK:
+                            results = ls_collection.query(
+                                query_embeddings=[embedding_query],
+                                n_results=1,
+                                include=["embeddings", "distances", "metadatas"]
+                            )
 
                         if results["ids"] and len(results["ids"][0]) > 0:
                             # Distance check (Cosine distance)
@@ -575,11 +583,12 @@ def save_article(
                                 new_centroid = new_vec.tolist()
 
                                 # 1. Update Chroma Collection
-                                ls_collection.update(
-                                    ids=[story_id],
-                                    embeddings=[new_centroid],
-                                    metadatas=results["metadatas"][0] if results["metadatas"] else None
-                                )
+                                with EMBEDDING_OP_LOCK:
+                                    ls_collection.update(
+                                        ids=[story_id],
+                                        embeddings=[new_centroid],
+                                        metadatas=results["metadatas"][0] if results["metadatas"] else None
+                                    )
 
                                 # 2. Update DB
                                 cursor = db_service.mb_conn.cursor()
@@ -591,7 +600,7 @@ def save_article(
                                     )
 
                                     # Insert StoryUpdate
-                                    update_id = str(uuid.uuid4())
+                                    update_id = uuid.uuid4().hex
                                     article_ids_json = json.dumps([next_id])
 
                                     cursor.execute(

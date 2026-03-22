@@ -22,6 +22,36 @@ def run_discovery_cycle():
     db = create_database_service()
     try:
         db.ensure_conn()
+
+        # Best-effort hygiene: trim stale rows that can no longer contribute to discovery.
+        # Safe criteria: very old rows whose backing article is missing or already synthesized.
+        stale_ttl_hours = max(1, int(os.environ.get("LS_PENDING_POOL_TTL_HOURS", "72")))
+        stale_purge_limit = max(1, int(os.environ.get("LS_PENDING_POOL_STALE_PURGE_LIMIT", "500")))
+        stale_cursor = db.mb_conn.cursor()
+        try:
+            stale_cursor.execute(
+                """
+                DELETE p FROM pending_articles_pool p
+                LEFT JOIN articles a ON a.id = p.article_id
+                WHERE p.added_at < (NOW() - INTERVAL %s HOUR)
+                  AND (a.id IS NULL OR COALESCE(a.is_synthesized, 0) = 1)
+                LIMIT %s
+                """,
+                (stale_ttl_hours, stale_purge_limit),
+            )
+            removed_stale = int(stale_cursor.rowcount or 0)
+            if removed_stale > 0:
+                db.mb_conn.commit()
+                logger.info(
+                    "Pending pool stale cleanup removed %s rows (ttl=%sh, limit=%s)",
+                    removed_stale,
+                    stale_ttl_hours,
+                    stale_purge_limit,
+                )
+        except Exception as cleanup_err:
+            logger.warning("Pending pool stale cleanup skipped: %s", cleanup_err)
+        finally:
+            stale_cursor.close()
         
         # 1. Fetch all pending articles
         # We need vector_blob and article_id
