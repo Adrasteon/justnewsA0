@@ -16,6 +16,7 @@ import time
 import hashlib
 import statistics
 import re
+import math
 from urllib.parse import urlparse
 from difflib import SequenceMatcher
 from datetime import datetime, timedelta, timezone
@@ -202,6 +203,59 @@ def _safe_datetime(raw_value: Any) -> datetime | None:
         return parsed
     except Exception:
         return None
+
+
+def _vector_cosine_similarity(left: Any, right: Any) -> float:
+    if left is None or right is None:
+        return 0.0
+    try:
+        if len(left) != len(right):
+            return 0.0
+    except Exception:
+        return 0.0
+
+    dot = 0.0
+    left_norm = 0.0
+    right_norm = 0.0
+    for l_item, r_item in zip(left, right):
+        try:
+            l_val = float(l_item)
+            r_val = float(r_item)
+        except Exception:
+            return 0.0
+        dot += l_val * r_val
+        left_norm += l_val * l_val
+        right_norm += r_val * r_val
+
+    if left_norm <= 0.0 or right_norm <= 0.0:
+        return 0.0
+    return max(-1.0, min(1.0, dot / (math.sqrt(left_norm) * math.sqrt(right_norm))))
+
+
+def _token_overlap_score(left_text: str, right_text: str, max_terms: int = 80) -> float:
+    left_tokens = {
+        token
+        for token in re.findall(r"[a-z0-9]+", (left_text or "").lower())
+        if len(token) > 2
+    }
+    right_tokens = {
+        token
+        for token in re.findall(r"[a-z0-9]+", (right_text or "").lower())
+        if len(token) > 2
+    }
+    if not left_tokens or not right_tokens:
+        return 0.0
+
+    if len(left_tokens) > max_terms:
+        left_tokens = set(list(left_tokens)[:max_terms])
+    if len(right_tokens) > max_terms:
+        right_tokens = set(list(right_tokens)[:max_terms])
+
+    overlap = len(left_tokens.intersection(right_tokens))
+    union = len(left_tokens.union(right_tokens))
+    if union <= 0:
+        return 0.0
+    return max(0.0, min(1.0, overlap / union))
 
 
 def _infer_urgency_class(title_text: str | None, body_text: str | None) -> str:
@@ -1540,6 +1594,264 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
     def name(self) -> str:
         return "incremental_clustering"
 
+    def _average_embeddings_for_article_ids(self, article_ids: list[int], max_ids: int) -> list[float] | None:
+        if not article_ids:
+            return None
+        sampled_ids = [str(aid) for aid in article_ids[:max_ids] if int(aid) > 0]
+        if not sampled_ids:
+            return None
+        try:
+            result = self.db_service.collection.get(ids=sampled_ids, include=["embeddings"])
+            embeddings = result.get("embeddings") if isinstance(result, dict) else None
+            if not embeddings:
+                return None
+            valid = [emb for emb in embeddings if emb is not None]
+            if not valid:
+                return None
+            width = len(valid[0])
+            if width <= 0:
+                return None
+            acc = [0.0] * width
+            for emb in valid:
+                if len(emb) != width:
+                    continue
+                for idx, value in enumerate(emb):
+                    acc[idx] += float(value)
+            divisor = float(len(valid))
+            if divisor <= 0:
+                return None
+            return [val / divisor for val in acc]
+        except Exception as e:
+            logger.debug("Failed averaging embeddings for story-first candidates: %s", e)
+            return None
+
+    def _collect_story_first_candidates(
+        self,
+        article_id: int,
+        embedding: Any,
+        article_context: dict[str, Any],
+    ) -> dict[str, dict[str, Any]]:
+        candidates: dict[str, dict[str, Any]] = {}
+        max_story_scan = max(10, _safe_int(os.environ.get("LIVING_STORY_CANDIDATE_SCAN_LIMIT"), 300))
+        max_story_inputs = max(2, _safe_int(os.environ.get("LIVING_STORY_CANDIDATE_MAX_INPUT_ARTICLES"), 8))
+
+        self.db_service.ensure_conn()
+        cursor = self.db_service.mb_conn.cursor()
+        try:
+            cursor.execute(
+                """
+                SELECT cluster_id, input_articles, title, body, is_published, updated_at
+                FROM synthesized_articles
+                ORDER BY updated_at DESC, id DESC
+                LIMIT %s
+                """,
+                (max_story_scan,),
+            )
+            rows = cursor.fetchall()
+        finally:
+            cursor.close()
+
+        seen_clusters: set[str] = set()
+        article_text = " ".join(
+            str(article_context.get(key) or "").strip()
+            for key in ["title", "content"]
+        ).strip()
+
+        for row in rows:
+            try:
+                cluster_id = str(row[0] or "").strip()
+                if not cluster_id or cluster_id in seen_clusters:
+                    continue
+                seen_clusters.add(cluster_id)
+
+                input_ids = _safe_json_list(row[1])
+                if not input_ids:
+                    continue
+
+                cluster_embedding = self._average_embeddings_for_article_ids(input_ids, max_story_inputs)
+                if cluster_embedding is None:
+                    continue
+
+                semantic_similarity = max(0.0, _vector_cosine_similarity(embedding, cluster_embedding))
+                if semantic_similarity <= 0:
+                    continue
+
+                cluster_title = str(row[2] or "")
+                cluster_body = str(row[3] or "")
+                cluster_text = f"{cluster_title} {cluster_body}"
+                overlap_score = _token_overlap_score(article_text, cluster_text)
+
+                updated_dt = _safe_datetime(row[5])
+                recency_score = 0.0
+                if updated_dt is not None:
+                    age_hours = max((datetime.utcnow() - updated_dt).total_seconds() / 3600.0, 0.0)
+                    recency_score = math.exp(-age_hours / 48.0)
+
+                published_bonus = 1.0 if int(row[4] or 0) == 1 else 0.0
+                composite = (
+                    semantic_similarity * 0.70
+                    + overlap_score * 0.15
+                    + recency_score * 0.10
+                    + published_bonus * 0.05
+                )
+
+                candidates[cluster_id] = {
+                    "cluster_id": cluster_id,
+                    "source": "story_first",
+                    "semantic_similarity": round(semantic_similarity, 4),
+                    "overlap_score": round(overlap_score, 4),
+                    "recency_score": round(recency_score, 4),
+                    "published_bonus": round(published_bonus, 4),
+                    "score": round(composite, 4),
+                }
+            except Exception as e:
+                logger.debug("Skipping story-first candidate for article %s: %s", article_id, e)
+
+        return candidates
+
+    def _collect_neighbor_candidates(self, article_id: int, embedding: Any) -> dict[str, dict[str, Any]]:
+        candidates: dict[str, dict[str, Any]] = {}
+        neighbor_k = max(5, _safe_int(os.environ.get("CLUSTER_NEIGHBOR_K"), 12))
+        min_neighbor_similarity = _safe_float(os.environ.get("CLUSTER_NEIGHBOR_MIN_SIMILARITY"), 0.5)
+
+        neighbors = self.db_service.collection.query(
+            query_embeddings=[embedding],
+            n_results=neighbor_k,
+            include=["metadatas", "distances", "documents"],
+        )
+
+        ids_list = neighbors.get("ids") if isinstance(neighbors, dict) else None
+        if not ids_list or not ids_list[0]:
+            return candidates
+
+        neighbor_ids = neighbors["ids"][0]
+        distances = neighbors.get("distances", [[]])[0]
+        weighted_hits: dict[str, float] = {}
+
+        valid_neighbor_db_ids = []
+        for nid, dist in zip(neighbor_ids, distances):
+            if str(nid) == str(article_id):
+                continue
+            similarity = max(0.0, 1.0 - _safe_float(dist, 1.0))
+            if similarity < min_neighbor_similarity:
+                continue
+            try:
+                valid_neighbor_db_ids.append((int(nid), similarity))
+            except Exception:
+                continue
+
+        if not valid_neighbor_db_ids:
+            return candidates
+
+        id_only = [nid for nid, _ in valid_neighbor_db_ids]
+        self.db_service.ensure_conn()
+        cursor = self.db_service.mb_conn.cursor()
+        try:
+            placeholders = ",".join(["%s"] * len(id_only))
+            cursor.execute(
+                f"SELECT id, input_cluster_ids FROM articles WHERE id IN ({placeholders})",
+                tuple(id_only),
+            )
+            rows = cursor.fetchall()
+        finally:
+            cursor.close()
+
+        similarity_by_id = {nid: sim for nid, sim in valid_neighbor_db_ids}
+        for row in rows:
+            aid = _safe_int(row[0], 0)
+            cluster_raw = row[1]
+            if not cluster_raw:
+                continue
+            try:
+                cluster_ids = json.loads(cluster_raw)
+            except Exception:
+                continue
+            if not isinstance(cluster_ids, list) or not cluster_ids:
+                continue
+            cluster_id = str(cluster_ids[0]).strip()
+            if not cluster_id:
+                continue
+            weighted_hits[cluster_id] = weighted_hits.get(cluster_id, 0.0) + similarity_by_id.get(aid, 0.0)
+
+        for cluster_id, weighted_score in weighted_hits.items():
+            candidates[cluster_id] = {
+                "cluster_id": cluster_id,
+                "source": "neighbor",
+                "score": round(max(0.0, min(1.0, weighted_score / max(len(valid_neighbor_db_ids), 1))), 4),
+                "neighbor_support": len(valid_neighbor_db_ids),
+            }
+
+        return candidates
+
+    def _merge_candidates(
+        self,
+        story_candidates: dict[str, dict[str, Any]],
+        neighbor_candidates: dict[str, dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        merged: dict[str, dict[str, Any]] = {}
+
+        for cid, payload in story_candidates.items():
+            merged[cid] = dict(payload)
+
+        for cid, payload in neighbor_candidates.items():
+            if cid not in merged:
+                merged[cid] = dict(payload)
+                continue
+            existing = merged[cid]
+            existing_score = _safe_float(existing.get("score"), 0.0)
+            neighbor_score = _safe_float(payload.get("score"), 0.0)
+            combined = (existing_score * 0.75) + (neighbor_score * 0.25)
+            existing["score"] = round(max(0.0, min(1.0, combined)), 4)
+            existing["neighbor_score"] = round(neighbor_score, 4)
+            existing["source"] = "hybrid" if existing.get("source") != "neighbor" else "neighbor"
+            existing["neighbor_support"] = payload.get("neighbor_support", existing.get("neighbor_support", 0))
+
+        ranked = sorted(merged.values(), key=lambda item: _safe_float(item.get("score"), 0.0), reverse=True)
+        top_k = max(1, _safe_int(os.environ.get("CLUSTER_CANDIDATE_TOP_K"), 5))
+        return ranked[:top_k]
+
+    def _persist_clustering_decision(
+        self,
+        article_id: int,
+        selected_cluster_id: str,
+        top_candidates: list[dict[str, Any]],
+        confidence_band: str,
+        confidence_score: float,
+        provisional: bool,
+    ) -> None:
+        self.db_service.ensure_conn()
+        cursor = self.db_service.mb_conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT structured_metadata FROM articles WHERE id = %s",
+                (article_id,),
+            )
+            row = cursor.fetchone()
+            existing_struct = _load_json_dict(row[0] if row else None)
+
+            reevaluate_minutes = max(5, _safe_int(os.environ.get("CLUSTER_REEVALUATE_AFTER_MINUTES"), 30))
+            decision_meta = {
+                "strategy": "living_story_update_first_v1",
+                "version": 1,
+                "selected_cluster": selected_cluster_id,
+                "confidence_band": confidence_band,
+                "confidence_score": round(confidence_score, 4),
+                "provisional": bool(provisional),
+                "top_candidates": top_candidates,
+                "decided_at": datetime.utcnow().isoformat() + "Z",
+                "reevaluate_after_minutes": reevaluate_minutes,
+            }
+            existing_struct["clustering_decision"] = decision_meta
+
+            input_cluster_json = json.dumps([selected_cluster_id])
+            cursor.execute(
+                "UPDATE articles SET input_cluster_ids = %s, structured_metadata = %s WHERE id = %s",
+                (input_cluster_json, json.dumps(existing_struct), article_id),
+            )
+            self.db_service.mb_conn.commit()
+        finally:
+            cursor.close()
+
     def check_condition(self, limit: int) -> List[int]:
         ids = []
         try:
@@ -1551,17 +1863,42 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
             cursor = self.db_service.mb_conn.cursor()
             
             # Process one by one or small batches.
+            provisional_window_hours = max(1, _safe_int(os.environ.get("CLUSTER_PROVISIONAL_REEVALUATE_WINDOW_HOURS"), 48))
             query = """
-                SELECT id FROM articles 
-                WHERE fact_check_status IS NOT NULL 
-                      AND embedded = 1
-                      AND (input_cluster_ids IS NULL OR input_cluster_ids = '[]' OR input_cluster_ids = '')
+                SELECT id, input_cluster_ids, structured_metadata, created_at
+                FROM articles
+                WHERE fact_check_status IS NOT NULL
+                  AND embedded = 1
+                  AND is_synthesized = 0
                 ORDER BY created_at DESC
                 LIMIT %s
             """
-            cursor.execute(query, (limit,))
+            cursor.execute(query, (max(limit * 6, limit),))
             rows = cursor.fetchall()
-            ids = [row[0] for row in rows]
+
+            now = datetime.utcnow()
+            for row in rows:
+                article_id = _safe_int(row[0], 0)
+                if article_id <= 0:
+                    continue
+                cluster_raw = row[1]
+                struct_meta = _load_json_dict(row[2])
+                created_at = _safe_datetime(row[3])
+
+                has_cluster = bool(cluster_raw and str(cluster_raw).strip() not in {"", "[]", "null"})
+                decision = struct_meta.get("clustering_decision") if isinstance(struct_meta.get("clustering_decision"), dict) else {}
+                provisional = bool(decision.get("provisional", False))
+
+                in_recheck_window = False
+                if created_at is not None:
+                    age_hours = max((now - created_at).total_seconds() / 3600.0, 0.0)
+                    in_recheck_window = age_hours <= provisional_window_hours
+
+                if not has_cluster or (provisional and in_recheck_window):
+                    ids.append(article_id)
+                if len(ids) >= limit:
+                    break
+
             cursor.close()
         except Exception as e:
             logger.error(f"Error checking DB condition for {self.name()}: {e}")
@@ -1584,8 +1921,7 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
 
         for article_id in items:
             try:
-                # 1. Get Embedding
-                # We cast ID to string as Chroma uses string IDs
+                # 1) Load embedding and article context
                 result = self.db_service.collection.get(
                     ids=[str(article_id)],
                     include=["embeddings"]
@@ -1601,80 +1937,86 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
                 if not has_embedding:
                     logger.warning(f"No embedding found for article {article_id}. Skipping.")
                     continue
-                    
-                embedding = result['embeddings'][0]
-                
-                # 2. Query Neighbors
-                # We look for nearest 5
-                # We filter by distance < 0.5
-                neighbors = self.db_service.collection.query(
-                    query_embeddings=[embedding],
-                    n_results=5,
-                    include=["metadatas", "distances", "documents"]
-                )
-                
-                found_cluster_id = None
-                
-                # Handling numpy/list ambiguity safely
-                has_results = False
-                if neighbors:
-                    ids_list = neighbors.get('ids')
-                    if ids_list and len(ids_list) > 0 and len(ids_list[0]) > 0:
-                        has_results = True
-                
-                if has_results:
-                    neighbor_ids = neighbors['ids'][0]
-                    distances = neighbors['distances'][0]
-                    
-                    # Filter by distance
-                    # 0.5 is significant. 0 is identical.
-                    valid_neighbor_db_ids = []
-                    for nid, dist in zip(neighbor_ids, distances):
-                        if dist < 0.5 and str(nid) != str(article_id):
-                            # nid is the chroma ID, which is str(article_id)
-                            try:
-                                valid_neighbor_db_ids.append(int(nid))
-                            except:
-                                pass
-                    
-                    if valid_neighbor_db_ids:
-                        # Fetch cluster IDs of these neighbors
-                        self.db_service.ensure_conn()
-                        cursor = self.db_service.mb_conn.cursor()
-                        format_strings = ','.join(['%s'] * len(valid_neighbor_db_ids))
-                        cursor.execute(f"SELECT input_cluster_ids FROM articles WHERE id IN ({format_strings})", tuple(valid_neighbor_db_ids))
-                        rows = cursor.fetchall()
-                        cursor.close()
-                        
-                        cluster_counts = {}
-                        for row in rows:
-                            if row[0]:
-                                try:
-                                    c_ids = json.loads(row[0])
-                                    if c_ids:
-                                        cid = c_ids[0]
-                                        cluster_counts[cid] = cluster_counts.get(cid, 0) + 1
-                                except:
-                                    pass
-                        
-                        # If we have candidates, pick the most frequent
-                        if cluster_counts:
-                            found_cluster_id = max(cluster_counts, key=cluster_counts.get)
-                            logger.info(f"Article {article_id} matched to existing cluster {found_cluster_id} (neighbors: {len(valid_neighbor_db_ids)})")
 
-                # 3. Assign Cluster
-                if not found_cluster_id:
-                    found_cluster_id = f"CL-{uuid.uuid4().hex[:8]}"
-                    logger.info(f"Article {article_id} assigned to NEW cluster {found_cluster_id}")
-                
-                # Update DB
+                embedding = result['embeddings'][0]
+
                 self.db_service.ensure_conn()
                 cursor = self.db_service.mb_conn.cursor()
-                input_cluster_json = json.dumps([found_cluster_id])
-                cursor.execute(
-                    "UPDATE articles SET input_cluster_ids = %s WHERE id = %s",
-                    (input_cluster_json, article_id)
+                try:
+                    cursor.execute(
+                        "SELECT title, content, source_url, created_at FROM articles WHERE id = %s",
+                        (article_id,),
+                    )
+                    context_row = cursor.fetchone() or ("", "", "", None)
+                finally:
+                    cursor.close()
+
+                article_context = {
+                    "title": context_row[0],
+                    "content": context_row[1],
+                    "source_url": context_row[2],
+                    "created_at": context_row[3],
+                }
+
+                # 2) Candidate retrieval: story-first, then neighbor fallback
+                story_candidates = self._collect_story_first_candidates(article_id, embedding, article_context)
+                neighbor_candidates = self._collect_neighbor_candidates(article_id, embedding)
+                top_candidates = self._merge_candidates(story_candidates, neighbor_candidates)
+
+                high_threshold = _safe_float(os.environ.get("CLUSTER_CONFIDENCE_HIGH"), 0.72)
+                medium_threshold = _safe_float(os.environ.get("CLUSTER_CONFIDENCE_MEDIUM"), 0.58)
+
+                selected_cluster_id = ""
+                confidence_score = 0.0
+                confidence_band = "low"
+                provisional = True
+
+                if top_candidates:
+                    top = top_candidates[0]
+                    selected_cluster_id = str(top.get("cluster_id") or "").strip()
+                    confidence_score = _safe_float(top.get("score"), 0.0)
+
+                if selected_cluster_id and confidence_score >= high_threshold:
+                    confidence_band = "high"
+                    provisional = False
+                elif selected_cluster_id and confidence_score >= medium_threshold:
+                    confidence_band = "medium"
+                    provisional = True
+                else:
+                    selected_cluster_id = f"CL-{uuid.uuid4().hex[:8]}"
+                    confidence_band = "low"
+                    provisional = True
+
+                self._persist_clustering_decision(
+                    article_id=article_id,
+                    selected_cluster_id=selected_cluster_id,
+                    top_candidates=top_candidates,
+                    confidence_band=confidence_band,
+                    confidence_score=confidence_score,
+                    provisional=provisional,
                 )
+
+                if confidence_band == "high":
+                    logger.info(
+                        "Article %s attached to existing cluster %s with high confidence %.3f",
+                        article_id,
+                        selected_cluster_id,
+                        confidence_score,
+                    )
+                elif confidence_band == "medium":
+                    logger.info(
+                        "Article %s provisionally attached to cluster %s (score=%.3f)",
+                        article_id,
+                        selected_cluster_id,
+                        confidence_score,
+                    )
+                else:
+                    logger.info(
+                        "Article %s assigned NEW provisional cluster %s (top_score=%.3f)",
+                        article_id,
+                        selected_cluster_id,
+                        confidence_score,
+                    )
 
                 removed = self._cleanup_pending_pool_for_article_ids([article_id])
                 if removed > 0:
@@ -1683,9 +2025,7 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
                         removed,
                         article_id,
                     )
-                self.db_service.mb_conn.commit()
-                cursor.close()
-                
+
             except Exception as e:
                 logger.error(f"Error processing clustering for article {article_id}: {e}")
 
@@ -1714,16 +2054,16 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
             except:
                 pass
             cursor = self.db_service.mb_conn.cursor()
-            
+
             # Fetch candidates: un-synthesized articles with clusters
             # We fetch a larger batch to find a complete cluster
             # New Rule: Only pick clusters with at least 2 articles (to avoid premature singletons)
             # Maturity Rule: Fetch created_at to ensure cluster is stable (no new arrivals in last 20 mins)
             # INCREASED LIMIT: To 2000 to ensure we look past the "Singleton Jam" (backlog of ~1000 items)
             query = """
-                SELECT input_cluster_ids, created_at FROM articles 
-                WHERE is_synthesized = 0 
-                  AND input_cluster_ids IS NOT NULL 
+                SELECT input_cluster_ids, created_at, structured_metadata FROM articles
+                WHERE is_synthesized = 0
+                  AND input_cluster_ids IS NOT NULL
                   AND input_cluster_ids != '[]'
                   AND input_cluster_ids != ''
                 ORDER BY created_at ASC
@@ -1732,57 +2072,81 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
             cursor.execute(query)
             rows = cursor.fetchall()
             cursor.close()
-            
+
             # Tally counts per cluster and track latest timestamp
             counts = {}
             latest_activity = {}
-            
+
             for row in rows:
                 try:
                     c_ids = json.loads(row[0])
                     created_at = row[1]
-                    
+
                     if isinstance(c_ids, list) and c_ids:
-                        cid = c_ids[0] # Assume primary cluster
+                        cid = c_ids[0]  # Assume primary cluster
                         counts[cid] = counts.get(cid, 0) + 1
-                        
+
                         if created_at:
                             current_max = latest_activity.get(cid)
                             if not current_max or created_at > current_max:
                                 latest_activity[cid] = created_at
                 except:
                     continue
-            
+
             # Filter:
             # 1. Count >= 2
             # 2. Maturity: Last article > 20 mins ago
             # 3. Optional singleton processing via env flag
             # 4. Stale Snapshot fallback: Count == 1 AND Age > 18 hours -> Synthesize as Brief
+            # 5. Fresh provisional assignments are held for reevaluation window
             valid_counts = {}
             now = datetime.now()
-            # Use 20 minutes maturity window for active clusters
             maturity_window = timedelta(minutes=20)
-            # Use 18 hours for stale singletons (Briefs)
             stale_window = timedelta(hours=18)
             process_singletons = _env_bool("PROCESS_SINGLETON_CLUSTERS", default=False)
-            
+            provisional_hold_minutes = max(
+                5,
+                _safe_int(os.environ.get("CLUSTER_PROVISIONAL_SYNTHESIS_HOLD_MINUTES"), 45),
+            )
+            provisional_hold_window = timedelta(minutes=provisional_hold_minutes)
+            cluster_hold_counts: dict[str, int] = {}
+
+            for row in rows:
+                try:
+                    c_ids = json.loads(row[0])
+                    created_at = row[1]
+                    struct_meta = _load_json_dict(row[2])
+                    if not isinstance(c_ids, list) or not c_ids:
+                        continue
+                    cid = c_ids[0]
+                    decision = (
+                        struct_meta.get("clustering_decision")
+                        if isinstance(struct_meta.get("clustering_decision"), dict)
+                        else {}
+                    )
+                    provisional = bool(decision.get("provisional", False))
+                    if provisional and created_at and (now - created_at) < provisional_hold_window:
+                        cluster_hold_counts[cid] = cluster_hold_counts.get(cid, 0) + 1
+                except Exception:
+                    continue
+
             for cid, count in counts.items():
+                if cluster_hold_counts.get(cid, 0) > 0:
+                    continue
                 last_ts = latest_activity.get(cid)
                 if last_ts:
                     age = now - last_ts
-                    
+
                     if count >= 2:
-                         # Active Cluster Maturity Rule
-                         if age > maturity_window:
-                             valid_counts[cid] = count
+                        if age > maturity_window:
+                            valid_counts[cid] = count
                     elif count == 1:
-                         if process_singletons:
-                             valid_counts[cid] = count
-                             continue
-                         # Stale Brief Rule
-                         if age > stale_window:
-                             valid_counts[cid] = count
-            
+                        if process_singletons:
+                            valid_counts[cid] = count
+                            continue
+                        if age > stale_window:
+                            valid_counts[cid] = count
+
             # Prioritize freshest clusters first, then larger clusters.
             # This prevents newer pipeline output from being starved behind older backlog.
             sorted_clusters = sorted(
@@ -1791,7 +2155,7 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                 reverse=True,
             )
             cluster_ids = [c[0] for c in sorted_clusters[:limit]]
-            
+
         except Exception as e:
             logger.error(f"Error checking DB condition for {self.name()}: {e}")
             try:
