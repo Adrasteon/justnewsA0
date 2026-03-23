@@ -606,6 +606,231 @@ def _resolve_publication_evidence(source: dict[str, Any], cursor: Any | None = N
 
     return str(raw_input_articles or "")
 
+
+def _ensure_publish_replacement_schema(cursor: Any) -> None:
+    """Ensure publisher tables support deterministic replacement + event tracking."""
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS news_story_republish_events (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            story_id VARCHAR(64) NOT NULL,
+            cluster_id VARCHAR(64) NULL,
+            news_article_id BIGINT NULL,
+            action VARCHAR(32) NOT NULL,
+            replaced_existing TINYINT(1) NOT NULL DEFAULT 0,
+            synthesized_created_at DATETIME NULL,
+            synthesized_updated_at DATETIME NULL,
+            previous_news_updated_at DATETIME NULL,
+            occurred_at DATETIME NOT NULL,
+            metadata JSON NULL,
+            INDEX idx_news_story_republish_events_story_id (story_id),
+            INDEX idx_news_story_republish_events_cluster_id (cluster_id),
+            INDEX idx_news_story_republish_events_occurred_at (occurred_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """
+    )
+
+    cursor.execute("SHOW COLUMNS FROM news_article")
+    article_columns = {
+        str((row.get("Field") if isinstance(row, dict) else "") or "")
+        for row in (cursor.fetchall() or [])
+    }
+
+    if "story_id" not in article_columns:
+        cursor.execute(
+            """
+            ALTER TABLE news_article
+            ADD COLUMN story_id VARCHAR(64) NULL
+            """
+        )
+    if "source_cluster_id" not in article_columns:
+        cursor.execute(
+            """
+            ALTER TABLE news_article
+            ADD COLUMN source_cluster_id VARCHAR(64) NULL
+            """
+        )
+
+    cursor.execute("SHOW INDEX FROM news_article")
+    existing_indexes = {
+        str((row.get("Key_name") if isinstance(row, dict) else "") or "")
+        for row in (cursor.fetchall() or [])
+    }
+    if "idx_news_article_story_id" not in existing_indexes:
+        cursor.execute("CREATE INDEX idx_news_article_story_id ON news_article (story_id)")
+    if "idx_news_article_source_cluster_id" not in existing_indexes:
+        cursor.execute(
+            "CREATE INDEX idx_news_article_source_cluster_id ON news_article (source_cluster_id)"
+        )
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS news_taxonomy_drift_events (
+            id BIGINT AUTO_INCREMENT PRIMARY KEY,
+            story_id VARCHAR(64) NOT NULL,
+            cluster_id VARCHAR(64) NULL,
+            observed_category VARCHAR(64) NOT NULL,
+            expected_category VARCHAR(64) NULL,
+            lane VARCHAR(64) NULL,
+            drift_score DECIMAL(8, 4) NOT NULL,
+            threshold_score DECIMAL(8, 4) NOT NULL,
+            llm_review_invoked TINYINT(1) NOT NULL DEFAULT 0,
+            llm_adjusted TINYINT(1) NOT NULL DEFAULT 0,
+            final_category VARCHAR(64) NOT NULL,
+            severity VARCHAR(16) NOT NULL,
+            metadata JSON NULL,
+            occurred_at DATETIME NOT NULL,
+            INDEX idx_news_taxonomy_drift_story (story_id),
+            INDEX idx_news_taxonomy_drift_cluster (cluster_id),
+            INDEX idx_news_taxonomy_drift_occurred_at (occurred_at)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        """
+    )
+
+
+def _derive_publish_action(source: dict[str, Any], existing_article: dict[str, Any] | None) -> str:
+    if not existing_article:
+        return "create"
+    source_created = source.get("created_at")
+    source_updated = source.get("updated_at")
+    if isinstance(source_created, datetime) and isinstance(source_updated, datetime):
+        if source_updated > source_created:
+            return "republished_update"
+    return "republish_refresh"
+
+
+def _extract_publication_lane(source: dict[str, Any]) -> str:
+    raw = source.get("synth_metadata")
+    metadata: dict[str, Any] = {}
+    if isinstance(raw, dict):
+        metadata = raw
+    elif isinstance(raw, str) and raw.strip():
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                metadata = parsed
+        except Exception:
+            metadata = {}
+
+    publication = metadata.get("publication") if isinstance(metadata.get("publication"), dict) else {}
+    lane = str(publication.get("publication_lane") or "").strip().lower()
+    return lane or "unknown"
+
+
+def _compute_taxonomy_drift_signal(
+    source: dict[str, Any],
+    observed_category: str,
+) -> dict[str, Any]:
+    raw = source.get("synth_metadata")
+    metadata: dict[str, Any] = {}
+    if isinstance(raw, dict):
+        metadata = raw
+    elif isinstance(raw, str) and raw.strip():
+        try:
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                metadata = parsed
+        except Exception:
+            metadata = {}
+
+    publish_meta = metadata.get("publish") if isinstance(metadata.get("publish"), dict) else {}
+    history = publish_meta.get("history") if isinstance(publish_meta.get("history"), list) else []
+
+    recent_categories: list[str] = []
+    for item in history[-10:]:
+        if not isinstance(item, dict):
+            continue
+        cat = _normalize_publication_category(item.get("category"))
+        if cat:
+            recent_categories.append(cat)
+
+    if not recent_categories:
+        return {
+            "expected_category": None,
+            "agreement_ratio": 0.0,
+            "drift_score": 0.0,
+            "sample_size": 0,
+        }
+
+    counts: dict[str, int] = {}
+    for cat in recent_categories:
+        counts[cat] = counts.get(cat, 0) + 1
+
+    expected_category = max(counts.items(), key=lambda item: item[1])[0]
+    dominant_count = int(counts.get(expected_category, 0))
+    sample_size = len(recent_categories)
+    agreement_ratio = (dominant_count / float(sample_size)) if sample_size else 0.0
+
+    observed = _normalize_publication_category(observed_category)
+    drift_score = agreement_ratio if observed != expected_category and sample_size >= 3 else 0.0
+
+    return {
+        "expected_category": expected_category,
+        "agreement_ratio": round(agreement_ratio, 4),
+        "drift_score": round(drift_score, 4),
+        "sample_size": sample_size,
+    }
+
+
+def _taxonomy_drift_threshold_for_lane(lane: str) -> float:
+    lane_normalized = str(lane or "").strip().lower()
+    if lane_normalized == "developing_brief":
+        return max(0.0, min(1.0, float(os.environ.get("LIVING_STORY_DRIFT_THRESHOLD_DEVELOPING", "0.85"))))
+    return max(0.0, min(1.0, float(os.environ.get("LIVING_STORY_DRIFT_THRESHOLD_STABLE", "0.60"))))
+
+
+def _run_taxonomy_remediation_review(
+    title: str,
+    summary: str,
+    body: str,
+    observed_category: str,
+    lane: str,
+) -> dict[str, Any]:
+    """Run LLM remediation when taxonomy drift is detected.
+
+    The loop is intentionally conservative: if model confidence is not strong,
+    we keep the observed category unchanged.
+    """
+    reviewed_category = observed_category
+    confidence = 0.0
+    llm_invoked = False
+    llm_adjusted = False
+
+    try:
+        llm_invoked = True
+        classification = categorize_content("\n\n".join([title or "", summary or "", body or ""]))
+        predicted = classification.get("category") if isinstance(classification, dict) else None
+        confidence = float(classification.get("confidence", 0.0)) if isinstance(classification, dict) else 0.0
+        normalized_predicted = _normalize_publication_category(predicted)
+        min_confidence = max(0.0, min(1.0, float(os.environ.get("LIVING_STORY_DRIFT_REMEDIATION_MIN_CONFIDENCE", "0.65"))))
+        if normalized_predicted and confidence >= min_confidence and normalized_predicted != observed_category:
+            reviewed_category = normalized_predicted
+            llm_adjusted = True
+    except Exception as exc:
+        logger.warning("Taxonomy remediation review failed: %s", exc)
+
+    edited_title = title
+    edited_summary = summary
+    if llm_adjusted:
+        # Re-headline and summary regeneration acts as light-touch edit loop.
+        edited_title = _derive_publication_title(title, summary, body)
+        edited_summary = _resolve_publication_summary(body=body, source_summary=summary, title=edited_title)
+        edited_title, edited_summary, _ = _apply_lane_caveat(
+            {"synth_metadata": json.dumps({"publication": {"publication_lane": lane}})},
+            edited_title,
+            edited_summary,
+            body,
+        )
+
+    return {
+        "category": reviewed_category,
+        "confidence": round(confidence, 4),
+        "llm_review_invoked": llm_invoked,
+        "llm_adjusted": llm_adjusted,
+        "title": edited_title,
+        "summary": edited_summary,
+    }
+
 # Global engine instance
 _engine: ChiefEditorEngine | None = None
 
@@ -905,6 +1130,8 @@ def publish_story(story_id: str) -> dict[str, Any]:
         # Use context managers for automatic cleanup
         with mysql.connector.connect(**db_config) as conn:
             with conn.cursor(dictionary=True) as cursor:
+                _ensure_publish_replacement_schema(cursor)
+
                 # 1. Fetch from synthesized_articles
                 cursor.execute("SELECT * FROM synthesized_articles WHERE story_id = %s", (story_id,))
                 source = cursor.fetchone()
@@ -951,19 +1178,48 @@ def publish_story(story_id: str) -> dict[str, Any]:
 
                 # Create stable slug (reuse existing story slug when republishing)
                 story_suffix = story_id[:8]
+                cluster_id = str(source.get("cluster_id") or "").strip() or None
+
                 cursor.execute(
                     """
-                    SELECT slug
+                    SELECT id, slug, updated_at, published_at, story_id, source_cluster_id
                     FROM news_article
-                    WHERE slug LIKE %s
+                    WHERE source_cluster_id = %s
                     ORDER BY updated_at DESC, id DESC
                     LIMIT 1
                     """,
-                    (f"%-{story_suffix}",),
+                    (cluster_id,),
                 )
-                existing_slug_row = cursor.fetchone()
-                if existing_slug_row and existing_slug_row.get("slug"):
-                    slug = str(existing_slug_row["slug"])
+                existing_article = cursor.fetchone()
+
+                if not existing_article:
+                    cursor.execute(
+                        """
+                        SELECT id, slug, updated_at, published_at, story_id, source_cluster_id
+                        FROM news_article
+                        WHERE story_id = %s
+                        ORDER BY updated_at DESC, id DESC
+                        LIMIT 1
+                        """,
+                        (story_id,),
+                    )
+                    existing_article = cursor.fetchone()
+
+                if not existing_article:
+                    cursor.execute(
+                        """
+                        SELECT id, slug, updated_at, published_at, story_id, source_cluster_id
+                        FROM news_article
+                        WHERE slug LIKE %s
+                        ORDER BY updated_at DESC, id DESC
+                        LIMIT 1
+                        """,
+                        (f"%-{story_suffix}",),
+                    )
+                    existing_article = cursor.fetchone()
+
+                if existing_article and existing_article.get("slug"):
+                    slug = str(existing_article["slug"])
                 else:
                     slug_base = re.sub(r'[^a-zA-Z0-9]+', '-', title.lower()).strip('-')
                     slug = f"{slug_base[:40]}-{story_suffix}"
@@ -971,52 +1227,148 @@ def publish_story(story_id: str) -> dict[str, Any]:
                 evidence = _resolve_publication_evidence(source, cursor=cursor)
                 
                 category = _derive_publication_category(source, title, summary, body, cursor=cursor)
+                observed_category = category
+                lane = _extract_publication_lane(source)
+
+                drift_signal = _compute_taxonomy_drift_signal(
+                    source=source,
+                    observed_category=category,
+                )
+                drift_score = float(drift_signal.get("drift_score", 0.0) or 0.0)
+                drift_threshold = _taxonomy_drift_threshold_for_lane(lane)
+                drift_triggered = drift_score >= drift_threshold
+
+                remediation = {
+                    "category": category,
+                    "confidence": 0.0,
+                    "llm_review_invoked": False,
+                    "llm_adjusted": False,
+                    "title": title,
+                    "summary": summary,
+                }
+                if drift_triggered:
+                    remediation = _run_taxonomy_remediation_review(
+                        title=title,
+                        summary=summary,
+                        body=body,
+                        observed_category=category,
+                        lane=lane,
+                    )
+                    category = remediation["category"]
+                    title = remediation["title"]
+                    summary = remediation["summary"]
                 
                 now = datetime.now()
                 author = "Chief Editor"
                 score = 0.9  # Default score
+                publish_action = _derive_publish_action(source=source, existing_article=existing_article)
+                replaced_existing = bool(existing_article)
+                previous_news_updated_at = (
+                    existing_article.get("updated_at") if isinstance(existing_article, dict) else None
+                )
 
-                # 3. Upsert into news_article
-                upsert_sql = """
-                    INSERT INTO news_article 
-                    (title, slug, summary, body, published_at, updated_at, author, score, evidence, is_featured, category)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON DUPLICATE KEY UPDATE
-                    title=VALUES(title),
-                    summary=VALUES(summary),
-                    body=VALUES(body),
-                    published_at=VALUES(published_at),
-                    updated_at=VALUES(updated_at),
-                    author=VALUES(author),
-                    score=VALUES(score),
-                    evidence=VALUES(evidence),
-                    category=VALUES(category)
-                """
-                cursor.execute(upsert_sql, (
-                    title, slug, summary, body, now, now, author, score, evidence, 0, category
-                ))
+                # 3. Deterministic replace/update of existing published article row.
+                if existing_article and existing_article.get("id"):
+                    cursor.execute(
+                        """
+                        UPDATE news_article
+                        SET title = %s,
+                            slug = %s,
+                            summary = %s,
+                            body = %s,
+                            updated_at = %s,
+                            author = %s,
+                            score = %s,
+                            evidence = %s,
+                            category = %s,
+                            story_id = %s,
+                            source_cluster_id = %s,
+                            published_at = COALESCE(published_at, %s)
+                        WHERE id = %s
+                        """,
+                        (
+                            title,
+                            slug,
+                            summary,
+                            body,
+                            now,
+                            author,
+                            score,
+                            evidence,
+                            category,
+                            story_id,
+                            cluster_id,
+                            now,
+                            existing_article["id"],
+                        ),
+                    )
+                    article_id = int(existing_article["id"])
+                else:
+                    cursor.execute(
+                        """
+                        INSERT INTO news_article
+                        (title, slug, summary, body, published_at, updated_at, author, score, evidence, is_featured, category, story_id, source_cluster_id)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        """,
+                        (
+                            title,
+                            slug,
+                            summary,
+                            body,
+                            now,
+                            now,
+                            author,
+                            score,
+                            evidence,
+                            0,
+                            category,
+                            story_id,
+                            cluster_id,
+                        ),
+                    )
+                    article_id = int(cursor.lastrowid)
+
+                # Enforce a single canonical published row per living story identity.
+                pruned_duplicates = 0
+                if cluster_id:
+                    cursor.execute(
+                        """
+                        DELETE FROM news_article
+                        WHERE id <> %s
+                          AND source_cluster_id = %s
+                        """,
+                        (article_id, cluster_id),
+                    )
+                    pruned_duplicates += int(cursor.rowcount or 0)
 
                 cursor.execute(
                     """
-                    SELECT id
-                    FROM news_article
-                    WHERE slug = %s
-                    ORDER BY updated_at DESC, id DESC
-                    LIMIT 1
+                    DELETE FROM news_article
+                    WHERE id <> %s
+                      AND story_id = %s
                     """,
-                    (slug,),
+                    (article_id, story_id),
                 )
-                article_row = cursor.fetchone()
-                article_id = article_row.get("id") if article_row else None
+                pruned_duplicates += int(cursor.rowcount or 0)
 
                 publish_provenance = {
                     "timestamp": now.isoformat() + "Z",
                     "actor": "chief_editor",
                     "story_id": story_id,
+                    "cluster_id": cluster_id,
                     "article_id": article_id,
                     "slug": slug,
                     "category": category,
                     "source_model": "rule_based",
+                    "action": publish_action,
+                    "replaced_existing": replaced_existing,
+                    "previous_news_updated_at": previous_news_updated_at.isoformat() + "Z"
+                    if isinstance(previous_news_updated_at, datetime)
+                    else None,
+                    "synthesized_updated_at": source.get("updated_at").isoformat() + "Z"
+                    if isinstance(source.get("updated_at"), datetime)
+                    else None,
+                    "pruned_duplicate_rows": pruned_duplicates,
                 }
 
                 # 4. Mark as Published
@@ -1056,9 +1408,78 @@ def publish_story(story_id: str) -> dict[str, Any]:
                     (json.dumps(existing_meta), story_id),
                 )
 
+                cursor.execute(
+                    """
+                    INSERT INTO news_story_republish_events
+                    (story_id, cluster_id, news_article_id, action, replaced_existing,
+                     synthesized_created_at, synthesized_updated_at, previous_news_updated_at,
+                     occurred_at, metadata)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        story_id,
+                        cluster_id,
+                        article_id,
+                        publish_action,
+                        1 if replaced_existing else 0,
+                        source.get("created_at"),
+                        source.get("updated_at"),
+                        previous_news_updated_at,
+                        now,
+                        json.dumps(publish_provenance),
+                    ),
+                )
+
+                drift_expected_category = drift_signal.get("expected_category")
+                drift_severity = "none"
+                if drift_triggered and remediation.get("llm_adjusted"):
+                    drift_severity = "auto_corrected"
+                elif drift_triggered:
+                    drift_severity = "warning"
+
+                drift_metadata = {
+                    "story_id": story_id,
+                    "cluster_id": cluster_id,
+                    "lane": lane,
+                    "agreement_ratio": drift_signal.get("agreement_ratio"),
+                    "sample_size": drift_signal.get("sample_size"),
+                    "remediation": {
+                        "llm_review_invoked": bool(remediation.get("llm_review_invoked")),
+                        "llm_adjusted": bool(remediation.get("llm_adjusted")),
+                        "llm_confidence": remediation.get("confidence"),
+                    },
+                }
+                cursor.execute(
+                    """
+                    INSERT INTO news_taxonomy_drift_events
+                    (story_id, cluster_id, observed_category, expected_category, lane,
+                     drift_score, threshold_score, llm_review_invoked, llm_adjusted,
+                     final_category, severity, metadata, occurred_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        story_id,
+                        cluster_id,
+                        observed_category,
+                        drift_expected_category,
+                        lane,
+                        drift_score,
+                        drift_threshold,
+                        1 if remediation.get("llm_review_invoked") else 0,
+                        1 if remediation.get("llm_adjusted") else 0,
+                        category,
+                        drift_severity,
+                        json.dumps(drift_metadata),
+                        now,
+                    ),
+                )
+
                 try:
                     payload = {
                         "story_id": story_id,
+                        "cluster_id": cluster_id,
+                        "action": publish_action,
+                        "replaced_existing": replaced_existing,
                         "slug": slug,
                         "title": title,
                         "category": category,

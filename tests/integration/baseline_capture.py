@@ -25,7 +25,7 @@ import argparse
 import socket
 import subprocess
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add app to path
@@ -40,7 +40,7 @@ class BaselineCapture:
         self.verbose = verbose
         self.output_path.parent.mkdir(parents=True, exist_ok=True)
         self.results = {
-            "capture_date": datetime.utcnow().isoformat() + "Z",
+            "capture_date": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "environment": {},
             "metrics": {
                 "ingestion": {},

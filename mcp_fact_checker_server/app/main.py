@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 # Load global environment variables
@@ -51,7 +51,7 @@ async def check_fact_sync(request: FactCheckRequest, api_key: str = Depends(veri
 @app.post("/fact_check/async")
 async def check_fact_async(request: FactCheckRequest, background_tasks: BackgroundTasks, api_key: str = Depends(verify_api_key)):
     job_id = str(uuid.uuid4())
-    jobs[job_id] = JobRecord(job_id=job_id, status=JobStatus.PENDING, created_at=datetime.utcnow())
+    jobs[job_id] = JobRecord(job_id=job_id, status=JobStatus.PENDING, created_at=datetime.now(timezone.utc))
     background_tasks.add_task(process_job, job_id, request)
     return {"job_id": job_id, "status": "pending"}
 

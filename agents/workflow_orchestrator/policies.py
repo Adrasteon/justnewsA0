@@ -408,7 +408,9 @@ def _govern_override(override: dict[str, Any]) -> tuple[dict[str, Any] | None, d
     owner = str(override.get("owner", "")).strip()
     approved_by = str(override.get("approved_by", "")).strip()
     expires_at = _safe_datetime(override.get("expires_at")) if override.get("expires_at") else None
-    now_utc = datetime.utcnow()
+    now_utc = datetime.now(timezone.utc)
+    if expires_at is not None and expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
 
     if require_owner and not owner:
         return None, {"reason": "missing_owner", "required": "owner"}
@@ -430,8 +432,8 @@ def _govern_override(override: dict[str, Any]) -> tuple[dict[str, Any] | None, d
     governed["owner"] = owner
     governed["approved_by"] = approved_by
     if expires_at is not None:
-        governed["expires_at"] = expires_at.isoformat() + "Z"
-    governed["governed_at"] = datetime.utcnow().isoformat() + "Z"
+        governed["expires_at"] = expires_at.isoformat().replace("+00:00", "Z")
+    governed["governed_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     governed["governance"] = {
         "require_owner": require_owner,
         "require_approval": require_approval,
@@ -737,7 +739,7 @@ def _derive_publication_lane_metadata(
         "policy_override_source": override_source,
         "lane1_enabled": lane_verified_enabled,
         "lane2_enabled": lane_developing_enabled,
-        "policy_decision_at": datetime.utcnow().isoformat() + "Z",
+        "policy_decision_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "policy_thresholds": {
             "min_article_count": min_article_count,
             "min_source_count": min_sources,
@@ -903,7 +905,7 @@ def upsert_living_story_record(
     normalized_ids = sorted({int(x) for x in article_ids})
     input_arts_json = json.dumps(normalized_ids)
     fingerprint = _cluster_input_fingerprint(normalized_ids)
-    now_iso = datetime.utcnow().isoformat() + "Z"
+    now_iso = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     generation_event = {
         "timestamp": now_iso,
         "source_agent": "synthesizer",
@@ -1684,7 +1686,15 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
                 updated_dt = _safe_datetime(row[5])
                 recency_score = 0.0
                 if updated_dt is not None:
-                    age_hours = max((datetime.utcnow() - updated_dt).total_seconds() / 3600.0, 0.0)
+                    updated_dt_utc = (
+                        updated_dt.replace(tzinfo=timezone.utc)
+                        if updated_dt.tzinfo is None
+                        else updated_dt.astimezone(timezone.utc)
+                    )
+                    age_hours = max(
+                        (datetime.now(timezone.utc) - updated_dt_utc).total_seconds() / 3600.0,
+                        0.0,
+                    )
                     recency_score = math.exp(-age_hours / 48.0)
 
                 published_bonus = 1.0 if int(row[4] or 0) == 1 else 0.0
@@ -1838,7 +1848,7 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
                 "confidence_score": round(confidence_score, 4),
                 "provisional": bool(provisional),
                 "top_candidates": top_candidates,
-                "decided_at": datetime.utcnow().isoformat() + "Z",
+                "decided_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 "reevaluate_after_minutes": reevaluate_minutes,
             }
             existing_struct["clustering_decision"] = decision_meta
@@ -1876,7 +1886,7 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
             cursor.execute(query, (max(limit * 6, limit),))
             rows = cursor.fetchall()
 
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             for row in rows:
                 article_id = _safe_int(row[0], 0)
                 if article_id <= 0:
@@ -1891,7 +1901,12 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
 
                 in_recheck_window = False
                 if created_at is not None:
-                    age_hours = max((now - created_at).total_seconds() / 3600.0, 0.0)
+                    created_at_utc = (
+                        created_at.replace(tzinfo=timezone.utc)
+                        if created_at.tzinfo is None
+                        else created_at.astimezone(timezone.utc)
+                    )
+                    age_hours = max((now - created_at_utc).total_seconds() / 3600.0, 0.0)
                     in_recheck_window = age_hours <= provisional_window_hours
 
                 if not has_cluster or (provisional and in_recheck_window):

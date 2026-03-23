@@ -25,7 +25,7 @@ Endpoints:
 
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import requests
@@ -548,7 +548,7 @@ async def synthesize_and_publish(request: SynthesisRequest) -> dict[str, Any]:
         synthesis_text = result.get("synthesis", "")
         synthesis_metadata = {
             "provenance": {
-                "generated_at": datetime.utcnow().isoformat() + "Z",
+                "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
                 "source_agent": "synthesizer",
                 "entrypoint": "synthesize_and_publish",
                 "cluster_id": request.cluster_id,

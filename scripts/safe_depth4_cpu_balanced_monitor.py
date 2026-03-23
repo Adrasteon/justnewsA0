@@ -3,7 +3,7 @@ import json
 import os
 import time
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Tuple
 
 import mysql.connector
@@ -139,7 +139,7 @@ def _parse_timestamp(value: str | None) -> datetime | None:
         return None
     for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M:%S'):
         try:
-            return datetime.strptime(text, fmt)
+            return datetime.strptime(text, fmt).replace(tzinfo=timezone.utc)
         except Exception:
             continue
     return None
@@ -170,7 +170,7 @@ def fetch_source_domains() -> tuple[list[str], dict[str, int]]:
     cursor.close()
     conn.close()
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     stats = {
         'total_rows': len(rows),
         'accepted': 0,

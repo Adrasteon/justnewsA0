@@ -86,6 +86,26 @@ Phase-1 behavior is implemented in:
    - Workflow no longer double-writes publish state.
    - Chief Editor marks publish state with idempotent guard (`... WHERE is_published = 0`).
 
+6. **Deterministic publish replacement + republish audit trail**
+   - Publisher writes now resolve a canonical row by `source_cluster_id` (fallback: `story_id`, then suffix slug).
+   - Existing row is updated in-place (not duplicated) so the public article is replaced by the newest meaningful revision.
+   - Duplicate rows for the same `source_cluster_id` / `story_id` are pruned during publish refresh.
+   - Every publish/republish emits a row in `news_story_republish_events` with:
+     - `story_id`, `cluster_id`, `news_article_id`, `action`,
+     - `replaced_existing`,
+     - `synthesized_created_at`, `synthesized_updated_at`,
+     - `previous_news_updated_at`, `occurred_at`,
+     - `metadata` (full provenance payload).
+
+7. **Taxonomy drift monitoring + LLM remediation loop**
+    - Publish path computes category drift against recent publish history.
+    - Drift tolerance is lane-aware:
+       - stable lanes use stricter threshold,
+       - `developing_brief` uses higher threshold to tolerate natural evolution.
+    - When drift exceeds threshold, an LLM review is invoked for category remediation.
+    - If model confidence clears `LIVING_STORY_DRIFT_REMEDIATION_MIN_CONFIDENCE`, category is auto-corrected and title/summary are regenerated.
+    - Every publish emits a `news_taxonomy_drift_events` record with drift score, threshold, lane, severity, and remediation outcomes.
+
 ---
 
 ## Decision Logic (Meaningful vs No-op)
@@ -241,6 +261,52 @@ LIMIT 1;
 ```
 
 This report summarizes action distribution, calibration profile usage, override rejections, and publish-latency trends.
+
+### 6) Verify republish replacement events
+
+```sql
+SELECT story_id,
+       cluster_id,
+       news_article_id,
+       action,
+       replaced_existing,
+       previous_news_updated_at,
+       synthesized_updated_at,
+       occurred_at
+FROM news_story_republish_events
+ORDER BY occurred_at DESC
+LIMIT 50;
+```
+
+Expected signals:
+- `action='republished_update'` appears for meaningful revisions.
+- `replaced_existing=1` confirms the canonical article row was updated in place.
+- `previous_news_updated_at` populated for replacement events.
+
+### 7) Verify taxonomy drift loop events
+
+```sql
+SELECT story_id,
+       cluster_id,
+       observed_category,
+       expected_category,
+       lane,
+       drift_score,
+       threshold_score,
+       llm_review_invoked,
+       llm_adjusted,
+       final_category,
+       severity,
+       occurred_at
+FROM news_taxonomy_drift_events
+ORDER BY occurred_at DESC
+LIMIT 50;
+```
+
+Expected signals:
+- `severity='none'` for normal runs.
+- `severity='warning'` when drift exceeded threshold but not auto-corrected.
+- `severity='auto_corrected'` when LLM remediation changed category.
 
 ---
 
