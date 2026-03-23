@@ -1,0 +1,38 @@
+{
+  "status_code": 200,
+  "body": {
+    "status": "ok",
+    "version": 399,
+    "previous_version": 398,
+    "applied": {
+      "orchestrator.max_concurrent_tasks": 3,
+      "orchestrator.polling_interval_seconds": 6
+    },
+    "warnings": [],
+    "blocked_non_hot": [],
+    "impacted_services": [
+      "workflow_orchestrator"
+    ],
+    "inverse_rollback": {
+      "method": "rollback_to_version",
+      "target_version": 398,
+      "inverse_patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 17
+      }
+    },
+    "updated_at": "2026-03-23T14:24:05.838083Z",
+    "tier": "tier1",
+    "owner_apply_result": {
+      "applied": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 3,
+        "orchestrator.polling_interval_seconds": 6
+      },
+      "ignored": {}
+    },
+    "owner": "workflow_orchestrator"
+  }
+}

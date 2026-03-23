@@ -1,0 +1,46 @@
+{
+  "baseline": {
+    "timestamp": "2026-03-23T14:23:52.883281+00:00",
+    "runtime": {
+      "polling_interval_seconds": 17,
+      "max_concurrent_tasks": 1,
+      "runtime_config_version": 398
+    },
+    "autonomic_last_reason": "stable_no_change",
+    "queue": {
+      "orchestrator_policy_queue_total": 5,
+      "articles_analyze_pending": 62,
+      "articles_embed_pending": 0,
+      "articles_fact_check_pending": 0,
+      "articles_cluster_pending": 309,
+      "articles_synthesis_pending": 34
+    }
+  },
+  "final": {
+    "timestamp": "2026-03-23T14:54:47.485493+00:00",
+    "runtime": {
+      "polling_interval_seconds": 9,
+      "max_concurrent_tasks": 1,
+      "runtime_config_version": 402
+    },
+    "autonomic_last_reason": "resource_pressure",
+    "queue": {
+      "orchestrator_policy_queue_total": 8,
+      "articles_analyze_pending": 28,
+      "articles_embed_pending": 0,
+      "articles_fact_check_pending": 0,
+      "articles_cluster_pending": 305,
+      "articles_synthesis_pending": 37
+    }
+  },
+  "sample_count": 31,
+  "window_minutes": 30.13,
+  "delta": {
+    "orchestrator_policy_queue_total": 3,
+    "articles_analyze_pending": -34,
+    "articles_embed_pending": 0,
+    "articles_fact_check_pending": 0,
+    "articles_cluster_pending": -4,
+    "articles_synthesis_pending": 3
+  }
+}

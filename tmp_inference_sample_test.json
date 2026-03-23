@@ -1,0 +1,179 @@
+{
+  "summary": {
+    "timestamp_utc": "2026-03-23T16:36:24.151596+00:00",
+    "target_url": "http://vllm:8010/v1/chat/completions",
+    "model": "Qwen/Qwen2.5-14B-Instruct-AWQ",
+    "iterations": 20,
+    "ok_count": 20,
+    "fail_count": 0,
+    "success_rate": 100.0,
+    "latency_seconds": {
+      "min": 0.213,
+      "max": 0.392,
+      "avg": 0.353
+    },
+    "errors": []
+  },
+  "samples": [
+    {
+      "index": 1,
+      "timestamp_utc": "2026-03-23T16:31:31.655037+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.392,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 2,
+      "timestamp_utc": "2026-03-23T16:31:47.081598+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.378,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 3,
+      "timestamp_utc": "2026-03-23T16:32:02.473602+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.35,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 4,
+      "timestamp_utc": "2026-03-23T16:32:17.856414+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.384,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 5,
+      "timestamp_utc": "2026-03-23T16:32:33.246370+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.362,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 6,
+      "timestamp_utc": "2026-03-23T16:32:48.643134+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.39,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 7,
+      "timestamp_utc": "2026-03-23T16:33:04.043112+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.355,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 8,
+      "timestamp_utc": "2026-03-23T16:33:19.426095+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.379,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 9,
+      "timestamp_utc": "2026-03-23T16:33:34.840267+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.366,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 10,
+      "timestamp_utc": "2026-03-23T16:33:50.220589+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.39,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 11,
+      "timestamp_utc": "2026-03-23T16:34:05.645005+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.355,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 12,
+      "timestamp_utc": "2026-03-23T16:34:21.015456+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.384,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 13,
+      "timestamp_utc": "2026-03-23T16:34:36.431379+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.369,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 14,
+      "timestamp_utc": "2026-03-23T16:34:51.809040+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.39,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 15,
+      "timestamp_utc": "2026-03-23T16:35:07.228484+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.367,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 16,
+      "timestamp_utc": "2026-03-23T16:35:22.608904+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.305,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 17,
+      "timestamp_utc": "2026-03-23T16:35:37.942559+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.243,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 18,
+      "timestamp_utc": "2026-03-23T16:35:53.193911+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.378,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 19,
+      "timestamp_utc": "2026-03-23T16:36:08.606306+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.318,
+      "ok": true,
+      "response_preview": "OK"
+    },
+    {
+      "index": 20,
+      "timestamp_utc": "2026-03-23T16:36:23.938293+00:00",
+      "http_status": 200,
+      "latency_seconds": 0.213,
+      "ok": true,
+      "response_preview": "OK"
+    }
+  ]
+}
