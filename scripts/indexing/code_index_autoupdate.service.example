@@ -1,0 +1,10 @@
+# Example systemd user unit for autonomous code index refresh.
+# Install to ~/.config/systemd/user/code-index-autoupdate.service
+
+[Unit]
+Description=JustNews Local Code Index Auto Update (user)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/app
+ExecStart=/usr/bin/env python3 /app/scripts/indexing/autonomous_index_update.py --root /app --index-dir .cache/code_index

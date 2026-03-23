@@ -1,0 +1,13 @@
+# Example systemd user timer for periodic code index refresh.
+# Install to ~/.config/systemd/user/code-index-autoupdate.timer
+
+[Unit]
+Description=Run code index auto update periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=15min
+Unit=code-index-autoupdate.service
+
+[Install]
+WantedBy=timers.target

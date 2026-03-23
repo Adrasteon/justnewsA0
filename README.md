@@ -18,6 +18,7 @@ This includes Search Console/Bing submission, live-domain sitemap/feed verificat
 - **Architecture**: [docs/architecture_overview.md](docs/architecture_overview.md)
 - **Workflow Orchestrator**: [docs/orchestrator/WORKFLOW_ORCHESTRATOR.md](docs/orchestrator/WORKFLOW_ORCHESTRATOR.md)
 - **Developer Guide**: [docs/developer/README.md](docs/developer/README.md)
+- **Code Index + Memory Playbook**: [docs/developer/CODE_INDEX_MEMORY_PLAYBOOK.md](docs/developer/CODE_INDEX_MEMORY_PLAYBOOK.md)
 - **Diagnostic Tools**: [docs/tools/DIAGNOSTIC_SCRIPTS.md](docs/tools/DIAGNOSTIC_SCRIPTS.md)
 - **API Reference**: [docs/api/README.md](docs/api/README.md)
 - **Operations**: [docs/operations/README.md](docs/operations/README.md)

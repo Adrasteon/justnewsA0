@@ -30,11 +30,25 @@ help:
 	@echo "  alertmanager-status     Show Alertmanager status and API info"
 	@echo "  alertmanager-test       Send a test alert to local Alertmanager instance"
 	@echo "  monitoring-check        Run Prometheus & Grafana validity checks (pytest tests/monitoring)"
+	@echo "  index-build             Build or incrementally refresh local code index"
+	@echo "  index-build-full        Force full rebuild of local code index"
+	@echo "  index-query             Query local code index (use QUERY='...')"
+	@echo "  index-auto-install      Install code index auto-update user service+timer"
+	@echo "  index-auto-enable       Enable/start periodic code index timer"
+	@echo "  index-auto-disable      Disable/stop periodic code index timer"
+	@echo "  index-auto-status       Show code index timer/service status"
+	@echo "  index-auto-run-now      Run one immediate autonomous index refresh"
+	@echo "  index-bootstrap         Show new-chat index/bootstrap status"
+	@echo "  index-bootstrap-json    Write new-chat bootstrap snapshot as JSON"
+	@echo "  index-telemetry-summary Summarize lightweight indexing telemetry"
+	@echo "  index-telemetry-tail    Show recent telemetry events"
 	@echo ""
 	@echo "Environment variables:"
 	@echo "  ENV         Target environment (development/staging/production)"
 	@echo "  VERSION     Release version (for release target)"
 	@echo "  DOCKER_TAG  Docker image tag (for deploy target)"
+	@echo "  TELEMETRY_PATH  JSONL path for indexing telemetry events"
+	@echo "  BOOTSTRAP_JSON_PATH  Output path for bootstrap JSON snapshot"
 
 # Environment setup
 ENV ?= development
@@ -244,6 +258,90 @@ docs-validate:
 ci-check: check-processing-time lint test security-check
 	$(call log_success,"CI checks passed")
 
+# Local code indexing and retrieval (RAG helper)
+QUERY ?=
+TELEMETRY_PATH ?= run/indexing_telemetry.jsonl
+BOOTSTRAP_JSON_PATH ?= run/index_bootstrap.json
+
+index-build:
+	$(call log_info,"Building incremental local code index...")
+	python3 scripts/indexing/build_code_index.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
+	$(call log_success,"Local code index refreshed")
+
+index-build-full:
+	$(call log_info,"Building full local code index (no reuse)...")
+	python3 scripts/indexing/build_code_index.py --root . --index-dir .cache/code_index --full --telemetry-path "$(TELEMETRY_PATH)"
+	$(call log_success,"Full local code index rebuilt")
+
+index-query:
+	@if [ -z "$(QUERY)" ]; then \
+		echo "Usage: make index-query QUERY='publish republish taxonomy drift'"; \
+		exit 1; \
+	fi
+	$(call log_info,"Querying local code index...")
+	python3 scripts/indexing/query_code_index.py "$(QUERY)" --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
+
+index-auto-install:
+	$(call log_info,"Installing code index auto-update user units")
+	@mkdir -p ~/.config/systemd/user
+	@cp scripts/indexing/code_index_autoupdate.service.example ~/.config/systemd/user/code-index-autoupdate.service
+	@cp scripts/indexing/code_index_autoupdate.timer.example ~/.config/systemd/user/code-index-autoupdate.timer
+	@if systemctl --user daemon-reload >/dev/null 2>&1; then \
+		echo "systemd user units reloaded"; \
+	else \
+		echo "systemd user bus unavailable; daemon fallback will be used"; \
+	fi
+	$(call log_success,"Code index auto-update units/scripts installed")
+
+index-auto-enable:
+	$(call log_info,"Enabling and starting code index auto-update timer")
+	@if systemctl --user enable --now code-index-autoupdate.timer >/dev/null 2>&1; then \
+		echo "code-index-autoupdate.timer enabled"; \
+	else \
+		echo "systemd user bus unavailable; starting daemon fallback"; \
+		bash scripts/indexing/index_autoupdate_daemon.sh start; \
+	fi
+	$(call log_success,"Code index auto-update enabled")
+
+index-auto-disable:
+	$(call log_info,"Disabling and stopping code index auto-update timer")
+	@systemctl --user disable --now code-index-autoupdate.timer >/dev/null 2>&1 || true
+	@bash scripts/indexing/index_autoupdate_daemon.sh stop >/dev/null 2>&1 || true
+	$(call log_success,"Code index auto-update timer disabled")
+
+index-auto-status:
+	$(call log_info,"Code index auto-update status")
+	@if systemctl --user status code-index-autoupdate.timer --no-pager --lines=5 >/dev/null 2>&1; then \
+		systemctl --user status code-index-autoupdate.timer --no-pager --lines=5 || true; \
+		systemctl --user status code-index-autoupdate.service --no-pager --lines=5 || true; \
+	else \
+		echo "systemd user bus unavailable; daemon fallback status:"; \
+		bash scripts/indexing/index_autoupdate_daemon.sh status; \
+	fi
+
+index-auto-run-now:
+	$(call log_info,"Running immediate autonomous index refresh")
+	@python3 scripts/indexing/autonomous_index_update.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
+	$(call log_success,"Autonomous index refresh completed")
+
+index-bootstrap:
+	$(call log_info,"Collecting new-chat bootstrap context")
+	@python3 scripts/indexing/bootstrap_context.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
+
+index-bootstrap-json:
+	$(call log_info,"Writing new-chat bootstrap JSON snapshot")
+	@mkdir -p "$(dir $(BOOTSTRAP_JSON_PATH))"
+	@python3 scripts/indexing/bootstrap_context.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)" --json > "$(BOOTSTRAP_JSON_PATH)"
+	@echo "Wrote $(BOOTSTRAP_JSON_PATH)"
+
+index-telemetry-summary:
+	$(call log_info,"Summarizing indexing telemetry")
+	@python3 scripts/indexing/telemetry_summary.py --path "$(TELEMETRY_PATH)"
+
+index-telemetry-tail:
+	$(call log_info,"Showing recent indexing telemetry events")
+	@tail -n 20 "$(TELEMETRY_PATH)" || true
+
 # Validate global.env has PYTHON_BIN (CI-friendly check; does not require root)
 .PHONY: check-global-env
 check-global-env:
@@ -318,7 +416,7 @@ dev-update:
 	$(call log_success,"Dependencies updated")
 
 # GPU Monitor management
-.PHONY: monitor-install monitor-enable monitor-disable monitor-install-rotate monitor-status monitor-tail alertmanager-install alertmanager-enable alertmanager-disable alertmanager-status alertmanager-test
+.PHONY: monitor-install monitor-enable monitor-disable monitor-install-rotate monitor-status monitor-tail alertmanager-install alertmanager-enable alertmanager-disable alertmanager-status alertmanager-test index-auto-install index-auto-enable index-auto-disable index-auto-status index-auto-run-now index-bootstrap index-bootstrap-json index-telemetry-summary index-telemetry-tail
 
 monitor-install:
 	$(call log_info,"Installing GPU monitor user systemd unit (copies example to ~/.config/systemd/user)")

@@ -1,5 +1,9 @@
 # JustNews Developer Documentation
 
+## Quick Links
+
+- [Code Index + Memory Playbook](CODE_INDEX_MEMORY_PLAYBOOK.md)
+
 ## Architecture Overview
 
 JustNews is a distributed multi-agent system for automated news analysis, featuring GPU acceleration, continuous

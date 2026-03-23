@@ -121,3 +121,6 @@ run/
 model_store/
 db.sqlite3
 fact_checker_deprecation_archive/
+
+# Local code index artifacts (RAG helper)
+.cache/code_index/
