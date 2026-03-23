@@ -46,6 +46,33 @@ Provide operators with safe procedures to enable, monitor, troubleshoot, and rol
 - Resource saturation (CPU/memory/GPU)
 - Config propagation lag and apply failures
 
+## 5.1 Throughput-First Reliable Control Profile
+
+The orchestrator now supports a backlog-floor recovery action that restores bounded throughput when queue pressure rises and resources are still healthy.
+
+Decision behavior:
+- `resource_pressure`: reduce `max_concurrent_tasks`, increase `polling_interval_seconds`
+- `downstream_stall_recovery`: increase `max_concurrent_tasks`, decrease `polling_interval_seconds`
+- `queue_backlog_floor_recovery`: if backlog pressure is present and runtime settings are below throughput floor, restore floor values
+- `stable_no_change`: no patch
+
+Backlog-floor recovery guardrails:
+- Only considered when resources are healthy and not under saturation pressure
+- Uses the same damping streak logic as other actions (`AUTONOMIC_ACTION_STREAK_REQUIRED`)
+- Uses existing cooldown and action-budget guardrails
+- Uses existing runtime key allowlist/denylist and auto-rollback SLO protections
+
+Recommended throughput-first, reliability-safe environment settings:
+- `AUTONOMIC_QUEUE_RECOVERY_DEPTH=8`
+- `AUTONOMIC_QUEUE_RECOVERY_PRESSURE_SCORE=10.0`
+- `AUTONOMIC_THROUGHPUT_FLOOR_MAX_CONCURRENT_TASKS=3`
+- `AUTONOMIC_THROUGHPUT_FLOOR_POLLING_INTERVAL_SECONDS=6`
+
+Interpretation:
+- Keep floor values moderate. Higher floors can improve drain speed but increase risk of contention.
+- Keep dynamic per-policy controls enabled to absorb local bottlenecks while global floor drives end-to-end flow.
+- If rollback events occur, lower floor task count first before widening cooldown or disabling active mode.
+
 ## 6. Incident Triggers and Immediate Actions
 
 ### Trigger: Error-rate spike
@@ -98,6 +125,15 @@ Advance only if all are true for two consecutive windows:
 - [ ] Post-change verification completed
 - [ ] Rollback readiness confirmed
 - [ ] Incident notes updated (if applicable)
+
+### 9.1 Throughput Validation Checklist
+
+- [ ] Capture pre-change baseline: queue depth, effective poll interval, effective max concurrent tasks
+- [ ] Enable backlog-floor settings and keep autonomic mode in `active` only for canary scope
+- [ ] Verify `/status` decision tail includes `queue_backlog_floor_recovery` when backlog is present
+- [ ] Verify no sustained increase in tick error rate or repeated auto-rollbacks
+- [ ] Confirm queue depth trend decreases faster than baseline over equivalent window
+- [ ] Record final accepted floor settings and decision evidence in ops notes
 
 ## 10. Post-Incident Review Template
 

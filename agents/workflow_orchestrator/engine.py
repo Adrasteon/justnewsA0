@@ -47,6 +47,11 @@ AUTONOMIC_REASON_METADATA: dict[str, dict[str, str]] = {
         "reason_detail": "Downstream progress stalled while resources remain healthy.",
         "expected_effect": "Increase task pressure and tighten polling to recover flow.",
     },
+    "queue_backlog_floor_recovery": {
+        "reason_code": "AUTO_SCALE_UP_BACKLOG_RECOVERY",
+        "reason_detail": "Backlog pressure detected with healthy resources below throughput floor.",
+        "expected_effect": "Restore bounded throughput floor to accelerate queue drain.",
+    },
     "feature_flag_disabled": {
         "reason_code": "AUTO_DISABLED_BY_FLAG",
         "reason_detail": "Autonomic decisions are disabled by configuration.",
@@ -135,6 +140,36 @@ class OrchestratorEngine:
         self.autonomic_action_streak_required = max(
             1,
             int(os.environ.get("AUTONOMIC_ACTION_STREAK_REQUIRED", "2")),
+        )
+        self.autonomic_queue_recovery_depth = max(
+            1,
+            int(os.environ.get("AUTONOMIC_QUEUE_RECOVERY_DEPTH", "8")),
+        )
+        self.autonomic_queue_recovery_pressure_score = max(
+            0.0,
+            float(os.environ.get("AUTONOMIC_QUEUE_RECOVERY_PRESSURE_SCORE", "10.0")),
+        )
+        self.autonomic_throughput_floor_tasks = min(
+            30,
+            max(
+                1,
+                int(
+                    os.environ.get(
+                        "AUTONOMIC_THROUGHPUT_FLOOR_MAX_CONCURRENT_TASKS", "3"
+                    )
+                ),
+            ),
+        )
+        self.autonomic_throughput_floor_poll_seconds = min(
+            30,
+            max(
+                1,
+                int(
+                    os.environ.get(
+                        "AUTONOMIC_THROUGHPUT_FLOOR_POLLING_INTERVAL_SECONDS", "6"
+                    )
+                ),
+            ),
         )
         self.alert_staleness_seconds = max(
             10,
@@ -1063,12 +1098,26 @@ class OrchestratorEngine:
         )
 
         queue_pressure = self._build_queue_pressure_state()
+        total_queue_depth = int(queue_pressure.get("total_queue_depth", 0) or 0)
+        hottest_pressure_score = float(
+            queue_pressure.get("hottest_pressure_score", 0.0) or 0.0
+        )
+        backlog_pressure = (
+            total_queue_depth >= self.autonomic_queue_recovery_depth
+            or hottest_pressure_score >= self.autonomic_queue_recovery_pressure_score
+        )
+        below_throughput_floor = (
+            current_tasks < self.autonomic_throughput_floor_tasks
+            or current_poll > self.autonomic_throughput_floor_poll_seconds
+        )
 
         candidate_reason = "stable_no_change"
         if pressure_detected:
             candidate_reason = "resource_pressure"
         elif stalled and self._last_resource_healthy:
             candidate_reason = "downstream_stall_recovery"
+        elif backlog_pressure and below_throughput_floor and self._last_resource_healthy:
+            candidate_reason = "queue_backlog_floor_recovery"
 
         if candidate_reason == self._autonomic_last_candidate_reason:
             self._autonomic_candidate_reason_streak += 1
@@ -1093,6 +1142,20 @@ class OrchestratorEngine:
         elif reason == "downstream_stall_recovery":
             proposed_patch["orchestrator.polling_interval_seconds"] = max(1, current_poll - 1)
             proposed_patch["orchestrator.max_concurrent_tasks"] = min(30, current_tasks + 1)
+        elif reason == "queue_backlog_floor_recovery":
+            # Restore a bounded throughput floor when backlog is present.
+            target_tasks = max(
+                min(30, current_tasks + 1),
+                min(30, self.autonomic_throughput_floor_tasks),
+            )
+            target_poll = min(
+                max(1, current_poll - 1),
+                self.autonomic_throughput_floor_poll_seconds,
+            )
+            if target_tasks != current_tasks:
+                proposed_patch["orchestrator.max_concurrent_tasks"] = target_tasks
+            if target_poll != current_poll:
+                proposed_patch["orchestrator.polling_interval_seconds"] = target_poll
 
         return {
             "reason": reason,
@@ -1110,12 +1173,16 @@ class OrchestratorEngine:
                 "stall_threshold_seconds": stall_threshold,
                 "stalled": stalled,
                 "queue_pressure_summary": {
-                    "total_queue_depth": queue_pressure.get("total_queue_depth", 0),
+                    "total_queue_depth": total_queue_depth,
                     "max_queue_depth": queue_pressure.get("max_queue_depth", 0),
                     "hottest_policy": queue_pressure.get("hottest_policy"),
-                    "hottest_pressure_score": queue_pressure.get(
-                        "hottest_pressure_score"
-                    ),
+                    "hottest_pressure_score": hottest_pressure_score,
+                    "backlog_pressure": backlog_pressure,
+                    "queue_recovery_depth": self.autonomic_queue_recovery_depth,
+                    "queue_recovery_pressure_score": self.autonomic_queue_recovery_pressure_score,
+                    "below_throughput_floor": below_throughput_floor,
+                    "throughput_floor_max_concurrent_tasks": self.autonomic_throughput_floor_tasks,
+                    "throughput_floor_polling_interval_seconds": self.autonomic_throughput_floor_poll_seconds,
                 },
                 "damping": {
                     "candidate_reason": candidate_reason,
