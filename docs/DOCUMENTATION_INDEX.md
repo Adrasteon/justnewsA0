@@ -148,6 +148,8 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Crawl4AI Prioritized Improvement Roadmap (2026-03-24)](./operations/CRAWL4AI_PRIORITIZED_IMPROVEMENT_ROADMAP.md) — Highest-impact Crawl4AI upgrade sequence, KPIs, and rollout tracker for JustNews
 
+- [Hermes JustNews Operating Playbook](./operations/HERMES_JUSTNEWS_OPERATING_PLAYBOOK.md) — Practical Hermes workflows for development, ops triage, PR preflight, and release checks
+
 **Deployment & Infrastructure**:
 
 - [Systemd Operations](./infrastructure/systemd/README.md) — Service management

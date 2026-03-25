@@ -40,6 +40,8 @@
 
 - [Crawl4AI Prioritized Improvement Roadmap (2026-03-24)](./CRAWL4AI_PRIORITIZED_IMPROVEMENT_ROADMAP.md) — Canonical implementation roadmap for highest-impact Crawl4AI upgrades in JustNews
 
+- [Hermes JustNews Operating Playbook](./HERMES_JUSTNEWS_OPERATING_PLAYBOOK.md) — Standardized Hermes workflows for daily development, PR preflight, incident triage, and release readiness
+
 - [Multi-Source Refactor Lane 2 Crawl Fallback Runbook (2026-03-17)](./MULTI_SOURCE_REFACTOR_LANE2_FALLBACK_RUNBOOK_2026-03-17.md)
 
 - [Multi-Source Refactor M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md)
