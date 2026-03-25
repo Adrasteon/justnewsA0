@@ -40,6 +40,7 @@ help:
 	@echo "  index-auto-run-now      Run one immediate autonomous index refresh"
 	@echo "  index-bootstrap         Show new-chat index/bootstrap status"
 	@echo "  index-bootstrap-json    Write new-chat bootstrap snapshot as JSON"
+	@echo "  index-hermes-daily      Run daily Hermes refresh workflow"
 	@echo "  index-telemetry-summary Summarize lightweight indexing telemetry"
 	@echo "  index-telemetry-tail    Show recent telemetry events"
 	@echo ""
@@ -334,6 +335,11 @@ index-bootstrap-json:
 	@python3 scripts/indexing/bootstrap_context.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)" --json > "$(BOOTSTRAP_JSON_PATH)"
 	@echo "Wrote $(BOOTSTRAP_JSON_PATH)"
 
+index-hermes-daily:
+	$(call log_info,"Running daily Hermes/index refresh workflow")
+	@bash scripts/indexing/daily_hermes_refresh.sh
+	$(call log_success,"Daily Hermes/index refresh workflow completed")
+
 index-telemetry-summary:
 	$(call log_info,"Summarizing indexing telemetry")
 	@python3 scripts/indexing/telemetry_summary.py --path "$(TELEMETRY_PATH)"
@@ -416,7 +422,7 @@ dev-update:
 	$(call log_success,"Dependencies updated")
 
 # GPU Monitor management
-.PHONY: monitor-install monitor-enable monitor-disable monitor-install-rotate monitor-status monitor-tail alertmanager-install alertmanager-enable alertmanager-disable alertmanager-status alertmanager-test index-auto-install index-auto-enable index-auto-disable index-auto-status index-auto-run-now index-bootstrap index-bootstrap-json index-telemetry-summary index-telemetry-tail
+.PHONY: monitor-install monitor-enable monitor-disable monitor-install-rotate monitor-status monitor-tail alertmanager-install alertmanager-enable alertmanager-disable alertmanager-status alertmanager-test index-auto-install index-auto-enable index-auto-disable index-auto-status index-auto-run-now index-bootstrap index-bootstrap-json index-hermes-daily index-telemetry-summary index-telemetry-tail
 
 monitor-install:
 	$(call log_info,"Installing GPU monitor user systemd unit (copies example to ~/.config/systemd/user)")

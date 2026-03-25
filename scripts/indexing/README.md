@@ -33,6 +33,7 @@ make index-auto-install
 make index-auto-enable
 make index-bootstrap
 make index-bootstrap-json
+make index-hermes-daily
 make index-telemetry-summary
 ```
 
@@ -50,6 +51,16 @@ Write a JSON snapshot to file:
 make index-bootstrap-json
 BOOTSTRAP_JSON_PATH=run/custom_bootstrap.json make index-bootstrap-json
 ```
+
+Run the full daily Hermes refresh workflow:
+
+```bash
+make index-hermes-daily
+bash scripts/indexing/daily_hermes_refresh.sh
+```
+
+This workflow runs session init bootstrap, incremental index refresh, bootstrap JSON snapshot,
+and a telemetry summary in one pass.
 
 ## Lightweight Telemetry
 
