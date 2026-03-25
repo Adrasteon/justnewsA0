@@ -777,7 +777,43 @@ class TestCrawlerEngine:
             assert result["total_articles"] == 1
             assert result["duplicates_skipped"] == 1
             assert result["site_breakdown"]["lane2.com"] == 1
+            assert result["lane2_fallback"]["enabled"] is True
+            assert result["lane2_fallback"]["triggered"] is True
+            assert result["lane2_fallback"]["attempted_sites"] == 1
+            assert result["lane2_fallback"]["ingested"] == 1
+            assert result["lane2_fallback"]["attempted_domains"] == ["lane2.com"]
+            assert isinstance(result["preflight"], dict)
             assert mock_ingest.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_crawl_multiple_sites_strict_preflight_abort(
+        self, crawler_engine, mock_site_config
+    ):
+        """Strict preflight should abort early when required dependencies are down."""
+        site_configs = [mock_site_config]
+
+        with (
+            patch.dict(
+                "os.environ",
+                {
+                    "USE_HITL": "1",
+                    "UNIFIED_CRAWLER_PREFLIGHT_STRICT": "1",
+                },
+                clear=False,
+            ),
+            patch("agents.crawler.crawler_engine.requests.get", side_effect=Exception("down")),
+            patch.object(crawler_engine, "crawl_site") as mock_crawl_site,
+        ):
+            result = await crawler_engine.crawl_multiple_sites(
+                site_configs,
+                max_articles_per_site=1,
+            )
+
+            assert result["sites_crawled"] == 0
+            assert result["total_articles"] == 0
+            assert result["lane2_fallback"]["triggered"] is False
+            assert result["preflight"]["ready"] is False
+            mock_crawl_site.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_crawl_multiple_sites_lane2_fallback_skips_blocked_source(

@@ -376,6 +376,14 @@ def get_active_sources(
     try:
         with _get_conn() as conn:
             state_supported = _supports_source_state_column(conn)
+            source_intel_enabled = _env_bool(
+                "UNIFIED_CRAWLER_SOURCE_INTELLIGENCE_ENABLED", default=True
+            )
+
+            if source_intel_enabled:
+                conditions.append(
+                    "(crawl_blocked_until IS NULL OR crawl_blocked_until <= NOW())"
+                )
 
             eligible_states = [
                 "trusted_whitelist",
@@ -396,7 +404,14 @@ def get_active_sources(
 
             if conditions:
                 sql += " WHERE " + " AND ".join(conditions)
-            sql += " ORDER BY last_verified IS NULL, last_verified DESC"
+            if source_intel_enabled:
+                sql += (
+                    " ORDER BY COALESCE(crawl_quality_score, 0.0) DESC,"
+                    " COALESCE(last_candidate_count, 0) DESC,"
+                    " last_verified IS NULL, last_verified DESC"
+                )
+            else:
+                sql += " ORDER BY last_verified IS NULL, last_verified DESC"
 
             if limit is not None:
                 sql += " LIMIT %s"
@@ -404,7 +419,32 @@ def get_active_sources(
 
             cursor = conn.cursor(dictionary=True)
             try:
-                cursor.execute(sql, tuple(params_list))
+                try:
+                    cursor.execute(sql, tuple(params_list))
+                except mysql.connector.Error as exc:
+                    if (
+                        source_intel_enabled
+                        and "unknown column" in str(exc).lower()
+                    ):
+                        fallback_sql = "SELECT * FROM sources"
+                        if state_supported and conditions:
+                            fallback_conditions = [
+                                c
+                                for c in conditions
+                                if "crawl_blocked_until" not in c
+                            ]
+                            if fallback_conditions:
+                                fallback_sql += " WHERE " + " AND ".join(
+                                    fallback_conditions
+                                )
+                        fallback_sql += (
+                            " ORDER BY last_verified IS NULL, last_verified DESC"
+                        )
+                        if limit is not None:
+                            fallback_sql += " LIMIT %s"
+                        cursor.execute(fallback_sql, tuple(params_list))
+                    else:
+                        raise
                 rows = cursor.fetchall()
                 return [_normalize_row(row) for row in rows]
             finally:
@@ -449,6 +489,88 @@ def update_source_crawling_strategy(source_id: int, strategy: str) -> None:
                 cursor.close()
     except mysql.connector.Error:
         logger.debug("Failed to persist crawling strategy for source_id=%s", source_id)
+
+
+def record_source_crawl_outcome(
+    *,
+    source_id: int | None,
+    domain: str | None,
+    attempted: int,
+    ingested: int,
+    errors: int,
+    paywalls: int,
+    blocked: bool = False,
+) -> None:
+    """Persist compact source crawl outcomes used for future scheduling.
+
+    This keeps source intelligence lean and avoids storing per-run blobs.
+    """
+
+    if source_id is None and not domain:
+        return
+
+    where_clause = "id = %s" if source_id is not None else "LOWER(domain) = %s"
+    where_value: Any = source_id if source_id is not None else str(domain).lower()
+
+    outcome = "success"
+    if blocked and ingested <= 0:
+        outcome = "blocked"
+    elif errors > 0 and ingested <= 0:
+        outcome = "error"
+    elif paywalls > 0 and ingested <= 0:
+        outcome = "paywall"
+    elif attempted > 0 and ingested <= 0:
+        outcome = "zero_yield"
+
+    # Repeated failures trigger a temporary block to reduce anti-bot pressure.
+    should_increment_fail_streak = outcome in {
+        "blocked",
+        "error",
+        "paywall",
+        "zero_yield",
+    }
+
+    sql = (
+        "UPDATE sources "
+        "SET last_crawl_at = NOW(), "
+        "last_crawl_outcome = %s, "
+        "last_candidate_count = %s, "
+        "crawl_fail_streak = CASE WHEN %s THEN COALESCE(crawl_fail_streak, 0) + 1 ELSE 0 END, "
+        "crawl_quality_score = CASE "
+        "  WHEN %s > 0 THEN LEAST(1.0, COALESCE(crawl_quality_score, 0.0) + 0.08) "
+        "  WHEN %s > 0 THEN GREATEST(0.0, COALESCE(crawl_quality_score, 0.0) - 0.04) "
+        "  ELSE GREATEST(0.0, COALESCE(crawl_quality_score, 0.0) - 0.02) "
+        "END, "
+        "crawl_blocked_until = CASE "
+        "  WHEN %s AND COALESCE(crawl_fail_streak, 0) + 1 >= 3 THEN DATE_ADD(NOW(), INTERVAL 45 MINUTE) "
+        "  WHEN %s THEN crawl_blocked_until "
+        "  ELSE NULL "
+        "END, "
+        "updated_at = NOW() "
+        f"WHERE {where_clause}"
+    )
+
+    params = (
+        outcome,
+        max(0, int(attempted)),
+        should_increment_fail_streak,
+        max(0, int(ingested)),
+        max(0, int(errors + paywalls)),
+        should_increment_fail_streak,
+        should_increment_fail_streak,
+        where_value,
+    )
+
+    try:
+        with _get_conn() as conn:
+            cursor = conn.cursor()
+            try:
+                cursor.execute(sql, params)
+                conn.commit()
+            finally:
+                cursor.close()
+    except mysql.connector.Error:
+        logger.debug("Failed to persist crawl outcome for %s", domain or source_id)
 
 
 def record_crawling_performance(
@@ -643,5 +765,6 @@ __all__ = [
     "initialize_connection_pool",
     "record_crawling_performance",
     "record_paywall_detection",
+    "record_source_crawl_outcome",
     "update_source_crawling_strategy",
 ]

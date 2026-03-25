@@ -21,6 +21,9 @@ profiles:
     run_config:
       word_count_threshold: 60
       exclude_external_links: true
+      check_robots_txt: true
+      scan_full_page: true
+      semaphore_count: 5
       remove_overlay_elements: true
       process_iframes: false
       table_score_threshold: 8
@@ -35,6 +38,11 @@ profiles:
       include_external: false
       max_links: 100
       concurrency: 3
+    dispatcher:
+      type: memory
+      memory_threshold_percent: 80
+      check_interval: 1.0
+      max_session_permit: 6
     adaptive:
       confidence_threshold: 0.7
       max_pages: 12
@@ -42,6 +50,7 @@ profiles:
       min_gain_threshold: 0.05
     extra:
       query: "latest headlines {domain}"
+      use_arun_many: true
   deep_financial_sections:
     description: "Deeper section crawl for complex financial publishers"
     engine: crawl4ai
@@ -57,6 +66,15 @@ profiles:
     run_config:
       word_count_threshold: 80
       exclude_external_links: true
+      check_robots_txt: true
+      page_timeout: 30000
+      extraction_strategy:
+        type: json_css
+        schema:
+          title: "h1, article h1"
+          byline: "[rel='author'], .byline, .author"
+          published_at: "time[datetime], meta[property='article:published_time']"
+          body: "article p"
       process_iframes: true
       table_score_threshold: 9
       markdown_generator:
@@ -79,6 +97,8 @@ profiles:
       min_gain_threshold: 0.04
     extra:
       query: "{domain} markets earnings"
+      pre_nav_js: "window.scrollTo(0, document.body.scrollHeight * 0.2)"
+      post_nav_js: "window.scrollTo(0, 0)"
   bbc_high_volume:
     description: "High-volume Crawl4AI pass for BBC News"
     engine: crawl4ai

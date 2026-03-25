@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "bash scripts/indexing/session_chat_init.sh",
+        "timeout": 120
+      }
+    ]
+  }
+}

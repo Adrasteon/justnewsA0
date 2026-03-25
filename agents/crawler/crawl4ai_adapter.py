@@ -431,11 +431,24 @@ _ALLOWED_BROWSER_KEYS = {
 _ALLOWED_RUN_CONFIG_KEYS = {
     "word_count_threshold",
     "exclude_external_links",
+    "exclude_social_media_links",
     "remove_overlay_elements",
     "process_iframes",
     "target_elements",
     "excluded_tags",
     "only_text",
+    "check_robots_txt",
+    "simulate_user",
+    "scan_full_page",
+    "mean_delay",
+    "max_range",
+    "semaphore_count",
+    "page_timeout",
+    "delay_before_return_html",
+    "wait_until",
+    "shared_data",
+    "js_only",
+    "extraction_strategy",
     "score_links",
     "wait_for",
     "wait_for_timeout",
@@ -447,6 +460,12 @@ _ALLOWED_RUN_CONFIG_KEYS = {
     "exclude_external_images",
     "image_score_threshold",
     "table_score_threshold",
+    "magic",
+    "log_console",
+    "keep_data_attributes",
+    "override_navigator",
+    "ignore_body_visibility",
+    "prettiify",
 }
 
 _ALLOWED_LINK_PREVIEW_KEYS = {
@@ -562,6 +581,23 @@ def _build_run_config(profile: dict[str, Any]):
         if list_key in kwargs and isinstance(kwargs[list_key], str):
             kwargs[list_key] = [kwargs[list_key]]
 
+    # Dynamic-site hooks: allow pre/post navigation JS snippets via profile extra.
+    extra = profile.get("extra") or {}
+    pre_nav_js = extra.get("pre_nav_js")
+    post_nav_js = extra.get("post_nav_js")
+    if pre_nav_js or post_nav_js:
+        merged_js: list[str] = []
+        existing_js = kwargs.get("js_code")
+        if isinstance(existing_js, list):
+            merged_js.extend(str(item) for item in existing_js if str(item).strip())
+        elif isinstance(existing_js, str) and existing_js.strip():
+            merged_js.append(existing_js)
+        if pre_nav_js:
+            merged_js.insert(0, str(pre_nav_js))
+        if post_nav_js:
+            merged_js.append(str(post_nav_js))
+        kwargs["js_code"] = merged_js
+
     link_preview_cfg = _build_link_preview_config(profile.get("link_preview"))
     if link_preview_cfg:
         kwargs["link_preview_config"] = link_preview_cfg
@@ -570,6 +606,14 @@ def _build_run_config(profile: dict[str, Any]):
         generator = _build_markdown_generator(markdown_generator_def)
         if generator is not None:
             kwargs["markdown_generator"] = generator
+
+    extraction_def = run_config_def.get("extraction_strategy")
+    if isinstance(extraction_def, Mapping):
+        extraction_strategy = _build_extraction_strategy(extraction_def)
+        if extraction_strategy is not None:
+            kwargs["extraction_strategy"] = extraction_strategy
+        elif "extraction_strategy" in kwargs:
+            kwargs.pop("extraction_strategy", None)
 
     adaptive_kwargs = profile.get("adaptive") or {}
 
@@ -596,6 +640,79 @@ def _build_run_config(profile: dict[str, Any]):
             config.adaptive_config = adaptive_config  # type: ignore[attr-defined]
 
     return config
+
+
+def _build_extraction_strategy(settings: Mapping[str, Any] | None) -> Any | None:
+    if not settings:
+        return None
+    if crawl4ai is None:
+        return None
+
+    strategy_type = str(settings.get("type") or "").strip().lower()
+    options = {str(k): v for k, v in settings.items() if str(k) != "type"}
+    if strategy_type in {"json_css", "jsoncssextractionstrategy"}:
+        strategy_cls = getattr(crawl4ai, "JsonCssExtractionStrategy", None)
+        if strategy_cls is None:
+            try:
+                strategy_mod = importlib.import_module("crawl4ai.extraction_strategy")
+                strategy_cls = getattr(strategy_mod, "JsonCssExtractionStrategy", None)
+            except ImportError:  # pragma: no cover
+                strategy_cls = None
+        if strategy_cls is None:
+            return None
+        try:
+            return strategy_cls(**options)
+        except Exception as exc:  # pragma: no cover - compatibility fallback
+            logger.debug("Failed to initialize extraction strategy: %s", exc)
+            return None
+
+    return None
+
+
+def _build_dispatcher(profile: dict[str, Any]) -> Any | None:
+    """Build an optional Crawl4AI dispatcher object for batched crawling.
+
+    The dispatcher API varies across Crawl4AI versions, so this helper keeps
+    instantiation permissive and falls back to no dispatcher on errors.
+    """
+    if crawl4ai is None:
+        return None
+
+    dispatcher_def = profile.get("dispatcher")
+    if not isinstance(dispatcher_def, Mapping):
+        return None
+
+    dispatcher_type = str(dispatcher_def.get("type") or "").strip().lower()
+    dispatcher_kwargs = {
+        str(k): v for k, v in dispatcher_def.items() if str(k) != "type"
+    }
+    if not dispatcher_type:
+        return None
+
+    aliases = {
+        "memory": "MemoryAdaptiveDispatcher",
+        "semaphore": "SemaphoreDispatcher",
+    }
+
+    candidate_names = [dispatcher_type]
+    aliased = aliases.get(dispatcher_type)
+    if aliased:
+        candidate_names.append(aliased)
+    if not dispatcher_type.endswith("dispatcher"):
+        candidate_names.append(f"{dispatcher_type}_dispatcher")
+        candidate_names.append(f"{dispatcher_type.title()}Dispatcher")
+
+    for candidate in candidate_names:
+        dispatcher_cls = getattr(crawl4ai, candidate, None)
+        if dispatcher_cls is None:
+            continue
+        try:
+            return dispatcher_cls(**dispatcher_kwargs)
+        except Exception as exc:  # pragma: no cover - best-effort compatibility
+            logger.debug("Failed to initialize dispatcher %s: %s", candidate, exc)
+            continue
+
+    return None
 
 
 def _build_content_filter(settings: Mapping[str, Any] | None):
@@ -1137,6 +1254,54 @@ async def crawl_site_with_crawl4ai(
         )
         if adaptive_articles:
             return adaptive_articles[: context.max_articles]
+
+    use_batch_seed_crawl = bool((profile.get("extra") or {}).get("use_arun_many"))
+    if use_batch_seed_crawl and hasattr(AsyncWebCrawler, "arun_many"):
+        crawler_factory = (
+            AsyncWebCrawler(config=browser_config)
+            if browser_config
+            else AsyncWebCrawler()
+        )
+        dispatcher_obj = _build_dispatcher(profile)
+        seed_targets = unique_urls[: context.page_budget]
+        async with crawler_factory as crawler:
+            try:
+                if dispatcher_obj is not None:
+                    results = await crawler.arun_many(
+                        seed_targets,
+                        config=run_config,
+                        dispatcher=dispatcher_obj,
+                    )
+                else:
+                    results = await crawler.arun_many(seed_targets, config=run_config)
+            except TypeError:
+                results = await crawler.arun_many(seed_targets, config=run_config)
+            except Exception as exc:  # noqa: BLE001 - graceful fallback to queue mode
+                logger.warning(
+                    "Crawl4AI arun_many failed for %s: %s",
+                    site_config.name,
+                    exc,
+                )
+                results = []
+
+        for target_url, result in zip(seed_targets, list(results or []), strict=False):
+            if result is None or not getattr(result, "success", True):
+                continue
+            article = _build_article_from_result(
+                builder,
+                target_url,
+                result,
+                profile,
+                links_followed=0,
+            )
+            if article:
+                article = await _apply_ingestion_triage(article, site_config, profile)
+                articles.append(article)
+            if len(articles) >= context.max_articles:
+                break
+
+        if articles:
+            return articles[: context.max_articles]
 
     recoverable_markers = (
         "browsercontext.new_page",

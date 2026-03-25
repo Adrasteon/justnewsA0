@@ -38,6 +38,8 @@
 
 - [Crawl Ingestion Triage System Guide (2026-03-21)](./CRAWL_INGESTION_TRIAGE_SYSTEM_GUIDE_2026-03-21.md) — Full technical and operational reference for triage functionality, runtime controls, metadata contract, user interaction, and troubleshooting
 
+- [Crawl4AI Prioritized Improvement Roadmap (2026-03-24)](./CRAWL4AI_PRIORITIZED_IMPROVEMENT_ROADMAP.md) — Canonical implementation roadmap for highest-impact Crawl4AI upgrades in JustNews
+
 - [Multi-Source Refactor Lane 2 Crawl Fallback Runbook (2026-03-17)](./MULTI_SOURCE_REFACTOR_LANE2_FALLBACK_RUNBOOK_2026-03-17.md)
 
 - [Multi-Source Refactor M2 Sign-Off Evidence Index (2026-02-22)](./MULTI_SOURCE_REFACTOR_M2_SIGNOFF_EVIDENCE_INDEX_2026-02-22.md)
@@ -81,6 +83,10 @@
 - [Crawler Maturity Checklist](./CRAWLER_MATURITY_CHECKLIST.md) — Phased roadmap and acceptance criteria to move toward enterprise-grade crawling
 
 - [Crawler Ingest Resiliency Runbook](./CRAWLER_INGEST_RESILIENCY.md) — Disk-backed deferred ingest spool, replay behavior, and outage recovery
+
+- `scripts/ops/validate_crawl_lane_behavior.py` — Validates crawl summary contracts for preflight, lane2 fallback telemetry, and per-site detail accounting
+
+- [Crawl4AI Prioritized Improvement Roadmap (2026-03-24)](./CRAWL4AI_PRIORITIZED_IMPROVEMENT_ROADMAP.md) — Prioritized rollout plan, KPIs, and execution tracker for crawler modernization
 
 - [Monitoring Scripts Reference](./MONITORING_SCRIPTS_REFERENCE.md) — Script-level monitoring checks, technical signals, and recommended run sequence
 

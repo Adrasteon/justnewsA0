@@ -57,6 +57,25 @@ All indexing scripts can write newline-delimited JSON events.
 
 - Default log file: `run/indexing_telemetry.jsonl`
 - Event types: `index_build`, `index_query`, `index_autoupdate`
+- `index_query` events now include estimated token savings fields:
+  - `tokenizer_model` (resolved from selected Copilot chat model by default)
+  - `tokenizer_model_source`
+  - `tokenizer_backend` (`tiktoken:model`, `tiktoken:encoding`, or `chars_per_token` fallback)
+  - `tokenizer_encoding`
+  - `exact_token_counting`
+  - `indexed_snippet_tokens`
+  - `baseline_snippet_tokens`
+  - `token_savings`
+  - `token_savings_pct`
+  - legacy-compatible mirrors are still emitted:
+  - `indexed_snippet_tokens_estimate`
+  - `baseline_snippet_tokens_estimate`
+  - `estimated_token_savings`
+  - `estimated_token_savings_pct`
+  - Uses selected Copilot chat model tokenization when `tiktoken` is available.
+  - Falls back to `chars_per_token` estimator (default `4.0`) when exact tokenizer resolution is unavailable.
+  - Session init persists a deterministic model binding in `run/copilot_chat_model.env`.
+    - `query_code_index.py` reads this binding when runtime env vars are absent.
 
 Examples:
 
@@ -64,6 +83,15 @@ Examples:
 python scripts/indexing/build_code_index.py --root . --index-dir .cache/code_index --telemetry-path run/indexing_telemetry.jsonl
 python scripts/indexing/query_code_index.py "publish republish taxonomy" --root . --index-dir .cache/code_index --telemetry-path run/indexing_telemetry.jsonl
 python scripts/indexing/autonomous_index_update.py --root . --index-dir .cache/code_index --telemetry-path run/indexing_telemetry.jsonl
+
+# optional: tune token estimator ratio
+python scripts/indexing/query_code_index.py "publish republish taxonomy" --root . --index-dir .cache/code_index --chars-per-token 4.0
+
+# optional: force a specific tokenizer model or encoding fallback
+python scripts/indexing/query_code_index.py "publish republish taxonomy" --root . --index-dir .cache/code_index --tokenizer-model gpt-5.3-codex --tokenizer-fallback-encoding o200k_base
+
+# default behavior reads selected chat model env vars, then persisted binding file, then default
+python scripts/indexing/session_chat_init.sh
 ```
 
 Disable telemetry for a single run:

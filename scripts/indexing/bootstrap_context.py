@@ -105,6 +105,36 @@ def _daemon_status(root: Path) -> dict[str, Any]:
     return status
 
 
+def _chat_model_binding_status(root: Path) -> dict[str, Any]:
+    binding_path = root / 'run' / 'copilot_chat_model.env'
+    status: dict[str, Any] = {
+        'path': binding_path.as_posix(),
+        'exists': binding_path.exists(),
+        'model': '',
+        'source': '',
+    }
+    if not binding_path.exists():
+        return status
+
+    try:
+        lines = binding_path.read_text(encoding='utf-8').splitlines()
+    except Exception:
+        return status
+
+    for line in lines:
+        text = line.strip()
+        if not text or text.startswith('#') or '=' not in text:
+            continue
+        key, value = text.split('=', 1)
+        k = key.strip()
+        v = value.strip().strip('"').strip("'")
+        if k == 'COPILOT_CHAT_MODEL':
+            status['model'] = v
+        elif k == 'COPILOT_CHAT_MODEL_SOURCE':
+            status['source'] = v
+    return status
+
+
 def _build_summary(root: Path, index_dir: Path, telemetry_path: Path, telemetry_sample: int) -> dict[str, Any]:
     manifest_path = index_dir / 'manifest.json'
     entries_path = index_dir / 'entries.jsonl'
@@ -153,6 +183,7 @@ def _build_summary(root: Path, index_dir: Path, telemetry_path: Path, telemetry_
             'last_event_ts': last_event_ts,
         },
         'daemon_fallback': _daemon_status(root),
+        'chat_model_binding': _chat_model_binding_status(root),
         'memory_visibility': 'mounted' if memory_visible else 'not-mounted-in-shell',
         'memory_files': [
             _file_info(path)
@@ -210,6 +241,13 @@ def _print_human(summary: dict[str, Any]) -> None:
     print('Autoupdate Daemon Fallback')
     print(f"- PID file exists: {daemon.get('pid_file_exists', False)}")
     print(f"- Running: {daemon.get('running', False)}")
+    print('')
+
+    chat_binding = summary.get('chat_model_binding', {})
+    print('Chat Model Binding')
+    print(f"- Binding file exists: {chat_binding.get('exists', False)}")
+    print(f"- Model: {chat_binding.get('model', '')}")
+    print(f"- Source: {chat_binding.get('source', '')}")
     print('')
 
     print('Read First')

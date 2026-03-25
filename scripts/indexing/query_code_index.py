@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import math
 import json
+import os
 import re
 import subprocess
 import time
@@ -108,6 +109,25 @@ def parse_args() -> argparse.Namespace:
         help="Disable telemetry logging",
     )
     parser.add_argument("--json", action="store_true", help="Emit JSON output")
+    parser.add_argument(
+        "--chars-per-token",
+        type=float,
+        default=4.0,
+        help="Estimator ratio used for token estimates (chars/token)",
+    )
+    parser.add_argument(
+        "--tokenizer-model",
+        default="copilot_chat_selected",
+        help=(
+            "Tokenizer model name. Use 'copilot_chat_selected' to resolve from "
+            "Copilot chat model environment variables."
+        ),
+    )
+    parser.add_argument(
+        "--tokenizer-fallback-encoding",
+        default="o200k_base",
+        help="tiktoken encoding to use when model-specific encoding is unavailable",
+    )
     return parser.parse_args()
 
 
@@ -604,6 +624,126 @@ def _format_pretty(query: str, results: list[dict[str, Any]]) -> str:
     return "\n".join(lines).strip() + "\n"
 
 
+def _estimate_tokens_from_chars(char_count: int, chars_per_token: float) -> int:
+    safe_chars = max(int(char_count), 0)
+    ratio = chars_per_token if chars_per_token > 0 else 4.0
+    return int(math.ceil(safe_chars / ratio)) if safe_chars > 0 else 0
+
+
+def _load_persisted_chat_model(root: Path) -> tuple[str, str]:
+    binding_path = (root / "run" / "copilot_chat_model.env").resolve()
+    if not binding_path.exists():
+        return "", ""
+
+    try:
+        text = binding_path.read_text(encoding="utf-8")
+    except Exception:
+        return "", ""
+
+    values: dict[str, str] = {}
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        values[key.strip()] = value.strip().strip("\"").strip("'")
+
+    model = str(values.get("COPILOT_CHAT_MODEL") or "").strip()
+    source = str(values.get("COPILOT_CHAT_MODEL_SOURCE") or "persisted").strip()
+    return model, source
+
+
+def _resolve_tokenizer_model(tokenizer_model_arg: str, root: Path) -> tuple[str, str]:
+    requested = str(tokenizer_model_arg or "").strip()
+    if requested and requested.lower() != "copilot_chat_selected":
+        return requested, "cli"
+
+    candidates = [
+        "COPILOT_CHAT_MODEL",
+        "GITHUB_COPILOT_CHAT_MODEL",
+        "VSCODE_COPILOT_CHAT_MODEL",
+        "CHAT_MODEL",
+        "GITHUB_COPILOT_MODEL",
+    ]
+    for key in candidates:
+        value = str(os.environ.get(key) or "").strip()
+        if value:
+            return value, f"env:{key}"
+
+    persisted_model, persisted_source = _load_persisted_chat_model(root)
+    if persisted_model:
+        return persisted_model, f"file:{persisted_source}"
+
+    # Default to the active assistant model family if no explicit session value is exposed.
+    return "gpt-5.3-codex", "default"
+
+
+def _encoding_hint_for_model(model_name: str, fallback_encoding: str) -> str:
+    lowered = str(model_name or "").strip().lower()
+    if not lowered:
+        return fallback_encoding
+
+    if any(token in lowered for token in ("gpt-5", "gpt-4.1", "gpt-4o", "o3", "o4")):
+        return "o200k_base"
+    if any(token in lowered for token in ("gpt-4", "gpt-3.5", "cl100k")):
+        return "cl100k_base"
+    return fallback_encoding
+
+
+def _count_tokens_model_aware(
+    text: str,
+    *,
+    tokenizer_model: str,
+    fallback_encoding: str,
+    chars_per_token: float,
+) -> dict[str, Any]:
+    body = str(text or "")
+    if not body:
+        return {
+            "tokens": 0,
+            "backend": "none",
+            "encoding": "",
+            "exact": True,
+        }
+
+    try:
+        import tiktoken  # type: ignore
+
+        try:
+            encoding = tiktoken.encoding_for_model(tokenizer_model)
+            encoding_name = str(getattr(encoding, "name", "")) or _encoding_hint_for_model(
+                tokenizer_model,
+                fallback_encoding,
+            )
+            tokens = len(encoding.encode(body))
+            return {
+                "tokens": int(tokens),
+                "backend": "tiktoken:model",
+                "encoding": encoding_name,
+                "exact": True,
+            }
+        except Exception:
+            encoding_name = _encoding_hint_for_model(tokenizer_model, fallback_encoding)
+            encoding = tiktoken.get_encoding(encoding_name)
+            tokens = len(encoding.encode(body))
+            return {
+                "tokens": int(tokens),
+                "backend": "tiktoken:encoding",
+                "encoding": encoding_name,
+                "exact": True,
+            }
+    except Exception:
+        fallback_tokens = _estimate_tokens_from_chars(len(body), chars_per_token)
+        return {
+            "tokens": int(fallback_tokens),
+            "backend": "chars_per_token",
+            "encoding": "",
+            "exact": False,
+        }
+
+
 def main() -> int:
     started = time.perf_counter()
     args = parse_args()
@@ -633,6 +773,16 @@ def main() -> int:
         max_snippet_lines=max(int(args.max_snippet_lines), 10),
     )
 
+    # Baseline approximation for "no-index narrowing": include all Stage-A
+    # candidates, then compare against final Stage-B top-k payload size.
+    baseline_results = _stage_b_refine(
+        root,
+        stage_a,
+        top_k=max(len(stage_a), 1),
+        context_lines=max(int(args.context_lines), 0),
+        max_snippet_lines=max(int(args.max_snippet_lines), 10),
+    )
+
     output = {
         "query": args.query,
         "index_dir": index_dir.as_posix(),
@@ -649,6 +799,41 @@ def main() -> int:
         try:
             top_result = stage_b[0] if stage_b else {}
             snippet_chars = sum(len(str(item.get("snippet") or "")) for item in stage_b)
+            baseline_snippet_chars = sum(
+                len(str(item.get("snippet") or "")) for item in baseline_results
+            )
+
+            tokenizer_model, tokenizer_model_source = _resolve_tokenizer_model(
+                args.tokenizer_model,
+                root,
+            )
+            indexed_text = "\n\n".join(str(item.get("snippet") or "") for item in stage_b)
+            baseline_text = "\n\n".join(
+                str(item.get("snippet") or "") for item in baseline_results
+            )
+
+            indexed_token_metrics = _count_tokens_model_aware(
+                indexed_text,
+                tokenizer_model=tokenizer_model,
+                fallback_encoding=str(args.tokenizer_fallback_encoding),
+                chars_per_token=float(args.chars_per_token),
+            )
+            baseline_token_metrics = _count_tokens_model_aware(
+                baseline_text,
+                tokenizer_model=tokenizer_model,
+                fallback_encoding=str(args.tokenizer_fallback_encoding),
+                chars_per_token=float(args.chars_per_token),
+            )
+
+            chars_per_token = float(args.chars_per_token)
+            indexed_tokens = int(indexed_token_metrics.get("tokens") or 0)
+            baseline_tokens = int(baseline_token_metrics.get("tokens") or 0)
+            savings_tokens = max(baseline_tokens - indexed_tokens, 0)
+            savings_pct = (
+                (savings_tokens / baseline_tokens) * 100.0
+                if baseline_tokens > 0
+                else 0.0
+            )
             _append_telemetry(
                 root,
                 args.telemetry_path,
@@ -665,6 +850,23 @@ def main() -> int:
                     "top_path": str(top_result.get("path") or ""),
                     "top_score": float(top_result.get("score", 0.0) or 0.0),
                     "snippet_chars_total": int(snippet_chars),
+                    "baseline_snippet_chars_total": int(baseline_snippet_chars),
+                    "tokenizer_model": tokenizer_model,
+                    "tokenizer_model_source": tokenizer_model_source,
+                    "tokenizer_backend": str(indexed_token_metrics.get("backend") or ""),
+                    "tokenizer_encoding": str(indexed_token_metrics.get("encoding") or ""),
+                    "exact_token_counting": bool(indexed_token_metrics.get("exact", False)),
+                    "indexed_snippet_tokens": int(indexed_tokens),
+                    "baseline_snippet_tokens": int(baseline_tokens),
+                    "token_savings": int(savings_tokens),
+                    "token_savings_pct": round(float(savings_pct), 3),
+                    "token_estimator": "chars_per_token",
+                    "chars_per_token": float(chars_per_token),
+                    # Backward compatibility fields retained for existing dashboards.
+                    "indexed_snippet_tokens_estimate": int(indexed_tokens),
+                    "baseline_snippet_tokens_estimate": int(baseline_tokens),
+                    "estimated_token_savings": int(savings_tokens),
+                    "estimated_token_savings_pct": round(float(savings_pct), 3),
                     "duration_ms": round((time.perf_counter() - started) * 1000.0, 3),
                 },
             )

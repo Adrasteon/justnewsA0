@@ -59,6 +59,7 @@ from .crawler_utils import (
     is_source_row_eligible_for_crawl,
     record_crawling_performance,
     record_paywall_detection,
+    record_source_crawl_outcome,
 )
 
 MCP_BUS_URL = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
@@ -193,6 +194,57 @@ def _is_whitelist_only_mode() -> bool:
 def _is_provisional_ingest_enabled() -> bool:
     # Preserve current behavior unless explicitly disabled.
     return _env_bool("UNIFIED_CRAWLER_PROVISIONAL_INGEST_ENABLED", default=True)
+
+
+def _run_crawler_preflight() -> dict[str, Any]:
+    """Run lightweight dependency preflight checks before large crawl batches."""
+
+    checks: list[dict[str, Any]] = []
+    strict_mode = _env_bool("UNIFIED_CRAWLER_PREFLIGHT_STRICT", default=False)
+    try:
+        health_timeout = max(
+            0.2,
+            float(os.environ.get("UNIFIED_CRAWLER_PREFLIGHT_TIMEOUT_SECONDS", "2.0")),
+        )
+    except (TypeError, ValueError):
+        health_timeout = 2.0
+
+    if _env_bool("USE_HITL", default=False):
+        hitl_url = (
+            os.environ.get("HITL_SERVICE_URL")
+            or os.environ.get("HITL_SERVICE_ADDRESS")
+            or "http://localhost:8019"
+        ).rstrip("/")
+        status = "ok"
+        detail = None
+        try:
+            response = requests.get(
+                f"{hitl_url}/health",
+                timeout=health_timeout,
+            )
+            if response.status_code >= 400:
+                status = "degraded"
+                detail = f"status={response.status_code}"
+        except Exception as exc:  # noqa: BLE001 - preflight should remain resilient
+            status = "degraded"
+            detail = str(exc)
+        checks.append(
+            {
+                "name": "hitl_health",
+                "required": strict_mode,
+                "status": status,
+                "detail": detail,
+            }
+        )
+
+    return {
+        "enabled": True,
+        "strict": strict_mode,
+        "checks": checks,
+        "ready": all(
+            c["status"] == "ok" or not bool(c.get("required")) for c in checks
+        ),
+    }
 
 
 def call_analyst_tool(tool: str, *args, **kwargs) -> Any:
@@ -362,9 +414,15 @@ class CrawlerEngine:
             or os.environ.get("HITL_SERVICE_ADDRESS")
             or "http://localhost:8019"
         ).rstrip("/")
-        self.hitl_enabled = (
-            os.environ.get("ENABLE_HITL_PIPELINE", "true").lower() != "false"
+        use_hitl = (
+            os.environ.get("USE_HITL", "false").strip().lower()
+            in {"1", "true", "yes", "on"}
         )
+        legacy_hitl_enabled = (
+            os.environ.get("ENABLE_HITL_PIPELINE", "true").strip().lower()
+            != "false"
+        )
+        self.hitl_enabled = use_hitl and legacy_hitl_enabled
         self.hitl_stats_interval = _parse_int("HITL_STATS_INTERVAL_SECONDS", 60, 0)
         self.hitl_backoff_seconds = _parse_int("HITL_FAILURE_BACKOFF_SECONDS", 180, 30)
         self._hitl_last_stats_check = 0.0
@@ -1144,6 +1202,41 @@ class CrawlerEngine:
         all_articles: list[dict[str, Any]] = []
 
         resolved_profiles: dict[str, dict[str, Any]] = {}
+        preflight = _run_crawler_preflight()
+        if not preflight.get("ready"):
+            logger.warning("Crawler preflight failed in strict mode; aborting crawl run")
+            return {
+                "unified_crawl": True,
+                "sites_crawled": 0,
+                "total_articles_attempted": 0,
+                "total_ingest_candidates": 0,
+                "total_articles": 0,
+                "articles_ingested": 0,
+                "duplicates_skipped": 0,
+                "ingestion_errors": 0,
+                "total_paywalls_detected": 0,
+                "processing_time_seconds": 0.0,
+                "articles_per_second": 0.0,
+                "strategy_breakdown": self.performance_metrics["mode_usage"],
+                "site_breakdown": {},
+                "site_attempted_breakdown": {},
+                "site_candidate_breakdown": {},
+                "site_duplicate_breakdown": {},
+                "site_error_breakdown": {},
+                "site_paywall_breakdown": {},
+                "site_exhaustion": {},
+                "site_ingestion_details": {},
+                "articles": [],
+                "preflight": preflight,
+                "lane2_fallback": {
+                    "enabled": False,
+                    "triggered": False,
+                    "attempted_sites": 0,
+                    "ingested": 0,
+                    "attempted_domains": [],
+                },
+            }
+
         if profile_overrides:
             resolved_profiles = {
                 (key or "").lower(): value
@@ -1672,6 +1765,22 @@ class CrawlerEngine:
                             )
 
                     async with aggregation_lock:
+                        if not site_details:
+                            if site_ingested > 0:
+                                site_details.append(
+                                    {
+                                        "status": "ingested",
+                                        "count": site_ingested,
+                                    }
+                                )
+                            else:
+                                site_details.append(
+                                    {
+                                        "status": exhaustion_reason or "no_candidates",
+                                        "count": 0,
+                                    }
+                                )
+
                         site_articles[domain_key] = site_articles_local
                         site_metrics[domain_key] = {
                             "attempted": site_ingested,
@@ -1720,15 +1829,59 @@ class CrawlerEngine:
                         perf_exc,
                     )
 
+                try:
+                    blocked_outcome = False
+                    if isinstance(exhaustion_reason, str) and "block" in exhaustion_reason:
+                        blocked_outcome = True
+                    if not blocked_outcome and site_details:
+                        for detail in site_details:
+                            if not isinstance(detail, dict):
+                                continue
+                            reason_text = " ".join(
+                                [
+                                    str(detail.get("status") or ""),
+                                    str(detail.get("reason") or ""),
+                                    str(detail.get("error") or ""),
+                                ]
+                            ).lower()
+                            if any(code in reason_text for code in (" 403", " 429", "forbidden", "too many requests", "blocked")):
+                                blocked_outcome = True
+                                break
+
+                    record_source_crawl_outcome(
+                        source_id=site_config.source_id,
+                        domain=site_config.domain or domain_key,
+                        attempted=site_candidates,
+                        ingested=site_ingested,
+                        errors=site_errors,
+                        paywalls=site_paywalls,
+                        blocked=blocked_outcome,
+                    )
+                except Exception as outcome_exc:  # noqa: BLE001 - non-critical
+                    logger.debug(
+                        "Unable to persist source crawl outcome for %s: %s",
+                        domain_key,
+                        outcome_exc,
+                    )
+
         tasks = [crawl_site_with_limit(config) for config in site_configs]
         await asyncio.gather(*tasks, return_exceptions=True)
 
         lane2_fallback_enabled = _env_bool(
             "UNIFIED_CRAWLER_LANE2_FALLBACK_ENABLED", default=False
         )
+        lane2_contract: dict[str, Any] = {
+            "enabled": bool(lane2_fallback_enabled),
+            "triggered": False,
+            "attempted_sites": 0,
+            "ingested": 0,
+            "attempted_domains": [],
+        }
         if whitelist_only_mode:
             lane2_fallback_enabled = False
+            lane2_contract["enabled"] = False
         if lane2_fallback_enabled and site_configs and total_successful == 0:
+            lane2_contract["triggered"] = True
             try:
                 lane2_max_sites = max(
                     1,
@@ -1795,6 +1948,7 @@ class CrawlerEngine:
 
                 attempted_domains.add(domain)
                 lane2_added += 1
+                lane2_contract["attempted_domains"].append(domain)
                 logger.info(
                     "🛟 Lane2 fallback triggered after zero-ingest lane1 run: domain=%s budget=%s",
                     domain,
@@ -1808,6 +1962,8 @@ class CrawlerEngine:
                     break
 
             if lane2_added > 0:
+                lane2_contract["attempted_sites"] = lane2_added
+                lane2_contract["ingested"] = total_successful
                 logger.info(
                     "🛟 Lane2 fallback summary: attempted_sites=%s total_ingested=%s",
                     lane2_added,
@@ -2161,6 +2317,8 @@ class CrawlerEngine:
                 if metrics["details"]
             },
             "articles": all_articles,
+            "preflight": preflight,
+            "lane2_fallback": lane2_contract,
         }
 
         adaptive_summary = summarise_adaptive_articles(all_articles)

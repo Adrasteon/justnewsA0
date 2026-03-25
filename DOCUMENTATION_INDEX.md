@@ -29,6 +29,10 @@
 👉 **Implementation Plan**: [`docs/operations/TWO_LANE_TRACEABILITY_IMPLEMENTATION_PLAN_2026-03-20.md`](docs/operations/TWO_LANE_TRACEABILITY_IMPLEMENTATION_PLAN_2026-03-20.md)
 - File-by-file rollout plan for BBC-seed Lane 1, DDG expansion, structured attribution, and hybrid balance governance
 
+### Crawl4AI Modernization Roadmap
+👉 **Prioritized Roadmap**: [`docs/operations/CRAWL4AI_PRIORITIZED_IMPROVEMENT_ROADMAP.md`](docs/operations/CRAWL4AI_PRIORITIZED_IMPROVEMENT_ROADMAP.md)
+- Canonical P1/P2/P3 upgrade plan for high-impact Crawl4AI improvements, KPI targets, and execution tracking
+
 ### Hybrid Whitelist + Discovery Rollout
 👉 **Implementation Tickets**: [`docs/operations/HYBRID_WHITELIST_DISCOVERY_IMPLEMENTATION_TICKETS_2026-03-21.md`](docs/operations/HYBRID_WHITELIST_DISCOVERY_IMPLEMENTATION_TICKETS_2026-03-21.md)
 - Implementation-ready epics and ticket details for controlled global discovery, anti-flood safeguards, and constrained self-learning

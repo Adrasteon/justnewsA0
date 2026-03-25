@@ -4343,14 +4343,105 @@
       "timestamp": "2026-03-23T14:53:21.252493Z",
       "version": 402,
       "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 10
+      },
+      "previous_version": 402,
+      "reason": "autonomic:resource_pressure",
+      "timestamp": "2026-03-24T15:02:03.588386Z",
+      "version": 403,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 11
+      },
+      "previous_version": 403,
+      "reason": "autonomic:resource_pressure",
+      "timestamp": "2026-03-24T15:04:06.796276Z",
+      "version": 404,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 12
+      },
+      "previous_version": 404,
+      "reason": "autonomic:resource_pressure",
+      "timestamp": "2026-03-24T15:12:06.188812Z",
+      "version": 405,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 13
+      },
+      "previous_version": 405,
+      "reason": "autonomic:resource_pressure",
+      "timestamp": "2026-03-24T15:14:12.668140Z",
+      "version": 406,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 14
+      },
+      "previous_version": 406,
+      "reason": "autonomic:resource_pressure",
+      "timestamp": "2026-03-24T15:22:18.205860Z",
+      "version": 407,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 15
+      },
+      "previous_version": 407,
+      "reason": "autonomic:resource_pressure",
+      "timestamp": "2026-03-24T15:24:30.718751Z",
+      "version": 408,
+      "warnings": []
+    },
+    {
+      "actor": "autonomic_controller",
+      "operation": "apply",
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 3,
+        "orchestrator.polling_interval_seconds": 6
+      },
+      "previous_version": 408,
+      "reason": "autonomic:queue_backlog_floor_recovery",
+      "timestamp": "2026-03-24T21:14:03.595514Z",
+      "version": 409,
+      "warnings": []
     }
   ],
   "overrides": {
     "orchestrator.lane_policy.lane1_enabled": true,
     "orchestrator.lane_policy.lane2_enabled": false,
     "orchestrator.lane_policy.version": "v-focus-lane1",
-    "orchestrator.max_concurrent_tasks": 1,
-    "orchestrator.polling_interval_seconds": 9
+    "orchestrator.max_concurrent_tasks": 3,
+    "orchestrator.polling_interval_seconds": 6
   },
   "timeline": [
     {
@@ -12690,8 +12781,218 @@
       ],
       "timestamp": "2026-03-23T14:53:21.252493Z",
       "version": 402
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 1,
+          "orchestrator.polling_interval_seconds": 9
+        },
+        "method": "rollback_to_version",
+        "target_version": 402
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 10
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 10
+      },
+      "previous_version": 402,
+      "reason": "autonomic:resource_pressure",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-24T15:02:03.588386Z",
+      "version": 403
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 1,
+          "orchestrator.polling_interval_seconds": 10
+        },
+        "method": "rollback_to_version",
+        "target_version": 403
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 11
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 11
+      },
+      "previous_version": 403,
+      "reason": "autonomic:resource_pressure",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-24T15:04:06.796276Z",
+      "version": 404
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 1,
+          "orchestrator.polling_interval_seconds": 11
+        },
+        "method": "rollback_to_version",
+        "target_version": 404
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 12
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 12
+      },
+      "previous_version": 404,
+      "reason": "autonomic:resource_pressure",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-24T15:12:06.188812Z",
+      "version": 405
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 1,
+          "orchestrator.polling_interval_seconds": 12
+        },
+        "method": "rollback_to_version",
+        "target_version": 405
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 13
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 13
+      },
+      "previous_version": 405,
+      "reason": "autonomic:resource_pressure",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-24T15:14:12.668140Z",
+      "version": 406
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 1,
+          "orchestrator.polling_interval_seconds": 13
+        },
+        "method": "rollback_to_version",
+        "target_version": 406
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 14
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 14
+      },
+      "previous_version": 406,
+      "reason": "autonomic:resource_pressure",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-24T15:22:18.205860Z",
+      "version": 407
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 1,
+          "orchestrator.polling_interval_seconds": 14
+        },
+        "method": "rollback_to_version",
+        "target_version": 407
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 15
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 1,
+        "orchestrator.polling_interval_seconds": 15
+      },
+      "previous_version": 407,
+      "reason": "autonomic:resource_pressure",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-24T15:24:30.718751Z",
+      "version": 408
+    },
+    {
+      "actor": "autonomic_controller",
+      "inverse_rollback": {
+        "inverse_patch": {
+          "orchestrator.max_concurrent_tasks": 1,
+          "orchestrator.polling_interval_seconds": 15
+        },
+        "method": "rollback_to_version",
+        "target_version": 408
+      },
+      "operation": "apply",
+      "overrides": {
+        "orchestrator.lane_policy.lane1_enabled": true,
+        "orchestrator.lane_policy.lane2_enabled": false,
+        "orchestrator.lane_policy.version": "v-focus-lane1",
+        "orchestrator.max_concurrent_tasks": 3,
+        "orchestrator.polling_interval_seconds": 6
+      },
+      "patch": {
+        "orchestrator.max_concurrent_tasks": 3,
+        "orchestrator.polling_interval_seconds": 6
+      },
+      "previous_version": 408,
+      "reason": "autonomic:queue_backlog_floor_recovery",
+      "tiers": [
+        "tier1"
+      ],
+      "timestamp": "2026-03-24T21:14:03.595514Z",
+      "version": 409
     }
   ],
-  "updated_at": "2026-03-23T14:53:21.252493Z",
-  "version": 402
+  "updated_at": "2026-03-24T21:14:03.595514Z",
+  "version": 409
 }
