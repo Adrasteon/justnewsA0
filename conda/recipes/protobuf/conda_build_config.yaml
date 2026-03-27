@@ -1,4 +1,0 @@
-# Force conda-build to use Python 3.12 for builds so we produce a matching
-# python ABI wheel and package that works with our canonical environment.
-python:
-  - 3.12
