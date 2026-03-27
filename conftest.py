@@ -5,7 +5,6 @@ test discovery paths (not only `tests/` dir). This sets a minimal test
 read `/etc/justnews/global.env` on development hosts.
 """
 
-import json
 import os
 
 # Filter known protobuf upb deprecation (PyType_Spec + custom tp_new) in test runs until
@@ -15,34 +14,11 @@ import sys
 import tempfile
 import textwrap
 from pathlib import Path
-from shutil import which
 
-# Prefer project-level PYTHON_BIN or a conda env for running preflight scripts; fall
+# Prefer project-level PYTHON_BIN or UV/.venv for running preflight scripts; fall
 # back to the system python if not available.
 project_root = Path(__file__).resolve().parent
 project_global_env = project_root / "global.env"
-
-
-def _conda_env_available(env_name: str) -> bool:
-    """Return True if the requested conda env exists on this host."""
-    try:
-        result = subprocess.run(
-            ["conda", "env", "list", "--json"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-        data = json.loads(result.stdout or "{}")
-    except Exception:
-        return False
-    env_paths = data.get("envs", [])
-    for env_path in env_paths:
-        try:
-            if Path(env_path).name == env_name:
-                return True
-        except Exception:
-            continue
-    return False
 
 
 py_cmd = None
@@ -74,14 +50,9 @@ elif project_global_env.exists():
     except Exception:
         py_cmd = None
 if py_cmd is None:
-    # fallback to using conda run, if the recommended env exists
-    # Support both unified env (justnews-py312) and phased envs (justnews-py312-phaseN)
-    canonical_env = os.environ.get("CANONICAL_ENV", "justnews-py312-phase1")
-    if which("conda") is not None and _conda_env_available(canonical_env):
-        py_cmd = ["conda", "run", "-n", canonical_env, "python"]
-    elif which("conda") is not None and _conda_env_available("justnews-py312"):
-        # Fallback to unified env if phase env not found
-        py_cmd = ["conda", "run", "-n", "justnews-py312", "python"]
+    venv_python = project_root / ".venv" / "bin" / "python"
+    if venv_python.exists():
+        py_cmd = [str(venv_python)]
     else:
         py_cmd = [os.environ.get("PYTHON_BIN", sys.executable or "python")]
 

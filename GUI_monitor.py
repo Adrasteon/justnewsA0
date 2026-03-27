@@ -1,12 +1,13 @@
-import tkinter as tk
-from tkinter import ttk
+import ast
+import json
+import os
+import sys
 import threading
 import time
+import tkinter as tk
+from tkinter import ttk
+
 import requests
-import sys
-import os
-import json
-import ast
 
 # Add project root to path so we can import database utils
 project_root = os.path.dirname(os.path.abspath(__file__))
@@ -116,7 +117,7 @@ class StatusDashboard(tk.Tk):
         # Container Canvas for rounded border
         self.canvas = tk.Canvas(self, bg="#111111", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
+
         # Frame to hold treeview (will be placed inside canvas)
         self.tree_frame = tk.Frame(self.canvas, bg="#111111")
         self.container_window = self.canvas.create_window(0, 0, window=self.tree_frame, anchor="nw")
@@ -124,10 +125,10 @@ class StatusDashboard(tk.Tk):
         # --- NEW: Quick Stats Header ---
         self.stats_frame = tk.Frame(self.tree_frame, bg="#111111")
         self.stats_frame.pack(fill=tk.X, padx=10, pady=(10, 5))
-        
+
         self.total_articles_label = tk.Label(self.stats_frame, text="Total Articles: -", bg="#111111", fg="#00FF00", font=("Helvetica", 12, "bold"))
         self.total_articles_label.pack(side=tk.LEFT, padx=10)
-        
+
         self.last_ingest_label = tk.Label(self.stats_frame, text="Last Ingest: -", bg="#111111", fg="#FFFF00", font=("Helvetica", 11))
         self.last_ingest_label.pack(side=tk.RIGHT, padx=10)
         # -------------------------------
@@ -135,13 +136,13 @@ class StatusDashboard(tk.Tk):
         self.tree = ttk.Treeview(self.tree_frame, columns=("Jobs", "Δ"), show="tree headings")
         self.tree.heading("#0", text="Component")
         self.tree.column("#0", width=420, anchor="w")
-        
+
         self.tree.heading("Jobs", text="Outstanding Jobs")
         self.tree.column("Jobs", width=150, anchor="center")
-        
+
         self.tree.heading("Δ", text="Δ Since Last")
         self.tree.column("Δ", width=100, anchor="center")
-        
+
         self.tree.pack(fill=tk.BOTH, expand=True)
 
         # Configure hover highlighting
@@ -149,7 +150,7 @@ class StatusDashboard(tk.Tk):
         self.tree.bind("<Motion>", self.on_motion)
         self.tree.bind("<Leave>", self.on_leave)
         self.highlighted_item = None
-        
+
         for agent in AGENTS:
             self.tree.insert("", "end", iid=agent["name"], text=agent["name"], image=self.icons["stopped"], values=("?", "?"))
 
@@ -161,7 +162,7 @@ class StatusDashboard(tk.Tk):
         radius = 20
         self.canvas.delete("border")
         create_rounded_rect(self.canvas, 2, 2, w-2, h-2, radius, outline="#FF0000", width=2, fill="", tag="border")
-        
+
         # Resize internal frame to fit inside border with padding
         pad = 8
         self.canvas.itemconfigure(self.container_window, width=w-2*pad, height=h-2*pad)
@@ -194,10 +195,10 @@ class StatusDashboard(tk.Tk):
         stats = {}
         if not create_database_service:
             return stats
-            
+
         try:
             db = create_database_service()
-            conn = db.get_connection() 
+            conn = db.get_connection()
             cursor = conn.cursor()
 
             # Newsreader Agent: Crawler Jobs
@@ -218,7 +219,7 @@ class StatusDashboard(tk.Tk):
                 cursor.execute("SELECT count(*) FROM articles WHERE analyzed=0 AND (is_synthesized=0 OR is_synthesized IS NULL)")
                 stats["Analyst (Content Analysis)"] = cursor.fetchone()[0]
             except Exception: pass
-            
+
             # Synthesizer: Remaining Clusters
             try:
                 cursor.execute("SELECT id, input_cluster_ids FROM articles WHERE input_cluster_ids IS NOT NULL AND input_cluster_ids != '' AND input_cluster_ids != '[]'")
@@ -235,7 +236,7 @@ class StatusDashboard(tk.Tk):
                         for c in clusters: all_clusters.add(str(c))
                     elif isinstance(clusters, str):
                         all_clusters.add(clusters)
-                
+
                 cursor.execute("SELECT cluster_id FROM synthesized_articles")
                 completed_rows = cursor.fetchall()
                 completed = set(str(r[0]) for r in completed_rows)
@@ -247,7 +248,7 @@ class StatusDashboard(tk.Tk):
                 cursor.execute("SELECT count(*) FROM articles WHERE is_synthesized=1 AND (fact_check_status IS NULL OR fact_check_status='unknown')")
                 stats["Fact Checker (Verification)"] = cursor.fetchone()[0]
             except Exception: pass
-            
+
             # Publisher Agent: Pending
             try:
                 cursor.execute("SELECT count(*) FROM articles WHERE is_synthesized=1 AND is_published=0")
@@ -259,7 +260,7 @@ class StatusDashboard(tk.Tk):
                 cursor.execute("SELECT count(*) FROM orchestrator_jobs WHERE status IN ('pending', 'running')")
                 stats["Workflow Orch (Job Scheduling)"] = cursor.fetchone()[0]
             except Exception: pass
-            
+
             # --- NEW: Global Article Stats ---
             try:
                 cursor.execute("SELECT count(*) FROM articles")
@@ -270,7 +271,7 @@ class StatusDashboard(tk.Tk):
 
         except Exception as e:
             print(f"DB Poll Error: {e}")
-        
+
         return stats
 
     def update_status(self):
@@ -282,10 +283,10 @@ class StatusDashboard(tk.Tk):
         last_ts = self.current_stats.get("_last_ingest", "Never")
         if last_ts and str(last_ts) != "None":
             # Format timestamp nicely if possible, else str
-            pass 
+            pass
         else:
              last_ts = "-"
-        
+
         self.total_articles_label.config(text=f"Total Articles: {total}")
         self.last_ingest_label.config(text=f"Last Ingest: {last_ts}")
 
@@ -293,7 +294,7 @@ class StatusDashboard(tk.Tk):
             name = agent["name"]
             port = agent["port"]
             endpoint = agent["endpoint"]
-            
+
             if agent.get("deprecated"):
                  status = "deprecated"
             else:
@@ -305,9 +306,9 @@ class StatusDashboard(tk.Tk):
                         status = "degraded"
                 except Exception:
                     status = "stopped"
-            
+
             jobs, delta = self.get_job_count(name)
-            
+
             # Update row: Icon in #0, values in remaining columns
             self.tree.item(name, text=name, image=self.icons[status], values=(jobs, delta))
 
@@ -321,14 +322,14 @@ class StatusDashboard(tk.Tk):
 
     def get_job_count(self, agent_name):
         current = self.current_stats.get(agent_name)
-        
+
         if current is None:
             return "-", "-"
-            
+
         prev = self.last_job_counts.get(agent_name, current)
         delta_val = current - prev
         self.last_job_counts[agent_name] = current
-        
+
         delta_str = f"{'+' if delta_val > 0 else ''}{delta_val}" if delta_val != 0 else "-"
         return current, delta_str
 

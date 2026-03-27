@@ -1,21 +1,7 @@
-import os
-import sys
+#!/usr/bin/env python3
+"""Deprecated local diagnostic script (retained as compatibility stub)."""
 
-print(f"CWD: {os.getcwd()}")
-print(f"sys.path: {sys.path}")
-
-try:
-    import database
-    print(f"database imported: {database}")
-    print(f"database package: {database.__package__}")
-    print(f"database path: {database.__path__}")
-except Exception as e:
-    print(f"Failed to import database: {e}")
-
-try:
-    print("Successfully imported agents.memory.main")
-except Exception as e:
-    print(f"Failed to import agents.memory.main: {e}")
-    import traceback
-    traceback.print_exc()
-
+print("ERROR: diagnose_memory_import.py was retired from active repo paths.")
+print("Archived copy: archive_local/deprecated-scripts/root/diagnose_memory_import.py")
+print("Use maintained diagnostics under scripts/ops or tests/.")
+raise SystemExit(1)

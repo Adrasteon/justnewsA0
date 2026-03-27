@@ -37,10 +37,13 @@ redis-cli FLUSHALL || echo "Redis flush failed (maybe not running?)"
 
 # 5. Re-Initialize Database
 echo ">>> Applying Schema..."
-# Activate conda using variable-based path (works for any user)
-source "$HOME"/miniconda3/etc/profile.d/conda.sh
-conda activate "${CANONICAL_ENV:-justnews-py312-phase1}"
-python apply_migrations_script.py
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_PY="${REPO_ROOT}/.venv/bin/python"
+if [[ -x "${VENV_PY}" ]]; then
+  "${VENV_PY}" apply_migrations_script.py
+else
+  python apply_migrations_script.py
+fi
 # rm apply_migrations_script.py
 
 # 6. Restart Services

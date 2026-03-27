@@ -1,18 +1,7 @@
-import re
+#!/usr/bin/env python3
+"""Deprecated one-off fixer script (retained as compatibility stub)."""
 
-# Read the file
-with open('monitoring/core/trace_collector.py') as f:
-    content = f.read()
-
-# Replace the trace_count counter method call
-content = re.sub(
-    r'self\.trace_count = self\.metrics\.create_counter\(\s*"traces_total",\s*"Total number of traces processed",\s*\[\"status\"\],\s*\)',
-    'self.trace_count = self.metrics._get_or_create_counter("traces_total")',
-    content
-)
-
-# Write the file back
-with open('monitoring/core/trace_collector.py', 'w') as f:
-    f.write(content)
-
-print('TraceCollector trace_count counter method call has been fixed')
+print("ERROR: fix_trace_collector_trace_count.py was retired from active repo paths.")
+print("Archived copy: archive_local/deprecated-scripts/root/fix_trace_collector_trace_count.py")
+print("Use maintained tooling under scripts/ and tests/ instead.")
+raise SystemExit(1)

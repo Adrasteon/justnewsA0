@@ -1,16 +1,7 @@
+#!/usr/bin/env python3
+"""Deprecated one-off fixer script (retained as compatibility stub)."""
 
-# Define the file path
-file_path = '/a0/justnewsA0/agents/dashboard/dashboard_engine.py'
-
-# Read the file content
-with open(file_path) as file:
-    content = file.read()
-
-# Replace the deprecated .model_dump() with .model_dump()
-content = content.replace('.model_dump()', '.model_dump()')
-
-# Write the modified content back to the file
-with open(file_path, 'w') as file:
-    file.write(content)
-
-print('File has been updated successfully.')
+print("ERROR: fix_dashboard_deprecation.py was retired from active repo paths.")
+print("Archived copy: archive_local/deprecated-scripts/root/fix_dashboard_deprecation.py")
+print("Use maintained tooling under scripts/ and tests/ instead.")
+raise SystemExit(1)

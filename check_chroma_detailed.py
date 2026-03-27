@@ -1,33 +1,7 @@
-import chromadb
-import os
+#!/usr/bin/env python3
+"""Retired root utility script (compatibility stub)."""
 
-def check_chroma():
-    host = 'chromadb'
-    port = 8000
-    tenant = 'default_tenant'
-    
-    client = chromadb.HttpClient(host=host, port=port, tenant=tenant)
-    
-    print(f"Checking tenant: {tenant}")
-    collections = client.list_collections()
-    for c in collections:
-        print(f"Collection: {c.name}")
-        print(f"  Count: {c.count()}")
-        print(f"  Metadata: {c.metadata}")
-
-    # Explicitly check for names mentioned in docs
-    targets = [
-        "articles__all-MiniLM-L6-v2__384",
-        "articles__BAAI_bge-large-en-v1_5__1024",
-        "fact_checks_vector"
-    ]
-    
-    for target in targets:
-        try:
-            col = client.get_collection(target)
-            print(f"✅ Found {target}: {col.count()} items")
-        except Exception:
-            print(f"❌ {target} not found in this tenant")
-
-if __name__ == "__main__":
-    check_chroma()
+print("ERROR: check_chroma_detailed.py has been retired from active repo paths.")
+print("Archived copy: archive_local/deprecated-scripts/root/check_chroma_detailed.py")
+print("Use maintained workflows under scripts/ops, scripts/perf, or tests/.")
+raise SystemExit(1)

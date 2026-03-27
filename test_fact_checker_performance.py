@@ -1,6 +1,6 @@
-import requests
-import json
 import time
+
+import requests
 
 url = "http://localhost:8018/fact_check"
 
@@ -69,17 +69,17 @@ for fact in variations:
     try:
         response = requests.post(url, json={"fact": fact}, timeout=150)
         end = time.time()
-        
+
         if response.status_code == 200:
             res = response.json()
             metrics = res.get("model_trace", {}).get("metrics", {})
             timings = metrics.get("timings", {})
             stats = metrics.get("source_stats", {})
-            
+
             t_total = timings.get('total_seconds', 0)
             total_time += t_total
             success_count += 1
-            
+
             print(f"{fact[:58]:<60} | {str(res['is_accurate']):<8} | {res['confidence']:.2f} | "
                   f"{timings.get('collection_seconds', 0):>8} | {timings.get('evaluation_seconds', 0):>6} | "
                   f"{t_total:>8} | {stats.get('duplicate_removed', 0)}")
@@ -92,11 +92,11 @@ for fact in variations:
 print("-" * 125)
 if success_count > 0:
     avg_time = total_time / success_count
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"Total Facts Checked: {len(variations)}")
     print(f"Successful Requests: {success_count}")
     print(f"Average Processing Time: {avg_time:.2f} seconds")
-    
+
     true_count = sum(1 for r in results_log if r['is_accurate'])
     false_count = success_count - true_count
     print(f"Identified as True: {true_count}")
