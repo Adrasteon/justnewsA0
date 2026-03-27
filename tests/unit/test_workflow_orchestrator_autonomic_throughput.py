@@ -1,11 +1,11 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from agents.workflow_orchestrator.engine import OrchestratorEngine
 from agents.workflow_orchestrator.resources import SystemStats
 
 
 def _iso_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z')
+    return datetime.now(UTC).isoformat().replace('+00:00', 'Z')
 
 
 def _build_engine(monkeypatch) -> OrchestratorEngine:

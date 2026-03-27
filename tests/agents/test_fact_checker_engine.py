@@ -1,7 +1,6 @@
 import types
 
 import pytest
-
 from agents.fact_checker.fact_checker_engine import FactCheckerConfig, FactCheckerEngine
 
 

@@ -1,5 +1,5 @@
 import asyncio
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -14,7 +14,7 @@ from monitoring.core.log_collector import LogEntry, LogLevel
 @pytest.fixture
 def mock_log_entry():
     return LogEntry(
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         level=LogLevel.INFO,
         logger_name="test",
         message="msg",

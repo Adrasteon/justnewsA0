@@ -1,4 +1,4 @@
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -79,7 +79,7 @@ async def test_detect_bottleneck(monitor):
     snapshots = []
     for _ in range(5):
         s = PerformanceSnapshot(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             cpu_percent=90.0, # High CPU
             memory_percent=50.0,
             disk_read_bytes=0, disk_write_bytes=0,
@@ -98,7 +98,7 @@ async def test_detect_bottleneck(monitor):
     snapshots_mem = []
     for _ in range(5):
         s = PerformanceSnapshot(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             cpu_percent=10.0,
             memory_percent=95.0, # High Mem
             disk_read_bytes=0, disk_write_bytes=0,
@@ -113,7 +113,7 @@ async def test_detect_bottleneck(monitor):
 async def test_update_performance_metrics(monitor, collector):
     """Test updating prometheus metrics."""
     snap = PerformanceSnapshot(
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         cpu_percent=55.5,
         memory_percent=44.4,
         disk_read_bytes=0, disk_write_bytes=0,
@@ -139,7 +139,7 @@ async def test_calculate_performance_score(monitor):
 
     # Perfect scenario
     snap_perfect = PerformanceSnapshot(
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         cpu_percent=10, memory_percent=10,
         disk_read_bytes=0, disk_write_bytes=0,
         network_sent_bytes=0, network_recv_bytes=0
@@ -148,7 +148,7 @@ async def test_calculate_performance_score(monitor):
 
     # Bad CPU
     snap_cpu = PerformanceSnapshot(
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         cpu_percent=95, # > 90 -> -30
         memory_percent=10,
         disk_read_bytes=0, disk_write_bytes=0,
@@ -158,7 +158,7 @@ async def test_calculate_performance_score(monitor):
 
     # Bad Memory + Bad CPU
     snap_bad = PerformanceSnapshot(
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         cpu_percent=95, # -30
         memory_percent=96, # -30
         disk_read_bytes=0, disk_write_bytes=0,
@@ -179,7 +179,7 @@ async def test_check_thresholds_alerts(monitor, collector):
 
     # Snapshot that triggers WARNING (60 > 50)
     snap = PerformanceSnapshot(
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         cpu_percent=60.0,
         memory_percent=10.0,
         disk_read_bytes=0, disk_write_bytes=0,
@@ -200,7 +200,7 @@ async def test_check_thresholds_alerts(monitor, collector):
 async def test_analyze_performance_loop(monitor, collector):
     """Test high-level analysis loop triggers."""
     # Populate enough snapshots to trigger analysis
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for i in range(5):
         monitor._snapshots.append(PerformanceSnapshot(
             timestamp=now - timedelta(minutes=i),
@@ -232,7 +232,7 @@ async def test_get_performance_report_no_data(monitor):
 async def test_get_performance_report_with_data(monitor):
     """Test report generation with data."""
     snap = PerformanceSnapshot(
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         cpu_percent=50.0, memory_percent=50.0,
         disk_read_bytes=0, disk_write_bytes=0,
         network_sent_bytes=0, network_recv_bytes=0

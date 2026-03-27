@@ -1,4 +1,4 @@
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -27,7 +27,7 @@ def sample_trace_span():
         start_time=None
     ):
         if start_time is None:
-            start_time = datetime.now(timezone.utc)
+            start_time = datetime.now(UTC)
 
         return TraceSpan(
             trace_id="trace-1",
@@ -57,7 +57,7 @@ def sample_trace_data(sample_trace_span):
         if spans is None:
             spans = [sample_trace_span()]
 
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
         return TraceData(
             trace_id=trace_id,
             root_span_id=spans[0].span_id if spans else "root",
@@ -224,7 +224,7 @@ class TestTraceAnalyzer:
 
     def test_analyze_trends(self, analyzer, sample_trace_span, sample_trace_data):
         # Add a series of traces over time to simulate a trend
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         traces = []
         for i in range(10):

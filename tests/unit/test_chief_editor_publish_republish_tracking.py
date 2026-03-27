@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from agents.chief_editor.tools import (
     _compute_taxonomy_drift_signal,
@@ -29,14 +29,14 @@ class _FakeCursor:
 
 def test_derive_publish_action_create_when_no_existing_article():
     source = {
-        'created_at': datetime.now(timezone.utc),
-        'updated_at': datetime.now(timezone.utc),
+        'created_at': datetime.now(UTC),
+        'updated_at': datetime.now(UTC),
     }
     assert _derive_publish_action(source=source, existing_article=None) == 'create'
 
 
 def test_derive_publish_action_republished_update_when_source_updated():
-    created = datetime.now(timezone.utc) - timedelta(minutes=5)
+    created = datetime.now(UTC) - timedelta(minutes=5)
     updated = created + timedelta(minutes=3)
     source = {'created_at': created, 'updated_at': updated}
     existing = {'id': 1, 'slug': 'example'}
@@ -48,7 +48,7 @@ def test_derive_publish_action_republished_update_when_source_updated():
 
 
 def test_derive_publish_action_refresh_when_not_meaningfully_updated():
-    created = datetime.now(timezone.utc)
+    created = datetime.now(UTC)
     source = {'created_at': created, 'updated_at': created}
     existing = {'id': 1, 'slug': 'example'}
 

@@ -1,8 +1,8 @@
 from agents.analyst.schemas import (
     AnalysisReport,
-    AttributionSpan,
     AttributedQuote,
     AttributedStatement,
+    AttributionSpan,
     BalanceAssessment,
     PerArticleAnalysis,
 )

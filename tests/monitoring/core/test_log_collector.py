@@ -1,5 +1,5 @@
 import asyncio
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -91,8 +91,8 @@ async def test_process_worker_flush(collector):
     collector.config["flush_interval"] = 100 # Long interval
 
     # Create entries
-    e1 = LogEntry(datetime.now(timezone.utc), LogLevel.INFO, "l", "m1")
-    e2 = LogEntry(datetime.now(timezone.utc), LogLevel.INFO, "l", "m2")
+    e1 = LogEntry(datetime.now(UTC), LogLevel.INFO, "l", "m1")
+    e2 = LogEntry(datetime.now(UTC), LogLevel.INFO, "l", "m2")
 
     # Mock flush buffer - we need to capture the list CONTENT because the list object is cleared
     captured_buffer = []
@@ -151,7 +151,7 @@ async def test_custom_handler(collector):
     custom_handler = AsyncMock()
     collector.add_log_handler(custom_handler)
 
-    entry = LogEntry(datetime.now(timezone.utc), LogLevel.INFO, "l", "msg")
+    entry = LogEntry(datetime.now(UTC), LogLevel.INFO, "l", "msg")
 
     # Manually trigger flush buffer
     await collector._flush_buffer([entry])

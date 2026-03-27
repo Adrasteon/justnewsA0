@@ -22,7 +22,7 @@ def _stub_chat(adapter_wrapper: Any, return_value: dict[str, Any]):
         def fake(prompt: str, **kwargs):
             captured["messages"] = [{"role": "user", "content": prompt}]
             return {"text": json.dumps(return_value)}
-        
+
         # We need to mock the bound method on the instance
         # Since adapter.adapter is an instance of OpenAIAdapter, we patch its infer method
         adapter_wrapper.adapter.infer = fake
@@ -34,9 +34,9 @@ def _stub_chat(adapter_wrapper: Any, return_value: dict[str, Any]):
         def fake_json(messages: list[dict[str, str]]):
             captured["messages"] = messages
             return return_value
-        
+
         adapter_wrapper._chat_json = fake_json
-        
+
     return captured
 
 
@@ -86,7 +86,7 @@ def test_reasoning_adapter_defaults_when_no_facts():
     assert doc == {"verdict": "unclear"}
     # New prompt format check
     body = captured["messages"][0]["content"]
-    # Reasoning adapter 'analyze' likely creates a user block. 
+    # Reasoning adapter 'analyze' likely creates a user block.
     # Let's assume assume "Claim:" or similar is present or just rely on the stub returning value.
     # The original test checked "None provided". Let's update closer to reality if needed.
     # But verifying return value is most important for smoke test.

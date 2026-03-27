@@ -1,5 +1,5 @@
-from agents.workflow_orchestrator import policies
 from agents.critic import tools as critic_tools
+from agents.workflow_orchestrator import policies
 
 
 def test_upsert_living_story_applies_traceability_gate(monkeypatch):

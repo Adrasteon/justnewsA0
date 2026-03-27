@@ -113,6 +113,7 @@ def _is_supported_uv_env(interpreter_path: str) -> bool:
         os.path.abspath(interpreter_path),
         os.path.realpath(interpreter_path),
     }
+    normalized = os.path.realpath(interpreter_path)
 
     supported_prefixes = {
         os.path.abspath("/app/.venv/bin/") ,
@@ -154,29 +155,21 @@ if (
     else:
         detected_phase = None
 
-    # Detect phase from current interpreter path (supports both unified and phased conda envs)
+    # Detect managed JustNews interpreter naming patterns (legacy-compatible).
     if detected_phase is None:
         detected_phase = _detect_phase_from_path(sys.executable)
 
     if detected_phase is None:
-        # Not running in a supported JustNews UV/venv or conda environment.
+        # Not running in a supported JustNews UV/venv environment.
         msg = """
 Tests should be run inside a supported JustNews Python environment for consistent results.
 
 Supported environments:
   - UV/venv: /app/.venv or /deps/.venv
-  - justnews-py312 (unified)
-  - justnews-py312-phase1, -phase2, -phase3, -phase4 (phased)
 
 To setup:
-    # UV (preferred)
-    uv venv .venv && source .venv/bin/activate
-    uv pip install -r requirements-bootstrap.txt
-
-    # Or conda legacy setup
-  bash scripts/dev/setup_dev_environment.sh --create-all-phases
-  bash scripts/dev/select_phase_env.sh --phase 1
-  source ./global.env
+  uv venv .venv && source .venv/bin/activate
+  uv pip install -r requirements-bootstrap.txt
 
 Then run tests:
   pytest tests/

@@ -1,6 +1,6 @@
+import asyncio
 import sys
 import types
-import asyncio
 
 from agents.sites.generic_site_crawler import SiteConfig
 

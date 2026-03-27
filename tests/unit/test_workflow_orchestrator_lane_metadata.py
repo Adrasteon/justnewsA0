@@ -1,10 +1,10 @@
+import agents.workflow_orchestrator.policies as policies
 from agents.workflow_orchestrator.policies import (
     _derive_publication_lane_metadata,
     _record_cluster_promotion_failure_metrics,
     _record_lane_metrics,
     _record_singleton_to_verified_conversion,
 )
-import agents.workflow_orchestrator.policies as policies
 
 
 def test_lane_metadata_verified_story(monkeypatch):

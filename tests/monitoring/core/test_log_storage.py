@@ -1,4 +1,4 @@
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,7 +11,7 @@ from monitoring.core.log_storage import LogQuery, LogStorage, QueryOperator
 # Sample Data
 def create_sample_entry(timestamp=None, level=LogLevel.INFO, msg="test"):
     if timestamp is None:
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
     return LogEntry(
         timestamp=timestamp,
         level=level,
@@ -66,7 +66,7 @@ async def test_store_logs_writes_file(storage, mock_aiofiles):
     """Test that store_logs writes log entries to the correct file."""
     mock_open_fn, mock_handle = mock_aiofiles
 
-    dt = datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+    dt = datetime(2025, 1, 1, 12, 0, 0, tzinfo=UTC)
     entries = [create_sample_entry(dt, msg="entry1")]
 
     # Mock _load_log_file to return empty list so we just append our new entry
@@ -136,7 +136,7 @@ async def test_matches_operator(storage):
 @pytest.mark.asyncio
 async def test_query_filtering(storage):
     """Test filtering logic within _query_file."""
-    dt = datetime.now(timezone.utc)
+    dt = datetime.now(UTC)
     entries = [
         create_sample_entry(dt, LogLevel.INFO, "info msg"),
         create_sample_entry(dt, LogLevel.ERROR, "error msg"),
@@ -164,8 +164,8 @@ async def test_cleanup_old_logs(storage, tmp_path):
     log_dir.mkdir(parents=True, exist_ok=True)
 
     # Create fake files
-    old_date = datetime.now(timezone.utc) - timedelta(days=20)
-    new_date = datetime.now(timezone.utc)
+    old_date = datetime.now(UTC) - timedelta(days=20)
+    new_date = datetime.now(UTC)
 
     old_filename = f"logs_{old_date.strftime('%Y%m%d_%H')}.json"
     new_filename = f"logs_{new_date.strftime('%Y%m%d_%H')}.json"

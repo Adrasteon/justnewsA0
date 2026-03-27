@@ -1,4 +1,4 @@
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
@@ -136,10 +136,10 @@ def test_cleanup_old_traces(collector):
 
     # Inject old completed trace
     old_data = TraceData(trace_id="old", root_span_id="1")
-    old_data.end_time = datetime.now(timezone.utc) - timedelta(hours=25) # > 24h retention
+    old_data.end_time = datetime.now(UTC) - timedelta(hours=25) # > 24h retention
 
     new_data = TraceData(trace_id="new", root_span_id="2")
-    new_data.end_time = datetime.now(timezone.utc) - timedelta(hours=1)
+    new_data.end_time = datetime.now(UTC) - timedelta(hours=1)
 
     collector.completed_traces["old"] = old_data
     collector.completed_traces["new"] = new_data

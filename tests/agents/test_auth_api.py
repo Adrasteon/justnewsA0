@@ -98,7 +98,7 @@ def test_login_user_success_sync(monkeypatch):
     assert res.refresh_token == "RTOKEN"
 
 
-from datetime import timezone, datetime, timedelta  # noqa: E402
+from datetime import UTC, datetime, timedelta  # noqa: E402
 
 from fastapi import HTTPException  # noqa: E402
 
@@ -158,7 +158,7 @@ async def test_login_user_invalid_user(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_login_user_locked(monkeypatch):
-    future = datetime.now(timezone.utc) + timedelta(minutes=5)
+    future = datetime.now(UTC) + timedelta(minutes=5)
     user = {
         "user_id": 1,
         "username": "bob",
@@ -176,7 +176,7 @@ async def test_login_user_locked(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_login_user_success(monkeypatch):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     user = {
         "user_id": 2,
         "username": "alice",
