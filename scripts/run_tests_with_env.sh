@@ -18,7 +18,10 @@ fi
 
 # Load global.env defaults (scripts/run_with_env.sh is preferred in normal usage)
 # But if you prefer this script, source the file if present
-if [[ -f "/etc/justnews/global.env" ]]; then
+if [[ -f "./global.env" ]]; then
+  # shellcheck disable=SC1091
+  source ./global.env
+elif [[ -f "/etc/justnews/global.env" ]]; then
   # shellcheck disable=SC1091
   source /etc/justnews/global.env
 fi

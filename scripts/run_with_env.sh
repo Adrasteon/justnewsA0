@@ -50,12 +50,17 @@ if [[ $# -eq 0 ]]; then
     exit 1
 fi
 
-# If caller wants to use `conda run ...` but `mamba` is available, prefer `mamba` as a drop-in replacement
-# This makes CI and developer scripts faster when mamba is installed in the base env.
-if [[ "$1" == "conda" ]]; then
-    if command -v mamba >/dev/null 2>&1; then
-        # Replace the leading 'conda' with 'mamba' and keep remaining args intact
-        set -- "mamba" "${@:2}"
+# Legacy compatibility: map `conda run -n <env> ...` to canonical UV/.venv python
+# for scripts that have not been fully migrated yet.
+if [[ "$1" == "conda" && "${2:-}" == "run" ]]; then
+    shift 2
+    if [[ "${1:-}" == "-n" || "${1:-}" == "--name" ]]; then
+        shift 2
+    fi
+    if [[ -x "${REPO_ROOT}/.venv/bin/python" ]]; then
+        set -- "${REPO_ROOT}/.venv/bin/python" "$@"
+    else
+        set -- "python" "$@"
     fi
 fi
 

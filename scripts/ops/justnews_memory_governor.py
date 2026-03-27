@@ -19,9 +19,8 @@ import signal
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
 
 
 @dataclass
@@ -67,7 +66,7 @@ def process_tree_pids(root_pid: int) -> list[int]:
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def log(message: str, *, level: str = "INFO", log_file: Path | None = None) -> None:

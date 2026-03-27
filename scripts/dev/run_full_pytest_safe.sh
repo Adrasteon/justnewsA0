@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Run the full pytest suite in the canonical conda environment with safe defaults
+# Run the full pytest suite in the canonical UV/venv environment with safe defaults
 # that avoid real GPU usage on developer machines.
 
 export TEST_GPU_AVAILABLE=${TEST_GPU_AVAILABLE:-false}

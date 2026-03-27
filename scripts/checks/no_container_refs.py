@@ -45,6 +45,16 @@ EXCLUDE_DIRS = [
     "logs",
     "scripts/checks",
     "third_party",
+    "agents/nucleoid_repo",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+    "run",
 ]
 
 # File extensions to scan (only these will be scanned for banned tokens)
@@ -79,10 +89,26 @@ def should_scan_file(path: Path) -> bool:
 
 def main() -> int:
     repo_root = Path.cwd()
+    allowed_roots = [
+        (repo_root / arg).resolve() if not Path(arg).is_absolute() else Path(arg).resolve()
+        for arg in sys.argv[1:]
+    ]
+
+    def in_allowed_roots(path: Path) -> bool:
+        if not allowed_roots:
+            return True
+        for allowed in allowed_roots:
+            try:
+                path.resolve().relative_to(allowed)
+                return True
+            except Exception:
+                continue
+        return False
+
     matches = []
     compiled = [re.compile(p, flags=re.IGNORECASE) for p in BANNED_PATTERNS]
 
-    for root, _dirs, files in os.walk(repo_root):
+    for root, _dirs, files in os.walk(repo_root, topdown=True):
         # Skip vendor/ or .git or site-packages
         try:
             top_element = Path(root).resolve().relative_to(repo_root.resolve()).parts[0]
@@ -91,6 +117,22 @@ def main() -> int:
         except Exception:
             # If the path is identical to repo_root or other reasons, skip gracefully
             pass
+
+        # Prune excluded subdirectories early for performance.
+        current_root = Path(root)
+        try:
+            _dirs[:] = [
+                d
+                for d in _dirs
+                if not any(
+                    str((current_root / d).relative_to(repo_root)).startswith(excl)
+                    for excl in EXCLUDE_DIRS
+                )
+                and d != ".git"
+            ]
+        except Exception:
+            pass
+
         # Skip excluded top-level dirs quickly
         relative_root = Path(root).relative_to(repo_root)
         skip_here = False
@@ -103,6 +145,8 @@ def main() -> int:
 
         for fname in files:
             fpath = Path(root) / fname
+            if not in_allowed_roots(fpath):
+                continue
             if not should_scan_file(fpath):
                 continue
             # Exclude binary-looking files

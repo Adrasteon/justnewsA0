@@ -13,12 +13,11 @@ import json
 import re
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 import requests
-
 
 METRIC_PATTERN = re.compile(
     r"published_verified_share|published_total_|cluster_promotion_failures|singleton_to_verified_conversion"
@@ -36,7 +35,7 @@ class ApiResult:
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _request_json(
@@ -204,7 +203,7 @@ def main() -> int:
     output_dir = Path(args.out_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     base_name = f"multi_source_refactor_{args.env_tag}_{stamp}"
 
     runtime_before = _request_json("GET", f"{orch_url}/runtime-config", timeout=args.request_timeout)

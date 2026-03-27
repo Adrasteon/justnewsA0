@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import os
 import textwrap
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 
 import mysql.connector
 
@@ -107,7 +107,7 @@ def seed_sample_row(conn) -> None:
                 json.dumps(metadata),
                 json.dumps(structured),
                 json.dumps(authors),
-                datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+                datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S"),
             ),
         )
         conn.commit()

@@ -8,7 +8,7 @@ import json
 import os
 import time
 from collections import Counter
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -27,7 +27,7 @@ def _iso_from_epoch(value: float | int | None) -> str:
     if not value:
         return ''
     try:
-        return datetime.fromtimestamp(float(value), tz=timezone.utc).isoformat().replace('+00:00', 'Z')
+        return datetime.fromtimestamp(float(value), tz=UTC).isoformat().replace('+00:00', 'Z')
     except Exception:
         return ''
 
@@ -173,7 +173,7 @@ def _build_summary(root: Path, index_dir: Path, telemetry_path: Path, telemetry_
 
     return {
         'generated_at_epoch': time.time(),
-        'generated_at_iso': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
+        'generated_at_iso': datetime.now(UTC).isoformat().replace('+00:00', 'Z'),
         'root': root.as_posix(),
         'index_dir': index_dir.as_posix(),
         'files': files_section,

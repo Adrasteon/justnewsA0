@@ -3,8 +3,7 @@ import json
 import os
 import time
 import urllib.request
-from datetime import datetime, timezone
-from typing import Dict, Tuple
+from datetime import UTC, datetime
 
 import mysql.connector
 from dotenv import load_dotenv
@@ -55,12 +54,12 @@ BASE_KWARGS = {
 }
 
 
-def get_json(url: str, timeout: int = 20) -> Dict:
+def get_json(url: str, timeout: int = 20) -> dict:
     with urllib.request.urlopen(url, timeout=timeout) as response:
         return json.loads(response.read().decode('utf-8'))
 
 
-def post_toolcall(url: str, kwargs_payload: Dict, timeout: int = 40) -> Tuple[int, Dict]:
+def post_toolcall(url: str, kwargs_payload: dict, timeout: int = 40) -> tuple[int, dict]:
     body = {'args': [], 'kwargs': kwargs_payload}
     req = urllib.request.Request(
         url,
@@ -101,7 +100,7 @@ def db_articles() -> int:
 
 def load_cursor() -> int:
     try:
-        with open(ROUND_ROBIN_CURSOR_FILE, 'r', encoding='utf-8') as file:
+        with open(ROUND_ROBIN_CURSOR_FILE, encoding='utf-8') as file:
             payload = json.load(file)
         return int(payload.get('cursor', 0))
     except Exception:
@@ -139,7 +138,7 @@ def _parse_timestamp(value: str | None) -> datetime | None:
         return None
     for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M:%S'):
         try:
-            return datetime.strptime(text, fmt).replace(tzinfo=timezone.utc)
+            return datetime.strptime(text, fmt).replace(tzinfo=UTC)
         except Exception:
             continue
     return None
@@ -170,7 +169,7 @@ def fetch_source_domains() -> tuple[list[str], dict[str, int]]:
     cursor.close()
     conn.close()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     stats = {
         'total_rows': len(rows),
         'accepted': 0,
@@ -314,8 +313,8 @@ def update_source_metadata_from_job(job_id: str, result: dict) -> None:
     conn.close()
 
 
-def read_cpu_times() -> Tuple[int, int]:
-    with open('/proc/stat', 'r', encoding='utf-8') as file:
+def read_cpu_times() -> tuple[int, int]:
+    with open('/proc/stat', encoding='utf-8') as file:
         first = file.readline().strip().split()
     values = [int(value) for value in first[1:]]
     idle = values[3] + values[4]
@@ -323,7 +322,7 @@ def read_cpu_times() -> Tuple[int, int]:
     return total, idle
 
 
-def cpu_utilization_percent(prev_times: Tuple[int, int]) -> Tuple[float, Tuple[int, int]]:
+def cpu_utilization_percent(prev_times: tuple[int, int]) -> tuple[float, tuple[int, int]]:
     current_total, current_idle = read_cpu_times()
     previous_total, previous_idle = prev_times
     total_delta = current_total - previous_total
@@ -337,7 +336,7 @@ def cpu_utilization_percent(prev_times: Tuple[int, int]) -> Tuple[float, Tuple[i
     return utilization, (current_total, current_idle)
 
 
-def policy(cpu_percent: float) -> Tuple[str, int, int, int, bool]:
+def policy(cpu_percent: float) -> tuple[str, int, int, int, bool]:
     if cpu_percent >= CPU_CRITICAL_PERCENT:
         return ('critical', 0, HIGH_TIER_CONCURRENT_SITES, HIGH_TIER_DOMAIN_BATCH, True)
     if cpu_percent >= CPU_THROTTLE_PERCENT:

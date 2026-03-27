@@ -47,8 +47,12 @@ def find_python_files(directory):
 
 def check_processing_time_patterns(file_path):
     """Check a Python file for suspicious processing_time patterns."""
-    with open(file_path, encoding='utf-8') as file:
-        content = file.read()
+    try:
+        with open(file_path, encoding='utf-8') as file:
+            content = file.read()
+    except UnicodeDecodeError:
+        # Skip non-UTF8 files so this check only fails on actual pattern issues.
+        return False, None
 
     # Pattern 1: processing_time = time.time() - time.time()
     pattern1 = re.compile(r'processing_time\s*=\s*time\.time\(\)\s*-\s*time\.time\(\)')

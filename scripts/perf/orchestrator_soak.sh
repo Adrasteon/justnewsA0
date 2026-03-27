@@ -7,7 +7,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
-CANONICAL_ENV=${CANONICAL_ENV:-justnews-py312-phase3}
+REPO_VENV_PY=${REPO_VENV_PY:-${REPO_ROOT}/.venv/bin/python}
 
 REQUESTS=20
 SWEEP=0
@@ -32,20 +32,19 @@ OUT_CSV="$OUT_DIR/orchestrator-soak-${TS}.csv"
 
 echo "Running orchestrator soak: requests=$REQUESTS sweep=$SWEEP model=$MODEL"
 
-# Run using canonical env wrapper if present
-if [[ -x "$REPO_ROOT/scripts/run_with_env.sh" ]]; then
-  WRAPPER="$REPO_ROOT/scripts/run_with_env.sh"
-else
-  WRAPPER=""
+if [[ ! -x "$REPO_VENV_PY" ]]; then
+  echo "ERROR: expected UV/venv python not found at $REPO_VENV_PY" >&2
+  echo "Create it first with: make env-bootstrap" >&2
+  exit 2
 fi
 
-CMD="$WRAPPER conda run -n ${CANONICAL_ENV} python $REPO_ROOT/scripts/perf/simulate_concurrent_inference.py --requests ${REQUESTS}"
+CMD=("$REPO_VENV_PY" "$REPO_ROOT/scripts/perf/simulate_concurrent_inference.py" "--requests" "$REQUESTS")
 if [[ $SWEEP -eq 1 ]]; then
-  CMD="$CMD --sweep --sweep-max ${SWEEP_MAX}"
+  CMD+=("--sweep" "--sweep-max" "$SWEEP_MAX")
 fi
-CMD="$CMD --model ${MODEL} --output-csv ${OUT_CSV}"
+CMD+=("--model" "$MODEL" "--output-csv" "$OUT_CSV")
 
-echo "Executing: $CMD"
-eval "$CMD"
+echo "Executing: ${CMD[*]}"
+"${CMD[@]}"
 
 echo "Results -> ${OUT_CSV}"

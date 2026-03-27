@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
-# Backwards-compatible wrapper for local pytest runs that prefer the canonical conda env
+# Local pytest wrapper that prefers project UV/venv (.venv).
 set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-# Respect global CANONICAL_ENV if exported in environment (fallback is inside
-# run_pytest_conda.sh). This wrapper simply delegates to run_pytest_conda.sh
-# to ensure a single behavior for local & CI test runs.
-# Run the pytest runner under scripts/run_with_env.sh so we pick up the canonical
-# environment variables loaded from global.env before invoking pytest in conda.
-if [[ -x "${SCRIPT_DIR}/../run_with_env.sh" ]]; then
-	exec "${SCRIPT_DIR}/../run_with_env.sh" "${SCRIPT_DIR}/run_pytest_conda.sh" "$@"
-else
-	exec "${SCRIPT_DIR}/run_pytest_conda.sh" "$@"
+REPO_ROOT=$(cd "${SCRIPT_DIR}/../.." && pwd)
+VENV_PY="${REPO_ROOT}/.venv/bin/python"
+
+if [[ -x "${VENV_PY}" ]]; then
+  exec "${VENV_PY}" -m pytest "$@"
 fi
+
+if command -v uv >/dev/null 2>&1; then
+  exec uv run --directory "${REPO_ROOT}" pytest "$@"
+fi
+
+if command -v pytest >/dev/null 2>&1; then
+  exec pytest "$@"
+fi
+
+echo "ERROR: pytest is unavailable. Create the UV environment first (make env-bootstrap)." >&2
+exit 2

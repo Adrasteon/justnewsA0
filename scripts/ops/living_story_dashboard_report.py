@@ -12,7 +12,7 @@ import argparse
 import json
 import os
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from statistics import mean, median
 from typing import Any
 
@@ -136,7 +136,7 @@ def build_report(limit: int) -> dict[str, Any]:
             latencies.append(story.publish_latency_mean)
 
     report = {
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
         "sample_size": len(stories),
         "actions": actions,
         "urgency_classes": urgency,

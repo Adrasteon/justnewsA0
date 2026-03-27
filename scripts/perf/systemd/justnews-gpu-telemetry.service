@@ -4,7 +4,7 @@ After=network.target
 
 # Read runtime overrides from /etc/default/justnews-gpu-telemetry (optional)
 EnvironmentFile=-/etc/default/justnews-gpu-telemetry
-Environment=JN_PYTHON_BIN=${JN_PYTHON_BIN:-$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin/python}
+Environment=JN_PYTHON_BIN=${JN_PYTHON_BIN:-/usr/bin/python3}
 
 [Service]
 Type=simple

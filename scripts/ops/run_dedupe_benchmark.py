@@ -13,7 +13,7 @@ import os
 import statistics
 import subprocess
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +22,7 @@ import requests
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def parse_args() -> argparse.Namespace:
@@ -288,7 +288,7 @@ def main() -> int:
         "cycles": cycles,
     }
 
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     json_path = out_dir / f"dedupe_benchmark_{args.label}_{stamp}.json"
     md_path = out_dir / f"dedupe_benchmark_{args.label}_{stamp}.md"
 

@@ -7,7 +7,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +18,6 @@ if str(PROJECT_ROOT) not in sys.path:
 os.environ.setdefault("JUSTNEWS_DB_EMBEDDING_ENABLED", "0")
 
 from database.utils.migrated_database_utils import create_database_service
-
 
 REQUIRED_FIELDS = [
     "publication_lane",
@@ -34,7 +33,7 @@ REQUIRED_FIELDS = [
 
 
 def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _parse_args() -> argparse.Namespace:
@@ -275,7 +274,7 @@ def main() -> int:
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     base_name = f"multi_source_refactor_provenance_{args.env_tag}_{stamp}"
     json_path = out_dir / f"{base_name}.json"
     md_path = out_dir / f"{base_name}.md"

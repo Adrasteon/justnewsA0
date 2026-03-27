@@ -13,7 +13,7 @@ import argparse
 import json
 import os
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +21,7 @@ import requests
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _headers() -> dict[str, str]:
@@ -55,7 +55,7 @@ def _contains_feed_markers(text: str) -> bool:
 
 def _write_reports(out_dir: Path, report: dict[str, Any]) -> tuple[Path, Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     json_path = out_dir / f"bbc_lane1_entity_verification_{stamp}.json"
     md_path = out_dir / f"bbc_lane1_entity_verification_{stamp}.md"
 

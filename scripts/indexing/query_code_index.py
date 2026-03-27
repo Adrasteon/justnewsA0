@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import math
 import json
+import math
 import os
 import re
 import subprocess

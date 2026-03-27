@@ -7,4 +7,4 @@ echo "Stopping local agents before running tests (if any)"
 "${SCRIPT_DIR}/stop_local_agents.sh"
 
 echo "Running pytest via canonical runner"
-exec "${SCRIPT_DIR}/run_pytest_conda.sh" "$@"
+exec "${SCRIPT_DIR}/pytest.sh" "$@"

@@ -7,8 +7,9 @@ REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
-import chromadb
 from chromadb.config import Settings
+
+import chromadb
 
 try:
     from common.observability import get_logger
@@ -23,12 +24,12 @@ except ImportError as e:
 def setup_chroma():
     host = os.environ.get("CHROMADB_HOST", "localhost")
     port = int(os.environ.get("CHROMADB_PORT", "8000"))
-    
+
     logger.info(f"Connecting to Chroma at {host}:{port}")
-    
+
     try:
         client = chromadb.HttpClient(
-            host=host, 
+            host=host,
             port=port,
             settings=Settings(allow_reset=True, anonymized_telemetry=False)
         )
@@ -37,7 +38,7 @@ def setup_chroma():
         return
 
     collection_name = "active_living_stories"
-    
+
     try:
         # Check if exists
         try:
@@ -48,10 +49,10 @@ def setup_chroma():
             # We use cosine similarity as per plan
             client.create_collection(
                 name=collection_name,
-                metadata={"hnsw:space": "cosine"} 
+                metadata={"hnsw:space": "cosine"}
             )
             logger.info(f"Created collection '{collection_name}'.")
-            
+
     except Exception as e:
         logger.error(f"Error managing collection: {e}")
 

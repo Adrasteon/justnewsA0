@@ -4,8 +4,8 @@ import sys
 # Add project root to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
-from database.utils.migrated_database_utils import create_database_service
 from common.observability import get_logger
+from database.utils.migrated_database_utils import create_database_service
 
 logger = get_logger("reset_clustering")
 

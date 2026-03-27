@@ -13,8 +13,8 @@ if [[ -z "${CI:-}" ]]; then
   if [[ -x ./scripts/dev/ensure_canonical_env.sh ]]; then
     ./scripts/dev/ensure_canonical_env.sh || true
   fi
-  echo "[justnews] Notice: we recommend running tests via scripts/dev/pytest.sh inside the '${CANONICAL_ENV:-justnews-py312}' conda env for consistency."
-  echo "[justnews] To bypass this message set ALLOW_ANY_PYTEST_ENV=1 or set up the conda env."
+  echo "[justnews] Notice: we recommend running tests via scripts/dev/pytest.sh inside the project UV/.venv environment for consistency."
+  echo "[justnews] To bypass local env checks set ALLOW_ANY_PYTEST_ENV=1."
 fi
 
 if [[ "${GIT_STRICT_TEST_HOOK:-0}" == "1" ]]; then

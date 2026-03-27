@@ -1,16 +1,25 @@
 #!/usr/bin/env bash
 # start_services_daemon.sh
-# Starts the justnews set of FastAPI/uvicorn agent services using the
-# `justnews-py312-phase1` conda environment. Performs simple health checks and
-# writes per-agent logs to ./logs/
+# Starts the JustNews set of FastAPI/uvicorn agent services using the
+# project-local UV-managed .venv when available. Performs simple health checks
+# and writes per-agent logs to ./logs/
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$SCRIPT_DIR/logs"
 mkdir -p "$LOG_DIR"
 
-# Conda environment name used by the project
-CANONICAL_ENV="${CANONICAL_ENV:-justnews-py312-phase1}"
+# Canonical Python runtime for project services
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+VENV_PY="${REPO_ROOT}/.venv/bin/python"
+DEFAULT_PYTHON_BIN="${PYTHON_BIN:-}"
+if [ -z "${DEFAULT_PYTHON_BIN}" ]; then
+  if [ -x "${VENV_PY}" ]; then
+    DEFAULT_PYTHON_BIN="${VENV_PY}"
+  else
+    DEFAULT_PYTHON_BIN="$(command -v python || echo python)"
+  fi
+fi
 
 # Default timeout for healthchecks (seconds)
 HEALTH_TIMEOUT=60
@@ -45,9 +54,12 @@ export WORKFLOW_ORCHESTRATOR_PORT=8023
 
 PIDS=()
 
-activate_conda_env() {
-  # Use conda run in commands below; this function is a placeholder for future activation.
-  return 0
+resolve_python_bin() {
+  local py_bin="${PYTHON_BIN:-${DEFAULT_PYTHON_BIN}}"
+  if [ ! -x "${py_bin}" ]; then
+    py_bin="$(command -v python || echo python)"
+  fi
+  echo "${py_bin}"
 }
 
 # Check whether a TCP port is currently listening on localhost
@@ -270,7 +282,9 @@ if [ "${AUTO_SEED_SOURCES:-0}" = "1" ]; then
     if [ "${NEED_SEED:-0}" = "1" ]; then
       if [ -f "$SCRIPT_DIR/scripts/news_outlets.py" ]; then
         echo "[startup] Seeding sources from potential_news_sources.md"
-        conda run --name "$CONDA_ENV" python "$SCRIPT_DIR/scripts/news_outlets.py" \
+        local py_bin
+        py_bin="$(resolve_python_bin)"
+        "$py_bin" "$SCRIPT_DIR/scripts/news_outlets.py" \
           --file "$SCRIPT_DIR/markdown_docs/agent_documentation/potential_news_sources.md" || echo "[startup] WARNING: source seeding script failed"
       else
         echo "[startup] WARNING: scripts/news_outlets.py not found – cannot seed sources"
@@ -284,11 +298,13 @@ start_agent() {
   local err_log="$LOG_DIR/${name}.err.log"
 
   echo "Starting $name -> $module on port $port"
-  # Start uvicorn via conda run so the right env is used. Run in background.
+  # Start uvicorn with the canonical project interpreter (UV/.venv when available).
+  local py_bin
+  py_bin="$(resolve_python_bin)"
   if [ "$name" = "training_system" ]; then
-    TRAINING_SYSTEM_PORT="$port" conda run --name "$CONDA_ENV" uvicorn "$module" --host 0.0.0.0 --port "$port" --log-level info >"$out_log" 2>"$err_log" &
+    TRAINING_SYSTEM_PORT="$port" "$py_bin" -m uvicorn "$module" --host 0.0.0.0 --port "$port" --log-level info >"$out_log" 2>"$err_log" &
   else
-    conda run --name "$CONDA_ENV" uvicorn "$module" --host 0.0.0.0 --port "$port" --log-level info >"$out_log" 2>"$err_log" &
+    "$py_bin" -m uvicorn "$module" --host 0.0.0.0 --port "$port" --log-level info >"$out_log" 2>"$err_log" &
   fi
   local pid=$!
   PIDS+=("$pid")
@@ -334,7 +350,7 @@ else
   echo "Running in detach mode: started agents will continue running after this script exits."
 fi
 
-echo "Starting agents using conda env: $CONDA_ENV"
+echo "Starting agents using python: $(resolve_python_bin)"
 for entry in "${AGENTS[@]}"; do
   IFS='|' read -r name module port <<< "$entry"
   start_agent "$name" "$module" "$port"
