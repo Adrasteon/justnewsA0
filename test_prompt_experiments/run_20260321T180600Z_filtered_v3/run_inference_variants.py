@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-import os
 import json
+import os
 import re
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import mysql.connector
@@ -75,7 +75,7 @@ cfg = {
 }
 
 run_manifest = {
-    'run_generated_at_utc': datetime.now(timezone.utc).isoformat(),
+    'run_generated_at_utc': datetime.now(UTC).isoformat(),
     'model': model,
     'base_url': base_url,
     'chat_url': chat_url,

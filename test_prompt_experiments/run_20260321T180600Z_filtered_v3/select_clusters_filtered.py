@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
+import json
 import os
 import re
-import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+
 import mysql.connector
 
 OUT = Path(os.environ.get('EXPERIMENT_DIR', '.')).resolve()
@@ -158,7 +159,7 @@ with mysql.connector.connect(**cfg) as conn:
                 needed -= 1
 
 result = {
-    'generated_at_utc': datetime.now(timezone.utc).isoformat(),
+    'generated_at_utc': datetime.now(UTC).isoformat(),
     'target_count': TARGET_COUNT,
     'control_clusters': CONTROL_CLUSTERS,
     'excluded_clusters': sorted(list(REJECT_CLUSTERS)),

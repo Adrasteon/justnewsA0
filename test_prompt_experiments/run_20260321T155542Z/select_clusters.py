@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import os
 import json
-from datetime import datetime, timezone
+import os
+from datetime import UTC, datetime
 from pathlib import Path
+
 import mysql.connector
 
 OUT = Path(os.environ.get('EXPERIMENT_DIR', '.')).resolve()
@@ -44,7 +45,7 @@ if len(selected) < TARGET_COUNT:
 selected = selected[:TARGET_COUNT]
 
 result = {
-    'generated_at_utc': datetime.now(timezone.utc).isoformat(),
+    'generated_at_utc': datetime.now(UTC).isoformat(),
     'target_count': TARGET_COUNT,
     'selected': selected,
 }
