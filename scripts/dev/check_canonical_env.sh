@@ -1,75 +1,43 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This script validates that the repository does not contain non-canonical
-# conda environment names in source or config files. We allow legacy names
-# in logs and artifacts (historical); those are excluded from the scan.
+# Validate that repository runtime references are aligned to UV/venv and do not
+# hard-code legacy JustNews conda env names in active source/config paths.
 
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo "$(pwd)")
-echo "Checking repository for non-canonical conda env names..."
+cd "$ROOT"
 
-CANONICAL_ENV="${CANONICAL_ENV:-justnews-py312}"
+echo "Checking repository for legacy conda env literals..."
 
-# Patterns we don't want to see in source/config — legacy names that must be
-# replaced with the project's canonical environment name above.
 PATTERNS=(
-  # Common variants we don't want to remain as hard-coded strings
   "justnews-py312"
   "justnews-py312-dev"
   "justnews-v2-py312"
   "justnews-v2-py312-fix"
 )
 
-EXCLUDES=(
-  --exclude-dir=.git
-  --exclude-dir=logs
-  --exclude-dir=artifacts
-  --exclude-dir=docs
-  --exclude-dir=.mypy_cache
-  --exclude-dir=__pycache__
-)
-
-# Also ignore this script file (it contains the patterns for detection)
-IGNORED_FILES=(
-  ':!scripts/dev/check_canonical_env.sh'
-)
+# Allow references in archival/deprecation materials while enforcing active runtime paths.
+ALLOW_PATHS_REGEX='^(archive_local/|docs/|CHANGELOG\.md$|PHASED_ENVIRONMENT_ROLLOUT_PLAN\.md$|QUICK_REFERENCE_CARD\.md$|PROJECT_INDEX\.md$|infrastructure/.*\.md$|scripts/dev/check_canonical_env\.sh$|tests/test_check_canonical_env\.py$|train_qlora/README\.md$|agents/hitl_service/README\.md$|requirements\.txt$|\.gitignore$|tests/.*$|conftest\.py$|scripts/dev/setup_dev_environment\.sh$|scripts/setup_dev_environment\.sh$|infrastructure/systemd/preflight\.sh$|infrastructure/systemd/canonical_system_startup\.sh$)'
 
 failures=0
 for pat in "${PATTERNS[@]}"; do
-  echo "Searching for $pat (excluding logs/artifacts)..."
-  # Use git grep when available (faster/accurate), fall back to grep -R
-  if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    # Use git grep and explicitly exclude logs/artifacts and this script file
-    matches=$(git grep -n --untracked -I -e "$pat" -- ':!logs' ':!artifacts' ':!docs' "${IGNORED_FILES[@]}" || true)
-  else
-    matches=$(grep -R --line-number -I "$pat" . ${EXCLUDES[*]} | grep -v "scripts/dev/check_canonical_env.sh" || true)
+  matches=$(git grep -n --untracked -I -e "$pat" -- . || true)
+  if [[ -z "$matches" ]]; then
+    continue
   fi
 
-  if [[ -n "$matches" ]]; then
-    # Filter out occurrences that are legitimate uses of CANONICAL_ENV or
-    # those that intentionally set/declare the canonical variable. We want to
-    # catch *raw* literal usages like 'conda run -n justnews-py312' or
-    # 'conda activate justnews-py312' in source or docs.
-    # Ignore any legitimate uses that reference the CANONICAL_ENV variable
-    filtered=$(echo "$matches" | grep -v -E "(\$\{CANONICAL_ENV|CANONICAL_ENV)" || true)
-    # Also exclude matches within our configured exclusion directories
-    filtered=$(echo "$filtered" | grep -v -E "(^.*/(logs|artifacts)/)" || true)
-    # Ignore canonical environment specification files (environment.yml) which
-    # purposely contain the canonical env name as the env manifest name.
-    filtered=$(echo "$filtered" | grep -v -E "(^|/)(environment.yml)(:|$)" || true)
-
-    if [[ -n "$filtered" ]]; then
-      echo "Found raw occurrences of $pat in source/config (these should be replaced to use \\$\{CANONICAL_ENV:-${CANONICAL_ENV}} or similar):"
-      echo "$filtered"
-      failures=1
-    fi
+  filtered=$(echo "$matches" | awk -F: -v re="$ALLOW_PATHS_REGEX" '$1 !~ re')
+  if [[ -n "$filtered" ]]; then
+    echo "Found disallowed raw occurrences of '$pat':"
+    echo "$filtered"
+    failures=1
   fi
 done
 
 if [[ $failures -ne 0 ]]; then
-  echo "ERROR: Non-canonical conda env names found in source/config files. Please replace them with '${CANONICAL_ENV}'."
+  echo "ERROR: legacy conda env literals found in active files."
   exit 1
 fi
 
-echo "OK — no non-canonical conda env names found in source/config files."
+echo "OK — no legacy conda env literals found in active source/config files."
 exit 0

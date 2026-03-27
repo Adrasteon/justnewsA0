@@ -5,7 +5,7 @@ Chroma Bootstrap Utility
 Small operator helper to bootstrap Chroma server tenant/collection in a best-effort, idempotent manner.
 
 Usage:
-    PYTHONPATH=. conda run -n ${CANONICAL_ENV:-justnews-py312} python scripts/chroma_bootstrap.py --host HOST --port PORT --tenant TENANT --collection COLLECTION
+    PYTHONPATH=. .venv/bin/python scripts/chroma_bootstrap.py --host HOST --port PORT --tenant TENANT --collection COLLECTION
 
 This script attempts to (in order):
   1. Validate the host/port is a Chroma instance (and not the MCP Bus)

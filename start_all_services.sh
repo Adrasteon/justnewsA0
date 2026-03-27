@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Legacy compatibility wrapper: canonical app lifecycle is Docker-first.
+if [[ "${JUSTNEWS_ENABLE_LEGACY_START_STOP:-0}" != "1" ]]; then
+  exec bash "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/ops/docker_compose.sh" up "$@"
+fi
 #
 # start_all_services.sh - Canonical comprehensive service startup script
 #

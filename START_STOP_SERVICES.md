@@ -1,14 +1,23 @@
-# JustNews Canonical Service Startup & Shutdown Scripts
+# JustNews Service Startup & Shutdown Compatibility Wrappers
 
-This document describes the canonical `start_all_services.sh` and `stop_all_services.sh` scripts for managing the complete JustNews system.
+This document describes the `start_all_services.sh` and `stop_all_services.sh` compatibility wrappers.
+
+Default behavior is Docker-first:
+- `start_all_services.sh` -> Docker compose up
+- `stop_all_services.sh` -> Docker compose down
+
+Set `JUSTNEWS_ENABLE_LEGACY_START_STOP=1` to re-enable legacy in-script lifecycle behavior during transition.
 
 ## Overview
 
-The JustNews system consists of:
-- **Database Services**: MariaDB, ChromaDB, Redis
-- **Agents**: 17 agent services managed through the canonical agents manifest
+Docker-first default:
+- `./start_all_services.sh` forwards to `scripts/ops/docker_compose.sh up`
+- `./stop_all_services.sh` forwards to `scripts/ops/docker_compose.sh down`
 
-These scripts provide a single, comprehensive entry point for starting and stopping all services in the correct order with proper dependency management.
+Legacy in-script orchestration mode is available only when explicitly enabled:
+- `JUSTNEWS_ENABLE_LEGACY_START_STOP=1`
+
+Use legacy mode only for temporary transition scenarios.
 
 ## Table of Contents
 

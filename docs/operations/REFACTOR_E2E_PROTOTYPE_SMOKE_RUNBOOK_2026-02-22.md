@@ -1,5 +1,8 @@
 # Refactor E2E Prototype Smoke Runbook
 
+> Historical context note: This document may describe legacy startup/orchestration flows captured at the time. Canonical runtime for JustNews is Docker-first. See `docs/operations/DOCKER_FIRST_STRATEGY.md` and `docs/operations/DOCKER_CANONICAL_COMMANDS.md`.
+
+
 Date: 2026-02-22  
 Scope: Fastest path to demonstrate refactored JustNews functionality end-to-end
 

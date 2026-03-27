@@ -7,12 +7,14 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+COMMON_LIB="$SCRIPT_DIR/scripts/lib/common.sh"
+if [[ -f "$COMMON_LIB" ]]; then
+    # shellcheck source=/dev/null
+    source "$COMMON_LIB"
+else
+    echo "[ERROR] Missing shared library: $COMMON_LIB" >&2
+    exit 1
+fi
 
 # Configuration
 STOP_MODE=false
@@ -21,24 +23,8 @@ GATE_ONLY=false
 GATE_INSTANCE=""
 # Allow environment override for gate timeout (defaults to 180s)
 GATE_TIMEOUT=${GATE_TIMEOUT:-180}
-CANONICAL_ENV="${CANONICAL_ENV:-justnews-py312-phase1}"
+PYTHON_BIN="${PYTHON_BIN:-/app/.venv/bin/python}"
 
-# Logging functions
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
 
 # Check if running as root
 check_root() {
@@ -108,11 +94,18 @@ check_gpu_environment() {
         log_info "CUDA toolkit not found (ok if using only drivers/runtime)."
     fi
 
-    # Attempt PyTorch CUDA probe via the standard env (optional)
-    if command -v conda &> /dev/null; then
-        if conda env list 2>/dev/null | grep -E "^\s*${CANONICAL_ENV}\s" > /dev/null; then
-            local torch_probe
-            if torch_probe=$(conda run -n "${CANONICAL_ENV}" python - <<'PY' 2>/dev/null
+    # Attempt PyTorch CUDA probe via configured PYTHON_BIN (optional)
+    local probe_py="$PYTHON_BIN"
+    if [[ ! -x "$probe_py" ]]; then
+        if [[ -x "$PROJECT_ROOT/.venv/bin/python" ]]; then
+            probe_py="$PROJECT_ROOT/.venv/bin/python"
+        else
+            probe_py="python3"
+        fi
+    fi
+
+    local torch_probe
+    if torch_probe=$($probe_py - <<'PY' 2>/dev/null
 import json, sys
 try:
     import torch
@@ -128,35 +121,27 @@ except Exception as e:
     sys.exit(1)
 PY
 ); then
-                if echo "$torch_probe" | grep -q '"error"'; then
-                    log_warning "⚠ PyTorch probe reported: $torch_probe"
-                else
-                    log_success "✓ PyTorch probe: $torch_probe"
-                fi
-            else
-                log_warning "⚠ Unable to run PyTorch probe in conda env ${CANONICAL_ENV}"
-            fi
+        if echo "$torch_probe" | grep -q '"error"'; then
+            log_warning "⚠ PyTorch probe reported: $torch_probe"
         else
-            log_info "Conda env ${CANONICAL_ENV} not found; skipping PyTorch probe."
+            log_success "✓ PyTorch probe: $torch_probe"
         fi
     else
-        log_info "Conda not found; skipping PyTorch probe."
+        log_warning "⚠ Unable to run PyTorch probe via PYTHON_BIN (${probe_py})"
     fi
 
     return 0
 }
 
-# Check that expected conda env exists (warning only)
-check_conda_env_exists() {
-    log_info "Checking conda environment availability..."
-    if command -v conda &> /dev/null; then
-        if conda env list 2>/dev/null | grep -E "^\s*${CANONICAL_ENV}\s" > /dev/null; then
-            log_success "✓ Conda env ${CANONICAL_ENV} exists"
-        else
-            log_warning "⚠ Conda env ${CANONICAL_ENV} not found"
-        fi
+# Check that expected Python runtime exists (warning only)
+check_python_runtime_exists() {
+    log_info "Checking Python runtime availability..."
+    if [[ -x "${PYTHON_BIN}" ]]; then
+        log_success "✓ Python runtime exists: ${PYTHON_BIN}"
+    elif [[ -x "${PROJECT_ROOT}/.venv/bin/python" ]]; then
+        log_success "✓ Python runtime exists: ${PROJECT_ROOT}/.venv/bin/python"
     else
-        log_warning "⚠ conda not found in PATH; ensure the runtime env is available"
+        log_warning "⚠ No configured UV/.venv Python runtime found"
     fi
     return 0
 }
@@ -402,12 +387,12 @@ check_python_environment() {
         return 1
     fi
 
-    # Check if conda environment exists
-    if [[ -n "${CONDA_DEFAULT_ENV:-}" ]]; then
-        log_success "✓ Conda environment active: $CONDA_DEFAULT_ENV"
+    # Check if virtual environment is active
+    if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+        log_success "✓ Python virtual environment active: $VIRTUAL_ENV"
     else
-        log_warning "⚠ No conda environment active"
-        log_info "  Consider activating: conda activate ${CANONICAL_ENV}"
+        log_warning "⚠ No virtual environment active"
+        log_info "  Consider activating: source ${PROJECT_ROOT}/.venv/bin/activate"
     fi
 
     return 0
@@ -658,7 +643,7 @@ main() {
         "check_python_environment"
         "check_project_structure"
     "check_disk_space"
-    "check_conda_env_exists"
+    "check_python_runtime_exists"
     "check_gpu_environment"
     "check_systemd_enabled_status"
     "check_ulimits_and_swap"

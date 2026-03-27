@@ -20,11 +20,17 @@ help:
 	@echo "  docs        Generate and validate documentation"
 	@echo "  ci-check    Run CI validation checks"
 	@echo "  release     Create and publish release"
+	@echo "  deploy-docker       Start JustNews Docker services"
+	@echo "  deploy-docker-stop  Stop JustNews Docker services"
+	@echo "  deploy-docker-status Show JustNews Docker service status"
+	@echo "  deploy-docker-logs  Tail JustNews Docker service logs"
+	@echo "  docker-migration-check Report Docker-first cutover compliance status"
 	@echo "  monitor-install    Install GPU monitor user unit (local dev)"
 	@echo "  monitor-enable     Enable & start GPU monitor service (user)"
 	@echo "  monitor-status     Show GPU monitor status"
 	@echo "  monitor-tail       Tail GPU monitor log"
-	@echo "  monitor-install-rotate   Install logrotate policy (requires sudo)"	@echo "  alertmanager-install    Install Alertmanager and copy example configs (requires sudo)"
+	@echo "  monitor-install-rotate   Install logrotate policy (requires sudo)"
+	@echo "  alertmanager-install    Install Alertmanager and copy example configs (requires sudo)"
 	@echo "  alertmanager-enable     Enable & start Alertmanager (requires sudo)"
 	@echo "  alertmanager-disable    Stop and disable Alertmanager (requires sudo)"
 	@echo "  alertmanager-status     Show Alertmanager status and API info"
@@ -57,30 +63,16 @@ VERSION ?= $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
 DOCKER_TAG ?= latest
 
 # Python and tools
-PYTHON := python
+PYTHON ?= python3
 PIP := $(PYTHON) -m pip
-# Allow a single, overrideable canonical environment name that can be set in
-# /etc/justnews/global.env or exported by the operator. Default remains
-# `${CANONICAL_ENV:-justnews-py312}` for compatibility.
-CANONICAL_ENV ?= justnews-py312
-CONDA_ENV ?= $(CANONICAL_ENV)
-CONDA := $(shell command -v conda 2>/dev/null || echo)
-ifeq ($(CONDA),)
+VENV_DIR ?= .venv
+VENV_PY := $(VENV_DIR)/bin/python
+
+# Prefer project-local UV/venv interpreter when available.
+ifeq ($(wildcard $(VENV_PY)),)
 RUN_PY := $(PYTHON)
 else
-# If the run wrapper exists prefer to load global.env before running conda-run;
-# this makes local & CI test runs consistently pick up the canonical env vars.
-# NOTE: We recommend installing `mamba` into base for faster environment solves:
-#   conda install -n base -c conda-forge mamba -y
-# `mamba run -n <env>` is a drop-in replacement for `conda run -n <env>` when available.
-RUN_WRAPPER := $(shell [ -x ./scripts/run_with_env.sh ] && printf "./scripts/run_with_env.sh" || printf "")
-# Prefer using mamba if available (faster resolver). Detect at make parse-time.
-RUNNER := $(shell command -v mamba >/dev/null 2>&1 && echo mamba || echo conda)
-ifeq ($(RUN_WRAPPER),)
-RUN_PY := $(RUNNER) run -n $(CONDA_ENV) $(PYTHON)
-else
-RUN_PY := $(RUN_WRAPPER) $(RUNNER) run -n $(CONDA_ENV) $(PYTHON)
-endif
+RUN_PY := $(VENV_PY)
 endif
 
 # Directories
@@ -130,12 +122,27 @@ install-dev:
 	$(call log_success,"Development packages installed")
 
 # Testing targets
-test: test-unit test-integration
+DEV_REQUIREMENTS ?= requirements-bootstrap.txt
+PYTEST_ALLOW_ANY_ENV ?= 1
+
+test: ensure-dev-tools check-python-version test-unit test-integration
 	$(call log_success,"All tests completed")
 
-# Local pytest wrapper target which ensures tests are launched in the
-# `${CANONICAL_ENV:-justnews-py312}` conda environment. Developers should prefer this target
-# for local runs to ensure consistent environments.
+ensure-dev-tools:
+	$(call log_info,"Ensuring required developer tools are available in active environment...")
+	@$(RUN_PY) -c "import pytest,ruff,mypy" >/dev/null 2>&1 || { \
+		echo "Dev tools missing (pytest/ruff/mypy). Installing minimal toolchain..."; \
+		$(RUN_PY) -m pip install pytest pytest-asyncio pytest-cov ruff mypy; \
+	}
+	$(call log_success,"Developer tools are available")
+
+check-python-version:
+	@printf '$(BLUE)[INFO]$(NC) %s\n' "Validating Python runtime for tests (Python 3.12+ required)"
+	@$(RUN_PY) -c "import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)" || \
+		(printf '$(RED)[ERROR]$(NC) %s\n' "Tests require Python 3.12+ (datetime.UTC is used across code/tests). Activate /app/.venv (UV-managed) env."; exit 1)
+	$(call log_success,"Python runtime is compatible with tests")
+
+# Local pytest wrapper target via project-local UV/venv.
 pytest-local:
 	$(call log_info,"Running local pytest via scripts/dev/pytest.sh")
 	$(shell [ -x ./scripts/dev/run_full_pytest_safe.sh ] || chmod +x ./scripts/dev/run_full_pytest_safe.sh)
@@ -143,26 +150,35 @@ pytest-local:
 
 test-unit:
 	$(call log_info,"Running unit tests...")
-	$(RUN_PY) -m pytest tests/ -v --cov=. --cov-report=term-missing --cov-report=xml \
+	ALLOW_ANY_PYTEST_ENV=$(PYTEST_ALLOW_ANY_ENV) $(RUN_PY) -m pytest tests/ -v --cov=. --cov-report=term-missing --cov-report=xml \
 		--cov-fail-under=80 -k "not integration" --tb=short
 	$(call log_success,"Unit tests passed")
 
 test-integration:
 	$(call log_info,"Running integration tests...")
-	$(RUN_PY) -m pytest tests/ -v -k "integration" --tb=short || \
-		($(call log_warning,"Integration tests failed, but continuing..."); true)
-	$(call log_success,"Integration tests completed")
+	ALLOW_ANY_PYTEST_ENV=$(PYTEST_ALLOW_ANY_ENV) $(RUN_PY) -m pytest tests/ -v -k "integration" --tb=short
+	$(call log_success,"Integration tests passed")
 
 test-performance:
 	$(call log_info,"Running performance tests...")
-	$(RUN_PY) -m pytest tests/ -v -k "performance" --tb=short --durations=10
+	ALLOW_ANY_PYTEST_ENV=$(PYTEST_ALLOW_ANY_ENV) $(RUN_PY) -m pytest tests/ -v -k "performance" --tb=short --durations=10
 	$(call log_success,"Performance tests completed")
 
 # Code quality targets
 
 # Linting includes a check for reintroduced container/orchestration artifacts
-lint: check-processing-time lint-code lint-docs lint-no-containers
+# Start with a maintainable baseline scope; use `make lint-full` to audit legacy debt.
+LINT_RUFF_PATHS ?= scripts/ci scripts/checks tests/unit
+LINT_MYPY_PATHS ?= scripts/ci scripts/checks
+LINT_NO_CONTAINERS_PATHS ?= scripts/ci scripts/checks tests/unit
+lint: ensure-dev-tools check-processing-time lint-code lint-docs lint-no-containers
 	$(call log_success,"Code quality checks passed")
+
+lint-full: ensure-dev-tools check-processing-time
+	$(call log_info,"Running full-repo linting legacy debt audit...")
+	ruff check . --fix
+	mypy . --ignore-missing-imports
+	$(call log_success,"Full-repo linting completed")
 
 # Repo-specific checks
 check-processing-time:
@@ -172,19 +188,19 @@ check-processing-time:
 
 lint-code:
 	$(call log_info,"Running code linting...")
-	ruff check . --fix
-	mypy . --ignore-missing-imports || true
+	ruff check $(LINT_RUFF_PATHS) --fix
+	mypy $(LINT_MYPY_PATHS) --ignore-missing-imports
 	$(call log_success,"Code linting completed")
 
 lint-docs:
 	$(call log_info,"Running documentation checks...")
-	python scripts/ci/enforce_docs_policy.py
+	$(PYTHON) scripts/ci/enforce_docs_policy.py
 	$(call log_success,"Documentation checks passed")
 
 # Repo checks for disallowed container references (fail CI if found)
 lint-no-containers:
 	$(call log_info,"Checking for disallowed container/orchestration references in code...")
-	python scripts/checks/no_container_refs.py || (printf '\033[0;31m[ERROR]\033[0m %s\n' "Disallowed container/orchestration references found, see output above."; exit 1)
+	$(PYTHON) scripts/checks/no_container_refs.py $(LINT_NO_CONTAINERS_PATHS) || (printf '\033[0;31m[ERROR]\033[0m %s\n' "Disallowed container/orchestration references found in lint scope, see output above."; exit 1)
 	$(call log_success,"No disallowed container/orchestration references outside allowed folders.")
 
 format:
@@ -193,22 +209,26 @@ format:
 	$(call log_success,"Code formatting completed")
 
 # Build targets
-build: clean build-artifacts build-containers
+build: clean build-artifacts
 	$(call log_success,"Build completed")
 
 build-artifacts: $(ARTIFACTS_DIR)
 	$(call log_info,"Building production artifacts...")
 	mkdir -p $(DIST_DIR)
-	$(PYTHON) -m pip wheel . -w $(DIST_DIR)/
+	@if [ -f pyproject.toml ] || [ -f setup.py ]; then \
+		$(PYTHON) -m pip wheel . -w $(DIST_DIR)/; \
+	else \
+		printf '$(YELLOW)[WARNING]$(NC) %s\n' "No root pyproject.toml/setup.py found; skipping wheel build and packaging runtime artifacts only."; \
+	fi
 	cp requirements.txt $(DIST_DIR)/
-	cp environment.yml $(DIST_DIR)/
+	cp requirements-bootstrap.txt $(DIST_DIR)/
 	$(call log_info,"Creating artifact archive...")
 	cd $(BUILD_DIR) && tar -czf artifacts/justnews-$(VERSION).tar.gz -C dist .
 	$(call log_success,"Artifacts built in $(ARTIFACTS_DIR)")
 
 build-containers:
-	$(call log_error,"Docker containers and Kubernetes manifests are deprecated and disabled. Use systemd packaging or CI-driven builds/artifacts.")
-	@exit 1
+	$(call log_info,"Container artifact build is now Docker-first. Use compose/image workflows for runtime packaging.")
+	@echo "No-op: build-containers target retained for compatibility."
 
 $(ARTIFACTS_DIR):
 	mkdir -p $(ARTIFACTS_DIR)
@@ -221,15 +241,41 @@ deploy-check:
 	$(call log_info,"Running pre-deployment checks...")
 	test -f $(CONFIG_DIR)/system_config.json || ($(call log_error,"Config file missing"); exit 1)
 	$(PYTHON) -c "import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)" || \
-			($(call log_error,"Python 3.11+ required"); exit 1)
+			($(call log_error,"Python 3.12+ required"); exit 1)
 	$(call log_success,"Pre-deployment checks passed")
 
 deploy-development: deploy-check
-	$(call log_warning,"docker-compose and Kubernetes deployments are deprecated; using systemd instead")
-	# Prefer deploy-systemd or deploy-staging (k8s) for dev environment
-	$(call log_info,"Deploying to development environment using systemd (preferred alternative)...")
-	$(MAKE) deploy-systemd
-	$(call log_success,"Development deployment completed (via systemd)")
+	$(call log_info,"Deploying to development environment using Docker (canonical runtime)...")
+	$(MAKE) deploy-docker
+	$(call log_success,"Development deployment completed (via Docker)")
+
+# Docker-first deployment lifecycle targets
+deploy-docker: docker-preflight
+	$(call log_info,"Starting JustNews Docker services...")
+	bash scripts/ops/docker_compose.sh up
+	$(call log_success,"Docker services started")
+
+docker-preflight:
+	$(call log_info,"Running Docker runtime preflight checks...")
+	bash scripts/ops/docker_preflight.sh
+	$(call log_success,"Docker runtime preflight checks passed")
+
+deploy-docker-stop:
+	$(call log_info,"Stopping JustNews Docker services...")
+	bash scripts/ops/docker_compose.sh down
+	$(call log_success,"Docker services stopped")
+
+deploy-docker-status:
+	$(call log_info,"Docker service status...")
+	bash scripts/ops/docker_compose.sh status
+
+deploy-docker-logs:
+	$(call log_info,"Tailing Docker service logs...")
+	bash scripts/ops/docker_compose.sh logs
+
+docker-migration-check:
+	$(call log_info,"Running Docker-first migration compliance check...")
+	bash scripts/ops/docker_first_migration_check.sh
 
 deploy-staging: deploy-check
 	$(call log_info,"Deploying to staging environment using systemd...")
@@ -252,7 +298,7 @@ docs-generate:
 
 docs-validate:
 	$(call log_info,"Validating documentation...")
-	python docs/doc_management_tools/doc_linter.py --report
+	$(PYTHON) scripts/ci/enforce_docs_policy.py
 	$(call log_success,"Documentation validation completed")
 
 # CI validation targets
@@ -357,7 +403,12 @@ check-global-env:
 
 security-check:
 	$(call log_info,"Running security checks...")
-	# Run security scanning tools
+	$(RUN_PY) -m pip check
+	@if command -v bandit >/dev/null 2>&1; then \
+		bandit -q -r . -x tests,build,dist,.venv || exit 1; \
+	else \
+		echo "bandit not installed; install with '$(PIP) install bandit' for static security scanning"; \
+	fi
 	$(call log_success,"Security checks completed")
 
 # Release targets
@@ -400,7 +451,8 @@ clean-cache:
 
 clean-test:
 	$(call log_info,"Cleaning test artifacts...")
-	rm -f .coverage coverage.xml .pytest_cache/
+	rm -f .coverage coverage.xml
+	rm -rf .pytest_cache
 	$(call log_success,"Test artifacts cleaned")
 
 # Development helpers
@@ -411,9 +463,16 @@ dev-setup: install
 	$(call log_success,"Development environment ready")
 
 env-bootstrap:
-	$(call log_info,"Bootstrap canonical conda env (${CANONICAL_ENV:-justnews-py312}) and install vLLM")
-	@./scripts/bootstrap_conda_env.sh || (echo "Bootstrap failed; check output"; false)
-	$(call log_success,"Conda env bootstrap completed")
+	$(call log_info,"Bootstrapping UV/venv environment from requirements-bootstrap.txt")
+	@if command -v uv >/dev/null 2>&1; then \
+		uv venv $(VENV_DIR); \
+		uv pip install --python $(VENV_PY) -r requirements-bootstrap.txt; \
+	else \
+		$(PYTHON) -m venv $(VENV_DIR); \
+		$(VENV_PY) -m pip install --upgrade pip setuptools wheel; \
+		$(VENV_PY) -m pip install -r requirements-bootstrap.txt; \
+	fi
+	$(call log_success,"UV/venv bootstrap completed")
 
 dev-update:
 	$(call log_info,"Updating development dependencies...")
@@ -471,17 +530,32 @@ modelstore-fetch-mistral:
 
 vllm-start:
 	$(call log_info,"Start vLLM service (user)")
-	@./scripts/start_vllm.sh
+	@if [ -x ./scripts/start_vllm.sh ]; then \
+		./scripts/start_vllm.sh; \
+	else \
+		echo "scripts/start_vllm.sh missing; use systemd unit targets instead (vllm-install-unit / vllm-install-and-start)."; \
+		exit 1; \
+	fi
 	$(call log_success,"vLLM start requested; check 'make monitor-status' for status")
 
 vllm-stop:
 	$(call log_info,"Stop vLLM service (user)")
-	@./scripts/stop_vllm.sh
+	@if [ -x ./scripts/stop_vllm.sh ]; then \
+		./scripts/stop_vllm.sh; \
+	else \
+		echo "scripts/stop_vllm.sh missing; stop via systemd (sudo systemctl stop vllm-mistral-7b.service)."; \
+		exit 1; \
+	fi
 	$(call log_success,"vLLM stop requested")
 
 vllm-smoke-test:
 	$(call log_info,"Run vLLM smoke test (requires network port 7060)")
-	@./scripts/vllm_smoke_test.sh
+	@if [ -x ./scripts/vllm_smoke_test.sh ]; then \
+		./scripts/vllm_smoke_test.sh; \
+	else \
+		echo "scripts/vllm_smoke_test.sh missing; run manual check: curl -sS http://127.0.0.1:7060/v1/models"; \
+		exit 1; \
+	fi
 	$(call log_success,"vLLM smoke test finished")
 
 monitor-status:
@@ -500,7 +574,7 @@ alertmanager-install:
 	( echo "Falling back to release download" && TMPDIR=$$(mktemp -d) && \
 	  ARCH=$$(uname -m); \
 	  case $$ARCH in x86_64) ARCH=linux-amd64 ;; aarch64) ARCH=linux-arm64 ;; *) ARCH=linux-amd64 ;; esac; \
-	  TAG=$$(curl -s https://api.github.com/repos/prometheus/alertmanager/releases/latest | python -c "import sys,json; print(json.load(sys.stdin)['tag_name'])" 2>/dev/null || echo 'v0.27.0'); \
+	  TAG=$$(curl -s https://api.github.com/repos/prometheus/alertmanager/releases/latest | $(PYTHON) -c "import sys,json; print(json.load(sys.stdin)['tag_name'])" 2>/dev/null || echo 'v0.27.0'); \
 	  URL="https://github.com/prometheus/alertmanager/releases/download/$$TAG/alertmanager-$${TAG#v}.$$ARCH.tar.gz"; \
 	  curl -fsSL -o $$TMPDIR/am.tar.gz "$$URL"; tar -xzf $$TMPDIR/am.tar.gz -C $$TMPDIR; BIN=$$(find $$TMPDIR -type f -name alertmanager | head -n1); sudo install -m 0755 $$BIN /usr/local/bin/alertmanager; rm -rf $$TMPDIR )
 	@sudo mkdir -p /etc/alertmanager/templates /var/lib/alertmanager

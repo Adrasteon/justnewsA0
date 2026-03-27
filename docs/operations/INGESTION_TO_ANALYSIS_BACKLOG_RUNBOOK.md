@@ -1,5 +1,8 @@
 # Ingestion → Analysis Backlog Remediation Runbook
 
+> Historical context note: This document may describe legacy startup/orchestration flows captured at the time. Canonical runtime for JustNews is Docker-first. See `docs/operations/DOCKER_FIRST_STRATEGY.md` and `docs/operations/DOCKER_CANONICAL_COMMANDS.md`.
+
+
 ## Purpose
 This runbook defines the exact implementation sequence to drain large `articles.analyzed = 0` backlogs safely, with measurable checkpoints and rollback triggers.
 

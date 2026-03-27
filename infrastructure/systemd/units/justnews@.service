@@ -8,14 +8,11 @@ Type=simple
 # Global and per-instance environment files (optional but recommended)
 EnvironmentFile=-/etc/justnews/global.env
 EnvironmentFile=-/etc/justnews/%i.env
-# Prefer to set the interpreter explicitly to the known conda env so services
-# start consistently even when 'conda' isn't available in system PATH.
+# Prefer to set the interpreter explicitly to the project UV/.venv python.
 # Operators can override this per-instance using /etc/justnews/<agent>.env.
-# If you prefer not to hardcode the interpreter here, rely on global.env instead.
-Environment=PYTHON_BIN=$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin/python
-# Add conda bin to PATH so 'conda' itself can be resolved if needed by the
-# startup scripts (used for 'conda run -n <env> python').
-Environment=PATH=$HOME/miniconda3/bin:/usr/local/bin:/usr/bin:/bin
+# If this path is not valid on a target host, set PYTHON_BIN in global.env.
+Environment=PYTHON_BIN=$HOME/JustNews/.venv/bin/python
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
 # Run as the deploy user by default (override in /etc/justnews/<instance>.env if needed)
 User=adra
 Group=adra

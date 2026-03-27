@@ -4,85 +4,46 @@
 
 - [ ] Qwen-2.5-14B vLLM running on 8010: `curl -s http://localhost:8010/health`
 
-- [ ] Conda environment activated: `echo $CONDA_PREFIX | grep ${CANONICAL_ENV:-justnews-py312}`
+- [ ] UV/.venv available (or container runtime configured): `test -x .venv/bin/python || echo "using Docker runtime"`
 
 - [ ] Project directory accessible: `cd ${SERVICE_DIR:-$HOME/JustNews} && pwd`
 
 ---
 
-## Canonical Startup Checklist (Recommended)
+## Canonical Startup Checklist (Docker-first)
 
-Follow this exact sequence for a safe, reproducible system startup (preferred operator flow):
+Follow this sequence for reproducible startup in the canonical Docker runtime:
 
-1. Preflight / Dry-run checks (non-destructive)
+1. Preflight checks
 
-- [ ] Validate global env and tooling: `sudo ./infrastructure/systemd/canonical_system_startup.sh --dry-run`
+- [ ] Run: `make docker-preflight`
+- [ ] Run compliance check: `make docker-migration-check`
 
-- [ ] Optional: run `sudo ./infrastructure/systemd/preflight.sh` to inspect tools, ports and GPU state
+1. One-command startup
 
-1. Ensure environment files are present
+- [ ] Run: `make deploy-docker`
+  - or `./start_all_services.sh` (wrapper to Docker by default)
 
-- [ ] Confirm `/etc/justnews/global.env`exists and contains at
-  least`SERVICE_DIR`,`PYTHON_BIN`(or`CANONICAL_ENV`),`MARIADB_HOST/PORT/USER/PASSWORD`, and`CHROMA_HOST/PORT`.
+1. Service verification
 
-- [ ] If missing, copy examples: `sudo cp infrastructure/systemd/examples/justnews.env.example /etc/justnews/global.env`
-  and edit securely.
-
-1. One-command canonical startup (recommended)
-
-- [ ] Run: `./start_all_services.sh`
-
-  - This is the canonical startup script for JustNews. It performs the following:
-    - Loads environment checks
-    - Starts Database Services (MariaDB, ChromaDB, Redis)
-    - Runs Migration Scripts
-    - Starts All 16 Agents (mcp_bus, chief_editor, etc.)
-    - Verifies Health
-
-
-1. (Alternative) Manual orchestrator-first flow
-
-- [ ] Start GPU Orchestrator: `sudo systemctl enable --now justnews@gpu_orchestrator`
-
-- [ ] Wait for READY: `curl -fsS <http://127.0.0.1:8014/ready`> (wait up to 180s or adjust`GATE_TIMEOUT`)
-
-- [ ] Start services: `sudo ./infrastructure/systemd/scripts/enable_all.sh start`
-
-- [ ] Verify MCP Bus: `curl -fsS <http://127.0.0.1:8000/health`>
-
-1. Monitoring & Alertmanager
-
-- [ ] Ensure Prometheus/Grafana running (canonical flow calls the installer). To manually provision: `sudo
-  infrastructure/systemd/scripts/install_monitoring_stack.sh --enable --start`
-
-- [ ] Alertmanager: opt-in via `AUTO_INSTALL_ALERTMANAGER=1`in`/etc/justnews/global.env` (disabled by default); the MCP
-  Bus startup will run the idempotent installer when enabled.
+- [ ] Run: `make deploy-docker-status`
+- [ ] Check logs: `make deploy-docker-logs`
 
 1. Final health verification
 
-- [ ] Run: `sudo ./infrastructure/systemd/scripts/health_check.sh -v`and verify all services report`healthy`.
+- [ ] Verify key health endpoints from containers/services are healthy
+- [ ] Confirm database/vector/cache container health
 
-- [ ] Check `justnews_agent_health_status` metric in Prometheus / Grafana panels (if monitoring present).
+1. Optional legacy/systemd path (transition-only)
 
-1. Troubleshooting quick commands
-
-- [ ] View orchestrator logs: `sudo journalctl -u justnews@gpu_orchestrator -f`
-
-- [ ] View agent logs: `sudo journalctl -u justnews@<agent> -f`
-
-- [ ] Collect diagnostic bundle: `sudo infrastructure/systemd/collect_startup_diagnostics.sh`
-
-- [ ] Free occupied ports (if preflight warned): `sudo ./infrastructure/systemd/preflight.sh --stop`or run`sudo
-  ./infrastructure/systemd/reset_and_start.sh` to clean ports and restart services
+- [ ] If required temporarily, enable legacy wrappers:
+  - `JUSTNEWS_ENABLE_LEGACY_START_STOP=1 ./start_all_services.sh`
+- [ ] Use systemd app-orchestration only for migration fallback, not canonical flow
 
 Notes:
 
-- Use `SAFE_MODE=true`in`/etc/justnews/global.env` to disable GPU usage and apply conservative settings on developer
-  hosts.
-
-- `AUTO_BOOTSTRAP_CONDA`defaults to`1`(auto-bootstrap canonical env if missing); set to`0` to opt out.
-
-- `MARIADB_CHECK_REQUIRED=true` enforces DB connectivity on startup (recommended for production).
+- Use `SAFE_MODE=true` in environment when conservative runtime behavior is required.
+- `MARIADB_CHECK_REQUIRED=true` remains recommended for strict startup checks.
 
 ---
 
@@ -96,9 +57,7 @@ Notes:
 
 - `CHROMA_HOST`,`CHROMA_PORT`
 
-- `CANONICAL_ENV=${CANONICAL_ENV:-justnews-py312-phase1}`
-
-- `JUSTNEWS_PYTHON=/home/adra/miniconda3/envs/${CANONICAL_ENV:-justnews-py312}/bin/python`
+- `PYTHON_BIN=${SERVICE_DIR:-$HOME/JustNews}/.venv/bin/python` (for non-container local workflows)
 
 - `SERVICE_DIR=${SERVICE_DIR:-$HOME/JustNews}`
 
@@ -311,7 +270,7 @@ TABLES;"`– run`init_database.py` if needed | | vLLM 8010 not responding |
 ## Time Estimate
 
 | Phase | Est. Time | Notes | |-------|-----------|-------| | Pre-Flight | 2 min
-| Verify conda + vLLM | | Phase 1 (Env + Infra) | 30 min | MariaDB + ChromaDB
+| Verify Docker runtime + vLLM | | Phase 1 (Env + Infra) | 30 min | MariaDB + ChromaDB
 setup | | Phase 2 (Schema) | 5 min | Database initialization | | Phase 3
 (Agents) | 30 min | MCP + Orchestrator + Crawlers | | Phase 4 (Data) | 20–60 min
 | Depends on test size | | **TOTAL** | **~90–120 min** | Full production-ready

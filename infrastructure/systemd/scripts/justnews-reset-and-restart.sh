@@ -10,19 +10,19 @@ SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 PROJECT_ROOT="$(realpath "$SCRIPT_DIR/../../..")"
 ENV_FILE="/etc/justnews/global.env"
 
-# Activate Conda environment
-if [[ -n "$SUDO_USER" ]]; then
-    CONDA_BASE="$(sudo -Hiu "$SUDO_USER" bash -lc 'echo "$HOME"')/miniconda3"
-else
-    CONDA_BASE="$HOME/miniconda3"
+# Resolve Python runtime (prefer project UV/.venv)
+if [[ -z "${PYTHON_BIN:-}" ]]; then
+    if [[ -x "$PROJECT_ROOT/.venv/bin/python" ]]; then
+        PYTHON_BIN="$PROJECT_ROOT/.venv/bin/python"
+    else
+        PYTHON_BIN="$(command -v python3 || command -v python || true)"
+    fi
 fi
-if [[ -f "$CONDA_BASE/etc/profile.d/conda.sh" ]]; then
-    source "$CONDA_BASE/etc/profile.d/conda.sh"
-    conda activate ${CANONICAL_ENV:-justnews-py312-phase1}
-else
-    echo "Conda initialization script not found at $CONDA_BASE/etc/profile.d/conda.sh"
+if [[ -z "${PYTHON_BIN:-}" ]]; then
+    echo "No Python interpreter available; expected $PROJECT_ROOT/.venv/bin/python or system python" >&2
     exit 1
 fi
+export PYTHON_BIN
 
 # Print environment variables for debugging
 echo "Environment variables for debugging:" >&2
@@ -66,6 +66,6 @@ $PROJECT_ROOT/infrastructure/systemd/scripts/justnews-system-status.sh
 
 # Debug NVML Initialization
 echo "Testing NVML Initialization..."
-python3 -c "from pynvml import nvmlInit, nvmlShutdown; nvmlInit(); print('NVML Initialized'); nvmlShutdown()" || echo "NVML Initialization failed in script context."
+"${PYTHON_BIN}" -c "from pynvml import nvmlInit, nvmlShutdown; nvmlInit(); print('NVML Initialized'); nvmlShutdown()" || echo "NVML Initialization failed in script context."
 
 echo "JustNews system reset and restart completed successfully."

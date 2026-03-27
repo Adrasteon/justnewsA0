@@ -36,7 +36,8 @@ Scripts for deployment, database setup, and infrastructure provisioning.
 
 Scripts for development environment setup and tooling.
 
-- `setup_dev_environment.sh` - Development environment configuration
+- `bootstrap_venv.sh` - Canonical UV/.venv bootstrap for development
+- `setup_dev_environment.sh` - Deprecated compatibility wrapper (forwards to bootstrap_venv.sh)
 
 ### maintenance/
 
@@ -139,7 +140,7 @@ Scripts use these common environment variables:
 
 - `BASE_MODEL_DIR` - Agent model cache directory
 
-- `CONDA_DEFAULT_ENV` - Conda environment name
+- `VIRTUAL_ENV` - Active virtual environment path (.venv expected for local dev)
 
 ## Error Handling
 

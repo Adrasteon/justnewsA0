@@ -1,5 +1,9 @@
 # JustNews Service Startup/Shutdown - Quick Reference
 
+Docker-first note:
+- `start_all_services.sh` and `stop_all_services.sh` are compatibility wrappers that default to Docker compose lifecycle.
+- Set `JUSTNEWS_ENABLE_LEGACY_START_STOP=1` only if you intentionally need legacy in-script behavior during transition.
+
 ## TL;DR - Getting Started Fast
 
 ```bash

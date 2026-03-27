@@ -1,0 +1,7900 @@
+{
+  "totals": {
+    "all_scripts": 843,
+    "active_nonretired": 782,
+    "retired_stubs": 61,
+    "with_callers": 47
+  },
+  "categories": {
+    ".devcontainer": {
+      "total": 6,
+      "active": 6,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "GUI_monitor.py": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "agents": {
+      "total": 204,
+      "active": 204,
+      "retired": 0,
+      "deprecated_marked": 8
+    },
+    "analyze_pipeline.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "apply_factual_audit_schema.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "apply_migrations_script.py": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "canonical_status_check.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_chroma_detailed.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_chroma_final.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_cluster_counts.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_clustering_progress.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_clustering_status.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_collections_detail.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_count.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_crawl_queue.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_db_status.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_db_status_v2.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_embedding_loop.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "check_latest_ingestion.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "cleanup_docker.py": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "common": {
+      "total": 23,
+      "active": 23,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "config": {
+      "total": 9,
+      "active": 9,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "conftest.py": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "database": {
+      "total": 20,
+      "active": 20,
+      "retired": 0,
+      "deprecated_marked": 1
+    },
+    "debug_metrics.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "debug_vllm_auth.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "diagnose_blockers.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "diagnose_jobs.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "diagnose_memory_import.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "diagnose_workflow.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "docker_diagnostic.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "evaluation": {
+      "total": 3,
+      "active": 3,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "fast_diagnose.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "fetch_sources.py": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "final_pipeline_status.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "fix_dashboard_deprecation.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "fix_dashboards.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "fix_fact_check_enum.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "fix_fix_dashboard_deprecation.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "fix_missing_embedded_column.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "fix_schema.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "fix_schema_python.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "fix_trace_collector.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "fix_trace_collector_trace_count.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "full_pipeline_check.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "import_activity_dashboard.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "infrastructure": {
+      "total": 57,
+      "active": 54,
+      "retired": 3,
+      "deprecated_marked": 9
+    },
+    "inspect_articles_schema.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "inspect_fact_checks.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "inspect_progress.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "inspect_schema.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "justnews_publisher": {
+      "total": 19,
+      "active": 19,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "load_sources.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "manage.py": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "mcp_fact_checker_server": {
+      "total": 4,
+      "active": 4,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "models": {
+      "total": 6,
+      "active": 6,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "monitor_crawl.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "monitor_crawl_pipeline.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "monitor_crawl_progress.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "monitor_crawl_status.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "monitor_pipeline.sh": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "monitor_pipeline_live.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "monitoring": {
+      "total": 19,
+      "active": 19,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "populate_database.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "reset_and_crawl.sh": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "run_deployment_simulation.sh": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "run_full_crawl.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "run_memory_agent.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "run_schema_ops.sh": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "scripts": {
+      "total": 138,
+      "active": 137,
+      "retired": 1,
+      "deprecated_marked": 17
+    },
+    "security": {
+      "total": 15,
+      "active": 15,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "simulation_test.sh": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "sitecustomize.py": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "start_agents_devcontainer.sh": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "start_all_services.sh": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "start_chromadb_server.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "start_dev_system.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "stop_all_services.sh": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "system_status_report.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "test_fact_checker_performance.py": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "test_prompt_experiments": {
+      "total": 9,
+      "active": 9,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "tests": {
+      "total": 224,
+      "active": 224,
+      "retired": 0,
+      "deprecated_marked": 1
+    },
+    "tmp_unified_crawl_and_drain_monitor.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "training_system": {
+      "total": 12,
+      "active": 12,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "trigger_backfill.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "trigger_custom_crawl.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "trigger_requested_crawl_lite.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "validate_dashboard_queries.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    },
+    "verify_chroma.py": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "verify_shim_live.py": {
+      "total": 1,
+      "active": 1,
+      "retired": 0,
+      "deprecated_marked": 0
+    },
+    "verify_synthesizer_connection.py": {
+      "total": 1,
+      "active": 0,
+      "retired": 1,
+      "deprecated_marked": 1
+    }
+  },
+  "top_active_entrypoints": [
+    {
+      "path": "scripts/indexing/build_code_index.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 5,
+      "callers": [
+        "Makefile",
+        "scripts/indexing/autonomous_index_update.py",
+        "scripts/indexing/daily_hermes_refresh.sh",
+        "scripts/indexing/query_code_index.py",
+        "scripts/indexing/session_chat_init.sh"
+      ]
+    },
+    {
+      "path": "scripts/indexing/bootstrap_context.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 3,
+      "callers": [
+        "Makefile",
+        "scripts/indexing/daily_hermes_refresh.sh",
+        "scripts/indexing/session_chat_init.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/run_systemd_nspawn_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 3,
+      "callers": [
+        ".github/workflows/e2e-systemd-nspawn.yml",
+        "scripts/dev/run_e2e_in_nspawn.sh",
+        "scripts/dev/run_systemd_nspawn_env.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/pytest.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 3,
+      "callers": [
+        "Makefile",
+        "scripts/dev/run_full_pytest_safe.sh",
+        "scripts/dev/run_pytest_conda.sh"
+      ]
+    },
+    {
+      "path": "scripts/checks/no_container_refs.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 3,
+      "callers": [
+        ".github/workflows/enforce-no-container-references.yml",
+        "Makefile",
+        "scripts/checks/no_container_refs.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/orchestrator_soak.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        ".github/workflows/perf-orchestrator-soak.yml",
+        "scripts/perf/orchestrator_soak.sh"
+      ]
+    },
+    {
+      "path": "scripts/perf/gpu_telemetry_exporter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        "scripts/perf/gpu_activity_agent.py",
+        "scripts/perf/gpu_telemetry_exporter.py"
+      ]
+    },
+    {
+      "path": "scripts/install_alertmanager_unit.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        "Makefile",
+        "infrastructure/systemd/scripts/justnews-start-agent.sh"
+      ]
+    },
+    {
+      "path": "scripts/indexing/telemetry_summary.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        "Makefile",
+        "scripts/indexing/daily_hermes_refresh.sh"
+      ]
+    },
+    {
+      "path": "scripts/indexing/index_autoupdate_daemon.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        "Makefile",
+        "scripts/indexing/session_chat_init.sh"
+      ]
+    },
+    {
+      "path": "scripts/indexing/autonomous_index_update.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        "Makefile",
+        "scripts/indexing/index_autoupdate_daemon.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/setup_selfhosted_runner.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        ".github/workflows/e2e-systemd-nspawn.yml",
+        "scripts/dev/run_e2e_in_nspawn.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/run_agent_chain_harness.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        ".github/workflows/editorial-harness-publish-sandbox.yml",
+        ".github/workflows/editorial-harness.yml"
+      ]
+    },
+    {
+      "path": "scripts/dev/bootstrap_editorial_harness_db.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        ".github/workflows/editorial-harness-publish-sandbox.yml",
+        ".github/workflows/editorial-harness.yml"
+      ]
+    },
+    {
+      "path": "scripts/run_with_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/run_e2e_with_env.sh"
+      ]
+    },
+    {
+      "path": "scripts/perf/simulate_concurrent_inference.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/perf/simulate_concurrent_inference.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/nvml_dropout_watchdog.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/perf/nvml_dropout_watchdog.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/gpu_telemetry.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/perf/gpu_activity_agent.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/gpu_activity_monitor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/perf/gpu_activity_monitor.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/gpu_activity_agent.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/perf/gpu_activity_agent.py"
+      ]
+    },
+    {
+      "path": "scripts/ops/run_refactor_e2e_smoke.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/run_dedupe_benchmark.py"
+      ]
+    },
+    {
+      "path": "scripts/ops/run_crawl_schedule.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "infrastructure/systemd/scripts/run_crawl_schedule.sh"
+      ]
+    },
+    {
+      "path": "scripts/ops/justnews_memory_governor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/enable_governor.sh"
+      ]
+    },
+    {
+      "path": "scripts/ops/diagnose_ingestion_samples.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/diagnose_ingestion_samples.py"
+      ]
+    },
+    {
+      "path": "scripts/ops/backfill_raw_html.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/backfill_raw_html.py"
+      ]
+    },
+    {
+      "path": "scripts/ops/apply_synthesis_migration_py.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/apply_synthesis_migration_py.py"
+      ]
+    },
+    {
+      "path": "scripts/ops/apply_stage_b_migration.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/apply_stage_b_migration.sh"
+      ]
+    },
+    {
+      "path": "scripts/manage_secrets.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/admin/manage_secrets.py"
+      ]
+    },
+    {
+      "path": "scripts/install_logrotate.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/indexing/session_chat_init.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/indexing/daily_hermes_refresh.sh"
+      ]
+    },
+    {
+      "path": "scripts/indexing/query_code_index.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/indexing/daily_hermes_refresh.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/download_agent_models.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/download_agent_models.py"
+      ]
+    },
+    {
+      "path": "scripts/dev/setup_dev_environment.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/setup_dev_environment.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/run_pytest_conda.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/run_pytest_conda.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/run_full_pytest_safe.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/dev/run_e2e_in_nspawn.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/run_e2e_in_nspawn.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/mark_sources_verified.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/mark_sources_verified.py"
+      ]
+    },
+    {
+      "path": "scripts/dev/e2e_smoke.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        ".github/workflows/e2e-docker.yml"
+      ]
+    },
+    {
+      "path": "scripts/dev/crawl4ai_profile_variants_probe.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/crawl4ai_profile_variants_probe.py"
+      ]
+    },
+    {
+      "path": "scripts/dev/check_canonical_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        ".github/workflows/pytest.yml"
+      ]
+    },
+    {
+      "path": "scripts/ci/enforce_docs_policy.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/check_processing_time.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/bootstrap_conda_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 1,
+      "callers": [
+        "infrastructure/systemd/scripts/justnews-start-agent.sh"
+      ]
+    },
+    {
+      "path": "infrastructure/systemd/scripts/install_dev_telemetry_unit.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "infrastructure/systemd/operators/dev-telemetry-playbook.md"
+      ]
+    },
+    {
+      "path": "infrastructure/systemd/scripts/check_db_services.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "infrastructure/systemd/scripts/README.md"
+      ]
+    }
+  ],
+  "records": [
+    {
+      "path": ".devcontainer/diagnostic.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": ".devcontainer/entrypoint.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": ".devcontainer/scripts/create_deps_venv.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": ".devcontainer/scripts/post-create.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": ".devcontainer/scripts/pre-build-cleanup.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": ".devcontainer/scripts/run-publisher.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "GUI_monitor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/analyst_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/audit.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/claims.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/discovery.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/gpu_analyst.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/model_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/schemas.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/tests/test_analyst_tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/tests/test_claims_module.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analyst/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analytics/analytics_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analytics/dashboard.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analytics/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/analytics/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/archive/archive_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/archive/archive_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/archive/entity_linker.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/archive/ingest_pipeline.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/archive/knowledge_graph.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/archive/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/archive/metrics_registry.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/archive/raw_html_snapshot.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/archive/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/auth/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/auth/auth_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/auth/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/auth/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/c4ai/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/c4ai/bridge.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/c4ai/server.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/c4ai/tests/test_auth_c4ai.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/c4ai/tests/test_crawl4ai_auth.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/chief_editor/chief_editor_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/chief_editor/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/chief_editor/model_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/chief_editor/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/cluster_fetcher/cluster_fetcher.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/adapter_base.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/advanced_analytics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/advanced_optimization.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/agent_chain_harness.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/analytics_client.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/async_database.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/auth.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/auth_api.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/auth_models.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/base_mistral_json_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/compliance_audit.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/compliance_dashboard.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/compliance_retention.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/consent_management.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/consent_ui_components.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/consent_validation_middleware.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/data_minimization.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/database.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/editorial_harness_runner.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/embedding.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/evidence.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/gpu_cluster_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/gpu_config_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/gpu_dashboard_api.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/gpu_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/gpu_manager_production.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/gpu_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/gpu_monitoring_enhanced.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/gpu_optimizer_enhanced.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/gpu_orchestrator_client.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/headline_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/hf_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/ingest.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/mcp_bus_client.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/mistral_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/mistral_loader.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/mock_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/model_loader.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/model_store.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/normalized_article_repository.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/notifications.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/openai_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/publisher_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/reload.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/schemas.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/shutdown.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/tracing.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/common/triage_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawl4ai/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawl4ai/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/adaptive_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/crawl4ai_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/crawler_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/crawler_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/enhancements/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/enhancements/demo.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/enhancements/modal_handler.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/enhancements/paywall_detector.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/enhancements/proxy_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/enhancements/stealth_browser.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/enhancements/ua_rotation.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/extraction.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/job_store.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/paywall_aggregator.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/tests/test_auth_crawler.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/tests/test_cleanup.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/tests/test_crawler_tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/tests/test_endpoints.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/tests/test_job_store.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/tests/test_robots.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/tests/test_stop_jobs.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler_control/crawl_profiles.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler_control/crawl_schedule.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler_control/crawler_control_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler_control/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/crawler_control/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/critic/critic_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/critic/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/critic/model_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/critic/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/dashboard/dashboard_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/dashboard/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/dashboard/previous_migrations/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/dashboard/rate_limit.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/dashboard/search_api.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/dashboard/storage.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/dashboard/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/dashboard/transparency_repository.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/dashboard/transparency_router.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/fact_checker/shim.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/gpu_orchestrator/gpu_orchestrator_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/gpu_orchestrator/job_consumer.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/gpu_orchestrator/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/gpu_orchestrator/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/gpu_orchestrator/worker.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/hitl_service/app.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/hitl_service/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/hitl_service/staging_bus.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/journalist/journalist_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/journalist/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/journalist/model_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/journalist/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/mcp_bus/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/mcp_bus/mcp_bus_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/mcp_bus/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/memory/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/memory/memory_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/memory/tests/test_memory_tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/memory/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/memory/vector_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/memory/worker_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/newsreader/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/newsreader/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/newsreader/newsreader_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/newsreader/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/arc/dist/llama/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/arc/dist/llama/llama.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/lang/handlers/assignment_handler.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/lang/handlers/expression_handler.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/nucleoid/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/nucleoid/graph.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/nucleoid/nucleoid.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/nucleoid/parse.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/nucleoid/process.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/nucleoid/state.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/tests/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/nucleoid_repo/python/tests/test_nucleoid.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/performance_monitoring.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/reasoning/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/reasoning/model_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/reasoning/reasoning_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/reasoning/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/scout/crawl4ai_bridge.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/scout/crawl4ai_server.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/scout/crawl4ai_server_impl.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/scout/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/scout/scout_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/scout/tests/test_scout_tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/scout/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/sites/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/sites/bbc_crawler.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/sites/generic_site_crawler.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/synthesizer/job_store.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/synthesizer/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/synthesizer/model_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/synthesizer/persistence.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/synthesizer/synthesizer_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/synthesizer/tests/test_synthesizer_tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/synthesizer/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/tools/7b_re_ranker.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/tools/mistral_re_ranker_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/tools/re_ranker_7b.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/workflow_orchestrator/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/workflow_orchestrator/engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/workflow_orchestrator/lane1_workflow.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/workflow_orchestrator/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/workflow_orchestrator/policies.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/workflow_orchestrator/resources.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/workflow_orchestrator/runtime_config.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "agents/workflow_orchestrator/tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "analyze_pipeline.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "apply_factual_audit_schema.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "apply_migrations_script.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "canonical_status_check.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_chroma_detailed.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_chroma_final.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_cluster_counts.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_clustering_progress.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_clustering_status.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_collections_detail.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_count.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_crawl_queue.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_db_status.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_db_status_v2.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_embedding_loop.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "check_latest_ingestion.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "cleanup_docker.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/agent_runner.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/audio_processing.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/ddg_search_service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/dev_db_fallback.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/env_loader.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/gpu_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/json_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/observability.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/online_training_coordinator.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/otel.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/schemas.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/secret_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/security.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/semantic_search_service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/sentry_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/stage_b_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/system_training_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/tracing.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/url_normalization.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/version_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "common/web_capture.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "config/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "config/config_quickref.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "config/core/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "config/environments/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "config/legacy/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "config/refactor/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "config/schemas/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "config/test_config_system.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "config/validation/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "conftest.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/core/backup_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/core/connection_pool.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/core/migration_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/core/query_optimizer.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/core/schema_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/migrations/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/models/base_model.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/models/migrated_models.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/refactor/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/refactor/utils/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/refactor/utils/database_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/tests/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/tests/conftest.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/tests/test_base_model.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/tests/test_connection_pool.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/tests/test_database_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/utils/chromadb_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/utils/database_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "database/utils/migrated_database_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "debug_metrics.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "debug_vllm_auth.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "diagnose_blockers.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "diagnose_jobs.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "diagnose_memory_import.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "diagnose_workflow.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "docker_diagnostic.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "evaluation/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "evaluation/metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "evaluation/run_evaluation.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fast_diagnose.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fetch_sources.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "final_pipeline_status.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fix_dashboard_deprecation.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fix_dashboards.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fix_fact_check_enum.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fix_fix_dashboard_deprecation.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fix_missing_embedded_column.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fix_schema.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fix_schema_python.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fix_trace_collector.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "fix_trace_collector_trace_count.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "full_pipeline_check.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "import_activity_dashboard.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/agents_manifest.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/docker/generate-agent-dockerfiles.sh",
+      "kind": "shell",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/helm/justnews/deploy-single-node.sh",
+      "kind": "shell",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/kubernetes/generate-agent-manifests.sh",
+      "kind": "shell",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/monitoring/demo_service/send_demo.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/monitoring/justnews_db_exporter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/monitoring/scripts/check_otel_spans.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/monitoring/scripts/check_tempo_traces.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/scripts/generate-config.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/scripts/health-check.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/scripts/rollback.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/scripts/test_vault_integration.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/scripts/validate-deployment.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/scripts/validate-global-env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/apply_preflight_override.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/canonical_system_startup.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/cold_start.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/collect_startup_diagnostics.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/complete_mariadb.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/health_check.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/helpers/boot_smoke_test.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/helpers/db-check.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/helpers/diag-dump.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/helpers/orchestrator-ready.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/helpers/tail-logs.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/manage_crawlers.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/preflight.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/reset_and_start.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/rollback_native.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/run_and_monitor.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/README.md",
+      "kind": "other",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/build_service_venv.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/canonical_system_startup.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/check_db_services.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "infrastructure/systemd/scripts/README.md"
+      ]
+    },
+    {
+      "path": "infrastructure/systemd/scripts/check_systemd_project_root.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/ci_check_deps.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/cold_start.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/dev-telemetry-manager.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/enable_all.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/ensure_global_python_bin.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/gpu_watch.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/health_check.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/install_dev_telemetry_unit.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "infrastructure/systemd/operators/dev-telemetry-playbook.md"
+      ]
+    },
+    {
+      "path": "infrastructure/systemd/scripts/install_monitoring_stack.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/justnews-boot-smoke.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/justnews-cold-start.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/justnews-preflight-check.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/justnews-reset-and-restart.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/justnews-start-agent.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/justnews-system-status.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/migrate_project_root.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/reset_and_start.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/run_crawl_schedule.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/scripts/wait_for_mcp.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/setup_mariadb.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/setup_preflight_nopasswd.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "infrastructure/systemd/wait_for_mcp.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "inspect_articles_schema.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "inspect_fact_checks.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "inspect_progress.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "inspect_schema.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/asgi.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/admin.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/apps.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/management/commands/ingest_articles.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/migrations/0001_initial.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/migrations/0002_article_category.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/migrations/0003_publish_audit.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/migrations/0004_backendarticle_livingstory_pendingarticle_and_more.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/migrations/0005_articleslugredirect.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/migrations/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/models.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/tests.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/urls.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/news/views.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/settings.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/urls.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "justnews_publisher/wsgi.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "load_sources.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "manage.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "mcp_fact_checker_server/app/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "mcp_fact_checker_server/app/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "mcp_fact_checker_server/app/models.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "mcp_fact_checker_server/app/service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "models/build_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "models/create_toy_model_store.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "models/fetch_model_to_modelstore.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "models/model_loader.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "models/model_store.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "models/native_tensorrt_compiler.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitor_crawl.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitor_crawl_pipeline.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitor_crawl_progress.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitor_crawl_status.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitor_pipeline.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitor_pipeline_live.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/custom_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/log_aggregator.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/log_analyzer.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/log_collector.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/log_storage.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/metrics_collector.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/performance_monitor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/trace_analyzer.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/trace_collector.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/trace_processor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/core/trace_storage.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/dashboards/alert_dashboard.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/dashboards/dashboard_generator.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/dashboards/executive_dashboard.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/dashboards/grafana_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/dashboards/realtime_monitor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "monitoring/dashboards/test_dashboard_system.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "populate_database.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "reset_and_crawl.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "run_deployment_simulation.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "run_full_crawl.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "run_memory_agent.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "run_schema_ops.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/admin/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/admin/check_article_count.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/admin/check_sources.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/admin/debug_crawler_tools.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/admin/inspect_schema.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/admin/manage_secrets.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/admin/populate_sources_from_md.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/analyze_cluster.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/archive/deprecate_dialogpt.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/archive/phase2_demo.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/archive/phase3_comprehensive_demo.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/archive/run_large_scale_crawl.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/archive/run_safe_mode_demo.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/bootstrap_conda_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 1,
+      "callers": [
+        "infrastructure/systemd/scripts/justnews-start-agent.sh"
+      ]
+    },
+    {
+      "path": "scripts/bootstrap_living_stories.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/check_processing_time.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/checks/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/checks/check_deprecation_warnings.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/checks/check_protobuf_version.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/checks/no_container_refs.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 3,
+      "callers": [
+        ".github/workflows/enforce-no-container-references.yml",
+        "Makefile",
+        "scripts/checks/no_container_refs.py"
+      ]
+    },
+    {
+      "path": "scripts/chroma_bootstrap.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ci/enforce_docs_policy.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/common/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/common/script_framework.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/configure_gpu_power.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/deploy/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/deploy/init_database.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/deploy/setup_postgres.sh",
+      "kind": "shell",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 1,
+      "callers": [
+        "scripts/deploy/setup_postgres.sh"
+      ]
+    },
+    {
+      "path": "scripts/deploy_monitoring.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/deprecations/find_deprecations.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/bootstrap_editorial_harness_db.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        ".github/workflows/editorial-harness-publish-sandbox.yml",
+        ".github/workflows/editorial-harness.yml"
+      ]
+    },
+    {
+      "path": "scripts/dev/canary_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/check_canonical_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        ".github/workflows/pytest.yml"
+      ]
+    },
+    {
+      "path": "scripts/dev/crawl4ai_profile_variants_probe.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/crawl4ai_profile_variants_probe.py"
+      ]
+    },
+    {
+      "path": "scripts/dev/crawl_canary.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/dev-telemetry-up.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/e2e_smoke.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        ".github/workflows/e2e-docker.yml"
+      ]
+    },
+    {
+      "path": "scripts/dev/editorial_canary.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/ensure_canonical_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/install_hooks.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/mark_sources_verified.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/mark_sources_verified.py"
+      ]
+    },
+    {
+      "path": "scripts/dev/normalize_canary.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/parse_canary.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/publish_canary.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/pytest.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 3,
+      "callers": [
+        "Makefile",
+        "scripts/dev/run_full_pytest_safe.sh",
+        "scripts/dev/run_pytest_conda.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/run_agent_chain_harness.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        ".github/workflows/editorial-harness-publish-sandbox.yml",
+        ".github/workflows/editorial-harness.yml"
+      ]
+    },
+    {
+      "path": "scripts/dev/run_e2e_docker.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/run_e2e_in_nspawn.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/run_e2e_in_nspawn.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/run_e2e_with_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/run_full_canary.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/run_full_pytest_safe.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/dev/run_pytest_conda.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/run_pytest_conda.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/run_pytest_with_cleanup.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/run_systemd_nspawn_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 3,
+      "callers": [
+        ".github/workflows/e2e-systemd-nspawn.yml",
+        "scripts/dev/run_e2e_in_nspawn.sh",
+        "scripts/dev/run_systemd_nspawn_env.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/select_phase_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/dev/setup_dev_environment.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/setup_dev_environment.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/setup_selfhosted_runner.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        ".github/workflows/e2e-systemd-nspawn.yml",
+        "scripts/dev/run_e2e_in_nspawn.sh"
+      ]
+    },
+    {
+      "path": "scripts/dev/stop_local_agents.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/download_agent_models.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/download_agent_models.py"
+      ]
+    },
+    {
+      "path": "scripts/estimate_vram.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/fetch_secrets_to_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/gpu_monitor.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/indexing/autonomous_index_update.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        "Makefile",
+        "scripts/indexing/index_autoupdate_daemon.sh"
+      ]
+    },
+    {
+      "path": "scripts/indexing/bootstrap_context.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 3,
+      "callers": [
+        "Makefile",
+        "scripts/indexing/daily_hermes_refresh.sh",
+        "scripts/indexing/session_chat_init.sh"
+      ]
+    },
+    {
+      "path": "scripts/indexing/build_code_index.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 5,
+      "callers": [
+        "Makefile",
+        "scripts/indexing/autonomous_index_update.py",
+        "scripts/indexing/daily_hermes_refresh.sh",
+        "scripts/indexing/query_code_index.py",
+        "scripts/indexing/session_chat_init.sh"
+      ]
+    },
+    {
+      "path": "scripts/indexing/daily_hermes_refresh.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/indexing/index_autoupdate_daemon.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        "Makefile",
+        "scripts/indexing/session_chat_init.sh"
+      ]
+    },
+    {
+      "path": "scripts/indexing/query_code_index.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/indexing/session_chat_init.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/indexing/daily_hermes_refresh.sh"
+      ]
+    },
+    {
+      "path": "scripts/indexing/telemetry_summary.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        "Makefile",
+        "scripts/indexing/daily_hermes_refresh.sh"
+      ]
+    },
+    {
+      "path": "scripts/ingestion_progress_monitor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/initialize_adapters.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/install_alertmanager_unit.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        "Makefile",
+        "infrastructure/systemd/scripts/justnews-start-agent.sh"
+      ]
+    },
+    {
+      "path": "scripts/install_logrotate.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "Makefile"
+      ]
+    },
+    {
+      "path": "scripts/job_lifecycle_diagnostic_monitor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/maintenance/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/maintenance/reset_clustering_state.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/maintenance/reset_dev_data_preserve_sources.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/maintenance/test_script_ecosystem.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/maintenance/validate_versions.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/manage_secrets.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/admin/manage_secrets.py"
+      ]
+    },
+    {
+      "path": "scripts/ops/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/adapter_worker_pool.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/apply_stage_b_migration.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/apply_stage_b_migration.sh"
+      ]
+    },
+    {
+      "path": "scripts/ops/apply_synthesis_migration.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/apply_synthesis_migration_py.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/apply_synthesis_migration_py.py"
+      ]
+    },
+    {
+      "path": "scripts/ops/backfill_raw_html.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/backfill_raw_html.py"
+      ]
+    },
+    {
+      "path": "scripts/ops/canary_scorecard.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/capture_refactor_parity_artifacts.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/check_dev_telemetry_status.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/cleanup_raw_html.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/diagnose_ingestion_samples.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/diagnose_ingestion_samples.py"
+      ]
+    },
+    {
+      "path": "scripts/ops/disable_governor.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/download_agent_models.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/enable_governor.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/enable_kernel_logging.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/export_refactor_provenance_sample.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/install_dcgm_exporter.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/install_otel_central_collector.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/install_otel_node_collector.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/justnews_memory_governor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/enable_governor.sh"
+      ]
+    },
+    {
+      "path": "scripts/ops/living_story_dashboard_report.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/queue_fresh_monitor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/run_crawl_schedule.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "infrastructure/systemd/scripts/run_crawl_schedule.sh"
+      ]
+    },
+    {
+      "path": "scripts/ops/run_dedupe_benchmark.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/run_local_otel.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/run_refactor_e2e_smoke.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/ops/run_dedupe_benchmark.py"
+      ]
+    },
+    {
+      "path": "scripts/ops/start_services_daemon.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/stop_services.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/validate_crawl_lane_behavior.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/ops/verify_bbc_lane1_entity_ingestion.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/perf/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/perf/compare_models.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/perf/gpu_activity_agent.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/perf/gpu_activity_agent.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/gpu_activity_monitor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/perf/gpu_activity_monitor.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/gpu_telemetry.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/perf/gpu_activity_agent.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/gpu_telemetry_exporter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        "scripts/perf/gpu_activity_agent.py",
+        "scripts/perf/gpu_telemetry_exporter.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/install_all.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/perf/install_logrotate.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/perf/install_service.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/perf/nvml_dropout_watchdog.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/perf/nvml_dropout_watchdog.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/orchestrator_soak.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 2,
+      "callers": [
+        ".github/workflows/perf-orchestrator-soak.yml",
+        "scripts/perf/orchestrator_soak.sh"
+      ]
+    },
+    {
+      "path": "scripts/perf/simulate_concurrent_inference.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/perf/simulate_concurrent_inference.py"
+      ]
+    },
+    {
+      "path": "scripts/perf/stress_test_context_window.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/publish_hf_to_model_store.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/roo_qdrant.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/run_tests_with_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/run_with_env.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 1,
+      "callers": [
+        "scripts/dev/run_e2e_with_env.sh"
+      ]
+    },
+    {
+      "path": "scripts/safe_depth4_cpu_balanced_monitor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/setup_dev_environment.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/setup_living_stories_collections.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/setup_postgres.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/start_orchestrator.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/stop_services.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/vendor_patches/apply_google_rpc_namespace_patch.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "scripts/verify_roo_index_setup.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/authentication/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/authentication/service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/authorization/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/authorization/service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/compliance/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/compliance/service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/demo.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/encryption/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/encryption/service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/models.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/monitoring/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/monitoring/service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/security_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "security/tests_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "simulation_test.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "sitecustomize.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "start_agents_devcontainer.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "start_all_services.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "start_chromadb_server.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "start_dev_system.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "stop_all_services.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "system_status_report.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "test_fact_checker_performance.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "test_prompt_experiments/run_20260321T155542Z/run_inference_variants.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "test_prompt_experiments/run_20260321T155542Z/select_clusters.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "test_prompt_experiments/run_20260321T162902Z_filtered/run_inference_variants.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "test_prompt_experiments/run_20260321T162902Z_filtered/select_clusters_filtered.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/run_inference_variants.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "test_prompt_experiments/run_20260321T173048Z_filtered_v2/select_clusters_filtered.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "test_prompt_experiments/run_20260321T180600Z_filtered_v3/run_inference_variants.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "test_prompt_experiments/run_20260321T180600Z_filtered_v3/select_clusters_filtered.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "test_prompt_experiments/run_20260321T181500Z_filtered_v3b/run_inference_variants.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_adapter_base.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_adapter_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_hf_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_hf_adapter_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_hf_adapter_retries.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_mock_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_model_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_model_adapter_fallbacks.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_openai_adapter.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_openai_adapter_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/adapters/test_openai_adapter_retries.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/analyst/test_audit_verdict_normalization.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/analyst/test_discovery.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/analyst/test_fact_checker_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/chief_editor/test_list_drafts.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/cluster_fetcher/test_cluster_fetcher.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/common/test_editorial_harness_publish_flow_gating.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/common/test_editorial_harness_publish_gating.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/common/test_editorial_harness_runner.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/common/test_normalized_article_repository.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/common/test_publisher_integration_http.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/crawler/test_adaptive_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/crawler/test_crawl4ai_follow_external.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/crawler/test_crawl4ai_ingestion_triage.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/crawler/test_crawler_utils_lifecycle.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/crawler/test_extraction.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/crawler/test_generic_site_crawler.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/crawler/test_sources_intelligence_contract.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/crawler_control/test_crawl_schedule.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/crawler_control/test_web_interface.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_admin_jwt_auth.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_dashboard_pages_api.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_dropdown_e2e.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_get_publishing_config.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_public_articles.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_public_website_route.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_public_website_template.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_rate_limiting.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_set_publishing_config.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_transparency_repository.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/dashboard/test_transparency_router.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/fact_checker/test_shim_enterprise.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/gpu_orchestrator/test_model_lifecycle.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/gpu_orchestrator/test_orchestrator_boot_config.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/mcp_bus/test_health.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/mcp_bus/test_health_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/memory/test_living_stories_fast_path.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/memory/test_memory_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/memory/test_memory_engine_chroma_validation.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/memory/test_save_article.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/memory/test_save_article_chroma_required.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/synthesizer/test_job_api.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/synthesizer/test_job_store_db.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/synthesizer/test_persistence.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/synthesizer/test_synthesizer_cluster_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/synthesizer/test_synthesizer_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/synthesizer/test_synthesizer_mistral_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/synthesizer/test_synthesizer_publish_e2e.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/synthesizer/test_transparency_gate.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_analyst.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_analyst_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_analyst_engine_traceability.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_analyst_mistral_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_analyst_schemas_traceability.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_archive_ingest_pipeline.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_archive_raw_html_snapshot.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_auth.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_auth_api.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_auth_api_additional.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_chief_editor_mistral_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_chief_editor_publish_lane_caveat.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_crawler_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_crawler_hitl_payloads.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_crawler_lane1_expansion_candidates.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_critic_mistral_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_critic_traceability_balance.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_embedding.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_fact_checker_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_fact_checker_engine_async.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_fact_checker_mistral_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_fact_checker_service_verdicts.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_gpu_manager_production.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_gpu_orchestrator_api.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_gpu_orchestrator_leader_api.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_hitl_payload_validation.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_hitl_programmatic_flow.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_hitl_service_ingest_forward.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_hitl_service_qa_endpoints.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_hitl_service_training_forward.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_journalist_mistral_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_lane1_workflow.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_model_adapters.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_policies_traceability_gate.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_reasoning_mistral_engine.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_runtime_config_traceability.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/agents/test_transparency_repository_traceability.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/ci/run_canonical_telemetry_startup_test.sh",
+      "kind": "shell",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/ci/run_sentry_demo.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_ddg_search_service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_embedding_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_headline_adapter_model_store.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_json_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_model_store_dry_run.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_observability.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_secret_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_semantic_search_service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_triage_adapter_model_store.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_url_normalization.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/common/test_version_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/config/test_legacy_init.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/conftest.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/database/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/database/conftest.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/database/test_chroma_canonical.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/database/test_chromadb_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/database/test_dual_database_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/database/test_dual_database_performance.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/database/test_migrated_database_cache.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/database/test_migrated_database_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/database/test_migrated_models.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/database/test_synthesized_article_model.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/deprecation/test_deprecation_checks.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/e2e/test_docker_poc_representative.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/e2e/test_orchestrator_real_e2e.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/e2e/test_publisher_publish_api_flow.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/e2e/test_publisher_publish_flow.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/baseline_capture.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_agent_chain_harness.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_chromadb_live.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_claim_concurrency.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_devcontainer.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_full_pipeline_5_variations.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_kg_and_chroma_metadata.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_model_store_resolution.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_orchestrator_e2e.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_persistence_schema.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_vllm_mistral_7b_smoke.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/integration/test_worker_flow.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/mcp_scaffold.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_custom_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_log_aggregator.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_log_analyzer.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_log_collector.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_log_storage.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_metrics_collector.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_performance_monitor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_trace_analyzer.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_trace_collector.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_trace_processor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/core/test_trace_storage.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/test_adapter_alert_rules.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/test_grafana_dashboards.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/test_grafana_provisioning.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/monitoring/test_prometheus_rules.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/parsing/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/parsing/test_canary_articles.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/scripts/test_backfill_raw_html.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/scripts/test_check_processing_time.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/scripts/test_check_protobuf_version.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/scripts/test_chroma_bootstrap.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/scripts/test_run_crawl_schedule_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/security/test_compliance_service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/security/test_encryption_service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/security/test_monitoring_service.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/smoke/test_run_full_canary.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/smoke/test_stage0_env.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/smoke/test_stage1_crawl.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/smoke/test_stage2_ingest.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/smoke/test_stage3_parse.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/smoke/test_stage4_editorial.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/smoke/test_stage5_publish.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/smoke/test_stage8_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/smoke_live.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_agents.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_backup_conda_env.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_c4ai_metadata.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_c4ai_paywall_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_c4ai_server.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_check_canonical_env.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_crawl4ai_shim_deprecation.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_deprecation_warnings_absence.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_end_to_end_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_gpu.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_gpu_defaults.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_gpu_live.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_mcp_bus.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_monitoring_telemetry_stack.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_no_deprecation_warnings.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_operational_scripts.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_paywall_aggregator.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_performance.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_preflight_safe_mode.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_protobuf_version.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_runner.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_security.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_sentry_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/test_utils.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/training_system/test_training_coordinator.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_7b_re_ranker.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_adapter_pool.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_chief_editor_publish_republish_tracking.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_dashboard_sources.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_db_safe_cursor.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_gpu_orchestrator_claims.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_gpu_orchestrator_jobs.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_gpu_orchestrator_leader.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_gpu_orchestrator_lease_reclaimer.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_gpu_orchestrator_persistent_leases.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_gpu_orchestrator_policy.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_gpu_orchestrator_pools_persistence.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_gpu_orchestrator_reclaimer.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_gpu_orchestrator_workers_api.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_perf_simulator.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_stage_b_publishing_metrics.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_workflow_orchestrator_autonomic_throughput.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_workflow_orchestrator_lane_metadata.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_workflow_orchestrator_living_story_clustering.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_workflow_orchestrator_runtime_control_plane_endpoints.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_workflow_orchestrator_runtime_examples.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_workflow_orchestrator_runtime_examples_endpoint.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tests/unit/test_workflow_orchestrator_runtime_overrides.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "tmp_unified_crawl_and_drain_monitor.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/core/system_manager.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/core/training_coordinator.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/dashboard/web_interface.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/main.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/mcp_integration.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/tests/test_hitl_label_forward.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/tests/validate_system.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/tests/validate_system_safe.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/utils/__init__.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/utils/gpu_cleanup.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "training_system/utils/helpers.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "trigger_backfill.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "trigger_custom_crawl.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "trigger_requested_crawl_lite.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "validate_dashboard_queries.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "verify_chroma.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "verify_shim_live.py",
+      "kind": "python",
+      "retired_stub": false,
+      "deprecated": false,
+      "caller_count": 0,
+      "callers": []
+    },
+    {
+      "path": "verify_synthesizer_connection.py",
+      "kind": "python",
+      "retired_stub": true,
+      "deprecated": true,
+      "caller_count": 0,
+      "callers": []
+    }
+  ]
+}

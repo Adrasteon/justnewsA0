@@ -36,24 +36,13 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 # actionable errors when venvs are missing packages.
 check_agent_python_deps() {
     local agent="$1"
-    # Prefer using a developer conda env when present (so checks match developer setup)
-    local py_cmd=""
-    local conda_env_to_try="${CONDA_ENV:-${CANONICAL_ENV:-justnews-py312-phase1}}"
-    if command -v conda >/dev/null 2>&1; then
-        if conda env list 2>/dev/null | awk '{print $1}' | grep -xq "$conda_env_to_try"; then
-            py_cmd="conda run -n $conda_env_to_try python"
-        fi
+    local py="${PYTHON_BIN:-$PROJECT_ROOT/.venv/bin/python}"
+    if [[ ! -x "$py" ]]; then
+        py="$(command -v python3 || command -v python || true)"
     fi
-    if [[ -z "$py_cmd" ]]; then
-    local py="${PYTHON_BIN:-$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}/bin/python}"
-        if [[ ! -x "$py" ]]; then
-            py="$(command -v python3 || command -v python || true)"
-        fi
-        if [[ -z "$py" ]]; then
-            log_warning "No Python interpreter found to perform dependency check; skipping"
-            return 0
-        fi
-        py_cmd="$py"
+    if [[ -z "$py" ]]; then
+        log_warning "No Python interpreter found to perform dependency check; skipping"
+        return 0
     fi
 
     local req_mods
@@ -66,23 +55,17 @@ check_agent_python_deps() {
 
     local modules_var="${req_mods[*]}"
     local missing
-    missing=$(eval "$py_cmd - <<PYCODE 2>/dev/null
+    missing=$("$py" - <<PYCODE 2>/dev/null
 import importlib,sys
-mods = \"${modules_var}\".split()
+mods = "${modules_var}".split()
 missing = [m for m in mods if importlib.util.find_spec(m) is None]
 sys.stdout.write(' '.join(missing))
 PYCODE
-")
+)
 
     if [[ -n "$missing" ]]; then
         log_error "Missing python modules for agent '$agent': $missing"
-        if [[ "$py_cmd" == conda* ]]; then
-            log_error "Install into the developer conda env (example): conda run -n ${conda_env_to_try} pip install $missing"
-        else
-            local py_path="$py_cmd"
-            py_path="${py_path%% *}"
-            log_error "Install them into the service venv (example): sudo ${py_path%/*}/pip install $missing"
-        fi
+        log_error "Install them into the service venv (example): ${PROJECT_ROOT}/.venv/bin/pip install $missing"
         return 2
     fi
     log_success "Python dependencies present for agent '$agent'"

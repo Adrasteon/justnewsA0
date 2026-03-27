@@ -12,9 +12,9 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 1. [Setup Guide](./operations/SETUP_GUIDE.md) — Complete installation from scratch
 
-- Python 3.12 and Miniconda setup
+- Python 3.12 and UV/venv setup
 
-- Conda environment creation
+- UV-managed .venv creation
 
 - Global environment configuration
 
@@ -29,6 +29,7 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 - Systemd integration
 
 1. [Environment Configuration](./operations/ENVIRONMENT_CONFIG.md) — Understanding and managing configuration
+1. [Conda Deprecation Notice](./operations/CONDA_ENVIRONMENT_DEPRECATION.md) — Canonical migration/removal guidance for legacy conda envs (including local archive policy)
 
 - Global.env file structure
 
@@ -85,6 +86,13 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 - [Setup Guide](./operations/SETUP_GUIDE.md) — End-to-end installation
 
 - [Environment Configuration](./operations/ENVIRONMENT_CONFIG.md) — Config management
+- [Deprecated Script Archive Policy](./operations/DEPRECATED_ARCHIVE_POLICY.md) — Archival policy for retired scripts
+- [Root Legacy Script Redirect Index](./operations/ROOT_LEGACY_REDIRECT_INDEX.md) — Replacements for retired root scripts
+- [Active Script Pathways Audit](./operations/ACTIVE_SCRIPT_PATHWAYS_AUDIT.md) — Comprehensive mapping of active script workflows and branches
+- [Docker-First Runtime Strategy](./operations/DOCKER_FIRST_STRATEGY.md) — Canonical Docker runtime and transition guidance
+- [Docker-First Operations Runbook](./operations/DOCKER_FIRST_OPS_RUNBOOK.md) — Runtime lifecycle and incident procedures
+- [Docker Canonical Commands](./operations/DOCKER_CANONICAL_COMMANDS.md) — one-page operator command reference
+- [Docker-First Cutover Plan (2026-03-26)](./plans/2026-03-26-docker-first-cutover-plan.md) — phased implementation roadmap
 
 - [Living Stories Architecture](./LIVING_STORIES_ARCHITECTURE.md) — Canonical story model, meaningful-change gating, and lifecycle
 
@@ -152,7 +160,7 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 **Deployment & Infrastructure**:
 
-- [Systemd Operations](./infrastructure/systemd/README.md) — Service management
+- [Systemd Operations](../infrastructure/systemd/README.md) — Service management
 
 - [Operations Guide](./operations/README.md) — General operational procedures
 
@@ -186,7 +194,7 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 1. Read [Environment Configuration](./operations/ENVIRONMENT_CONFIG.md) to understand the environment
 
-1. Follow [Setup Guide Phase 1-2](./operations/SETUP_GUIDE.md#phase-1-python-312--miniconda) to set up your machine
+1. Follow [Setup Guide](./operations/SETUP_GUIDE.md) to set up your machine
 
 1. Check out [Development Guide](./developer/) for coding standards
 
@@ -269,18 +277,18 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Vault Setup & Administration](./operations/VAULT_SETUP.md) — Complete guide
 
-- [AppRole Authentication](./operations/VAULT_SETUP.md#approle-authentication) — Service auth
+- [AppRole Authentication](./operations/VAULT_SETUP.md#configuration-approle-setup) — Service auth
 
-- [Secret Rotation](./operations/VAULT_SETUP.md#secret-rotation) — Regular key rotation
+- [Secret Rotation](./operations/VAULT_SETUP.md#rotating-approle-secret-id) — Regular key rotation
 
 - [Environment Secrets](./operations/ENVIRONMENT_CONFIG.md#secrets-management) — Using secrets in code
 
 ### Service Management
 
-- [Setup Guide - Systemd Integration](./operations/SETUP_GUIDE.md#phase-7-systemd-integration-and-startup) — Service
+- [Setup Guide - Systemd Integration](./operations/SETUP_GUIDE.md#phase-7-system-startup-integration-optional) — Service
   setup
 
-- [Systemd Operations](./infrastructure/systemd/README.md) — Service commands
+- [Systemd Operations](../infrastructure/systemd/README.md) — Service commands
 
 - [Systemd Monitoring](./operations/systemd-monitoring.md) — Health checks
 
@@ -304,7 +312,7 @@ This is a comprehensive index of all JustNews documentation, organized by topic 
 
 - [Setup Guide](./operations/SETUP_GUIDE.md) — Initial deployment
 
-- [Systemd Operations](./infrastructure/systemd/README.md) — Service deployment
+- [Systemd Operations](../infrastructure/systemd/README.md) — Service deployment
 
 - [Operations Guide](./operations/README.md) — General procedures
 
@@ -370,11 +378,11 @@ infrastructure/
 
 ### "How do I run a test locally?"
 
-→ Activate conda environment, then see [Development Guide](./developer/)
+→ Activate `.venv`, then see [Development Guide](./developer/)
 
 ### "How do I deploy to production?"
 
-→ Follow [Setup Guide](./operations/SETUP_GUIDE.md), then [Systemd Operations](./infrastructure/systemd/README.md)
+→ Follow [Setup Guide](./operations/SETUP_GUIDE.md), then [Systemd Operations](../infrastructure/systemd/README.md)
 
 ### "Where is the database schema?"
 
@@ -382,11 +390,11 @@ infrastructure/
 
 ### "How do I rotate secrets?"
 
-→ See [Vault Setup - Secret Rotation](./operations/VAULT_SETUP.md#secret- rotation)
+→ See [Vault Setup - Secret Rotation](./operations/VAULT_SETUP.md#rotating-approle-secret-id)
 
 ### "How do I monitor system health?"
 
-→ See [Troubleshooting - Monitoring](./operations/TROUBLESHOOTING.md#monitoring- and-observability)
+→ See [Troubleshooting - Monitoring](./operations/TROUBLESHOOTING.md#monitoring-and-observability)
 
 → See [Monitoring Scripts Reference](./operations/MONITORING_SCRIPTS_REFERENCE.md)
 
@@ -421,7 +429,8 @@ infrastructure/
 sudo journalctl -u vault -u mariadb -u chromadb -f
 
    # Check application logs
-tail -f logs/*.log ```
+tail -f logs/*.log
+```
 
 1. **Run diagnostics**:
 

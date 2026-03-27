@@ -7,6 +7,15 @@ set -uo pipefail  # Note: set -e removed to allow graceful handling of service c
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
+COMMON_LIB="$SCRIPT_DIR/scripts/lib/common.sh"
+if [[ -f "$COMMON_LIB" ]]; then
+    # shellcheck source=/dev/null
+    source "$COMMON_LIB"
+else
+    echo "[ERROR] Missing shared library: $COMMON_LIB" >&2
+    exit 1
+fi
+
 # Service definitions with ports and health endpoints
 declare -A SERVICES=(
     ["mcp_bus"]="8000:/health"
@@ -39,36 +48,12 @@ declare -A READINESS_ENDPOINTS=(
     ["gpu_orchestrator"]="8014:/ready"
 )
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
 # Configuration
 TIMEOUT=10
 HOST="localhost"
 EXIT_CODE=0
 PANEL=false
 REFRESH=2
-
-# Logging functions
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
 
 # Check if a port is listening
 check_port() {

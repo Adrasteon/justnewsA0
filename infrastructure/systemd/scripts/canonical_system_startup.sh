@@ -25,11 +25,16 @@ if [[ ! -x "$SCRIPT" ]]; then
   exit 1
 fi
 # Ensure PYTHONPATH and PYTHON_BIN are exported so downstream services and
-# scripts can correctly run using the project's conda environment. If
-# `/etc/justnews/global.env` or project `global.env` has been sourced, those
-# values will be used; otherwise prefer the canonical project env (CANONICAL_ENV, default: justnews-py312)
-export PYTHON_BIN="${PYTHON_BIN:-$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}/bin/python}"
+# scripts can correctly run using the project's UV/.venv environment.
+# If `/etc/justnews/global.env` or project `global.env` has been sourced,
+# those values will be used; otherwise prefer <repo>/.venv/bin/python.
+if [[ -z "${PYTHON_BIN:-}" ]]; then
+  if [[ -x "$ROOT/.venv/bin/python" ]]; then
+    export PYTHON_BIN="$ROOT/.venv/bin/python"
+  else
+    export PYTHON_BIN="$(command -v python3 || command -v python || echo /usr/bin/python3)"
+  fi
+fi
 export PYTHONPATH="${PYTHONPATH:-$ROOT}"
-# PYTHON_BIN default derived from CANONICAL_ENV when present
 
 exec "$SCRIPT" "$@"

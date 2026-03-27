@@ -5,7 +5,7 @@ def test_required_files_exist():
     repo_root = pathlib.Path(__file__).resolve().parents[2]
 
     required = [
-        repo_root / "environment.yml",
+        repo_root / "requirements-bootstrap.txt",
         repo_root / "scripts" / "dev" / "docker-compose.e2e.yml",
         repo_root / "scripts" / "dev" / "db-mariadb" / "Dockerfile",
         repo_root / "scripts" / "dev" / "canary_urls.txt",

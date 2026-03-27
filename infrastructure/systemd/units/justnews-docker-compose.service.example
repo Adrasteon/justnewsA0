@@ -1,0 +1,17 @@
+[Unit]
+Description=JustNews Docker Compose Stack (host wrapper)
+After=network-online.target docker.service
+Wants=network-online.target docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/app
+Environment=JUSTNEWS_COMPOSE_FILE=/app/infrastructure/docker/docker-compose.canonical.yml
+ExecStart=/usr/bin/env bash /app/scripts/ops/docker_compose.sh up
+ExecStop=/usr/bin/env bash /app/scripts/ops/docker_compose.sh down
+TimeoutStartSec=120
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

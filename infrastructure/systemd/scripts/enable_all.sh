@@ -8,6 +8,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SYSTEMD_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROJECT_ROOT="$(cd "$SYSTEMD_ROOT/../.." && pwd)"
 
+COMMON_LIB="$SCRIPT_DIR/lib/common.sh"
+if [[ -f "$COMMON_LIB" ]]; then
+    # shellcheck source=/dev/null
+    source "$COMMON_LIB"
+else
+    echo "[ERROR] Missing shared library: $COMMON_LIB" >&2
+    exit 1
+fi
+
 # Service definitions in startup order
 SERVICES=(
     "gpu_orchestrator" # GPU Orchestrator (port 8014) — MUST start before mcp_bus
@@ -43,30 +52,6 @@ OBSERVABILITY_SERVICES=(
     "dcgm-exporter"
     "sensor-logger"
 )
-
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Logging functions
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
 
 # Check if running as root
 check_root() {

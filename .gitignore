@@ -30,7 +30,6 @@ agents/hitl_service/*.db
 .env
 global.env
 global.env.backup.*
-justnews-py312/
 
 # Stray pip/packaging artifacts
 =*
@@ -124,3 +123,7 @@ fact_checker_deprecation_archive/
 
 # Local code index artifacts (RAG helper)
 .cache/code_index/
+
+# Local-only archive for deprecated assets (intentional hard cleanup staging)
+archive_local/
+archive/

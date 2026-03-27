@@ -6,7 +6,7 @@ on /metrics using prometheus_client. It's intentionally lightweight — no
 external deps beyond prometheus_client and a Python runtime.
 
 Usage:
-  # run in the same conda env used for tests
+  # run in the project UV/.venv (or current Python)
   python3 scripts/perf/gpu_telemetry_exporter.py --port 9118 --interval 1
 
 The exporter handles missing sensors gracefully and will report NaN for

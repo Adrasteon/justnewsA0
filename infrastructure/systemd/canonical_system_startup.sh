@@ -22,29 +22,27 @@ REQUEST_STOP=false
 SHOW_USAGE=false
 declare -a FORWARDED_ARGS=()
 
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+COMMON_LIB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/lib/common.sh"
+if [[ -f "$COMMON_LIB" ]]; then
+  # shellcheck source=/dev/null
+  source "$COMMON_LIB"
+else
+  echo "[ERROR] Missing shared library: $COMMON_LIB" >&2
+  exit 1
+fi
 
-log_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+# Preferred Python runtime for helpers (UV/.venv canonical)
+DEFAULT_PYTHON_BIN="${PYTHON_BIN:-${SERVICE_DIR:-$HOME/JustNews}/.venv/bin/python}"
 
-# Preferred conda env for Python helpers (default to canonical name when present)
-DEFAULT_CONDA_ENV="${CANONICAL_ENV:-justnews-py312-phase1}"
-CONDA_ENV="${CONDA_ENV:-$DEFAULT_CONDA_ENV}"
-
-# Helper: run a python script using conda run -n ${CONDA_ENV} when available;
-# otherwise fallback to PYTHON_BIN if configured, or system python.
+# Helper: run a python script using configured PYTHON_BIN, then fallback to
+# project .venv, then system python.
 run_python_script() {
   local script_path="$1"; shift || true
-  if command -v conda >/dev/null 2>&1; then
-    PYTHONPATH=. conda run -n "$CONDA_ENV" python "$script_path" "$@"
-  elif [[ -n "${PYTHON_BIN:-}" && -x "${PYTHON_BIN}" ]]; then
-    PYTHONPATH=. "$PYTHON_BIN" "$script_path" "$@"
+  local py_bin="${PYTHON_BIN:-$DEFAULT_PYTHON_BIN}"
+  if [[ -x "$py_bin" ]]; then
+    PYTHONPATH=. "$py_bin" "$script_path" "$@"
+  elif [[ -x "${SERVICE_DIR:-$HOME/JustNews}/.venv/bin/python" ]]; then
+    PYTHONPATH=. "${SERVICE_DIR:-$HOME/JustNews}/.venv/bin/python" "$script_path" "$@"
   else
     PYTHONPATH=. python "$script_path" "$@"
   fi
@@ -166,8 +164,8 @@ check_python_runtime() {
     exit 1
   fi
   log_success "Python runtime detected: $python_version"
-  if [[ "$python_path" != *"${CONDA_ENV:-$DEFAULT_CONDA_ENV}"* ]]; then
-   log_warn "PYTHON_BIN path does not reference the expected environment (${CONDA_ENV:-$DEFAULT_CONDA_ENV}); confirm the correct environment is targeted"
+  if [[ "$python_path" != *"/.venv/"* ]]; then
+   log_warn "PYTHON_BIN does not appear to target project UV/.venv; confirm correct runtime is targeted"
   fi
 }
 
@@ -735,18 +733,8 @@ start_gui_monitor() {
      
      local python_cmd="${PYTHON_BIN:-python3}"
      
-     # Check if custom conda env is needed?
-    # The user may be running with $HOME/miniconda3/envs/${CANONICAL_ENV}/bin/python3
-     # We should try to use that if possible.
-     
-     if [[ -n "${CONDA_ENV:-}" ]]; then
-        # If we know the conda env, we can try to find its python
-        # But for simplicity, let's trust PYTHON_BIN if set, or just run whatever 'python' maps to for the user?
-        # Actually, running 'python' as user might pick up system python.
-        # PYTHON_BIN in this script comes from global.env which is correct.
-        true
-     fi
-     
+    # PYTHON_BIN from global.env should already point to canonical UV/.venv.
+
      # Run as user
      sudo -u "$SUDO_USER" DISPLAY="$DISPLAY" XAUTHORITY="${XAUTHORITY:-/home/$SUDO_USER/.Xauthority}" \
        nohup "$python_cmd" "$monitor_script" >/dev/null 2>&1 &
@@ -904,9 +892,9 @@ main() {
       log_error "CHROMADB_HOST/PORT in environment $chroma_host:$chroma_port does not match canonical $chroma_canonical_host:$chroma_canonical_port; aborting startup."
       log_info "Helpful steps:"
       log_info "  1) Use $ROOT/scripts/chroma_diagnose.py to discover endpoints and root info"
-      log_info "     - Example: PYTHONPATH=. conda run -n ${CONDA_ENV:-$DEFAULT_CONDA_ENV} python scripts/chroma_diagnose.py --host $chroma_host --port $chroma_port"
+      log_info "     - Example: PYTHONPATH=. ${PYTHON_BIN:-$ROOT/.venv/bin/python} scripts/chroma_diagnose.py --host $chroma_host --port $chroma_port"
       log_info "  2) If tenant/collection missing, run the bootstrap helper: scripts/chroma_bootstrap.py"
-      log_info "     - Example: PYTHONPATH=. conda run -n ${CONDA_ENV:-$DEFAULT_CONDA_ENV} python scripts/chroma_bootstrap.py --host $chroma_canonical_host --port $chroma_canonical_port --tenant default_tenant --collection articles"
+      log_info "     - Example: PYTHONPATH=. ${PYTHON_BIN:-$ROOT/.venv/bin/python} scripts/chroma_bootstrap.py --host $chroma_canonical_host --port $chroma_canonical_port --tenant default_tenant --collection articles"
       exit 1
     fi
     # Run a diagnostic to confirm the canonical host/port is a Chroma instance

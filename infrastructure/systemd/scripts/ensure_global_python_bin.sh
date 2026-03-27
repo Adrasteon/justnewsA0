@@ -5,21 +5,25 @@ set -euo pipefail
 # Ensure /etc/justnews/global.env contains a valid PYTHON_BIN setting.
 # - If the file is missing, it will create it with a safe default.
 # - If PYTHON_BIN is absent, this script will add a canonical value derived
-#   from the requested CONDA_ENV (default: ${CANONICAL_ENV:-justnews-py312-phase1}).
+#   from the project UV-managed .venv (fallback: system python).
 # - Does not overwrite an existing PYTHON_BIN unless --force is passed.
 
 GLOBAL_ENV="/etc/justnews/global.env"
-DEFAULT_CONDA_ENV="${CONDA_ENV:-${CANONICAL_ENV:-justnews-py312-phase1}}"
-DEFAULT_PY_BIN="$HOME/miniconda3/envs/${DEFAULT_CONDA_ENV}/bin/python"
+JUSTNEWS_ROOT="${JUSTNEWS_ROOT:-$HOME/JustNews}"
+DEFAULT_PY_BIN="${JUSTNEWS_ROOT}/.venv/bin/python"
+if [[ ! -x "$DEFAULT_PY_BIN" ]]; then
+  DEFAULT_PY_BIN="$(command -v python3 || command -v python || echo /usr/bin/python3)"
+fi
 
 usage() {
   cat <<EOF
-Usage: $0 [--force] [--env-file <path>] [--conda-env <env>]
+Usage: $0 [--force] [--env-file <path>] [--root <path>] [--python-bin <path>]
 
 Ensure the global environment file contains PYTHON_BIN set to a valid interpreter.
 --force       Overwrite an existing PYTHON_BIN entry if present
 --env-file    Path to global.env (default: /etc/justnews/global.env)
---conda-env   Conda env name to derive default PYTHON_BIN from
+--root        JustNews repository root used to derive .venv path
+--python-bin  Explicit PYTHON_BIN value to set
 EOF
 }
 
@@ -28,7 +32,15 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --force) FORCE=true; shift ;;
     --env-file) GLOBAL_ENV="$2"; shift 2 ;;
-    --conda-env) DEFAULT_CONDA_ENV="$2"; DEFAULT_PY_BIN="$HOME/miniconda3/envs/${DEFAULT_CONDA_ENV}/bin/python"; shift 2 ;;
+    --root)
+      JUSTNEWS_ROOT="$2"
+      DEFAULT_PY_BIN="${JUSTNEWS_ROOT}/.venv/bin/python"
+      if [[ ! -x "$DEFAULT_PY_BIN" ]]; then
+        DEFAULT_PY_BIN="$(command -v python3 || command -v python || echo /usr/bin/python3)"
+      fi
+      shift 2
+      ;;
+    --python-bin) DEFAULT_PY_BIN="$2"; shift 2 ;;
     --help) usage; exit 0 ;;
     *) echo "Unknown arg: $1" >&2; usage; exit 2 ;;
   esac

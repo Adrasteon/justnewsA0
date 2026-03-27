@@ -1,5 +1,8 @@
 # Multi-Source Refactor Runtime Tuning Runbook
 
+> Historical context note: This document may describe legacy startup/orchestration flows captured at the time. Canonical runtime for JustNews is Docker-first. See `docs/operations/DOCKER_FIRST_STRATEGY.md` and `docs/operations/DOCKER_CANONICAL_COMMANDS.md`.
+
+
 **Date:** 2026-02-22  
 **Scope:** Safe runtime tuning and rollback of lane policy controls  
 **Service:** `workflow_orchestrator`

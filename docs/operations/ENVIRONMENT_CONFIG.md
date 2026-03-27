@@ -20,16 +20,17 @@ JustNews uses a **layered configuration approach**:
 
 The `scripts/run_with_env.sh` wrapper sources these in order, so later values override earlier ones.
 
-## Dependency manifests (Conda + UV/Pip)
+## Dependency manifests (UV/Pip canonical)
 
-- `environment.yml` is the canonical dependency specification.
-- `requirements-bootstrap.txt` is the UV/pip bootstrap mirror used in non-conda bootstrap flows.
+- `requirements-bootstrap.txt` is the canonical UV/.venv bootstrap dependency manifest.
 - `requirements.txt` is a compatibility wrapper that includes `requirements-bootstrap.txt`.
+- Legacy conda manifests are deprecated and moved to local archive references only.
 
 Recommended:
 
-- Use conda for primary runtime provisioning.
-- Use UV/pip bootstrap only where conda is not used, while keeping parity with `environment.yml`.
+- Use UV/venv for primary runtime provisioning.
+- Do not use conda/mamba for active setup, CI, or runtime flows.
+- Keep `requirements-bootstrap.txt` aligned with runtime requirements used by `.venv`.
 
 ### Decision note (2026-03-22): Docker builds remain pip-based
 
@@ -94,15 +95,12 @@ System-wide, non-secret configuration defaults for all JustNews services.
 
 ```bash
 
-## Canonical environment name
+## Canonical Python runtime (UV/venv)
 
-CANONICAL_ENV=${CANONICAL_ENV:-justnews-py312-phase1}
-
-## Paths to Python interpreter (must match conda environment)
-
-PYTHON_BIN=$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}/bin/python
-JUSTNEWS_PYTHON=$PYTHON_BIN
-CANONICAL_PYTHON_PATH=$PYTHON_BIN
+VENV_DIR=${VENV_DIR:-${SERVICE_DIR:-$HOME/JustNews}/.venv}
+PYTHON_BIN=${PYTHON_BIN:-${VENV_DIR}/bin/python}
+JUSTNEWS_PYTHON=${JUSTNEWS_PYTHON:-$PYTHON_BIN}
+CANONICAL_PYTHON_PATH=${CANONICAL_PYTHON_PATH:-$PYTHON_BIN}
 
 ## Enforce Python path on startup (0 = off, 1 = enforce)
 
@@ -112,10 +110,6 @@ ENFORCE_CANONICAL_PYTHON=1
 
 SERVICE_DIR=${SERVICE_DIR:-$HOME/JustNews}
 PYTHONPATH=${SERVICE_DIR:-$HOME/JustNews}
-
-## Conda prefix
-
-CONDA_PREFIX=$HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}
 
 ```
 

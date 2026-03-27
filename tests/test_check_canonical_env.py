@@ -2,7 +2,7 @@ import subprocess
 
 
 def test_checker_runs_successfully():
-    """Run the canonical-env checker script and expect success in the cleaned repo.
+    """Run the canonical UV-env checker script and expect success in the cleaned repo.
 
     This verifies CI's quick sanity check behaves as expected for this branch.
     """

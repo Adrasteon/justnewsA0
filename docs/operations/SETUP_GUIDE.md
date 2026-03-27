@@ -16,7 +16,10 @@ environment configuration, secrets management (Vault), and database initializati
 
 - **Privileges**: sudo access for system-level configuration
 
-## Phase 1: Python & Conda Environment
+## Phase 1: Python Environment (UV/.venv)
+
+Note: Conda/phased environment flows in this guide are deprecated. Use `scripts/bootstrap_venv.sh` as the canonical setup path.
+
 
 ### 1.1 Install Miniconda
 

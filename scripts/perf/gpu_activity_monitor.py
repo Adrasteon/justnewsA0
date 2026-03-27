@@ -67,14 +67,14 @@ def start_telemetry(
         print("started gpu_telemetry.sh pid", p.pid)
 
     if exporter_port and not os.path.exists(exporter_pid_file):
-        # Use the canonical project conda environment name for running monitoring helpers
-        conda_env = os.environ.get("CANONICAL_ENV", "justnews-py312")
+        # Run exporter in canonical project python (UV/.venv preferred).
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+        venv_python = os.path.join(repo_root, ".venv", "bin", "python")
+        python_bin = os.environ.get("PYTHON_BIN") or (
+            venv_python if os.path.exists(venv_python) else "python3"
+        )
         cmd = [
-            "mamba",
-            "run",
-            "-n",
-            conda_env,
-            "python",
+            python_bin,
             os.path.join("scripts", "perf", "gpu_telemetry_exporter.py"),
             "--port",
             str(exporter_port),

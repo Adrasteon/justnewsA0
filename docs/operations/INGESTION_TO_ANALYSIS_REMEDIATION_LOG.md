@@ -1,5 +1,8 @@
 # Ingestion → Analysis Remediation Log
 
+> Historical context note: This document may describe legacy startup/orchestration flows captured at the time. Canonical runtime for JustNews is Docker-first. See `docs/operations/DOCKER_FIRST_STRATEGY.md` and `docs/operations/DOCKER_CANONICAL_COMMANDS.md`.
+
+
 ## Session: 2026-02-18 (Phase 0 Baseline)
 
 ### Scope

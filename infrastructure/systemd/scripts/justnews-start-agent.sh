@@ -239,24 +239,22 @@ setup_environment() {
         fi
     fi
 
-    # Auto-bootstrap canonical conda environment if desired and available.
-    # This is idempotent and controlled by AUTO_BOOTSTRAP_CONDA (default: 1).
-    if [[ "${AUTO_BOOTSTRAP_CONDA:-1}" == "1" ]]; then
-        if command -v conda >/dev/null 2>&1; then
-            local target_env="${CONDA_ENV:-${CANONICAL_ENV:-justnews-py312-phase1}}"
-            if ! conda env list 2>/dev/null | awk '{print $1}' | grep -xq "$target_env"; then
-                log_info "Conda env '$target_env' not found; running bootstrap (AUTO_BOOTSTRAP_CONDA=1)"
-                # Run the idempotent bootstrap script; do not fail the agent startup if bootstrap fails
-                if [[ -x "${PROJECT_ROOT}/scripts/bootstrap_conda_env.sh" ]]; then
-                    "${PROJECT_ROOT}/scripts/bootstrap_conda_env.sh" --install-vllm-only || log_warning "Bootstrap script failed or was interrupted"
-                else
-                    log_warning "Bootstrap script not found at ${PROJECT_ROOT}/scripts/bootstrap_conda_env.sh"
-                fi
+    # Auto-bootstrap canonical UV/.venv environment when requested.
+    # This is idempotent and controlled by AUTO_BOOTSTRAP_VENV (default: 1).
+    if [[ "${AUTO_BOOTSTRAP_VENV:-1}" == "1" ]]; then
+        local target_py="${PYTHON_BIN:-${PROJECT_ROOT}/.venv/bin/python}"
+        if [[ ! -x "$target_py" ]]; then
+            log_info "Canonical UV/.venv not found; running bootstrap (AUTO_BOOTSTRAP_VENV=1)"
+            if [[ -x "${PROJECT_ROOT}/scripts/bootstrap_venv.sh" ]]; then
+                "${PROJECT_ROOT}/scripts/bootstrap_venv.sh" || log_warning "Bootstrap script failed or was interrupted"
+            elif [[ -x "${PROJECT_ROOT}/scripts/bootstrap_conda_env.sh" ]]; then
+                # Backward-compatible fallback wrapper (deprecated name).
+                "${PROJECT_ROOT}/scripts/bootstrap_conda_env.sh" || log_warning "Bootstrap fallback wrapper failed or was interrupted"
             else
-                log_info "Conda env '$target_env' already present; skipping bootstrap"
+                log_warning "Bootstrap script not found at ${PROJECT_ROOT}/scripts/bootstrap_venv.sh"
             fi
         else
-            log_info "conda not available; skipping auto bootstrap"
+            log_info "Canonical UV/.venv already present; skipping bootstrap"
         fi
     fi
 
@@ -327,11 +325,9 @@ check_python_deps_and_exit_if_missing() {
     # Selection order (best-effort):
     # 1) explicit PYTHON_BIN from agent/global env
     # 2) explicit CANONICAL_PYTHON_PATH (if set and executable)
-    # 3) default canonical env python path ($HOME/miniconda3/envs/${CANONICAL_ENV:-justnews-py312-phase1}/bin/python)
-    # 4) if conda is present and env exists -> 'conda run -n <env> python'
-    # 5) fallback to python3/python from PATH
+    # 3) default canonical UV/.venv python path ($PROJECT_ROOT/.venv/bin/python)
+    # 4) fallback to python3/python from PATH
     local py_cmd=""
-    local conda_env_to_try="${CONDA_ENV:-${CANONICAL_ENV:-justnews-py312-phase1}}"
 
     # 1) explicit override
     if [[ -n "${PYTHON_BIN:-}" && -x "${PYTHON_BIN}" ]]; then
@@ -347,22 +343,15 @@ check_python_deps_and_exit_if_missing() {
         fi
     fi
 
-    # 3) try the default canonical env path
+    # 3) try the default canonical UV/.venv path
     if [[ -z "$py_cmd" ]]; then
-        local default_canonical_path="$HOME/miniconda3/envs/${conda_env_to_try}/bin/python"
+        local default_canonical_path="$PROJECT_ROOT/.venv/bin/python"
         if [[ -x "$default_canonical_path" ]]; then
             py_cmd="$default_canonical_path"
         fi
     fi
 
-    # 4) fallback to conda run if conda exists and env is present
-    if [[ -z "$py_cmd" ]] && command -v conda >/dev/null 2>&1; then
-        if conda env list 2>/dev/null | awk '{print $1}' | grep -xq "$conda_env_to_try"; then
-            py_cmd="conda run -n $conda_env_to_try python"
-        fi
-    fi
-
-    # 5) last-resort PATH python
+    # 4) last-resort PATH python
     if [[ -z "$py_cmd" ]]; then
         if command -v python3 >/dev/null 2>&1; then
             py_cmd="$(command -v python3)"
@@ -413,7 +402,7 @@ check_python_deps_and_exit_if_missing() {
     local modules_var="${modules[*]}"
     local missing=""
 
-    # Split the interpreter command for safe invocation (supports values like "conda run -n env python")
+    # Split the interpreter command for safe invocation
     local -a py_parts
     local IFS=' '
     read -r -a py_parts <<< "$py_cmd"
@@ -452,44 +441,37 @@ PYCODE
 
         if [[ -n "$missing" ]]; then
         log_error "Missing python modules for agent '$agent': $missing"
-        if [[ "$py_cmd" == conda* ]]; then
-            log_error "Install into the developer conda env (example): conda run -n ${conda_env_to_try} pip install $missing"
-        else
-            local py_path="$py_cmd"
-            py_path="${py_path%% *}"
-            log_error "Install them into the service venv (example): sudo ${py_path%/*}/pip install $missing"
-        fi
+        local py_path="$py_cmd"
+        py_path="${py_path%% *}"
+        log_error "Install them into the service venv (example): ${PROJECT_ROOT}/.venv/bin/pip install $missing"
         exit 1
     fi
 
     # Export the resolved python command so callers can reuse the same interpreter selection
     export SELECTED_PY_CMD="$py_cmd"
-    # Provide a helpful warning if it's not the conda env python
-    check_python_interpreter_is_conda || true
+    check_python_interpreter_is_canonical || true
 }
 
-# If we detect the selected interpreter is not the canonical conda environment,
+# If we detect the selected interpreter is not the canonical UV/.venv environment,
 # warn about it to make debugging easier (does not change behavior).
-check_python_interpreter_is_conda() {
+check_python_interpreter_is_canonical() {
     local cmd="${SELECTED_PY_CMD:-${PYTHON_BIN:-}}"
-    local canonical_env="${CANONICAL_ENV:-justnews-py312-phase1}"
-    local canonical_path="${CANONICAL_PYTHON_PATH:-$HOME/miniconda3/envs/${canonical_env}/bin/python}"
+    local canonical_path="${CANONICAL_PYTHON_PATH:-$PROJECT_ROOT/.venv/bin/python}"
 
     if [[ -z "$cmd" ]]; then
         return 0
     fi
 
     # Consider the interpreter canonical if:
-    # - it contains the conda env path (/envs/<env>/bin) OR
-    # - it matches the canonical path explicitly OR
-    # - it is a 'conda run -n <env> python' invocation
-    if [[ "$cmd" == *"/envs/${canonical_env}/bin"* || "$cmd" == "$canonical_path" || "$cmd" == conda*"-n ${canonical_env}"* ]]; then
+    # - it contains the project .venv path OR
+    # - it matches the canonical path explicitly
+    if [[ "$cmd" == *"/.venv/bin"* || "$cmd" == "$canonical_path" ]]; then
         return 0
     fi
 
     # Not canonical — warn the operator; optionally fail if strict enforcement is enabled
-    log_warning "Selected python ($cmd) does not appear to be the developer conda env '${canonical_env}'"
-    log_warning "If you intended to use the conda environment, set PYTHON_BIN or CANONICAL_PYTHON_PATH in /etc/justnews/global.env or enable PATH to include the conda env's bin"
+    log_warning "Selected python ($cmd) does not appear to be the canonical UV/.venv interpreter"
+    log_warning "Set PYTHON_BIN or CANONICAL_PYTHON_PATH in /etc/justnews/global.env to point at $PROJECT_ROOT/.venv/bin/python"
 
     if [[ "${ENFORCE_CANONICAL_PYTHON:-0}" == "1" ]]; then
         log_error "ENFORCE_CANONICAL_PYTHON=1: refusing to continue with non-canonical interpreter: $cmd"

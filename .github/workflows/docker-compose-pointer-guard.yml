@@ -1,0 +1,43 @@
+name: Docker Compose Pointer Guard
+
+on:
+  pull_request:
+    paths:
+      - 'infrastructure/docker/docker-compose.yml'
+      - 'infrastructure/docker/docker-compose.canonical.yml'
+      - '.github/workflows/docker-compose-pointer-guard.yml'
+  push:
+    paths:
+      - 'infrastructure/docker/docker-compose.yml'
+      - 'infrastructure/docker/docker-compose.canonical.yml'
+      - '.github/workflows/docker-compose-pointer-guard.yml'
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure legacy compose path is a compatibility pointer only
+        run: |
+          set -euo pipefail
+          FILE=infrastructure/docker/docker-compose.yml
+
+          if ! grep -q "docker-compose.canonical.yml" "$FILE"; then
+            echo "ERROR: $FILE must reference docker-compose.canonical.yml"
+            exit 1
+          fi
+
+          # Hard guard: legacy file should be tiny pointer/include, not full stack.
+          lines=$(wc -l < "$FILE")
+          if [ "$lines" -gt 60 ]; then
+            echo "ERROR: $FILE appears to contain full compose content ($lines lines). Keep it as a pointer only."
+            exit 1
+          fi
+
+          echo "Pointer guard passed."
+
+      - name: Validate canonical compose syntax (best effort)
+        run: |
+          set -euo pipefail
+          docker compose -f infrastructure/docker/docker-compose.canonical.yml config >/dev/null

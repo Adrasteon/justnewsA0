@@ -1,16 +1,16 @@
 # JustNews Deployment System - Unified Infrastructure as Code
 
-Enterprise-grade deployment framework supporting systemd orchestration for the JustNews distributed system. Docker and
-Kubernetes have been removed from this workspace and are deprecated.
+Docker-first deployment framework for the JustNews distributed system. systemd remains available as an optional
+host-wrapper/legacy compatibility path during transition.
 
 ## Overview
 
 The deployment system provides a unified approach to deploying JustNews across different environments and platforms. It
 supports:
 
-- **systemd**: Production service management (preferred)
+- **Docker Compose**: Canonical app runtime and service lifecycle
 
-- **Systemd**: Traditional service management (legacy support)
+- **systemd**: Optional host-level wrapper and legacy compatibility path
 
 - **Infrastructure as Code**: Declarative configuration management
 
@@ -62,7 +62,8 @@ infrastructure/
 
 ### 1. Choose Deployment Target
 
-This workspace uses strictly **systemd** as the orchestrator.
+This workspace now treats **Docker Compose** as the canonical app orchestrator.
+systemd remains supported as an optional host-level/legacy compatibility layer.
 
 ### 2. Configure Environment
 
@@ -80,17 +81,19 @@ Ensure essential variables are set:
 
 ### 3. Deploy
 
-Use the canonical startup script:
+Use Docker-first deployment targets:
 
 ```bash
-sudo infrastructure/systemd/canonical_system_startup.sh
+make deploy-docker
 ```
 
-This script handles:
-- Prerequisite checks
-- Database connectivity verification
-- Service registration and startup
-- System health check
+Or direct compose wrapper:
+
+```bash
+bash scripts/ops/docker_compose.sh up
+```
+
+Optional legacy/systemd path remains available during transition for hosts that still rely on systemd wrappers.
 
 ## - MCP_BUS_HOST, MCP_BUS_PORT
 
@@ -483,7 +486,7 @@ sudo systemctl restart justnews-scout || true
 
 ## Rollback Docker Compose
 
-## If you used docker-compose previously, the repo includes legacy compose files in `infrastructure/docker/` marked as archived; production is systemd-only.
+## Docker Compose is now canonical for app runtime. Use `infrastructure/docker/docker-compose.canonical.yml` via `scripts/ops/docker_compose.sh`.
 
 ```
 

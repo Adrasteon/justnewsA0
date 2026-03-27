@@ -138,7 +138,7 @@ async def lifespan(app: FastAPI):
                     "Memory engine failed to initialize because CHROMADB canonical validation failed.\n"
                     "  - Confirm CHROMADB_HOST/CHROMADB_PORT match the canonical CHROMADB_CANONICAL_HOST/PORT in /etc/justnews/global.env\n"
                     "  - Use 'scripts/chroma_diagnose.py' and 'scripts/chroma_bootstrap.py' to diagnose and provision the tenant/collection\n"
-                    "  - Example: PYTHONPATH=. conda run -n ${CANONICAL_ENV:-justnews-py312} python scripts/chroma_diagnose.py --host <host> --port <port> --autocreate"
+                    "  - Example: PYTHONPATH=. ${PYTHON_BIN:-.venv/bin/python} scripts/chroma_diagnose.py --host <host> --port <port> --autocreate"
                 )
             raise
         await vector_engine.initialize()
@@ -451,7 +451,7 @@ def embed_article_endpoint(request: dict):
         else:
             # Direct call format: {"article_id": 123}
             article_id = request.get("article_id")
-        
+
         if article_id is None:
              raise HTTPException(status_code=400, detail="Missing article_id")
 
