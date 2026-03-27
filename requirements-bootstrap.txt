@@ -1,4 +1,4 @@
-# Generated from environment.yml for venv bootstrap
+# Canonical UV/.venv bootstrap requirements manifest
 numpy>=1.26
 scipy>=1.11
 pandas>=2.0

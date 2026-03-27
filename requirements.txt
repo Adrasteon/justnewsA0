@@ -1,8 +1,7 @@
 # JustNews compatibility requirements
 #
 # Source of truth:
-#   1) environment.yml (canonical conda spec)
-#   2) requirements-bootstrap.txt (pip/uv bootstrap mirror for non-conda flows)
+#   requirements-bootstrap.txt (UV/.venv bootstrap manifest)
 #
 # This file remains for tooling compatibility and delegates to the actively maintained
 # bootstrap requirements list used by UV/bootstrap workflows.
