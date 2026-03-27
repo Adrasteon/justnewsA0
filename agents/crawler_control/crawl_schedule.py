@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -27,7 +27,7 @@ class CrawlCadence:
 
     def scheduled_window_start(self, reference: datetime) -> datetime:
         """Return the start of the scheduling window anchored to the given reference."""
-        base = reference.astimezone(timezone.utc).replace(minute=0, second=0, microsecond=0)
+        base = reference.astimezone(UTC).replace(minute=0, second=0, microsecond=0)
         return base
 
     def scheduled_start(self, reference: datetime) -> datetime:
@@ -274,7 +274,7 @@ def load_crawl_schedule_from_sources(
     schedule_metadata = metadata or {}
     combined_metadata = {
         "description": "Generated from database sources",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "generated_at": datetime.now(UTC).isoformat(),
     }
     combined_metadata.update(schedule_metadata)
 

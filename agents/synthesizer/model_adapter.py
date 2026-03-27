@@ -1,10 +1,12 @@
 """LLM helper for the Synthesizer agent backed by the Qwen adapter."""
 
 from __future__ import annotations
-import os
+
 import json
+import os
 import textwrap
 from typing import Any
+
 from agents.common.openai_adapter import OpenAIAdapter
 from common.observability import get_logger
 
@@ -21,7 +23,7 @@ SYSTEM_PROMPT = (
 class SynthesizerModelAdapter:
     def __init__(self) -> None:
         self.enabled = os.environ.get("SYNTHESIZER_DISABLE_QWEN", "0").lower() not in {"1", "true"}
-        
+
         # Using the specific adapter ID 'qwen_synthesizer_v1' to enable training/refinement loops
         # that target this specific adapter configuration in model_store/synthesizer/adapters/qwen_synthesizer_v1
         self.adapter = OpenAIAdapter(
@@ -42,22 +44,22 @@ class SynthesizerModelAdapter:
     ) -> dict[str, Any] | None:
         if not self.enabled:
             return None
-        
+
         # Dynamic context window fitting (Target: ~40k chars for <16k tokens)
         target_total_chars = 40000
         per_article_limit = max(1000, target_total_chars // max(1, len(articles)))
-        
+
         snippets = [
-            textwrap.shorten(a, width=per_article_limit, placeholder="...") 
+            textwrap.shorten(a, width=per_article_limit, placeholder="...")
             for a in articles if a and a.strip()
         ]
         if not snippets:
             return None
-            
+
         joined = "\n---\n".join(snippets)
         prefix = f"Context: {context}\n" if context else ""
         user_block = f"{prefix}Articles:\n'''{joined}'''\n\nReturn valid JSON."
-        
+
         try:
             self.adapter.ensure_loaded()
             result = self.adapter.infer(user_block)

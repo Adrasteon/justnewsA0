@@ -5,12 +5,15 @@ Implements factual audit logic using the MCP Fact Checker.
 This module extracts claims from text and verifies them against the Fact Checker API
 to generate a Factual Accuracy Score (0.0 - 1.0).
 """
-import os
-import httpx
 import asyncio
-from typing import Any, Dict, List, Optional
-from .claims import extract_claims
+import os
+from typing import Any
+
+import httpx
+
 from common.observability import get_logger
+
+from .claims import extract_claims
 
 logger = get_logger(__name__)
 
@@ -57,7 +60,7 @@ def normalize_verdict(raw_verdict: Any) -> str:
     logger.warning("Received unknown verdict '%s'; coercing to Uncertain", raw_verdict)
     return "Uncertain"
 
-async def verify_claim(client: httpx.AsyncClient, claim: str, headers: dict) -> Dict[str, Any]:
+async def verify_claim(client: httpx.AsyncClient, claim: str, headers: dict) -> dict[str, Any]:
     """Verify a single claim against the Fact Checker API."""
     try:
         payload = {
@@ -67,7 +70,7 @@ async def verify_claim(client: httpx.AsyncClient, claim: str, headers: dict) -> 
         }
         url = f"{FACT_CHECKER_URL}/fact_check"
         resp = await client.post(url, json=payload, headers=headers, timeout=60.0)
-        
+
         if resp.status_code == 200:
             result = resp.json()
             result["verdict"] = normalize_verdict(result.get("verdict"))
@@ -75,12 +78,12 @@ async def verify_claim(client: httpx.AsyncClient, claim: str, headers: dict) -> 
         else:
             logger.warning(f"Fact check failed for '{claim[:30]}...': Status {resp.status_code}")
             return {"error": f"HTTP {resp.status_code}", "verdict": "Uncertain"}
-            
+
     except Exception as e:
         logger.error(f"Exc checking claim '{claim[:30]}...': {e}")
         return {"error": str(e), "verdict": "Uncertain"}
 
-async def audit_text(text: str, max_claims: int = 5) -> Dict[str, Any]:
+async def audit_text(text: str, max_claims: int = 5) -> dict[str, Any]:
     """
     Perform a factual audit on the provided text.
     
@@ -93,22 +96,22 @@ async def audit_text(text: str, max_claims: int = 5) -> Dict[str, Any]:
         Dict with keys: score, details, verdicts
     """
     logger.info(f"Starting factual audit on text ({len(text)} chars)...")
-    
+
     # 1. Extract Claims
     claims = extract_claims(text, max_claims=max_claims)
     if not claims:
         logger.info("No verifyable claims extracted.")
         return {
-            "score": 0.5, # Neutral score when no claims found (?) 
+            "score": 0.5, # Neutral score when no claims found (?)
                           # Or maybe None to indicate N/A. Requirements imply a score is needed.
                           # 0.5 is 'Uncertain' which is safe.
             "details": {"message": "No verifiable claims found"},
             "verdicts": []
         }
-    
+
     api_url = FACT_CHECKER_URL.rstrip("/")
     logger.info(f"Verifying {len(claims)} claims against {api_url}")
-    
+
     # 2. Verify in Parallel
     headers = {"X-API-Key": API_KEY} if API_KEY else {}
     tasks = []
@@ -135,7 +138,7 @@ async def audit_text(text: str, max_claims: int = 5) -> Dict[str, Any]:
             txt = claim_obj.get('claim_text', '')
             if txt:
                 tasks.append(verify_claim(client, txt, headers))
-        
+
         results = await asyncio.gather(*tasks)
 
     # 3. Calculate Score
@@ -143,20 +146,20 @@ async def audit_text(text: str, max_claims: int = 5) -> Dict[str, Any]:
     valid_count = 0
     verdict_counts = {}
     detailed_results = []
-    
+
     for i, res in enumerate(results):
         v_raw = normalize_verdict(res.get("verdict", "Uncertain"))
         v_str = v_raw.lower()
         score = VERDICT_SCORES.get(v_str, 0.5)
-        
+
         # Log unknown verdicts
         if v_str not in VERDICT_SCORES:
             logger.warning(f"Unknown verdict received: '{v_raw}'. Defaulting to 0.5")
-        
+
         total_score += score
         valid_count += 1
         verdict_counts[v_raw] = verdict_counts.get(v_raw, 0) + 1
-        
+
         # Merge extraction info with result
         combined = {
             "claim": claims[i]['claim_text'],
@@ -166,12 +169,12 @@ async def audit_text(text: str, max_claims: int = 5) -> Dict[str, Any]:
         detailed_results.append(combined)
 
     final_score = total_score / valid_count if valid_count > 0 else 0.5
-    
+
     # Round to 2 decimals
     final_score = round(final_score, 2)
-    
+
     logger.info(f"Audit Complete. Score: {final_score}. Verdicts: {verdict_counts}")
-    
+
     return {
         "score": final_score,
         "details": {

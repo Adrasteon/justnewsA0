@@ -14,7 +14,7 @@ import gzip
 import os
 import shutil
 import subprocess
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -84,7 +84,7 @@ class BackupManager:
 
         try:
             # Generate backup filename
-            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
             backup_name = f"justnews_backup_{backup_type}_{timestamp}"
 
             if compress:
@@ -110,7 +110,7 @@ class BackupManager:
             # Update metrics
             self.metrics["backups_created"] += 1
             self.metrics["total_backup_size"] += results["backup_size"]
-            self.metrics["last_backup_time"] = datetime.now(timezone.utc).isoformat()
+            self.metrics["last_backup_time"] = datetime.now(UTC).isoformat()
             self.metrics["last_backup_duration"] = results["duration"]
 
             logger.info(
@@ -295,7 +295,7 @@ class BackupManager:
         results = {"deleted_backups": [], "retained_backups": [], "errors": []}
 
         try:
-            cutoff_time = datetime.now(timezone.utc).timestamp() - (
+            cutoff_time = datetime.now(UTC).timestamp() - (
                 retention_days * 24 * 60 * 60
             )
 

@@ -7,7 +7,7 @@ enqueue a human-review request by calling the MCP Bus /call endpoint for the
 
 import json
 import os
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 
 import requests
 
@@ -21,7 +21,7 @@ def snapshot_paywalled_page(url: str, html: str, metadata: dict) -> str:
     Manifest contains: url, html_file, metadata, captured_at
     """
     os.makedirs(EVIDENCE_DIR, exist_ok=True)
-    now = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S")
+    now = datetime.now(UTC).strftime("%Y%m%dT%H%M%S")
     html_filename = f"evidence_{now}.html"
     manifest_filename = f"evidence_{now}.json"
     html_path = os.path.join(EVIDENCE_DIR, html_filename)
@@ -35,7 +35,7 @@ def snapshot_paywalled_page(url: str, html: str, metadata: dict) -> str:
         "url": url,
         "html_file": html_filename,
         "metadata": metadata,
-        "captured_at": datetime.now(timezone.utc).isoformat(),
+        "captured_at": datetime.now(UTC).isoformat(),
     }
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest, f)

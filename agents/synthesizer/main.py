@@ -25,7 +25,7 @@ Endpoints:
 
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import requests
@@ -57,8 +57,8 @@ from .tools import (
     get_stats,
     health_check,
     neutralize_text_tool,
-    synthesize_gpu_tool,
     summarize_article,
+    synthesize_gpu_tool,
 )
 
 logger = get_logger(__name__)
@@ -391,8 +391,8 @@ async def aggregate_cluster_endpoint(call: ToolCall) -> Any:
         logger.info(f"📝 Aggregating {len(article_texts)} articles (type={aggregation_type})")
 
         result = await aggregate_cluster_tool(
-            synthesizer_engine, 
-            article_texts, 
+            synthesizer_engine,
+            article_texts,
             aggregation_type=aggregation_type,
             previous_context=previous_context
         )
@@ -548,7 +548,7 @@ async def synthesize_and_publish(request: SynthesisRequest) -> dict[str, Any]:
         synthesis_text = result.get("synthesis", "")
         synthesis_metadata = {
             "provenance": {
-                "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "generated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 "source_agent": "synthesizer",
                 "entrypoint": "synthesize_and_publish",
                 "cluster_id": request.cluster_id,
@@ -702,7 +702,7 @@ async def summarize_article_endpoint(call: ToolCall) -> Any:
             article_id = call.args[0]
         else:
             article_id = call.kwargs.get("article_id")
-            
+
         if not article_id:
             raise HTTPException(status_code=400, detail="No article_id provided")
 

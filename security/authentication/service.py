@@ -7,7 +7,7 @@ Handles user authentication, session management, JWT tokens, and identity verifi
 import json
 import logging
 import secrets
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import aiofiles
@@ -119,7 +119,7 @@ class AuthenticationService:
         # Check if account is locked
         if user_data.get("locked_until"):
             locked_until = datetime.fromisoformat(user_data["locked_until"])
-            if locked_until > datetime.now(timezone.utc):
+            if locked_until > datetime.now(UTC):
                 raise AuthenticationError("Account is temporarily locked")
 
         # Verify password
@@ -132,7 +132,7 @@ class AuthenticationService:
             if user_data["login_attempts"] >= self.config.max_login_attempts:
                 lock_duration = timedelta(minutes=30)  # 30 minute lockout
                 user_data["locked_until"] = (
-                    datetime.now(timezone.utc) + lock_duration
+                    datetime.now(UTC) + lock_duration
                 ).isoformat()
 
             await self._save_user_data()
@@ -156,7 +156,7 @@ class AuthenticationService:
         Returns:
             Dict with access_token and refresh_token
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         session_id = secrets.token_urlsafe(32)
 
         # Access token payload
@@ -228,7 +228,7 @@ class AuthenticationService:
                     raise AuthenticationError("Refresh token revoked")
 
                 token_data = self._refresh_tokens[token]
-                if datetime.fromisoformat(token_data["expires_at"]) < datetime.now(timezone.utc):
+                if datetime.fromisoformat(token_data["expires_at"]) < datetime.now(UTC):
                     del self._refresh_tokens[token]
                     raise AuthenticationError("Refresh token expired")
 
@@ -334,7 +334,7 @@ class AuthenticationService:
             "password_hash": password_hash,
             "roles": roles or ["user"],
             "is_active": True,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "last_login": None,
             "mfa_enabled": False,
             "login_attempts": 0,
@@ -441,7 +441,7 @@ class AuthenticationService:
         """
         for user_data in self._user_store.values():
             if user_data["id"] == user_id:
-                user_data["last_login"] = datetime.now(timezone.utc).isoformat()
+                user_data["last_login"] = datetime.now(UTC).isoformat()
                 await self._save_user_data()
                 break
 

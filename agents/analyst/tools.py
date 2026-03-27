@@ -753,7 +753,7 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
 
         content = row.get("content")
         structured_metadata_raw = row.get("structured_metadata")
-        
+
         if not content:
             logger.warning(f"Article {article_id} has no content")
             _execute_update_with_retry(
@@ -766,7 +766,7 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
 
         # Run Analysis
         engine = get_analyst_engine()
-        
+
         # Run analyses
         # We catch individual errors to allow partial success
         stats = {}
@@ -816,7 +816,7 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
                     fact_check_status = "failed"
             except (TypeError, ValueError):
                 fact_check_status = "pending"
-        
+
         # Construct Metadata Update
         try:
             current_struct = json.loads(structured_metadata_raw) if structured_metadata_raw else {}
@@ -832,7 +832,7 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
             'entities': entities,
             'factual_audit': audit_result # Include full details in metadata
         }
-        
+
         # Update DB
         # Updates: analyzed=1, structured_metadata, fact columns
         update_query = """
@@ -845,10 +845,10 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
                 updated_at = NOW()
             WHERE id = %s
         """
-        
+
         # Prepare params
         audit_json = json.dumps(audit_result) if audit_result else None
-        
+
         _execute_update_with_retry(
             db,
             update_query,
@@ -920,7 +920,7 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
             logger.warning(
                 f"Failed to collect training data for analyze_article {article_id}: {e}"
             )
-        
+
         logger.info(
             f"Article {article_id} analyzed successfully (Score: {factual_score}, Status: {fact_check_status})"
         )
@@ -930,7 +930,7 @@ async def analyze_article(article_id: int) -> dict[str, Any]:
             "factual_score": factual_score,
             "fact_check_status": fact_check_status,
         }
-        
+
     except Exception as e:
         logger.error(f"Error analyzing article {article_id}: {e}")
         return {"status": "error", "error": str(e)}

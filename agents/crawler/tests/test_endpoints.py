@@ -1,5 +1,6 @@
-from fastapi.testclient import TestClient
 from pathlib import Path
+
+from fastapi.testclient import TestClient
 
 from agents.crawler import job_store
 from agents.crawler import main as crawler_main

@@ -1,10 +1,12 @@
 """High-accuracy editorial assessor for the Chief Editor agent (Qwen)."""
 
 from __future__ import annotations
-import os
+
 import json
+import os
 import textwrap
 from typing import Any
+
 from agents.common.openai_adapter import OpenAIAdapter
 from common.observability import get_logger
 
@@ -31,7 +33,7 @@ class ChiefEditorModelAdapter:
             vllm_host = os.environ.get("VLLM_HOST", "vllm")
             vllm_port = os.environ.get("VLLM_PORT", "8010")
             base_url = f"http://{vllm_host}:{vllm_port}/v1"
-        
+
         self.adapter = OpenAIAdapter(
             name="chief_editor_qwen",
             model=os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ"),
@@ -54,13 +56,13 @@ class ChiefEditorModelAdapter:
         """Original review method for full editorial decision support"""
         if not self.enabled:
             return None
-            
+
         text = textwrap.shorten(content or "", width=7000, placeholder="...")
         meta = metadata or {}
         assignment = meta.get("assignment") or meta.get("topic")
         lead = f"Assignment: {assignment}\n" if assignment else ""
         user_block = f"{lead}Metadata: {json.dumps(meta, default=str)}\nCopy:\n'''{text}'''\n\nReturn valid JSON."
-        
+
         try:
             self.adapter.ensure_loaded()
             result = self.adapter.infer(user_block)
@@ -75,7 +77,7 @@ class ChiefEditorModelAdapter:
             return None
 
         text = textwrap.shorten(content or "", width=4000, placeholder="...")
-        
+
         prompts = {
             "quality": (
                 "Assess the quality of this text. Return JSON with: "
@@ -98,21 +100,21 @@ class ChiefEditorModelAdapter:
         }
 
         user_prompt = f"{prompts.get(task, task)}\n\nText:\n'''{text}'''"
-        
+
         try:
             self.adapter.ensure_loaded()
-            # Override system prompt? OpenAIAdapter doesn't support easy per-call system prompt override 
+            # Override system prompt? OpenAIAdapter doesn't support easy per-call system prompt override
             # without re-init, but we can rely on the general persona or just strong user prompting.
             # The default system prompt is broad enough ("You are the chief editor").
-            
+
             result = self.adapter.infer(user_prompt)
             output = result.get("text", "").strip()
-            
+
             if task == "commentary":
                 return output
-            
+
             return self._parse_response(output)
-            
+
         except Exception as e:
             logger.warning(f"Chief Editor Qwen task {task} failed: {e}")
             return None

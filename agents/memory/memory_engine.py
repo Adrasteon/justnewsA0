@@ -96,16 +96,16 @@ class MemoryEngine:
              cursor, conn = self._acquire_cursor(dictionary=True)
              if not cursor:
                  return {"error": "DB connection failed"}
-             
+
              cursor.execute("SELECT id, content, metadata FROM articles WHERE id = %s", (article_id,))
              article = cursor.fetchone()
-             if conn: 
+             if conn:
                  cursor.close()
                  conn.close()
-             
+
              if not article:
                  return {"error": "Article not found"}
-            
+
              if not article['content']:
                  return {"error": "Article has no content"}
 
@@ -114,20 +114,20 @@ class MemoryEngine:
                   # Try to load - uses tools.get_embedding_model
                   from agents.memory.tools import get_embedding_model
                   self.embedding_model = get_embedding_model()
-             
+
              if not self.embedding_model:
                   return {"error": "Embedding model not available"}
 
              # Move model to device if needed/possible is handled by get_embedding_model logic generally
              # But here we assume it returns a usable model
-             
+
              embedding = self.embedding_model.encode(article['content']).tolist()
-             
+
              # Upsert to Chroma
              collection = getattr(self.db_service, "collection", None)
              if not collection:
                   return {"error": "Chroma collection not available"}
-             
+
              meta = {}
              # Use safe get
              if article.get('metadata'):
@@ -138,7 +138,7 @@ class MemoryEngine:
                         pass
                  elif isinstance(article['metadata'], dict):
                      meta = article['metadata']
-             
+
              if not meta:
                  meta = {"source": "unknown"}
 
@@ -149,15 +149,15 @@ class MemoryEngine:
                      safe_meta[k] = v
                  else:
                      safe_meta[k] = str(v)
-             
+
              if not safe_meta:
                  safe_meta = {"source": "unknown"}
-             
+
              # Perform vector store operation first - failure here must abort the DB update
              try:
                  if collection is None:
                      raise RuntimeError("ChromaDB collection is not available")
-                     
+
                  collection.upsert(
                      ids=[str(article_id)],
                      embeddings=[embedding],
@@ -171,24 +171,24 @@ class MemoryEngine:
 
              # ONLY after successful ChromaDB write do we update the MariaDB flag
              cursor, conn = self._acquire_cursor()
-             
+
              try:
                  # Update embedded flag
                  cursor.execute("UPDATE articles SET embedded=1 WHERE id=%s", (article_id,))
-                 
+
                  # Record embedding in embeddings_document table
                  try:
                      import json as json_module
                      meta_json = json_module.dumps(safe_meta) if safe_meta else '{}'
                      cursor.execute(
                          "INSERT INTO embeddings_document (embeddings_collection_id, document_id, content, content_hash, embedding_status, metadata) VALUES (1, %s, %s, %s, 'active', %s)",
-                         (str(article_id), article['title'][:255] if article.get('title') else '', 
+                         (str(article_id), article['title'][:255] if article.get('title') else '',
                          article.get('url_hash', ''), meta_json)
                      )
                  except Exception as emb_error:
                      logger.debug(f"Note: Could not record embedding metadata: {emb_error}")
-                 
-                 if conn: 
+
+                 if conn:
                     conn.commit()
                     logger.debug(f"Committed MariaDB transaction for article {article_id} (embedded=1)")
                  elif self.db_service and hasattr(self.db_service, 'mb_conn'):
@@ -256,7 +256,7 @@ class MemoryEngine:
                  logger.warning(
                      f"Failed to collect training data for embed_article {article_id}: {e}"
                  )
-             
+
              return {"status": "success", "article_id": article_id}
 
         except Exception as e:

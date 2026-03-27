@@ -5,7 +5,7 @@ Defines minimal dataclasses used for AnalysisReport and Claim objects.
 """
 
 from dataclasses import asdict, dataclass, field
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -35,7 +35,7 @@ class SourceFactCheck:
     claim_verdicts: list[ClaimVerdict] | None = field(default_factory=list)
     credibility_score: float | None = None
     source_url: str | None = None
-    processed_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    processed_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     fact_check_trace: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -213,7 +213,7 @@ class AnalysisReport:
     per_article: list[PerArticleAnalysis] | None = None
     source_fact_checks: list[SourceFactCheck] | None = field(default_factory=list)
     cluster_fact_check_summary: dict[str, Any] | None = None
-    generated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    generated_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     def to_dict(self) -> dict[str, Any]:
         return {

@@ -1,5 +1,6 @@
-from django.db import models
 import uuid
+
+from django.db import models
 
 
 class Article(models.Model):
@@ -91,7 +92,7 @@ class BackendArticle(models.Model):
     Mapped here for Foreign Key relationships with Living Stories.
     """
     id = models.AutoField(primary_key=True)
-    
+
     class Meta:
         managed = False
         db_table = 'articles'
@@ -115,7 +116,7 @@ class LivingStory(models.Model):
 class StoryUpdate(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     story = models.ForeignKey(LivingStory, on_delete=models.CASCADE, related_name="updates")
-    article_ids = models.JSONField(help_text="List of BackendArticle IDs in this batch") 
+    article_ids = models.JSONField(help_text="List of BackendArticle IDs in this batch")
     article_count = models.IntegerField(default=0)
     batch_centroid = models.JSONField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)

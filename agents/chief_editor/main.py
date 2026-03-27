@@ -631,7 +631,7 @@ async def publish_story_endpoint(request: dict):
         # Handle MCP Bus format vs Direct Pydantic model
         story_id = None
         format_output = "json"
-        
+
         if "args" in request and "kwargs" in request:
              # MCP Bus format
              kwargs = request.get("kwargs", {})
@@ -639,13 +639,13 @@ async def publish_story_endpoint(request: dict):
                  story_id = kwargs["story_id"]
              elif request["args"]:
                  story_id = request["args"][0]
-                 
+
              format_output = kwargs.get("format_output", "json")
         else:
              # Direct/Pydantic dict
              story_id = request.get("story_id")
              format_output = request.get("format_output", "json")
-             
+
         if not story_id:
              logger.error("Missing story_id in publishing request")
              raise HTTPException(status_code=400, detail="Missing story_id")

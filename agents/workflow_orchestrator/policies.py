@@ -5,27 +5,27 @@ This module defines the abstract base class and concrete implementations
 for data pipeline transitions.
 """
 
-from abc import ABC, abstractmethod
-from typing import List, Any, Awaitable, Callable
-import requests
 import asyncio
-import os
-import json
-import uuid
-import time
 import hashlib
-import statistics
-import re
+import json
 import math
-from urllib.parse import urlparse
+import os
+import re
+import statistics
+import uuid
+from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
+from datetime import UTC, datetime, timedelta
 from difflib import SequenceMatcher
-from datetime import datetime, timedelta, timezone
-from concurrent.futures import ThreadPoolExecutor
+from typing import Any
+from urllib.parse import urlparse
 
-from common.observability import get_logger
-from common.metrics import get_metrics
-from database.utils.migrated_database_utils import create_database_service
+import requests
+
 from agents.common.headline_adapter import HeadlineAdapter
+from common.metrics import get_metrics
+from common.observability import get_logger
+from database.utils.migrated_database_utils import create_database_service
 
 logger = get_logger(__name__)
 _ORCH_METRICS = get_metrics("workflow_orchestrator")
@@ -192,14 +192,14 @@ def _safe_datetime(raw_value: Any) -> datetime | None:
 
     if isinstance(raw_value, datetime):
         if raw_value.tzinfo is not None:
-            return raw_value.astimezone(timezone.utc).replace(tzinfo=None)
+            return raw_value.astimezone(UTC).replace(tzinfo=None)
         return raw_value
 
     try:
         raw_text = str(raw_value).strip().replace("Z", "+00:00")
         parsed = datetime.fromisoformat(raw_text)
         if parsed.tzinfo is not None:
-            return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+            return parsed.astimezone(UTC).replace(tzinfo=None)
         return parsed
     except Exception:
         return None
@@ -408,9 +408,9 @@ def _govern_override(override: dict[str, Any]) -> tuple[dict[str, Any] | None, d
     owner = str(override.get("owner", "")).strip()
     approved_by = str(override.get("approved_by", "")).strip()
     expires_at = _safe_datetime(override.get("expires_at")) if override.get("expires_at") else None
-    now_utc = datetime.now(timezone.utc)
+    now_utc = datetime.now(UTC)
     if expires_at is not None and expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
+        expires_at = expires_at.replace(tzinfo=UTC)
 
     if require_owner and not owner:
         return None, {"reason": "missing_owner", "required": "owner"}
@@ -433,7 +433,7 @@ def _govern_override(override: dict[str, Any]) -> tuple[dict[str, Any] | None, d
     governed["approved_by"] = approved_by
     if expires_at is not None:
         governed["expires_at"] = expires_at.isoformat().replace("+00:00", "Z")
-    governed["governed_at"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    governed["governed_at"] = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     governed["governance"] = {
         "require_owner": require_owner,
         "require_approval": require_approval,
@@ -739,7 +739,7 @@ def _derive_publication_lane_metadata(
         "policy_override_source": override_source,
         "lane1_enabled": lane_verified_enabled,
         "lane2_enabled": lane_developing_enabled,
-        "policy_decision_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "policy_decision_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "policy_thresholds": {
             "min_article_count": min_article_count,
             "min_source_count": min_sources,
@@ -905,7 +905,7 @@ def upsert_living_story_record(
     normalized_ids = sorted({int(x) for x in article_ids})
     input_arts_json = json.dumps(normalized_ids)
     fingerprint = _cluster_input_fingerprint(normalized_ids)
-    now_iso = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    now_iso = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     generation_event = {
         "timestamp": now_iso,
         "source_agent": "synthesizer",
@@ -1238,7 +1238,7 @@ def upsert_living_story_record(
 
 class WorkflowPolicy(ABC):
     """Abstract base class for a workflow policy."""
-    
+
     def __init__(self, mcp_bus_url: str):
         self.mcp_bus_url = mcp_bus_url
         self.db_service = create_database_service()
@@ -1258,15 +1258,15 @@ class WorkflowPolicy(ABC):
         pass
 
     @abstractmethod
-    def check_condition(self, limit: int) -> List[Any]:
+    def check_condition(self, limit: int) -> list[Any]:
         """Return a list of items (IDs) that match the condition."""
         pass
 
     @abstractmethod
-    async def execute(self, items: List[Any]):
+    async def execute(self, items: list[Any]):
         """Execute the workflow action on the items."""
         pass
-    
+
     def _call_mcp_tool_sync(self, agent: str, tool: str, kwargs: dict) -> dict:
         """Synchronous call to MCP Bus."""
         try:
@@ -1282,12 +1282,12 @@ class WorkflowPolicy(ABC):
                 timeout=self.mcp_call_timeout_seconds,
             )
             response.raise_for_status()
-            
+
             result = response.json()
             # Unwrap MCP Bus packet if it follows the status/data pattern
             if isinstance(result, dict) and result.get("status") == "success" and "data" in result:
                 return result["data"]
-                
+
             return result
         except Exception as e:
             logger.error(f"Failed to call {agent}.{tool}: {e}")
@@ -1305,7 +1305,7 @@ class WorkflowPolicy(ABC):
 
     async def _execute_bounded(
         self,
-        items: List[Any],
+        items: list[Any],
         worker: Callable[[Any], Awaitable[Any]],
         stage_label: str,
         default_parallelism: int | None = None,
@@ -1354,7 +1354,7 @@ class WorkflowPolicy(ABC):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self._call_mcp_tool_sync, agent, tool, kwargs)
 
-    def _cleanup_pending_pool_for_article_ids(self, article_ids: List[int]) -> int:
+    def _cleanup_pending_pool_for_article_ids(self, article_ids: list[int]) -> int:
         """Best-effort cleanup of pending pool rows for finalized article IDs."""
         if not article_ids:
             return 0
@@ -1385,7 +1385,7 @@ class IngestionToAnalysisPolicy(WorkflowPolicy):
     def name(self) -> str:
         return "ingestion_to_analysis"
 
-    def check_condition(self, limit: int) -> List[int]:
+    def check_condition(self, limit: int) -> list[int]:
         ids = []
         try:
             self.db_service.ensure_conn()
@@ -1415,7 +1415,7 @@ class IngestionToAnalysisPolicy(WorkflowPolicy):
                 pass
         return ids
 
-    async def execute(self, items: List[int]):
+    async def execute(self, items: list[int]):
         logger.info(f"Triggering analysis for {len(items)} articles.")
         async def _worker(article_id: int):
             return await self._call_mcp_tool(
@@ -1437,7 +1437,7 @@ class AnalysisToEmbeddingPolicy(WorkflowPolicy):
     def name(self) -> str:
         return "analysis_to_embedding"
 
-    def check_condition(self, limit: int) -> List[int]:
+    def check_condition(self, limit: int) -> list[int]:
         ids = []
         try:
             self.db_service.ensure_conn()
@@ -1466,7 +1466,7 @@ class AnalysisToEmbeddingPolicy(WorkflowPolicy):
                 pass
         return ids
 
-    async def execute(self, items: List[int]):
+    async def execute(self, items: list[int]):
         logger.info(f"Triggering embedding for {len(items)} articles.")
         async def _worker(article_id: int):
             return await self._call_mcp_tool(
@@ -1488,7 +1488,7 @@ class AnalysisToSummaryPolicy(WorkflowPolicy):
     def name(self) -> str:
         return "analysis_to_summary"
 
-    def check_condition(self, limit: int) -> List[int]:
+    def check_condition(self, limit: int) -> list[int]:
         if not _env_bool("ORCHESTRATOR_ENABLE_SOURCE_SUMMARY_STAGE", default=False):
             return []
         ids = []
@@ -1517,7 +1517,7 @@ class AnalysisToSummaryPolicy(WorkflowPolicy):
                 pass
         return ids
 
-    async def execute(self, items: List[int]):
+    async def execute(self, items: list[int]):
         logger.info(f"Triggering summarization for {len(items)} articles.")
         async def _worker(article_id: int):
             return await self._call_mcp_tool(
@@ -1539,7 +1539,7 @@ class AnalysisToFactCheckPolicy(WorkflowPolicy):
     def name(self) -> str:
         return "analysis_to_fact_check"
 
-    def check_condition(self, limit: int) -> List[int]:
+    def check_condition(self, limit: int) -> list[int]:
         ids = []
         try:
             self.db_service.ensure_conn()
@@ -1567,7 +1567,7 @@ class AnalysisToFactCheckPolicy(WorkflowPolicy):
                 pass
         return ids
 
-    async def execute(self, items: List[int]):
+    async def execute(self, items: list[int]):
         logger.info(f"Triggering fact check for {len(items)} articles.")
         async def _worker(article_id: int):
             return await self._call_mcp_tool(
@@ -1687,12 +1687,12 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
                 recency_score = 0.0
                 if updated_dt is not None:
                     updated_dt_utc = (
-                        updated_dt.replace(tzinfo=timezone.utc)
+                        updated_dt.replace(tzinfo=UTC)
                         if updated_dt.tzinfo is None
-                        else updated_dt.astimezone(timezone.utc)
+                        else updated_dt.astimezone(UTC)
                     )
                     age_hours = max(
-                        (datetime.now(timezone.utc) - updated_dt_utc).total_seconds() / 3600.0,
+                        (datetime.now(UTC) - updated_dt_utc).total_seconds() / 3600.0,
                         0.0,
                     )
                     recency_score = math.exp(-age_hours / 48.0)
@@ -1848,7 +1848,7 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
                 "confidence_score": round(confidence_score, 4),
                 "provisional": bool(provisional),
                 "top_candidates": top_candidates,
-                "decided_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                "decided_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
                 "reevaluate_after_minutes": reevaluate_minutes,
             }
             existing_struct["clustering_decision"] = decision_meta
@@ -1862,7 +1862,7 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
         finally:
             cursor.close()
 
-    def check_condition(self, limit: int) -> List[int]:
+    def check_condition(self, limit: int) -> list[int]:
         ids = []
         try:
             self.db_service.ensure_conn()
@@ -1871,7 +1871,7 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
             except:
                 pass
             cursor = self.db_service.mb_conn.cursor()
-            
+
             # Process one by one or small batches.
             provisional_window_hours = max(1, _safe_int(os.environ.get("CLUSTER_PROVISIONAL_REEVALUATE_WINDOW_HOURS"), 48))
             query = """
@@ -1886,7 +1886,7 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
             cursor.execute(query, (max(limit * 6, limit),))
             rows = cursor.fetchall()
 
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             for row in rows:
                 article_id = _safe_int(row[0], 0)
                 if article_id <= 0:
@@ -1902,9 +1902,9 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
                 in_recheck_window = False
                 if created_at is not None:
                     created_at_utc = (
-                        created_at.replace(tzinfo=timezone.utc)
+                        created_at.replace(tzinfo=UTC)
                         if created_at.tzinfo is None
-                        else created_at.astimezone(timezone.utc)
+                        else created_at.astimezone(UTC)
                     )
                     age_hours = max((now - created_at_utc).total_seconds() / 3600.0, 0.0)
                     in_recheck_window = age_hours <= provisional_window_hours
@@ -1923,12 +1923,12 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
                 pass
         return ids
 
-    async def execute(self, items: List[int]):
+    async def execute(self, items: list[int]):
         if not items:
             return
-            
+
         logger.info(f"Incremental clustering for {len(items)} articles.")
-        
+
         # We need the collection to be available
         if not self.db_service.collection:
              logger.warning("ChromaDB collection not available. Skipping clustering.")
@@ -1941,14 +1941,14 @@ class IncrementalClusteringPolicy(WorkflowPolicy):
                     ids=[str(article_id)],
                     include=["embeddings"]
                 )
-                
+
                 # Safe check for embeddings to avoid numpy ambiguity
                 has_embedding = False
                 if result and 'embeddings' in result:
                     embs = result['embeddings']
                     if embs is not None and len(embs) > 0:
                         has_embedding = True
-                
+
                 if not has_embedding:
                     logger.warning(f"No embedding found for article {article_id}. Skipping.")
                     continue
@@ -2059,7 +2059,7 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
         return "cluster_to_synthesis"
 
 
-    def check_condition(self, limit: int) -> List[str]:
+    def check_condition(self, limit: int) -> list[str]:
         # Returns list of Cluster IDs to process
         cluster_ids = []
         try:
@@ -2179,19 +2179,19 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                 pass
         return cluster_ids
 
-    async def execute(self, cluster_ids: List[str]):
+    async def execute(self, cluster_ids: list[str]):
         """
         Execute synthesis for the given cluster IDs.
         Note: The 'items' arg here is a list of cluster_ids, not article_ids.
         """
         logger.info(f"Synthesis policy triggered for {len(cluster_ids)} clusters.")
-        
+
         for cid in cluster_ids:
             try:
                 # 1. Fetch articles for this cluster
                 self.db_service.ensure_conn()
                 cursor = self.db_service.mb_conn.cursor()
-                
+
                 # We need to find articles where JSON contains this CID.
                 # LIKE is a cheap approximation for logic: ["CL-ABC"] contains CL-ABC
                 query = """
@@ -2202,20 +2202,20 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                 like_pattern = f"%{cid}%"
                 cursor.execute(query, (like_pattern,))
                 rows = cursor.fetchall()
-                
+
                 if not rows:
                     cursor.close()
                     continue
-                    
+
                 article_ids = [row[0] for row in rows]
                 texts = [row[1] for row in rows if row[1]]
                 cursor.close()
-                
+
                 if not texts:
                     continue
 
                 logger.info(f"Synthesizing cluster {cid} with {len(texts)} articles.")
-                
+
                 # Check for previous synthesis history (Context Continuity)
                 previous_context = None
                 try:
@@ -2228,11 +2228,11 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                     """
                     cursor.execute(hist_query, (cid,))
                     hist_row = cursor.fetchone()
-                    
+
                     if hist_row:
                         prev_body = hist_row[0]
                         prev_date = hist_row[1]
-                        
+
                         # Logic: Only use context if it's somewhat recent (e.g. < 7 days)
                         # otherwise treat as a fresh angle on an old topic.
                         if prev_body:
@@ -2255,7 +2255,7 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                         "previous_context": previous_context
                     }
                 )
-                
+
                 if isinstance(synthesis_result, dict) and synthesis_result.get("success"):
                     body_text = str(
                         synthesis_result.get("body")
@@ -2271,7 +2271,7 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                         synthesis_result,
                         is_brief=is_brief,
                     )
-                    
+
                     # 3. Upsert canonical living story per cluster
                     self.db_service.ensure_conn()
                     cursor = self.db_service.mb_conn.cursor()
@@ -2302,7 +2302,7 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                             removed,
                             cid,
                         )
-                    
+
                     self.db_service.mb_conn.commit()
                     cursor.close()
 
@@ -2323,7 +2323,7 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                 else:
                     err = synthesis_result.get('error') if isinstance(synthesis_result, dict) else str(synthesis_result)
                     logger.error(f"Synthesis failed for cluster {cid}: {err}")
-                    
+
                     # Log timeouts to a separate file for later processing
                     if "timed out" in str(err).lower() or "timeout" in str(err).lower():
                         try:
@@ -2340,7 +2340,7 @@ class ClusterToSynthesisPolicy(WorkflowPolicy):
                             logger.info(f"💾 Logged heavy cluster {cid} to {failed_log_path}")
                         except Exception as log_err:
                             logger.error(f"Failed to log heavy cluster: {log_err}")
-                    
+
             except Exception as e:
                 logger.error(f"Error processing cluster {cid}: {e}")
 
@@ -2356,13 +2356,13 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
     def name(self) -> str:
         return "heavy_cluster_retry"
 
-    def check_condition(self, limit: int) -> List[str]:
+    def check_condition(self, limit: int) -> list[str]:
         # 1. Check System Load
         try:
-            # 1 minute load average. 16 cores. 
+            # 1 minute load average. 16 cores.
             # If load > 6.0, consider it busy.
             load = os.getloadavg()
-            if load[0] > 6.0: 
+            if load[0] > 6.0:
                 return []
         except:
             return []
@@ -2382,25 +2382,25 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
             row = cursor.fetchone()
             cursor.close()
             backlog = row[0] if row else 0
-            
+
             # If there are more than 10 regular items pending, defer heavy processing
-            if backlog > 10: 
+            if backlog > 10:
                 return []
         except Exception as e:
             logger.error(f"Error checking backlog for HeavyClusterRetryPolicy: {e}")
             return []
-            
+
         # 3. Check for Heavy Clusters
         failed_log_path = "heavy_clusters.log"
         if not os.path.exists(failed_log_path):
             return []
 
         cluster_id_to_retry = None
-        
+
         try:
-            with open(failed_log_path, "r") as f:
+            with open(failed_log_path) as f:
                 lines = f.readlines()
-            
+
             # Check the first valid entry
             for line in lines:
                 if line.strip():
@@ -2414,7 +2414,7 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                             cursor.execute("SELECT id FROM synthesized_articles WHERE cluster_id = %s", (cid,))
                             exists = cursor.fetchone()
                             cursor.close()
-                            
+
                             if not exists:
                                 cluster_id_to_retry = cid
                                 break
@@ -2429,21 +2429,21 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
 
         if cluster_id_to_retry:
             return [cluster_id_to_retry]
-            
+
         return []
 
-    async def execute(self, cluster_ids: List[str]):
+    async def execute(self, cluster_ids: list[str]):
         """
         Execute synthesis for the given heavy cluster IDs.
         """
         logger.info(f"🏋️ HeavyClusterRetryPolicy triggered for {len(cluster_ids)} clusters.")
-        
+
         for cid in cluster_ids:
             try:
                 # 1. Fetch articles for this cluster
                 self.db_service.ensure_conn()
                 cursor = self.db_service.mb_conn.cursor()
-                
+
                 query = """
                     SELECT id, content FROM articles 
                     WHERE is_synthesized = 0 
@@ -2452,20 +2452,20 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                 like_pattern = f"%{cid}%"
                 cursor.execute(query, (like_pattern,))
                 rows = cursor.fetchall()
-                
+
                 if not rows:
                     cursor.close()
                     continue
-                    
+
                 article_ids = [row[0] for row in rows]
                 texts = [row[1] for row in rows if row[1]]
                 cursor.close()
-                
+
                 if not texts:
                     continue
 
                 logger.info(f"Retry synthesizing heavy cluster {cid} with {len(texts)} articles.")
-                
+
                 # 2. Call Synthesizer
                 # Using aggregate_cluster_tool
                 synthesis_result = await self._call_mcp_tool(
@@ -2473,7 +2473,7 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                     tool="aggregate_cluster",
                     kwargs={"article_texts": texts}
                 )
-                
+
                 if isinstance(synthesis_result, dict) and synthesis_result.get("success"):
                     body_text = str(
                         synthesis_result.get("body")
@@ -2488,7 +2488,7 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                         synthesis_result,
                         is_brief=len(texts) == 1,
                     )
-                    
+
                     # 3. Upsert canonical living story per cluster
                     self.db_service.ensure_conn()
                     cursor = self.db_service.mb_conn.cursor()
@@ -2519,7 +2519,7 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                             removed,
                             cid,
                         )
-                    
+
                     self.db_service.mb_conn.commit()
                     cursor.close()
 
@@ -2537,15 +2537,15 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                             f"composite_score={upsert_result.get('composite_score')}, "
                             f"new_articles={upsert_result.get('new_article_count')})."
                         )
-                    
+
                     # 5. Remove from heavy_clusters.log
                     self._remove_from_log(cid)
-                    
+
                 else:
                     err = synthesis_result.get('error') if isinstance(synthesis_result, dict) else str(synthesis_result)
                     logger.error(f"Retry failed for heavy cluster {cid}: {err}")
                     # Do not remove from log, so it can be retried again later (maybe infinite loop if keeps failing? user can check log)
-                    
+
             except Exception as e:
                 logger.error(f"Error processing heavy cluster {cid}: {e}")
 
@@ -2554,10 +2554,10 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
             failed_log_path = "heavy_clusters.log"
             if not os.path.exists(failed_log_path):
                 return
-                
-            with open(failed_log_path, "r") as f:
+
+            with open(failed_log_path) as f:
                 lines = f.readlines()
-            
+
             new_lines = []
             for line in lines:
                 try:
@@ -2566,10 +2566,10 @@ class HeavyClusterRetryPolicy(WorkflowPolicy):
                         new_lines.append(line)
                 except:
                     new_lines.append(line)
-            
+
             with open(failed_log_path, "w") as f:
                 f.writelines(new_lines)
-                
+
             logger.info(f"Removed {cid_to_remove} from {failed_log_path}")
         except Exception as e:
             logger.error(f"Failed to update heavy_clusters.log: {e}")
@@ -2588,7 +2588,7 @@ class SynthesisToCritiquePolicy(WorkflowPolicy):
     def name(self) -> str:
         return "synthesis_to_critique"
 
-    def check_condition(self, limit: int) -> List[str]:
+    def check_condition(self, limit: int) -> list[str]:
         ids = []
         try:
             self.db_service.ensure_conn()
@@ -2616,9 +2616,9 @@ class SynthesisToCritiquePolicy(WorkflowPolicy):
                 pass
         return ids
 
-    async def execute(self, items: List[str]):
+    async def execute(self, items: list[str]):
         logger.info(f"Triggering critique for {len(items)} stories.")
-        
+
         for story_id in items:
             try:
                 # Fetch story body
@@ -2627,21 +2627,21 @@ class SynthesisToCritiquePolicy(WorkflowPolicy):
                 cursor.execute("SELECT body, title FROM synthesized_articles WHERE story_id = %s", (story_id,))
                 row = cursor.fetchone()
                 cursor.close()
-                
+
                 if not row:
                     continue
-                    
+
                 body = row[0]
                 title = row[1]
                 content_to_critique = f"Title: {title}\n\n{body}"
-                
+
                 # Call Critic
                 result = await self._call_mcp_tool(
                     agent="critic",
                     tool="critique_synthesis",
                     kwargs={"content": content_to_critique}
                 )
-                
+
                 if isinstance(result, dict):
                     # Save critique
                     critique_text = json.dumps(result)
@@ -2672,7 +2672,7 @@ class SynthesisToPublishingPolicy(WorkflowPolicy):
     def name(self) -> str:
         return "synthesis_to_publishing"
 
-    def check_condition(self, limit: int) -> List[str]:
+    def check_condition(self, limit: int) -> list[str]:
         ids = []
         try:
             self.db_service.ensure_conn()
@@ -2681,7 +2681,7 @@ class SynthesisToPublishingPolicy(WorkflowPolicy):
             except:
                 pass
             cursor = self.db_service.mb_conn.cursor()
-            
+
             # Select unpublished stories that have been critiqued
             query = """
                 SELECT story_id FROM synthesized_articles 
@@ -2702,20 +2702,20 @@ class SynthesisToPublishingPolicy(WorkflowPolicy):
                 pass
         return ids
 
-    async def execute(self, items: List[str]):
+    async def execute(self, items: list[str]):
         logger.info(f"Triggering publishing for {len(items)} stories.")
-        
+
         for story_id in items:
             try:
                 logger.info(f"Publishing story {story_id}...")
-                
+
                 # 1. Call Chief Editor
                 result = await self._call_mcp_tool(
                     agent="chief_editor",
                     tool="publish_story",
                     kwargs={"story_id": story_id}
                 )
-                
+
                 # Unpack EditorialResponse if present
                 if isinstance(result, dict) and "result" in result and "status" not in result:
                     result = result["result"]
@@ -2731,6 +2731,6 @@ class SynthesisToPublishingPolicy(WorkflowPolicy):
                 else:
                     err = result.get('error') if isinstance(result, dict) else str(result)
                     logger.error(f"Publishing failed for {story_id}: {err}")
-                    
+
             except Exception as e:
                 logger.error(f"Error publishing story {story_id}: {e}")

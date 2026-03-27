@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import shutil
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -95,7 +95,7 @@ def ensure_raw_html_artifact(
         )
         return response
 
-    dest_dir = canonical_root / datetime.now(timezone.utc).strftime("%Y/%m/%d")
+    dest_dir = canonical_root / datetime.now(UTC).strftime("%Y/%m/%d")
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest_path = dest_dir / candidate.name
     counter = 1

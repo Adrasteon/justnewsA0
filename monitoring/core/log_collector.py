@@ -13,7 +13,7 @@ import sys
 import uuid
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -181,7 +181,7 @@ class LogCollector:
     def log(self, level: LogLevel, message: str, **kwargs) -> None:
         """Log a message with structured data"""
         entry = LogEntry(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             level=level,
             logger_name=f"justnews.{self.agent_name}",
             message=message,
@@ -354,7 +354,7 @@ class StructuredJSONFormatter(logging.Formatter):
         """Format log record as JSON"""
         # Create base log entry
         log_entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -396,7 +396,7 @@ class StructuredTextFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         """Format log record as structured text"""
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
         level = record.levelname
         logger = record.name
         message = record.getMessage()

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Protocol
 
 from common.ddg_search_service import DdgSearchService
@@ -102,7 +102,7 @@ class Lane1Workflow:
             "require_bbc_first": self.config.require_bbc_first,
             "seed_runs": seed_runs,
             "total_related_candidates": total_related,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }
 
         logger.info(

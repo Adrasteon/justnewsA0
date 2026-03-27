@@ -5,13 +5,12 @@ This module provides system resource monitoring capabilities (CPU, RAM, GPU)
 to help the orchestrator make backpressure decisions.
 """
 
-import os
 import shutil
 import subprocess
 from dataclasses import dataclass
-from typing import Optional
 
 import psutil
+
 from common.observability import get_logger
 
 logger = get_logger(__name__)
@@ -21,8 +20,8 @@ logger = get_logger(__name__)
 class SystemStats:
     cpu_percent: float
     memory_percent: float
-    gpu_utilization: Optional[float] = None
-    gpu_memory_percent: Optional[float] = None
+    gpu_utilization: float | None = None
+    gpu_memory_percent: float | None = None
 
 
 class ResourceMonitor:
@@ -33,10 +32,10 @@ class ResourceMonitor:
         """Get current system statistics."""
         cpu = psutil.cpu_percent(interval=None)
         memory = psutil.virtual_memory().percent
-        
+
         gpu_util = None
         gpu_mem = None
-        
+
         if self.has_nvidia_smi:
             try:
                 # Query all GPUs, take the max utilization (conservative approach)
@@ -61,7 +60,7 @@ class ResourceMonitor:
                             if len(parts) >= 2:
                                 utils.append(float(parts[0].strip()))
                                 mems.append(float(parts[1].strip()))
-                        
+
                         if utils:
                             gpu_util = max(utils)
                         if mems:
@@ -82,7 +81,7 @@ class ResourceMonitor:
         Returns True if resources are below thresholds.
         """
         stats = self.get_stats()
-        
+
         cpu_limit = thresholds.get("max_cpu_percent", 90)
         mem_limit = thresholds.get("max_memory_percent", 90)
         gpu_util_limit = thresholds.get("max_gpu_utilization", 95)
@@ -91,7 +90,7 @@ class ResourceMonitor:
         if stats.cpu_percent > cpu_limit:
             logger.warning(f"Throttling: CPU at {stats.cpu_percent}% > {cpu_limit}%")
             return False
-            
+
         if stats.memory_percent > mem_limit:
             logger.warning(f"Throttling: Memory at {stats.memory_percent}% > {mem_limit}%")
             return False

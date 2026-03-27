@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from copy import deepcopy
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from threading import Lock
 from typing import Any
@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 RUNTIME_KEY_REGISTRY: dict[str, dict[str, Any]] = {

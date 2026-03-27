@@ -14,7 +14,7 @@ import re
 import time
 import warnings
 from dataclasses import dataclass
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -667,7 +667,7 @@ class ScoutEngine:
                             if len(crawl_result.content) > 200
                             else crawl_result.content,
                             "links_found": len(crawl_result.links),
-                            "discovered_at": datetime.now(timezone.utc).isoformat(),
+                            "discovered_at": datetime.now(UTC).isoformat(),
                         }
                         sources.append(source_info)
 

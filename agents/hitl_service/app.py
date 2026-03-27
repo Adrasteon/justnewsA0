@@ -7,7 +7,7 @@ import sqlite3
 import time
 import uuid
 from collections.abc import Awaitable, Callable
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from io import StringIO
 from typing import Any
 
@@ -556,7 +556,7 @@ def insert_candidate(evt: CandidateEvent) -> str:
             evt.extracted_text,
             evt.raw_html_ref,
             json.dumps(evt.features or {}),
-            evt.crawler_ts or datetime.now(timezone.utc).isoformat(),
+            evt.crawler_ts or datetime.now(UTC).isoformat(),
             evt.crawler_job_id,
             "pending",
             priority,
@@ -673,7 +673,7 @@ def build_training_payload(
 
 def store_label(req: LabelRequest) -> dict[str, Any]:
     lid = str(uuid.uuid4())
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     label_low = req.label.lower()
     treat_as_valid_bool = label_low in ("valid_news", "messy_news")
     needs_cleanup_bool = label_low == "messy_news"
@@ -780,7 +780,7 @@ async def dispatch_ingest(job_payload: dict[str, Any], label_id: str) -> str:
                 [],
                 job_payload,
             )
-            ts = datetime.now(timezone.utc).isoformat()
+            ts = datetime.now(UTC).isoformat()
             update_ingest_status(label_id, "enqueued", ts)
             metrics.increment("hitl_ingest_dispatch_success_total")
             metrics.timing(
@@ -908,7 +908,7 @@ def get_qa_pending() -> int:
 
 
 def get_qa_failure_metrics(window_hours: int = 24) -> dict[str, int | float]:
-    since = (datetime.now(timezone.utc) - timedelta(hours=window_hours)).isoformat()
+    since = (datetime.now(UTC) - timedelta(hours=window_hours)).isoformat()
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute(
@@ -1022,7 +1022,7 @@ async def api_post_qa_review(req: QAReviewRequest):
     status = req.status.lower()
     if status not in ("pass", "fail"):
         raise HTTPException(status_code=400, detail="invalid QA status")
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     cur.execute(
@@ -1116,7 +1116,7 @@ async def api_get_qa_export(limit: int = 1000):
             buffer.seek(0)
             buffer.truncate(0)
 
-    filename = datetime.now(timezone.utc).strftime("hitl_qa_export_%Y%m%dT%H%M%SZ.csv")
+    filename = datetime.now(UTC).strftime("hitl_qa_export_%Y%m%dT%H%M%SZ.csv")
     headers = {"Content-Disposition": f"attachment; filename={filename}"}
     return StreamingResponse(_iter_csv(), media_type="text/csv", headers=headers)
 
@@ -1129,7 +1129,7 @@ async def api_stats():
     pending = cur.fetchone()[0]
     cur.execute("SELECT COUNT(*) FROM hitl_candidates WHERE status='in_review'")
     in_review = cur.fetchone()[0]
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     start_of_day = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
     last_hour = (now - timedelta(hours=1)).isoformat()
     cur.execute(

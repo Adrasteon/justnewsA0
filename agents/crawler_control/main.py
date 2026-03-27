@@ -20,6 +20,7 @@ from pydantic import BaseModel
 
 # Load environment variables first
 from common.env_loader import load_global_env
+
 load_global_env()
 
 # Import database functions - REMOVED: migrated to database.utils.migrated_database_utils

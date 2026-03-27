@@ -11,7 +11,7 @@ import json
 import os
 import time
 from collections.abc import Mapping, Sequence
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -865,7 +865,7 @@ class CrawlerEngine:
                     # Skip deprecated strategies
                     if strategy == "ultra_fast":
                         continue
-                        
+
                     avg_performance = sum(performances) / len(performances)
                     if avg_performance > best_avg_performance:
                         best_avg_performance = avg_performance
@@ -2452,7 +2452,7 @@ class CrawlerEngine:
             "extracted_text": extracted_text,
             "raw_html_ref": article.get("raw_html_ref"),
             "features": features or None,
-            "crawler_ts": article.get("timestamp") or datetime.now(timezone.utc).isoformat(),
+            "crawler_ts": article.get("timestamp") or datetime.now(UTC).isoformat(),
             "crawler_job_id": article.get("crawler_job_id"),
         }
         return candidate

@@ -19,7 +19,7 @@ Architecture:
 import json
 import os
 import threading
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -63,7 +63,7 @@ def log_feedback(event: str, details: dict):
     """Logs feedback to a file."""
     try:
         with open(FEEDBACK_LOG, "a", encoding="utf-8") as f:
-            f.write(f"{datetime.now(timezone.utc).isoformat()}\t{event}\t{details}\n")
+            f.write(f"{datetime.now(UTC).isoformat()}\t{event}\t{details}\n")
     except Exception as e:
         logger.error(f"Error logging feedback: {e}")
 
@@ -374,7 +374,7 @@ def save_article(
         publication_dt = _parse_publication_date(metadata.get("publication_date"))
         collection_dt = _parse_publication_date(metadata.get("collection_timestamp"))
         if collection_dt is None:
-            collection_dt = datetime.now(timezone.utc)
+            collection_dt = datetime.now(UTC)
 
         review_reasons_json = json.dumps(metadata.get("review_reasons") or [])
 
@@ -490,8 +490,8 @@ def save_article(
             }
 
         # Add embedding to ChromaDB
-        # MODIFICATION: We now treat ChromaDB failure as a significant event. 
-        # Although we don't have an 'embedded' flag here yet, we ensure the error is fatal if 
+        # MODIFICATION: We now treat ChromaDB failure as a significant event.
+        # Although we don't have an 'embedded' flag here yet, we ensure the error is fatal if
         # CHROMADB_REQUIRE_CANONICAL is set or if we want strict consistency.
         try:
             if getattr(db_service, "collection", None):
@@ -530,8 +530,9 @@ def save_article(
             try:
                 # Only proceed if we have an embedding and DB service
                 if locals().get("embedding") is not None and getattr(db_service, "mb_conn", None) and getattr(db_service, "chroma_client", None):
-                    import numpy as np
                     import uuid
+
+                    import numpy as np
 
                     # Configuration
                     ls_threshold = float(os.environ.get("LS_SIMILARITY_THRESHOLD", "0.85"))

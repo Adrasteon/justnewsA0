@@ -35,7 +35,7 @@ except (
 ):  # pragma: no cover - exercised implicitly when NVML bindings are absent
     pynvml = None  # type: ignore
     _HAS_PYNVML = False
-from datetime import timezone
+from datetime import UTC
 
 from fastapi import HTTPException
 from prometheus_client import Counter, Gauge, Histogram
@@ -43,6 +43,7 @@ from prometheus_client import Counter, Gauge, Histogram
 from common.metrics import JustNewsMetrics
 from common.tracing import inject_trace_context
 from database.utils.migrated_database_utils import create_database_service
+
 os.environ.setdefault("JUSTNEWS_DB_EMBEDDING_ENABLED", "0")
 
 # Constants
@@ -454,7 +455,7 @@ class GPUOrchestratorEngine:
                     name_str = name.decode('utf-8')
                 else:
                     name_str = str(name)
-                
+
                 memory_info = pynvml.nvmlDeviceGetMemoryInfo(handle)
                 self.logger.debug(f"Device {i}: {name_str}")
                 self.logger.debug(f"  Total memory: {memory_info.total / 1024**2} MB")
@@ -1291,8 +1292,8 @@ class GPUOrchestratorEngine:
             # Compute created_at / expires_at in Python for DB portability (works on MySQL & SQLite)
             from datetime import datetime, timedelta
 
-            created_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
-            expires_at = (datetime.now(timezone.utc) + timedelta(seconds=ttl)).strftime(
+            created_at = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+            expires_at = (datetime.now(UTC) + timedelta(seconds=ttl)).strftime(
                 "%Y-%m-%d %H:%M:%S"
             )
             cursor.execute(
@@ -1661,13 +1662,13 @@ class GPUOrchestratorEngine:
                     except Exception:
                         pass
                     conn = None
-            
+
             if not conn:
                 # Create new dedicated connection
                 _, conn = self._get_safe_cursor(per_call=True, buffered=True)
                 _.close() # We only need the connection object
                 self._leader_conn = conn
-            
+
             cursor = self._leader_conn.cursor()
             try:
                 cursor.execute(
@@ -1680,7 +1681,7 @@ class GPUOrchestratorEngine:
                 except Exception:
                     pass
                 # Do NOT close conn; we must hold it to keep the lock
-            
+
             locked = bool(res and int(res[0]) == 1)
             if locked:
                 self.is_leader = True
@@ -1705,7 +1706,7 @@ class GPUOrchestratorEngine:
         """
         if not self.db_service:
             return False
-            
+
         conn = getattr(self, '_leader_conn', None)
         if not conn:
             return False

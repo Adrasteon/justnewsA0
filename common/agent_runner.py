@@ -1,8 +1,8 @@
 import argparse
 import logging
 import os
-import sys
 from logging.handlers import RotatingFileHandler
+
 import uvicorn
 
 # Ensure LOG_DIR path is correct
@@ -17,7 +17,7 @@ def setup_agent_logging(agent_name: str, log_level: str):
     Configures root and uvicorn loggers to write to a rotating file.
     """
     log_file = os.path.join(LOG_DIR, f"{agent_name}.log")
-    
+
     max_bytes = int(os.environ.get("LOG_MAX_BYTES", 512000))
     backup_count = int(os.environ.get("LOG_BACKUP_COUNT", 3))
 
@@ -46,7 +46,7 @@ def setup_agent_logging(agent_name: str, log_level: str):
         logger.handlers = []
         logger.addHandler(file_handler)
         logger.setLevel(log_level.upper())
-    
+
     # Ensure uvicorn.access doesn't propagate to avoid double logging if root captures it
     logging.getLogger("uvicorn.access").propagate = False
     logging.getLogger("uvicorn.error").propagate = False

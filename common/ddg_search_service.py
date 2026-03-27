@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import os
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlparse
 
@@ -330,5 +330,5 @@ class DdgSearchService:
             "seed_title": seed_title,
             "queries": queries,
             "results": [result.to_dict() for result in candidates],
-            "expanded_at": datetime.now(timezone.utc).isoformat(),
+            "expanded_at": datetime.now(UTC).isoformat(),
         }

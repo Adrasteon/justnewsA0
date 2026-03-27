@@ -12,7 +12,7 @@ import os
 import secrets
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -92,7 +92,7 @@ class LogAggregator:
 
         # Aggregation state
         self._log_buffer: list[LogEntry] = []
-        self._last_flush_time = datetime.now(timezone.utc)
+        self._last_flush_time = datetime.now(UTC)
         self._flush_task: asyncio.Task | None = None
         self._shutdown_event = asyncio.Event()
 
@@ -192,7 +192,7 @@ class LogAggregator:
                 )
             elif self.aggregation_config.strategy == AggregationStrategy.TIME_WINDOW:
                 time_since_last_flush = (
-                    datetime.now(timezone.utc) - self._last_flush_time
+                    datetime.now(UTC) - self._last_flush_time
                 ).total_seconds()
                 should_flush = (
                     time_since_last_flush >= self.aggregation_config.time_window_seconds
@@ -227,7 +227,7 @@ class LogAggregator:
                     self._errors_count += 1
 
             self._batches_flushed += 1
-            self._last_flush_time = datetime.now(timezone.utc)
+            self._last_flush_time = datetime.now(UTC)
             self._log_buffer.clear()
 
         except Exception as e:
@@ -249,7 +249,7 @@ class LogAggregator:
         """Store logs to file system"""
         try:
             # Create timestamped filename
-            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
             batch_id = secrets.token_hex(4)
             filename = (
                 f"{self.storage_config.file_path}/logs_{timestamp}_{batch_id}.json"
@@ -374,7 +374,7 @@ class LogAggregator:
             try:
                 await asyncio.sleep(86400)  # Run daily
 
-                cutoff_date = datetime.now(timezone.utc) - timedelta(
+                cutoff_date = datetime.now(UTC) - timedelta(
                     days=self.aggregation_config.retention_days
                 )
                 cutoff_timestamp = cutoff_date.strftime("%Y%m%d")

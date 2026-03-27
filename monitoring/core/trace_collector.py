@@ -20,7 +20,7 @@ Date: October 22, 2025
 
 import logging  # noqa: E402
 from dataclasses import dataclass, field  # noqa: E402
-from datetime import timezone, datetime, timedelta  # noqa: E402
+from datetime import UTC, datetime, timedelta  # noqa: E402
 from typing import Any  # noqa: E402
 
 try:
@@ -477,7 +477,7 @@ class TraceCollector:
 
     async def cleanup_old_traces(self):
         """Cleanup old completed traces based on retention policy"""
-        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=self.trace_retention_hours)
+        cutoff_time = datetime.now(UTC) - timedelta(hours=self.trace_retention_hours)
         to_remove = []
 
         for trace_id, trace_data in self.completed_traces.items():

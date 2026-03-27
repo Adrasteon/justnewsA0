@@ -62,7 +62,7 @@ async def cluster_articles_tool(
         result = await engine.cluster_articles(article_texts, n_clusters)
 
         processing_time = time.time() - start_time
-        
+
         # Handle dict response (compatibility)
         if isinstance(result, dict):
              success = result.get("status") == "success"
@@ -98,7 +98,7 @@ async def cluster_articles_tool(
         # Add topics if available
         if topics:
             response["topics"] = topics
-            
+
         # Collect prediction for training
         try:
             from training_system import collect_prediction
@@ -137,24 +137,24 @@ async def cluster_articles_tool(
 async def summarize_article(engine: SynthesizerEngine, article_id: int) -> dict[str, Any]:
     """Summarize a single article by ID and update the database."""
     logger.info(f"📝 Summarizing article {article_id}")
-    
+
     from database.utils.migrated_database_utils import create_database_service
-    
+
     db_service = None
     try:
         db_service = create_database_service()
         db_service.ensure_conn()
-        
+
         cursor = db_service.mb_conn.cursor()
         cursor.execute("SELECT content FROM articles WHERE id = %s", (article_id,))
         row = cursor.fetchone()
-        
+
         if not row or not row[0]:
             cursor.close()
             return {"status": "error", "error": f"Article {article_id} not found or empty"}
-            
+
         content = row[0]
-        
+
         # Summarization logic
         summary = ""
         # Use engine's summarization (Qwen or fallback)
@@ -187,7 +187,7 @@ async def summarize_article(engine: SynthesizerEngine, article_id: int) -> dict[
         cursor.execute("UPDATE articles SET summary = %s WHERE id = %s", (summary, article_id))
         db_service.mb_conn.commit()
         cursor.close()
-        
+
         logger.info(f"✅ Article {article_id} summarized.")
         return {"status": "success", "article_id": article_id}
     except Exception as e:
@@ -271,8 +271,8 @@ async def neutralize_text_tool(engine: SynthesizerEngine, text: str) -> dict[str
 
 
 async def aggregate_cluster_tool(
-    engine: SynthesizerEngine, 
-    article_texts: list[str], 
+    engine: SynthesizerEngine,
+    article_texts: list[str],
     aggregation_type: str = "full",
     previous_context: str | None = None
 ) -> dict[str, Any]:
@@ -304,7 +304,7 @@ async def aggregate_cluster_tool(
 
         # Perform aggregation
         result = await engine.aggregate_cluster(article_texts, previous_context=previous_context)
-        
+
         processing_time = time.time() - start_time
 
         # Check if it behaves like a dict (safe fallback)
@@ -345,7 +345,7 @@ async def aggregate_cluster_tool(
             from training_system import collect_prediction
             method_val = result.get("method", "unknown") if isinstance(result, dict) else getattr(result, "method", "unknown")
             confidence_val = result.get("confidence", 0.0) if isinstance(result, dict) else getattr(result, "confidence", 1.0)
-            
+
             # Create input summary
             input_summary = f"Aggregating {len(article_texts)} articles. Type: {aggregation_type}. Samples: {article_texts[0][:200] if article_texts else 'None'}"
 

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import os
 import json
-import time
+import os
 import textwrap
+import time
 from dataclasses import dataclass
 from typing import Any
 
@@ -44,7 +44,7 @@ class AnalystModelAdapter:
 
     def __init__(self) -> None:
         self.enabled = os.environ.get("ANALYST_DISABLE_MISTRAL", "0").lower() not in {"1", "true"}
-        
+
         self.adapter = OpenAIAdapter(
             name="analyst_qwen",
             model=os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ"),
@@ -59,14 +59,14 @@ class AnalystModelAdapter:
     def classify(self, text: str) -> AdapterResult | None:
         if not self.enabled:
             return None
-            
+
         snippet = textwrap.shorten(text or "", width=6000, placeholder="...")
         if not snippet:
             return None
-            
+
         user_block = f"Text to evaluate:\n'''{snippet}'''\n\nReturn valid JSON."
         start = time.perf_counter()
-        
+
         try:
             # Ensure the adapter is loaded before first use
             if hasattr(self.adapter, "load"):
@@ -77,7 +77,7 @@ class AnalystModelAdapter:
         except Exception as e:
             logger.warning(f"Analyst Qwen generation failed: {e}")
             doc = None
-            
+
         elapsed = time.perf_counter() - start
         if not doc:
             return None

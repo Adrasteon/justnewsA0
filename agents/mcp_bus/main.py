@@ -166,16 +166,16 @@ def get_agent_port(agent_name: str) -> int:
     """Get the port for a known agent, checking environment variables first."""
     if agent_name not in KNOWN_AGENTS:
         return None
-    
+
     config = KNOWN_AGENTS[agent_name]
     env_var = config.get("env_var")
-    
+
     if env_var:
         try:
             return int(os.environ.get(env_var, config.get("port")))
         except (ValueError, TypeError):
             pass
-    
+
     return config.get("port")
 
 
@@ -184,15 +184,15 @@ async def discover_and_register_agents(only_missing: bool = False):
     Discover running agents by polling known ports and register them with the bus.
     This allows agents to be discovered even if they restart after MCP Bus.
     """
-    import asyncio
+
     import httpx
-    
+
     if only_missing:
         logger.debug("🔍 Starting missing-agent discovery...")
     else:
         logger.info("🔍 Starting agent discovery...")
     discovered = 0
-    
+
     for agent_name, config in KNOWN_AGENTS.items():
         if only_missing and _is_agent_registered_by_name(agent_name):
             continue
@@ -200,9 +200,9 @@ async def discover_and_register_agents(only_missing: bool = False):
         port = get_agent_port(agent_name)
         if not port:
             continue
-        
+
         agent_url = f"http://localhost:{port}"
-        
+
         try:
             # Try to verify agent is running with a health check
             async with httpx.AsyncClient(timeout=2) as client:
@@ -216,11 +216,11 @@ async def discover_and_register_agents(only_missing: bool = False):
                             discovered += 1
                 except httpx.ConnectError:
                     pass  # Agent not running on this port
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     pass  # Agent not responding
         except Exception as e:
             logger.debug(f"Agent discovery check for {agent_name} on port {port}: {e}")
-    
+
     if discovered > 0:
         logger.info(f"✅ Agent discovery complete: {discovered} agent(s) registered")
     else:
@@ -243,7 +243,7 @@ async def periodic_missing_agent_discovery_loop(interval_seconds: int, stop_even
 
         try:
             await asyncio.wait_for(stop_event.wait(), timeout=interval_seconds)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             continue
 
 
@@ -274,7 +274,7 @@ async def lifespan(app: FastAPI):
             )
         else:
             logger.info("⏸️ Periodic missing-agent discovery disabled")
-        
+
         # Notify GPU Orchestrator that MCP Bus is ready
         success = notify_gpu_orchestrator()
         if success:

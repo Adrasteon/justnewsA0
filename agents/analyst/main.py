@@ -2,8 +2,8 @@
 Main file for the Analyst Agent.
 """
 
-import os
 import asyncio
+import os
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -519,10 +519,10 @@ async def analyze_article_endpoint(call: ToolCall):
 
             # Delegate to tools implementation which now includes Factual Audit
             analysis_result = await analyze_article(article_id)
-            
+
             if analysis_result.get("status") == "error":
                 raise HTTPException(status_code=500, detail=analysis_result.get("error"))
-            
+
             return {"status": "success", "analysis_result": analysis_result}
 
         else:

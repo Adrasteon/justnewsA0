@@ -10,7 +10,7 @@ import json
 import os
 import uuid
 from contextlib import asynccontextmanager
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -107,7 +107,7 @@ def _persist_triage_training_examples(examples: list[dict[str, Any]]) -> int:
             if not isinstance(item, dict):
                 continue
             record = {
-                "received_at": datetime.now(timezone.utc).isoformat(),
+                "received_at": datetime.now(UTC).isoformat(),
                 "source": "training_system",
                 "task_type": item.get("task_type") or "ingestion_triage",
                 "input_text": item.get("input_text") or "",

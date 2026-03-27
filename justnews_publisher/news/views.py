@@ -15,7 +15,6 @@ from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_
 
 from .models import Article, ArticleSlugRedirect, PublishAudit
 
-
 SOURCE_LINK_PATTERN = re.compile(r"https?://[^\s)\]]+", re.IGNORECASE)
 
 

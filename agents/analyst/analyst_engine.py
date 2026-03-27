@@ -17,9 +17,9 @@ Architecture: Streamlined for production use with GPU acceleration and CPU fallb
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import importlib.util
-import asyncio
 import json
 import os
 import re
@@ -27,15 +27,15 @@ import statistics
 import time
 import warnings
 from collections import Counter, defaultdict
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from common.observability import get_logger
 from common.tracing import traced
 
 try:
+    from .model_adapter import AdapterResult
     from .model_adapter import AnalystModelAdapter as MistralAdapter
-    from .model_adapter import SYSTEM_PROMPT, AdapterResult
 except Exception:  # pragma: no cover - optional dependency wiring
     MistralAdapter = None  # type: ignore
     AdapterResult = Any  # type: ignore
@@ -321,7 +321,7 @@ class AnalystEngine:
     def _log_feedback(self, event: str, details: dict[str, Any]) -> None:
         """Log analysis feedback for monitoring and improvement."""
         try:
-            timestamp = datetime.now(timezone.utc).isoformat()
+            timestamp = datetime.now(UTC).isoformat()
             log_entry = {
                 "timestamp": timestamp,
                 "event": event,
@@ -677,9 +677,9 @@ class AnalystEngine:
         try:
             from .schemas import (
                 AnalysisReport,
-                AttributionSpan,
                 AttributedQuote,
                 AttributedStatement,
+                AttributionSpan,
                 BalanceAssessment,
                 Claim,
                 PerArticleAnalysis,
@@ -902,9 +902,8 @@ class AnalystEngine:
         Returns SourceFactCheck object with results.
         """
         try:
-            from .schemas import ClaimVerdict, SourceFactCheck
-
             from .audit import audit_text
+            from .schemas import ClaimVerdict, SourceFactCheck
 
             try:
                 result = asyncio.run(audit_text(text, max_claims=5))

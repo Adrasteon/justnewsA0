@@ -1,14 +1,16 @@
 import asyncio
+import json
 import logging
 import os
-import json
-import httpx
 import re
 from datetime import datetime
-from typing import List, Dict, Any, Optional
+from typing import Any
+
+import httpx
 from bs4 import BeautifulSoup
 from ddgs import DDGS
-from .models import FactCheckRequest, FactCheckResult, Evidence, EvidenceType, Verdict
+
+from .models import Evidence, EvidenceType, FactCheckRequest, FactCheckResult, Verdict
 
 # Database integration
 # See /app/MIGRATION_BGE_LARGE_1024.md for model and persistence details.
@@ -27,13 +29,13 @@ logger = logging.getLogger(__name__)
 
 # Enterprise-grade credibility registry
 TRUSTED_DOMAINS = {
-    "reuters.com", "apnews.com", "bbc.com", "nytimes.com", "wsj.com", 
+    "reuters.com", "apnews.com", "bbc.com", "nytimes.com", "wsj.com",
     "theguardian.com", "npr.org", "bloomberg.com", "economist.com",
     "afp.com", "dw.com", "france24.com", "aljazeera.com"
 }
 
 FACT_CHECK_DOMAINS = {
-    "snopes.com", "politifact.com", "factcheck.org", "fullfact.org", 
+    "snopes.com", "politifact.com", "factcheck.org", "fullfact.org",
     "reuters.com/fact-check", "apnews.com/hub/ap-fact-check",
     "checkyourfact.com", "leadstories.com"
 }
@@ -74,7 +76,7 @@ class FactCheckerService:
                 config = get_db_config()
                 self.db_service = MigratedDatabaseService(config)
                 logger.info("FactCheckerService: Database persistence enabled.")
-                
+
                 # Setup semantic cache for fact checks
                 if self.db_service.chroma_client:
                     try:
@@ -98,21 +100,21 @@ class FactCheckerService:
     async def verify_fact(self, request: FactCheckRequest) -> FactCheckResult:
         start_time = asyncio.get_event_loop().time()
         logger.info(f"Verifying fact: {request.fact}")
-        
+
         # 0. Generate queries and run lookups/collection in parallel
         queries = self._generate_queries(request.fact, request.context)
-        
+
         collect_start = asyncio.get_event_loop().time()
         # Parallelize historical lookup and web collection to reduce idle wait time
         historical_task = asyncio.create_task(self._lookup_history(request.fact))
         evidence_task = asyncio.create_task(self._collect_evidence(queries, request.sources))
-        
+
         historical_evidence, evidence = await asyncio.gather(historical_task, evidence_task)
-        
+
         # Merge historical evidence into the results for AI evaluation
         if historical_evidence:
             evidence.extend(historical_evidence)
-        
+
         # Robustness Fix: Deep Crawl if evidence is thin
         if len([e for e in evidence if e.evidence_type != EvidenceType.TEXT or "INTERNAL_DB" not in e.content]) < 3:
              logger.info("Thin evidence detected. Initiating deep crawl of top results.")
@@ -121,11 +123,11 @@ class FactCheckerService:
                  try:
                      deep_evidence = await asyncio.wait_for(self._deep_crawl_sources(top_urls), timeout=8.0)
                      evidence.extend(deep_evidence)
-                 except asyncio.TimeoutError:
+                 except TimeoutError:
                      logger.warning("Deep crawl timed out")
-        
+
         collect_end = asyncio.get_event_loop().time()
-        
+
         # Deduplicate evidence by URL to ensure AI only sees unique documents
         total_initial = len(evidence)
         unique_evidence = []
@@ -135,10 +137,10 @@ class FactCheckerService:
                 unique_evidence.append(e)
                 if e.source_url:
                     seen_urls.add(e.source_url)
-        
+
         dedup_count = total_initial - len(unique_evidence)
         logger.info(f"Evidence collected: {total_initial} raw, {len(unique_evidence)} unique. Removed {dedup_count} duplicates.")
-        
+
         # 1. Fetch source reliability metrics for domains in unique_evidence
         domain_metrics = {}
         if self.db_service:
@@ -148,14 +150,14 @@ class FactCheckerService:
                     from urllib.parse import urlparse
                     d = urlparse(e.source_url).netloc
                     if d: domains.add(d)
-            
+
             if domains:
                 domain_metrics = await self._get_domain_reliability(list(domains))
 
         eval_start = asyncio.get_event_loop().time()
         result = await self._evaluate_evidence(request.fact, unique_evidence, domain_metrics)
         eval_end = asyncio.get_event_loop().time()
-        
+
         # Inject detailed metrics into model_trace
         result.model_trace["metrics"] = {
             "timings": {
@@ -169,19 +171,19 @@ class FactCheckerService:
                 "duplicate_removed": dedup_count
             }
         }
-        
+
         # 2. Persist result and update source reliability
         if self.db_service:
             await self._persist_result(result)
             await self._update_source_metrics(result)
-        
+
         return result
 
-    async def _get_domain_reliability(self, domains: List[str]) -> Dict[str, Dict[str, int]]:
+    async def _get_domain_reliability(self, domains: list[str]) -> dict[str, dict[str, int]]:
         """Fetch historical performance metrics for specific domains."""
         if not self.db_service:
             return {}
-        
+
         try:
             cursor, conn = self.db_service.get_safe_cursor(per_call=True, dictionary=True)
             try:
@@ -197,11 +199,11 @@ class FactCheckerService:
             logger.warning(f"Failed to fetch domain metrics: {e}")
         return {}
 
-    async def _lookup_history(self, fact: str) -> List[Evidence]:
+    async def _lookup_history(self, fact: str) -> list[Evidence]:
         """Query MariaDB/ChromaDB for previously analyzed facts."""
         if not self.db_service:
             return []
-        
+
         results = []
         try:
             # 1. Semantic lookup in ChromaDB (High-Signal Matches)
@@ -213,7 +215,7 @@ class FactCheckerService:
                         n_results=1,
                         include=['metadatas', 'documents', 'distances']
                     )
-                    
+
                     if semantic_results['ids'] and semantic_results['ids'][0]:
                         distance = semantic_results['distances'][0][0]
                         if distance < 0.2: # High similarity threshold
@@ -245,7 +247,7 @@ class FactCheckerService:
             finally:
                 cursor.close()
                 conn.close()
-            
+
         except Exception as e:
             logger.warning(f"History lookup failed: {e}")
         return results
@@ -254,7 +256,7 @@ class FactCheckerService:
         """Save the verification result to MariaDB and ChromaDB."""
         if not self.db_service:
             return
-            
+
         try:
             cursor, conn = self.db_service.get_safe_cursor(per_call=True)
             try:
@@ -268,7 +270,7 @@ class FactCheckerService:
                 metadata_json = json.dumps(metrics)
                 cursor.execute(query, (result.fact, result.verdict, result.confidence, result.explanation, model_name, metadata_json))
                 fact_check_id = cursor.lastrowid
-                
+
                 # Semantic Indexing into ChromaDB
                 # MANDATORY: If configured, we must succeed here to continue to commit
                 if self.fact_checks_collection and self.db_service.embedding_model:
@@ -303,21 +305,21 @@ class FactCheckerService:
                 evidence_data = []
                 for e in result.evidence:
                     if "INTERNAL_DB" in e.content: continue # Don't re-index internal history as new evidence
-                    
+
                     domain = ""
                     if e.source_url and "http" in e.source_url:
                         from urllib.parse import urlparse
                         domain = urlparse(e.source_url).netloc
-                    
+
                     tag = "GENERAL"
                     if "[" in e.content and "]" in e.content:
                         tag = e.content.split("]")[0].strip("[")
-                    
+
                     evidence_data.append((fact_check_id, e.content[:1000], e.source_url, domain, tag))
-                
+
                 if evidence_data:
                     cursor.executemany(evidence_query, evidence_data)
-                
+
                 conn.commit()
             finally:
                 cursor.close()
@@ -329,12 +331,12 @@ class FactCheckerService:
         """Adjust reliability scores for domains based on their stance in this check."""
         if not self.db_service:
             return
-            
+
         try:
             cursor, conn = self.db_service.get_safe_cursor(per_call=True)
             try:
                 from urllib.parse import urlparse
-                
+
                 # Update trusted sources
                 for url in result.trusted_sources:
                     if not url or "http" not in url: continue
@@ -346,7 +348,7 @@ class FactCheckerService:
                         ON DUPLICATE KEY UPDATE proven_count = proven_count + 1
                         """
                         cursor.execute(query, (domain,))
-                
+
                 # Update misleading sources
                 for url in result.misleading_sources:
                     if not url or "http" not in url: continue
@@ -358,7 +360,7 @@ class FactCheckerService:
                         ON DUPLICATE KEY UPDATE misinfo_count = misinfo_count + 1
                         """
                         cursor.execute(query, (domain,))
-                
+
                 conn.commit()
             finally:
                 cursor.close()
@@ -366,14 +368,14 @@ class FactCheckerService:
         except Exception as e:
             logger.error(f"Failed to update source metrics: {e}")
 
-    async def _deep_crawl_sources(self, urls: List[str]) -> List[Evidence]:
+    async def _deep_crawl_sources(self, urls: list[str]) -> list[Evidence]:
         """Fetch full page content for limited set of sources."""
         results = []
         async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
             tasks = []
             for url in urls:
                 tasks.append(client.get(url))
-            
+
             responses = await asyncio.gather(*tasks, return_exceptions=True)
             for i, response in enumerate(responses):
                 if isinstance(response, httpx.Response) and response.status_code == 200:
@@ -381,14 +383,14 @@ class FactCheckerService:
                     soup = BeautifulSoup(response.text, 'html.parser')
                     for s in soup(["script", "style", "nav", "footer", "header"]):
                         s.decompose()
-                    
+
                     # Try to find main content
                     main_content = soup.find('main') or soup.find('article') or soup.find('div', class_=re.compile(r'content|article|body', re.I))
                     if main_content:
                         text = main_content.get_text(separator=' ', strip=True)
                     else:
                         text = soup.get_text(separator=' ', strip=True)
-                        
+
                     results.append(Evidence(
                         content=text[:3500], # Increased limit for better context
                         source_url=urls[i],
@@ -398,10 +400,10 @@ class FactCheckerService:
                     ))
         return results
 
-    def _generate_queries(self, fact: str, context: str = None) -> List[str]:
+    def _generate_queries(self, fact: str, context: str = None) -> list[str]:
         # Filter out common stop-words and focus on the core claim for search engine optimization
         sanitized_fact = fact.replace("?", "").replace("!", "").strip()
-        
+
         # Diversified search intents for cross-verification
         base_queries = [
             sanitized_fact,
@@ -413,15 +415,15 @@ class FactCheckerService:
         ]
         if context:
             base_queries.append(f"{sanitized_fact} {context}")
-        
+
         return base_queries[:6] # Parallelized queries are relative cheap; more queries reduces deep crawl triggers
 
-    async def _collect_evidence(self, queries: List[str], overrides: List[str] = None) -> List[Evidence]:
+    async def _collect_evidence(self, queries: list[str], overrides: list[str] = None) -> list[Evidence]:
         logger.info(f"Collecting evidence with queries: {queries}")
-        
+
         ad_patterns = ['ad.', 'doubleclick', 'googleadservices']
-        
-        async def fetch_query(query: str) -> List[Evidence]:
+
+        async def fetch_query(query: str) -> list[Evidence]:
             local_evidence = []
             try:
                 # Run synchronous DDGS in a separate thread to avoid blocking the event loop
@@ -442,13 +444,13 @@ class FactCheckerService:
                     href = r.get('href', '')
                     if any(pattern in href for pattern in ad_patterns) or not href:
                         continue
-                     
+
                     # Domain credibility scoring
                     source_label = "GENERAL"
                     confidence = 0.7
                     from urllib.parse import urlparse
                     domain = urlparse(href).netloc.lower().replace("www.", "")
-                    
+
                     if any(d in domain or d in href for d in FACT_CHECK_DOMAINS):
                         source_label = "FACT_CHECK"
                         confidence = 0.95
@@ -472,11 +474,11 @@ class FactCheckerService:
         # Launch all searches in parallel
         tasks = [fetch_query(q) for q in queries]
         results_lists = await asyncio.gather(*tasks)
-        
+
         evidence_list = []
         for l in results_lists:
             evidence_list.extend(l)
-            
+
         # Fallback/Mock evidence if no results found
         if not evidence_list:
              logger.warning("No web evidence found. Using mock fallback.")
@@ -486,13 +488,13 @@ class FactCheckerService:
                 evidence_type=EvidenceType.TEXT,
                 confidence=0.1
             ))
-            
+
         return evidence_list
 
-    async def _evaluate_evidence(self, fact: str, evidence: List[Evidence], domain_metrics: Dict[str, Any] = None) -> FactCheckResult:
+    async def _evaluate_evidence(self, fact: str, evidence: list[Evidence], domain_metrics: dict[str, Any] = None) -> FactCheckResult:
         vllm_base_url = os.getenv("VLLM_API_BASE") or os.getenv("VLLM_BASE_URL")
         domain_metrics = domain_metrics or {}
-        
+
         if vllm_base_url:
             try:
                 evidence_text = ""
@@ -504,14 +506,14 @@ class FactCheckerService:
                         if e.source_url and "http" in e.source_url:
                             from urllib.parse import urlparse
                             domain = urlparse(e.source_url).netloc
-                        
+
                         metrics_str = ""
                         if domain in domain_metrics:
                             m = domain_metrics[domain]
                             metrics_str = f" [DB_METRICS: Proven={m['proven_count']}, Misinfo={m['misinfo_count']}]"
-                        
+
                         evidence_snippets.append(f"- {e.content}{metrics_str} (Source: {e.source_url})")
-                    
+
                     # REDUCED from 20 to 10 context pieces to decrease LLM latency and memory pressure
                     evidence_text = "\n".join(evidence_snippets[:10])
 
@@ -541,11 +543,11 @@ class FactCheckerService:
                     # Handle trailing slash if present
                     base = vllm_base_url.rstrip('/')
                     url = f"{base}/chat/completions"
-                    
+
                     # Use fact-checker specific adapter if configured, else fallback to global model.
                     # This enables fine-tuning/training loops to target the fact-checker adapter ('qwen_fact_checker_v1').
                     model_name = os.getenv("VLLM_FACT_CHECKER_MODEL", os.getenv("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ"))
-                    
+
                     response = await client.post(
                         url,
                         json={
@@ -558,30 +560,30 @@ class FactCheckerService:
                         },
                         timeout=30.0
                     )
-                    
+
                     if response.status_code == 200:
                         data = response.json()
                         content = data['choices'][0]['message']['content'].strip()
-                        
+
                         # Advanced JSON extraction to handle various LLM formatting styles
                         import re
                         json_match = re.search(r'\{.*\}', content, re.DOTALL)
                         if json_match:
                             content = json_match.group(0)
-                        
+
                         try:
                             result_data = json.loads(content.strip())
                         except json.JSONDecodeError:
                             # Strip common markdown prefix/suffix if present
                             content = content.strip().replace("```json", "").replace("```", "").strip()
                             result_data = json.loads(content)
-                        
+
                         # Calibrate confidence and verdict
                         verdict = normalize_verdict(result_data.get("verdict", Verdict.UNCERTAIN.value))
                         # True/Likely True are treated as 'accurate' in boolean terms
                         is_accurate = verdict in ["True", "Likely True"]
                         confidence = float(result_data.get("confidence", 0.0) or 0.0)
-                        
+
                         # Logic patch: If model says it's False/Likely False because no evidence was found,
                         # it often sets low confidence. We elevate this if search returned many results.
                         if verdict in ["False", "Likely False"] and confidence < 0.5 and len(evidence) > 10:
@@ -612,18 +614,18 @@ class FactCheckerService:
         is_accurate = False
         verdict = Verdict.UNCERTAIN.value
         explanation = "Service currently unavailable for deep analysis."
-        
+
         if evidence:
             avg_confidence = 0.4
             explanation = "Evaluated via keyword density (AI Model skipped/failed)."
-            
+
             fact_words = set(w.lower() for w in fact.split() if len(w) > 3)
             match_score = 0
             for e in evidence:
                 content_lower = e.content.lower()
                 if any(w in content_lower for w in fact_words):
                     match_score += 1
-            
+
             if match_score > 2:
                 avg_confidence = 0.6
                 is_accurate = True
@@ -639,26 +641,26 @@ class FactCheckerService:
             explanation=explanation
         )
 
-    async def get_domain_metrics_summary(self) -> Dict[str, Any]:
+    async def get_domain_metrics_summary(self) -> dict[str, Any]:
         """Fetch summary of domain reliability metrics for all tracked domains."""
         if not self.db_service:
             return {"status": "Database unavailable"}
-            
+
         try:
             cursor, conn = self.db_service.get_safe_cursor(per_call=True, dictionary=True)
             try:
                 # Top trusted domains
                 cursor.execute("SELECT domain, proven_count FROM source_reliability_metrics ORDER BY proven_count DESC LIMIT 10")
                 trusted = cursor.fetchall()
-                
+
                 # Top misinformation domains
                 cursor.execute("SELECT domain, misinfo_count FROM source_reliability_metrics ORDER BY misinfo_count DESC LIMIT 10")
                 misleading = cursor.fetchall()
-                
+
                 # General stats
                 cursor.execute("SELECT COUNT(*) as total_domains, SUM(proven_count) as total_proven, SUM(misinfo_count) as total_misinfo FROM source_reliability_metrics")
                 stats = cursor.fetchone()
-                
+
                 return {
                     "top_trusted": trusted,
                     "top_misleading": misleading,

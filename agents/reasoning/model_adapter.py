@@ -1,10 +1,12 @@
 """LLM-backed chain-of-thought helper for the Reasoning agent (Qwen)."""
 
 from __future__ import annotations
-import os
+
 import json
+import os
 import textwrap
 from typing import Any
+
 from agents.common.openai_adapter import OpenAIAdapter
 from common.observability import get_logger
 
@@ -19,7 +21,7 @@ SYSTEM_PROMPT = (
 class ReasoningModelAdapter:
     def __init__(self) -> None:
         self.enabled = os.environ.get("REASONING_DISABLE_MISTRAL", "0").lower() not in {"1", "true"}
-        
+
         self.adapter = OpenAIAdapter(
             name="reasoning_qwen",
             model=os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ"),
@@ -36,10 +38,10 @@ class ReasoningModelAdapter:
     ) -> dict[str, Any] | None:
         if not self.enabled:
             return None
-            
+
         facts_block = "\n".join(context_facts or [])
         user_block = f"Question: {query}\nFacts:\n{textwrap.shorten(facts_block, width=8000, placeholder='...') or 'None provided'}\n\nReturn valid JSON."
-        
+
         try:
             self.adapter.ensure_loaded()
             result = self.adapter.infer(user_block)

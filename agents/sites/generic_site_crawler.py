@@ -15,7 +15,7 @@ import os
 import xml.etree.ElementTree as ET
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlparse, urlunparse
 
@@ -425,7 +425,7 @@ class GenericSiteCrawler:
         hash_algorithm = os.environ.get("ARTICLE_URL_HASH_ALGO", "sha256")
         hash_candidate = normalized_url or canonical_url or url
         url_hash = hash_article_url(hash_candidate, algorithm=hash_algorithm)
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
 
         extraction_metadata: dict[str, Any] = {
             "strategy": self.site_config.crawling_strategy,

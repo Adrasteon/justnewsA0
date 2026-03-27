@@ -67,12 +67,13 @@ except Exception:
 from common.observability import get_logger
 
 try:
-    from .model_adapter import CriticModelAdapter as MistralAdapter
     from .model_adapter import (
         MODEL_ADAPTER_NAME as CRITIC_ADAPTER_NAME,
-        SYSTEM_PROMPT,
+    )
+    from .model_adapter import (
         CriticAssessment,
     )
+    from .model_adapter import CriticModelAdapter as MistralAdapter
 except Exception:  # pragma: no cover - optional dependency wiring
     CriticAssessment = None  # type: ignore
     MistralAdapter = None  # type: ignore

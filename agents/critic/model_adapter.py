@@ -55,7 +55,7 @@ class CriticModelAdapter:
             "on",
         }
         self.max_chars = int(os.environ.get("CRITIC_MAX_CHARS", "6000"))
-        
+
         self.adapter = OpenAIAdapter(
             name="critic_qwen",
             model=os.environ.get("VLLM_MODEL", "Qwen/Qwen2.5-14B-Instruct-AWQ"),
@@ -66,7 +66,7 @@ class CriticModelAdapter:
             max_tokens=400,
             timeout=50.0
         )
-        
+
         self._last_hash: int | None = None
         self._last_result: CriticAssessment | None = None
 
@@ -88,7 +88,7 @@ class CriticModelAdapter:
             self.adapter.ensure_loaded()
             result = self.adapter.infer(user_block)
             payload = self._parse_completion(result.get("text", ""))
-            
+
             assessment = self._normalize(payload)
             if assessment:
                 self._last_hash = content_hash

@@ -10,19 +10,23 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
 
-from common.observability import bootstrap_observability, get_logger
-from common.metrics import get_metrics
 from agents.common.mcp_bus_client import MCPBusClient
-from database.utils.migrated_database_utils import create_database_service, get_db_config
+from common.metrics import get_metrics
+from common.observability import bootstrap_observability, get_logger
+from database.utils.migrated_database_utils import (
+    create_database_service,
+    get_db_config,
+)
+
 from .engine import OrchestratorEngine
 from .runtime_config import (
     RUNTIME_KEY_REGISTRY,
-    RuntimeConfigStore,
     TIER_KEY_PREFIXES,
+    RuntimeConfigStore,
     extract_owner_overrides,
     get_lane_policy_runtime_examples,
 )
-from .tools import get_orchestrator_status, force_run_policy
+from .tools import force_run_policy, get_orchestrator_status
 
 # Initialize Logging
 bootstrap_observability("workflow_orchestrator")
@@ -57,10 +61,10 @@ async def lifespan(app: FastAPI):
 
     # Bind runtime store so engine can poll config version and apply owner overrides each tick
     engine.attach_runtime_store(runtime_store)
-    
+
     # Start Engine
     await engine.start()
-    
+
     # Register with MCP Bus
     try:
         mcp_client = MCPBusClient(base_url=MCP_BUS_URL)
@@ -74,7 +78,7 @@ async def lifespan(app: FastAPI):
         logger.warning(f"MCP Bus registration failed: {e}")
 
     yield
-    
+
     # Shutdown
     await engine.stop()
     logger.info("Workflow Orchestrator Agent Stopped.")

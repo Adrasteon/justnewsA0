@@ -143,7 +143,7 @@ class JustNewsMetrics:
             agent_name,
             self.display_name,
         )
-        
+
         # Initialize gauges with default values to ensure series existence
         self._initialize_gauge_defaults()
 
@@ -152,7 +152,7 @@ class JustNewsMetrics:
         try:
             # Initialize Active Connections
             self.active_connections.labels(
-                agent=self.agent_name, 
+                agent=self.agent_name,
                 agent_display_name=self.display_name
             ).set(0)
 
@@ -163,7 +163,7 @@ class JustNewsMetrics:
                 queue_type="main",
                 queue_display_name="Main Queue"
             ).set(0)
-            
+
             # Initialize Health (Healthy by default)
             self.agent_health_status.labels(
                 agent=self.agent_name,

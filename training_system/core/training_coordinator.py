@@ -17,13 +17,14 @@ import threading
 import time
 from collections import deque
 from dataclasses import dataclass
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import torch
 
 from common.observability import get_logger
 from database.utils.migrated_database_utils import create_database_service
+
 os.environ.setdefault("JUSTNEWS_DB_EMBEDDING_ENABLED", "0")
 
 # Lazy import placeholders for heavy training utilities
@@ -54,7 +55,7 @@ except ImportError:
     # Fallback log_feedback function if observability not available
     def log_feedback(event: str, details: dict):
         with open("training_feedback.log", "a", encoding="utf-8") as f:
-            f.write(f"{datetime.now(timezone.utc).isoformat()}\t{event}\t{details}\n")
+            f.write(f"{datetime.now(UTC).isoformat()}\t{event}\t{details}\n")
 
 
 logger = get_logger(__name__)
@@ -200,7 +201,7 @@ class OnTheFlyTrainingCoordinator:
             uncertainty_score=uncertainty_score,
             importance_score=importance_score,
             source_url=source_url,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             user_feedback=user_feedback,
             correction_priority=correction_priority,
         )
@@ -385,7 +386,7 @@ class OnTheFlyTrainingCoordinator:
                         accuracy_before=pre_update_performance,
                         accuracy_after=post_update_performance,
                         examples_trained=len(selected_examples),
-                        update_timestamp=datetime.now(timezone.utc),
+                        update_timestamp=datetime.now(UTC),
                     )
                     self.performance_history.append(performance_record)
 

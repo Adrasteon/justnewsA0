@@ -11,7 +11,7 @@ import re
 import statistics
 import sys
 from dataclasses import dataclass
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
 
@@ -121,7 +121,7 @@ class LogAnalyzer:
             AnalysisResult with findings and recommendations
         """
         if time_range is None:
-            end_time = datetime.now(timezone.utc)
+            end_time = datetime.now(UTC)
             start_time = end_time - timedelta(
                 hours=self.config["analysis_window_hours"]
             )
@@ -147,7 +147,7 @@ class LogAnalyzer:
             logging.error(f"Error performing {analysis_type.value} analysis: {e}")
             return AnalysisResult(
                 analysis_type=analysis_type,
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 time_range=time_range,
                 findings=[],
                 anomalies=[],
@@ -224,7 +224,7 @@ class LogAnalyzer:
 
         return AnalysisResult(
             analysis_type=AnalysisType.ERROR_RATE_ANALYSIS,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             time_range=(start_time, end_time),
             findings=findings,
             anomalies=anomalies,
@@ -321,7 +321,7 @@ class LogAnalyzer:
 
         return AnalysisResult(
             analysis_type=AnalysisType.PERFORMANCE_ANALYSIS,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             time_range=(start_time, end_time),
             findings=findings,
             anomalies=anomalies,
@@ -402,7 +402,7 @@ class LogAnalyzer:
 
         return AnalysisResult(
             analysis_type=AnalysisType.ANOMALY_DETECTION,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             time_range=(start_time, end_time),
             findings=findings,
             anomalies=anomalies,
@@ -436,7 +436,7 @@ class LogAnalyzer:
 
         return AnalysisResult(
             analysis_type=AnalysisType.PATTERN_RECOGNITION,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             time_range=(start_time, end_time),
             findings=findings,
             anomalies=[],
@@ -458,7 +458,7 @@ class LogAnalyzer:
 
         return AnalysisResult(
             analysis_type=AnalysisType.TREND_ANALYSIS,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             time_range=(start_time, end_time),
             findings=findings,
             anomalies=[],
@@ -577,7 +577,7 @@ class LogAnalyzer:
                 title=f"Anomaly Detected: {anomaly['type'].replace('_', ' ').title()}",
                 description=self._generate_anomaly_description(anomaly),
                 details=anomaly,
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 confidence_score=analysis_result.confidence_score,
                 affected_components=[anomaly.get("component", "unknown")],
             )
@@ -610,7 +610,7 @@ class LogAnalyzer:
 
     async def update_baselines(self, time_range_days: int = 7) -> None:
         """Update baseline metrics for anomaly detection"""
-        end_time = datetime.now(timezone.utc)
+        end_time = datetime.now(UTC)
         start_time = end_time - timedelta(days=time_range_days)
 
         # Update error rate baselines

@@ -20,7 +20,7 @@ from collections import deque
 from collections.abc import Iterable
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -669,7 +669,7 @@ def record_paywall_detection(
                     {
                         "skip_streak": new_skip_streak,
                         "total_skips": new_total_skips,
-                        "last_detected_at": datetime.now(timezone.utc).isoformat() + "Z",
+                        "last_detected_at": datetime.now(UTC).isoformat() + "Z",
                         "threshold": threshold,
                     }
                 )

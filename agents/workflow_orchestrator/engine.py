@@ -9,24 +9,25 @@ import json
 import os
 import random
 import time
-from datetime import datetime, timezone
-from typing import Any, List
+from datetime import UTC, datetime
+from typing import Any
 
 from common.observability import get_logger
-from .runtime_config import extract_owner_overrides
+
 from .policies import (
-    WorkflowPolicy,
-    IngestionToAnalysisPolicy,
     AnalysisToEmbeddingPolicy,
-    AnalysisToSummaryPolicy,
     AnalysisToFactCheckPolicy,
-    IncrementalClusteringPolicy,
+    AnalysisToSummaryPolicy,
     ClusterToSynthesisPolicy,
     HeavyClusterRetryPolicy,
+    IncrementalClusteringPolicy,
+    IngestionToAnalysisPolicy,
     SynthesisToCritiquePolicy,
     SynthesisToPublishingPolicy,
+    WorkflowPolicy,
 )
 from .resources import ResourceMonitor
+from .runtime_config import extract_owner_overrides
 
 logger = get_logger(__name__)
 
@@ -71,7 +72,7 @@ AUTONOMIC_REASON_METADATA: dict[str, dict[str, str]] = {
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def _env_bool(name: str, default: bool = False) -> bool:
@@ -94,7 +95,7 @@ class OrchestratorEngine:
     def __init__(self):
         self.running = False
         self.resource_monitor = ResourceMonitor()
-        self.policies: List[WorkflowPolicy] = []
+        self.policies: list[WorkflowPolicy] = []
         self.runtime_store = None
         self.runtime_config_version = 0
         self.last_runtime_sync_at: str | None = None
@@ -697,7 +698,7 @@ class OrchestratorEngine:
         if last_error_at:
             try:
                 parsed = datetime.fromisoformat(str(last_error_at).replace("Z", "+00:00"))
-                age_seconds = max(0.0, now_epoch - parsed.astimezone(timezone.utc).timestamp())
+                age_seconds = max(0.0, now_epoch - parsed.astimezone(UTC).timestamp())
                 recent_error = (
                     age_seconds < self.dynamic_policy_limit_recent_error_cooldown_seconds
                 )
@@ -792,7 +793,7 @@ class OrchestratorEngine:
         if last_error_at:
             try:
                 parsed = datetime.fromisoformat(str(last_error_at).replace("Z", "+00:00"))
-                age_seconds = max(0.0, now_epoch - parsed.astimezone(timezone.utc).timestamp())
+                age_seconds = max(0.0, now_epoch - parsed.astimezone(UTC).timestamp())
                 recent_error = (
                     age_seconds
                     < self.dynamic_policy_parallelism_recent_error_cooldown_seconds
@@ -850,7 +851,7 @@ class OrchestratorEngine:
             parsed = datetime.fromisoformat(str(last_error_at).replace("Z", "+00:00"))
             age_seconds = max(
                 0.0,
-                time.time() - parsed.astimezone(timezone.utc).timestamp(),
+                time.time() - parsed.astimezone(UTC).timestamp(),
             )
         except Exception:
             return policy_limit
@@ -877,7 +878,7 @@ class OrchestratorEngine:
 
     def _load_config(self):
         self.mcp_bus_url = os.environ.get("MCP_BUS_URL", "http://localhost:8000")
-        
+
         # Default Config
         self.config = {
             "polling_interval_seconds": 10,
@@ -889,12 +890,12 @@ class OrchestratorEngine:
                 "max_gpu_memory_percent": 95
             }
         }
-        
+
         # Override from system_config.json if available
         try:
             config_path = os.path.join(os.getcwd(), "config", "system_config.json")
             if os.path.exists(config_path):
-                with open(config_path, "r") as f:
+                with open(config_path) as f:
                     sys_config = json.load(f)
                     orch_config = sys_config.get("orchestrator", {})
                     self.config.update(orch_config)
@@ -1087,7 +1088,7 @@ class OrchestratorEngine:
                 parsed = datetime.fromisoformat(last_progress_at.replace("Z", "+00:00"))
                 seconds_since_last_progress = max(
                     0.0,
-                    now_epoch - parsed.astimezone(timezone.utc).timestamp(),
+                    now_epoch - parsed.astimezone(UTC).timestamp(),
                 )
             except Exception:
                 seconds_since_last_progress = None
@@ -1466,7 +1467,7 @@ class OrchestratorEngine:
             try:
                 sync_epoch = datetime.fromisoformat(
                     str(self.last_runtime_sync_at).replace("Z", "+00:00")
-                ).astimezone(timezone.utc).timestamp()
+                ).astimezone(UTC).timestamp()
                 age_seconds = max(0.0, now_epoch - sync_epoch)
                 if age_seconds > self.alert_staleness_seconds:
                     alerts["runtime_config_stale"] = {
@@ -1487,10 +1488,10 @@ class OrchestratorEngine:
             try:
                 apply_epoch = datetime.fromisoformat(
                     str(self._autonomic_last_apply_at).replace("Z", "+00:00")
-                ).astimezone(timezone.utc).timestamp()
+                ).astimezone(UTC).timestamp()
                 sync_epoch = datetime.fromisoformat(
                     str(self.last_runtime_sync_at).replace("Z", "+00:00")
-                ).astimezone(timezone.utc).timestamp()
+                ).astimezone(UTC).timestamp()
                 propagation_lag = max(0.0, sync_epoch - apply_epoch)
                 if propagation_lag > self.alert_propagation_lag_seconds:
                     alerts["apply_propagation_lag"] = {
@@ -1522,7 +1523,7 @@ class OrchestratorEngine:
             try:
                 last_epoch = datetime.fromisoformat(
                     str(last_progress_at).replace("Z", "+00:00")
-                ).astimezone(timezone.utc).timestamp()
+                ).astimezone(UTC).timestamp()
                 seconds_since_last_progress = max(0.0, time.time() - last_epoch)
             except Exception:
                 seconds_since_last_progress = 0.0
@@ -1585,7 +1586,7 @@ class OrchestratorEngine:
                 elapsed_ms = max(0.0, (time.time() - start_time) * 1000.0)
                 self.telemetry["tick"]["last_duration_ms"] = round(elapsed_ms, 3)
                 self.telemetry["tick"]["last_completed_at"] = _utc_now()
-            
+
             # Sleep remainder of interval
             elapsed = time.time() - start_time
             sleep_time = max(1.0, self.config["polling_interval_seconds"] - elapsed)
@@ -1615,7 +1616,7 @@ class OrchestratorEngine:
 
         # 2. Iterate Policies
         max_tasks = self.config["max_concurrent_tasks"]
-        
+
         for policy in self._ordered_policies_for_tick():
             policy_name = policy.name()
             policy_telemetry = self._ensure_policy_telemetry(policy_name)
@@ -1732,7 +1733,7 @@ class OrchestratorEngine:
                 seconds_since_last_progress = max(
                     0.0,
                     now_epoch
-                    - parsed.astimezone(timezone.utc).timestamp(),
+                    - parsed.astimezone(UTC).timestamp(),
                 )
             except Exception:
                 seconds_since_last_progress = None

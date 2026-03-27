@@ -79,7 +79,7 @@ class JournalistEngine:
             html = payload.get("html") if isinstance(payload, dict) else None
             title = payload.get("title") if isinstance(payload, dict) else None
             url = payload.get("url") if isinstance(payload, dict) else None
-            
+
             result = self._model_adapter.generate_story_brief(
                 markdown, html, url=url, title=title
             )

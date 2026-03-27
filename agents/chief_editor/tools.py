@@ -19,14 +19,15 @@ All functions include robust error handling, validation, and fallbacks.
 
 import json
 import os
-import time
 import re
+import time
 from datetime import datetime
-import mysql.connector
 from typing import Any
 
-from common.observability import get_logger
+import mysql.connector
+
 from agents.common.headline_adapter import HeadlineAdapter
+from common.observability import get_logger
 
 from .chief_editor_engine import ChiefEditorConfig, ChiefEditorEngine
 
@@ -1225,7 +1226,7 @@ def publish_story(story_id: str) -> dict[str, Any]:
                     slug = f"{slug_base[:40]}-{story_suffix}"
 
                 evidence = _resolve_publication_evidence(source, cursor=cursor)
-                
+
                 category = _derive_publication_category(source, title, summary, body, cursor=cursor)
                 observed_category = category
                 lane = _extract_publication_lane(source)
@@ -1257,7 +1258,7 @@ def publish_story(story_id: str) -> dict[str, Any]:
                     category = remediation["category"]
                     title = remediation["title"]
                     summary = remediation["summary"]
-                
+
                 now = datetime.now()
                 author = "Chief Editor"
                 score = 0.9  # Default score

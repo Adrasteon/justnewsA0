@@ -4,7 +4,7 @@ import logging
 import os
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -293,7 +293,7 @@ async def lifespan(app: FastAPI):
         "verify_claim",
         "fact_check",
     ]
-    
+
     client.register_agent(
         agent_name="fact_checker",
         agent_address=agent_address,
@@ -339,7 +339,7 @@ async def proxy_tool(tool_name: str, payload: dict):
             "confidence": response.get("confidence", 0.0),
             "explanation": response.get("explanation", ""),
             "source": "fact_checker_shim",
-            "checked_at": datetime.now(timezone.utc).isoformat(),
+            "checked_at": datetime.now(UTC).isoformat(),
             "trusted_sources": response.get("trusted_sources", []),
             "misleading_sources": response.get("misleading_sources", []),
         }

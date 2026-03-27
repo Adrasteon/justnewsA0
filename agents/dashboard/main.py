@@ -9,7 +9,7 @@ import json
 import os
 import time
 from contextlib import asynccontextmanager
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -332,7 +332,7 @@ def set_publishing_config(payload: dict, request: Request):
             audit_dir.mkdir(parents=True, exist_ok=True)
             audit_file = audit_dir / "publishing_config_changes.jsonl"
             audit_entry = {
-                "ts": datetime.now(timezone.utc).isoformat(),
+                "ts": datetime.now(UTC).isoformat(),
                 "payload": payload,
             }
             # If admin action was performed with a JWT, record admin identity
@@ -906,7 +906,7 @@ async def get_crawl_status():
         # Get details for only the most recent 5 jobs for the main dashboard to keep it fast
         job_details = {}
         top_jobs = list(jobs.keys())[-5:]
-        
+
         for job_id in top_jobs:
             try:
                 detail_payload = {
@@ -1106,7 +1106,7 @@ def get_public_article(article_id: str):
         except ValueError:
             aid = article_id
 
-        # Use the underlying find_article_by_id or similar if available, 
+        # Use the underlying find_article_by_id or similar if available,
         # but _get_article_by_id is what we found in the search service.
         article = service._get_article_by_id(aid)
         if not article:

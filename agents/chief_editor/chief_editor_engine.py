@@ -15,7 +15,7 @@ Key Features:
 import os
 import re
 from dataclasses import dataclass
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -112,7 +112,7 @@ class ChiefEditorConfig:
     priority_threshold: float = 0.8
     confidence_threshold: float = 0.6
 
-    # Performance parameters  
+    # Performance parameters
     max_length: int = 512
     device: str = "cpu"  # Default to CPU (inference on Qwen)
 
@@ -177,7 +177,7 @@ class ChiefEditorEngine:
 
     # DEPRECATED MODEL LOADERS - Kept for reference, not called
     # All replaced by Qwen LLM adapter
-    
+
     def _load_bert_quality_model(self):
         """DEPRECATED: BERT model replaced by Qwen.
         
@@ -247,7 +247,7 @@ class ChiefEditorEngine:
                 "CHIEF_EDITOR_FEEDBACK_LOG", "./feedback_chief_editor.log"
             )
             with open(feedback_log, "a", encoding="utf-8") as f:
-                timestamp = datetime.now(timezone.utc).isoformat()
+                timestamp = datetime.now(UTC).isoformat()
                 f.write(f"{timestamp}\t{event}\t{details}\n")
         except Exception as e:
             logger.error(f"Error logging feedback: {e}")
@@ -256,13 +256,13 @@ class ChiefEditorEngine:
         """Assess content quality using Qwen."""
         if not self.qwen_adapter:
             return self._fallback_quality_assessment(text)
-            
+
         result = self.qwen_adapter.perform_task("quality", text)
         if not result or not isinstance(result, dict) or "overall_quality" not in result:
              return self._fallback_quality_assessment(text)
 
         result["model"] = "qwen-14b"
-        
+
         self.log_feedback(
             "assess_content_quality_qwen",
             {"quality_score": result["overall_quality"], "text_length": len(text)},
@@ -273,7 +273,7 @@ class ChiefEditorEngine:
         """Categorize content using Qwen."""
         if not self.qwen_adapter:
             return self._fallback_categorization(text)
-            
+
         result = self.qwen_adapter.perform_task("categorize", text)
         if not result or not isinstance(result, dict) or "category" not in result:
             return self._fallback_categorization(text)
@@ -290,7 +290,7 @@ class ChiefEditorEngine:
         result["category"] = normalized
         result["confidence"] = normalized_confidence
         result["model"] = "qwen-14b"
-        
+
         self.log_feedback(
             "categorize_content_qwen",
             {"category": result["category"], "confidence": result["confidence"]},
@@ -301,13 +301,13 @@ class ChiefEditorEngine:
         """Analyze editorial sentiment using Qwen."""
         if not self.qwen_adapter:
             return self._fallback_sentiment_analysis(text)
-            
+
         result = self.qwen_adapter.perform_task("sentiment", text)
         if not result or not isinstance(result, dict) or "sentiment" not in result:
             return self._fallback_sentiment_analysis(text)
 
         result["model"] = "qwen-14b"
-        
+
         self.log_feedback(
             "analyze_editorial_sentiment_qwen",
             result
@@ -325,7 +325,7 @@ class ChiefEditorEngine:
         if not commentary or not isinstance(commentary, str):
             # Check if it returned a dict by mistake, though perform_task handles this
             return self._fallback_commentary_generation(text, context)
-            
+
         self.log_feedback(
             "generate_editorial_commentary_qwen",
             {

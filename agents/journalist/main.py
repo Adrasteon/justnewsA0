@@ -95,6 +95,7 @@ async def crawl_url(payload: dict):
 
 if __name__ == "__main__":
     import os
+
     import uvicorn
 
     port = int(os.environ.get("JOURNALIST_PORT", 8017))

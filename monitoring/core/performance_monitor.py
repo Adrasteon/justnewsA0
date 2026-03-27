@@ -9,7 +9,7 @@ import logging
 import os
 import sys
 from dataclasses import dataclass
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
 
@@ -263,7 +263,7 @@ class PerformanceMonitor:
 
             # Create snapshot
             snapshot = PerformanceSnapshot(
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 cpu_percent=cpu_percent,
                 memory_percent=memory.percent,
                 disk_read_bytes=disk_read,
@@ -278,7 +278,7 @@ class PerformanceMonitor:
 
             # Store snapshot (keep last 24 hours)
             self._snapshots.append(snapshot)
-            cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+            cutoff = datetime.now(UTC) - timedelta(hours=24)
             self._snapshots = [s for s in self._snapshots if s.timestamp > cutoff]
 
         except Exception as e:
@@ -356,7 +356,7 @@ class PerformanceMonitor:
             recent_snapshots = [
                 s
                 for s in self._snapshots
-                if s.timestamp > datetime.now(timezone.utc) - timedelta(minutes=10)
+                if s.timestamp > datetime.now(UTC) - timedelta(minutes=10)
             ]
 
             if len(recent_snapshots) < 3:
@@ -382,7 +382,7 @@ class PerformanceMonitor:
                 self._bottleneck_history.append(bottleneck)
 
                 # Keep only recent history
-                cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+                cutoff = datetime.now(UTC) - timedelta(hours=24)
                 self._bottleneck_history = [
                     b for b in self._bottleneck_history if b.timestamp > cutoff
                 ]
@@ -438,7 +438,7 @@ class PerformanceMonitor:
         recommendations = self._generate_recommendations(primary_bottleneck, latest)
 
         return BottleneckAnalysis(
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             primary_bottleneck=primary_bottleneck,
             severity=severity,
             confidence_score=confidence,
@@ -511,7 +511,7 @@ class PerformanceMonitor:
 
                 # Check cooldown
                 if alert_key in self._alert_cooldowns:
-                    if datetime.now(timezone.utc) < self._alert_cooldowns[alert_key]:
+                    if datetime.now(UTC) < self._alert_cooldowns[alert_key]:
                         continue  # Still in cooldown
                     else:
                         del self._alert_cooldowns[alert_key]
@@ -532,7 +532,7 @@ class PerformanceMonitor:
                 )
 
                 # Set cooldown
-                self._alert_cooldowns[alert_key] = datetime.now(timezone.utc) + timedelta(
+                self._alert_cooldowns[alert_key] = datetime.now(UTC) + timedelta(
                     seconds=threshold.cooldown_seconds
                 )
 
@@ -586,7 +586,7 @@ class PerformanceMonitor:
             message=f"Performance threshold exceeded: {metric.value} = {current_value:.2f} (threshold: {threshold:.2f})",
             value=current_value,
             threshold=threshold,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             labels={"metric": metric.value, "agent": self.agent_name},
         )
 
@@ -594,7 +594,7 @@ class PerformanceMonitor:
 
     def get_performance_report(self, hours: int = 1) -> dict[str, Any]:
         """Get performance report for the last N hours"""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = datetime.now(UTC) - timedelta(hours=hours)
 
         recent_snapshots = [s for s in self._snapshots if s.timestamp > cutoff]
 
@@ -662,7 +662,7 @@ class PerformanceMonitor:
         recent_bottlenecks = [
             b
             for b in self._bottleneck_history
-            if b.timestamp > datetime.now(timezone.utc) - timedelta(hours=1)
+            if b.timestamp > datetime.now(UTC) - timedelta(hours=1)
         ]
 
         for bottleneck in recent_bottlenecks[-3:]:  # Last 3 bottlenecks

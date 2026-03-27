@@ -5,7 +5,6 @@ Shared logic for all agents to register with the central MCP Bus.
 
 import logging
 import threading
-import time
 
 import requests
 
@@ -26,10 +25,10 @@ class MCPBusClient:
             "address": agent_address,
             "tools": tools
         }
-        
+
         # Initial attempt (synchronous)
         success = self._attempt_registration(registration_data)
-        
+
         # Start background monitor to maintain registration / recover from bus restarts
         self._start_monitor(registration_data)
 
@@ -58,7 +57,7 @@ class MCPBusClient:
                 # Poll interval: 30 seconds
                 if self._stop_event.wait(timeout=30):
                     break
-                
+
                 # Check health or just re-register?
                 # Re-registering is safer as it handles Bus restarts (which clear registry)
                 try:

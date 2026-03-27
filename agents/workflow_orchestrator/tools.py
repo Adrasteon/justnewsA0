@@ -2,7 +2,8 @@
 Tools for the Workflow Orchestrator.
 """
 
-from typing import Any, Dict
+from typing import Any
+
 from common.observability import get_logger
 
 logger = get_logger(__name__)
@@ -10,7 +11,7 @@ logger = get_logger(__name__)
 # References to the engine provided by main.py via injection or global singleton pattern
 # For simplicity in this architecture, we'll assume the engine is accessible or passed.
 
-def get_orchestrator_status(engine) -> Dict[str, Any]:
+def get_orchestrator_status(engine) -> dict[str, Any]:
     """Get the current status of the orchestrator."""
     stats = engine.resource_monitor.get_stats()
     snapshot = engine.get_status_snapshot()
@@ -29,13 +30,13 @@ def get_orchestrator_status(engine) -> Dict[str, Any]:
         "signals": snapshot.get("signals", {}),
     }
 
-def force_run_policy(engine, policy_name: str) -> Dict[str, Any]:
+def force_run_policy(engine, policy_name: str) -> dict[str, Any]:
     """Force a policy to run immediately (async triggered, returns receipt)."""
     # This matches a specific policy by name
     policy = next((p for p in engine.policies if p.name() == policy_name), None)
     if not policy:
         return {"status": "error", "message": f"Policy '{policy_name}' not found."}
-    
+
     # In a real async implementation we might want to await it or schedule it.
     # checking condition sync logic:
     try:

@@ -25,7 +25,7 @@ import os
 import re
 import time
 from dataclasses import dataclass
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -142,7 +142,7 @@ class SynthesizerConfig:
     temperature: float = 0.8
     top_p: float = 0.9
     batch_size: int = 4
-    
+
     # Device configuration
     device: str = "cpu"  # Forced CPU to relieve VRAM pressure for VLLM
 
@@ -291,7 +291,7 @@ class SynthesizerEngine:
 
         # Finalized: if transformers are available but critical pieces are missing, raise
         # BART check removed
-        
+
         self.is_initialized = True
         return True
 
@@ -477,7 +477,7 @@ class SynthesizerEngine:
         """
         if os.environ.get("SYNTHESIZER_ENABLE_BERTOPIC") != "1":
             logger.info("🚫 BERTopic model loading disabled (set SYNTHESIZER_ENABLE_BERTOPIC=1 to enable)")
-            return 
+            return
 
         if not BERTOPIC_AVAILABLE or not self.embedding_model:
             logger.warning("⚠️ BERTopic not available, using fallback clustering")
@@ -525,7 +525,7 @@ class SynthesizerEngine:
         """
         if not self.is_initialized:
             raise RuntimeError("not initialized")
-            
+
         start_time = time.time()
 
         try:
@@ -546,14 +546,14 @@ class SynthesizerEngine:
             bertopic = getattr(self, "bertopic_model", None) or self.models.get(
                 "bertopic"
             )
-            
+
             clusters = []
             topic_info = []
 
             if bertopic:
                 try:
                     topics, probs = bertopic.fit_transform(texts)
-                    
+
                     # Build clusters from topic ids
                     topics_list = list(topics)
                     unique_topics = set(topics_list)
@@ -564,7 +564,7 @@ class SynthesizerEngine:
                             ]
                             if cluster_indices:
                                 clusters.append(cluster_indices)
-                                
+
                     if hasattr(bertopic, "get_topic_info"):
                         try:
                             topic_info = bertopic.get_topic_info()
@@ -574,7 +574,7 @@ class SynthesizerEngine:
                     if not clusters:
                         logger.warning("BERTopic found 0 clusters (all noise). Attempting fallback.")
                         bertopic = None  # Trigger fallback
-                        
+
                 except Exception as e:
                     logger.warning(f"BERTopic fit_transform failed: {e}")
                     bertopic = None
@@ -608,7 +608,7 @@ class SynthesizerEngine:
                                     "clusters": clusters,
                                     "topic_info": [],
                                 }
-                            
+
                             # Clean fallback using the internal helper
                             res = await self._cluster_articles_kmeans(texts, n_clusters, start_time)
                             logger.info(f"DEBUG: KMeans result success={res.success} clusters={len(res.metadata.get('clusters', []))}")
@@ -631,7 +631,7 @@ class SynthesizerEngine:
 
                     except Exception as e:
                          logger.error(f"Fallback clustering failed: {e}")
-                
+
                 logger.error(
                     "No clustering methods available (BERTopic unavailable, KMeans not configured)"
                 )
@@ -1041,7 +1041,7 @@ class SynthesizerEngine:
                 model_used="simple_text_extraction",
                 confidence=0.6,
             )
-            
+
             # Legacy code below (unreachable - kept for reference)
 
 
@@ -1491,7 +1491,7 @@ class SynthesizerEngine:
         """Log feedback for training and monitoring."""
         try:
             with open(self.config.feedback_log, "a", encoding="utf-8") as f:
-                timestamp = datetime.now(timezone.utc).isoformat()
+                timestamp = datetime.now(UTC).isoformat()
                 f.write(f"{timestamp}\t{event}\t{details}\n")
         except Exception as e:
             logger.warning(f"Feedback logging failed: {e}")
