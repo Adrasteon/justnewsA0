@@ -2,7 +2,7 @@
 
 This doc covers the recommended testing strategies for the GPU orchestrator: quick local unit/integration tests using
 in-memory emulators, deeper systemd- based containers for system-level testing, and CI configuration that runs tests in
-the canonical conda environment used by developers.
+the canonical UV/venv environment used by developers.
 
 Why this matters
 
@@ -18,7 +18,7 @@ Test tiers
 
 - Fast, deterministic, no external infra required
 
-- Use the pytest helper script to ensure you run tests inside the project's conda environment:
+- Use the pytest helper script to ensure you run tests inside the project's UV/venv environment:
 
 ./scripts/dev/pytest.sh [pytest args]
 

@@ -18,7 +18,7 @@ jobs:
           SERVICE_DIR=$GITHUB_WORKSPACE
           PYTHON_BIN=/usr/bin/python3
           JUSTNEWS_DATA_MOUNT=$GITHUB_WORKSPACE
-          # Skip aggressive conda-based checks in CI jobs
+          # Skip aggressive environment-enforcement checks in CI jobs
           CHROMADB_REQUIRE_CANONICAL=0
           ENV
 

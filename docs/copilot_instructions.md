@@ -38,7 +38,7 @@ environment system with phase-specific variants:
 - `justnews-py312-phase3` (Synthesis & LLM inference, GPU-heavy)
 - `justnews-py312-phase4` (Publication & CMS push, CPU-only)
 
-For local development, use `scripts/dev/select_phase_env.sh --phase N` to activate a specific phase, or set `CANONICAL_ENV` directly.
+For local development, use the project `.venv` (`make env-bootstrap`) and run commands via `.venv/bin/python`.
 
 When invoking scripts or running code snippets in documentation, prefer either:
 
@@ -83,7 +83,7 @@ Behavioral guidelines for assistants -----------------------------------
 Package installation policy ---------------------------
 
 - When performing package installs for this project, prefer `conda install` or `mamba install` targeting the canonical
-  conda environment (`${CANONICAL_ENV:-justnews-py312-phase1}`) and `conda-forge`/official channels.
+  UV/venv environment (`.venv`) and `requirements-bootstrap.txt` for dependency resolution.
 
 - Only use `pip`as a last resort when a required package or specific wheel is not available via conda; if`pip`is used,
   document the reason and pin the exact version/wheel in the PR and add an update to`environment.yml` where appropriate.

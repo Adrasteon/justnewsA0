@@ -1,9 +1,7 @@
-name: build-conda-protobuf
+name: build-legacy-protobuf-wheel
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main, codemod/utcnow-agents ]
 
 jobs:
   build:
@@ -12,26 +10,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Miniforge
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          miniforge-variant: Mambaforge
-          miniforge-version: latest
-          auto-activate-base: false
+          python-version: '3.12'
 
-      - name: Install conda-build & dependencies
+      - name: Build protobuf wheel (legacy compatibility)
         run: |
-          mamba install -y -n base -c conda-forge conda-build python=3.12 cmake pip setuptools wheel
-
-      - name: Build protobuf conda recipe
-        run: |
-          conda-build conda/recipes/protobuf --output-folder /tmp/conda-bld || true
+          python -m pip install --upgrade pip build setuptools wheel
+          python -m build conda/recipes/protobuf || true
 
       - name: Show built artifacts
-        run: ls -la /tmp/conda-bld || true
+        run: |
+          find conda/recipes/protobuf -maxdepth 3 -type f | sort
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: protobuf-conda-build
-          path: /tmp/conda-bld
+          name: protobuf-legacy-build
+          path: conda/recipes/protobuf

@@ -17,4 +17,4 @@ jobs:
       - name: Install markdownlint-cli
         run: npm install -g markdownlint-cli@0.35.0
       - name: Run markdownlint
-        run: markdownlint "**/*.md" || true
+        run: markdownlint "**/*.md"

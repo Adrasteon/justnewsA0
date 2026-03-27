@@ -6,10 +6,10 @@ Quick health check for MariaDB, ChromaDB, and vLLM services
 Run from /app: python .devcontainer/diagnostic.py
 """
 
-import socket
-import json
-import sys
 import os
+import socket
+import sys
+
 
 def check_service(host, port, service_name, http_endpoint=None):
     """Check service availability via socket and optionally HTTP"""
@@ -21,14 +21,14 @@ def check_service(host, port, service_name, http_endpoint=None):
         "http": None,
         "status": "unknown"
     }
-    
+
     # Socket connectivity check
     try:
         sock = socket.create_connection((host, port), timeout=2)
         sock.close()
         result["socket"] = "✓ connected"
         result["status"] = "partial"
-    except socket.timeout:
+    except TimeoutError:
         result["socket"] = "✗ timeout"
         return result
     except ConnectionRefusedError:
@@ -37,7 +37,7 @@ def check_service(host, port, service_name, http_endpoint=None):
     except Exception as e:
         result["socket"] = f"✗ error: {str(e)[:40]}"
         return result
-    
+
     # HTTP health check if endpoint provided
     if http_endpoint:
         try:
@@ -51,7 +51,7 @@ def check_service(host, port, service_name, http_endpoint=None):
             result["http"] = f"✗ HTTP {e.code}"
         except Exception as e:
             result["http"] = f"✗ {str(e)[:40]}"
-    
+
     return result
 
 def main():
@@ -59,28 +59,28 @@ def main():
     print("╔════════════════════════════════════════════════════╗")
     print("║   JustNews Service Diagnostic                      ║")
     print("╚════════════════════════════════════════════════════╝\n")
-    
+
     # Services to check
     services = [
         ("mariadb", 3306, "MariaDB", None),
         ("chromadb", 3307, "ChromaDB", "/api/v1/heartbeat"),
         ("vllm", 8001, "vLLM", "/v1/models"),
     ]
-    
+
     print("Service Status:")
     print("─" * 70)
-    
+
     results = []
     all_healthy = True
-    
+
     for host, port, name, http_endpoint in services:
         result = check_service(host, port, name, http_endpoint)
         results.append(result)
-        
+
         socket_status = result["socket"]
         http_status = result["http"] if result["http"] else "—"
         service_status = result["status"]
-        
+
         if service_status == "healthy":
             indicator = "✓"
         elif service_status == "partial":
@@ -89,11 +89,11 @@ def main():
         else:
             indicator = "✗"
             all_healthy = False
-        
+
         print(f"{indicator} {name:12} → {socket_status:20} {http_status:15}")
-    
+
     print("─" * 70)
-    
+
     # Summary
     print("\nSummary:")
     if all_healthy:
@@ -102,7 +102,7 @@ def main():
     else:
         partial = sum(1 for r in results if r["status"] == "partial")
         unhealthy = sum(1 for r in results if r["status"] == "unknown")
-        
+
         if unhealthy > 0:
             print(f"✗ {unhealthy} service(s) not responding")
             if "vllm" in [r["service"] for r in results if r["status"] == "unknown"]:
@@ -111,7 +111,7 @@ def main():
         else:
             print(f"⚠ {partial} service(s) responding but health checks pending")
             exit_code = 0
-    
+
     # Environment check
     print("\nEnvironment:")
     env_vars = ["MARIADB_HOST", "CHROMADB_PORT", "VLLM_HOST", "HF_TOKEN"]
@@ -123,28 +123,28 @@ def main():
             status = "✗"
         else:
             status = "✓"
-        
+
         display_val = val if var != "HF_TOKEN" else f"{val[:15]}..." if len(val) > 15 else val
         print(f"  {status} {var}: {display_val}")
-    
+
     # Troubleshooting hints
     print("\nTroubleshooting:")
     if not all_healthy:
         mariadb_result = next(r for r in results if r["service"] == "MariaDB")
         if mariadb_result["status"] == "unknown":
             print("  1. MariaDB not responding → docker compose restart mariadb")
-        
+
         chromadb_result = next(r for r in results if r["service"] == "ChromaDB")
         if chromadb_result["status"] == "unknown":
             print("  2. ChromaDB not responding → docker compose restart chromadb")
-        
+
         vllm_result = next(r for r in results if r["service"] == "vLLM")
         if vllm_result["status"] == "unknown":
             print("  3. vLLM not responding:")
             print("     - First start: Wait 2-5 min for model download")
             print("     - Check logs: docker compose logs vllm -f")
             print("     - If stuck: docker compose restart vllm")
-    
+
     print(f"\nExit code: {exit_code}")
     return exit_code
 

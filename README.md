@@ -46,7 +46,7 @@ For the quickest, most reliable development environment setup:
 
 ### Prerequisites
 
-- Python 3.12+ (via conda/mamba)
+- Python 3.12+ (UV-managed .venv recommended)
 - MariaDB 10.11+
 - Chrome/Chromium (for Crawl4AI)
 - GPU with CUDA (recommended for local inference)
@@ -77,7 +77,7 @@ python -m pytest -q
 /app/.venv/bin/python -m pytest -q
 ```
 
-Conda environments are still supported as a legacy fallback, but UV/venv is the primary development path.
+Conda environments are deprecated; UV/venv is the supported development path.
 
 For **local manual setup**, see [docs/dev-setup.md](docs/dev-setup.md) for detailed options:
 
@@ -92,16 +92,18 @@ uv venv .venv
 source .venv/bin/activate  # or .venv\Scripts\activate on Windows
 uv pip install -r requirements-bootstrap.txt
 
-# Option 2: Using Conda/Mamba
-mamba env create -f environment.yml -n justnews-py312
-mamba activate justnews-py312
+# Option 2 (deprecated): Legacy Conda/Mamba path
+# See docs/operations/CONDA_ENVIRONMENT_DEPRECATION.md for migration/removal steps.
 
 # Initialize database
 source global.env  # Load configuration
 python manage.py migrate
 
-# Start the system
-sudo infrastructure/systemd/canonical_system_startup.sh
+# Start the system (canonical)
+./start_all_services.sh
+
+# Legacy systemd startup (advanced/ops only)
+# sudo infrastructure/systemd/canonical_system_startup.sh
 ```
 
 ## 🏗️ System Architecture

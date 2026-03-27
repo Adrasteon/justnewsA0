@@ -3,7 +3,6 @@ name: CI — Orchestrator-only tests
 on:
   workflow_dispatch: {}
   push:
-    # Also auto-run this workflow when orchestrator code or tests change
     paths:
       - 'agents/gpu_orchestrator/**'
       - 'tests/unit/test_gpu_orchestrator_*'
@@ -14,42 +13,35 @@ jobs:
     name: "Orchestrator: unit + integration (targeted)"
     runs-on: ubuntu-latest
     env:
-      CANONICAL_ENV: justnews-py312-phase2
-      # Which CUDA toolchain short we expect for bitsandbytes wheels. CI first
-      # tries to fetch a prebuilt wheel from GH artifacts before falling back to
-      # pip-based installs if not available.
       BNB_CUDA_VERSION: 122
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Miniconda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          auto-activate-base: false
 
-      - name: Create / update project environment (using mamba if available)
+      - name: Install dependencies
         run: |
-          conda install -n base -c conda-forge mamba -y || true
-          conda env list
-          mamba env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || mamba env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || true
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-bootstrap.txt
 
       - name: Attempt to fetch latest bitsandbytes wheel from GitHub Actions artifacts
         run: |
           set -euo pipefail
-          # Try to find a build-bnb-wheels run that uploaded a matching artifact name
           echo "Searching GH actions artifacts for bitsandbytes-wheel-${BNB_CUDA_VERSION}..."
           if command -v jq >/dev/null 2>&1; then
             runs_url="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/.github/workflows/build-bnb-wheels.yml/runs?status=success&per_page=20"
             artifact_url=""
-            runs_json=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" "$runs_url") || runs_json=""
+            runs_json=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$runs_url") || runs_json=""
             if [ -z "$runs_json" ]; then
               echo "no runs json returned" && exit 0
             fi
             for run_id in $(echo "$runs_json" | jq -r '.workflow_runs[].id' || true); do
               arti_url="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}/artifacts"
-              arti_json=$(curl -s -H "Authorization: Bearer ${GITHUB_TOKEN}" "$arti_url" || true)
+              arti_json=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "$arti_url" || true)
               candidate=$(echo "$arti_json" | jq -r '.artifacts[] | select(.name==("bitsandbytes-wheel-'${BNB_CUDA_VERSION}'")) | .archive_download_url' || true)
               if [ -n "$candidate" ] && [ "$candidate" != "null" ]; then
                 artifact_url=$candidate
@@ -60,10 +52,10 @@ jobs:
             if [ -n "$artifact_url" ]; then
               echo "Found artifact: $artifact_url"
               mkdir -p wheel-cache
-              curl -L -H "Authorization: Bearer ${GITHUB_TOKEN}" -o wheel-cache/bnb-artifact.zip "$artifact_url"
+              curl -L -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -o wheel-cache/bnb-artifact.zip "$artifact_url"
               unzip -q wheel-cache/bnb-artifact.zip -d wheel-cache || true
               if ls -1 wheel-cache/*.whl >/dev/null 2>&1; then
-                ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} python -m pip install --no-deps --upgrade wheel-cache/*.whl || true
+                python -m pip install --no-deps --upgrade wheel-cache/*.whl || true
               else
                 echo "No whl file found inside artifact"
               fi
@@ -71,17 +63,10 @@ jobs:
               echo "No GH Actions artifact found for bitsandbytes-wheel-${BNB_CUDA_VERSION}"
             fi
           else
-            echo "jq not available; skipping GH artifact fetch";
+            echo "jq not available; skipping GH artifact fetch"
           fi
 
-      - name: Install pip deps in conda env (fallback)
+      - name: Run orchestrator tests
         run: |
-          ./scripts/run_with_env.sh mamba run -n ${CANONICAL_ENV} python -m pip install --upgrade pip || ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} python -m pip install --upgrade pip
-          ./scripts/run_with_env.sh mamba run -n ${CANONICAL_ENV} python -m pip install -r requirements.txt || ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} python -m pip install -r requirements.txt || true
-
-      - name: Run orchestrator tests (conda)
-        run: |
-          # Run only the new orchestrator unit tests and a focused integration test
-          ./scripts/run_with_env.sh mamba run -n ${CANONICAL_ENV} pytest -q tests/unit/test_gpu_orchestrator_* -q || ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} pytest -q tests/unit/test_gpu_orchestrator_* -q
-          # targeted integration smoke test that exercises claim concurrency
-          ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} pytest -q tests/integration/test_claim_concurrency.py -q || true
+          pytest -q tests/unit/test_gpu_orchestrator_* -q
+          pytest -q tests/integration/test_claim_concurrency.py -q || true

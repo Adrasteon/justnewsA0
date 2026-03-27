@@ -69,7 +69,7 @@ Testing guidance
   implements the contract deterministically.
 
 - Integration / dry-run tests: ensure adapters behave safely in dry-run mode and produce consistent, schema-compatible
-  outputs. Use the `PYTHONPATH=. scripts/dev/run_pytest_conda.sh <tests>`helper to run tests inside the canonical conda
+  outputs. Use `PYTHONPATH=. .venv/bin/python -m pytest <tests>` to run tests inside the canonical UV/venv
   environment (`${CANONICAL_ENV:-justnews-py312-phase1}`) so CI/local runs are identical.
 
 - CI: include adapter unit tests and dry-run adapter smoke tests in PR jobs. For real-provider tests (OpenAI/HF), gate
@@ -159,7 +159,7 @@ Repository templates
 1. **Document + register** — Update `docs/model-adapter-playbook.md` (status + next steps) and this spec if the new
    adapter introduces fresh patterns or requirements.
 
-1. **Run canonical tests** — Use `./scripts/dev/run_pytest_conda.sh tests/adapters/*`so the
+1. **Run canonical tests** — Use `.venv/bin/python -m pytest tests/adapters/*` so the
    canonical`${CANONICAL_ENV:-justnews-py312-phase1}` env validates your changes before opening a PR.
 
 Following this recipe keeps adapters testable, dry-run friendly, and aligned with the shared BaseAdapter utilities.

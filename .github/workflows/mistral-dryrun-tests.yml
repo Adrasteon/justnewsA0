@@ -7,27 +7,23 @@ jobs:
   mistral-dryrun:
     name: Mistral adapter dry-run tests
     runs-on: ubuntu-latest
-    env:
-      CANONICAL_ENV: justnews-py312-phase3
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Miniconda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          auto-activate-base: false
 
-      - name: Create / update project environment (using mamba if available)
+      - name: Install dependencies
         run: |
-          conda install -n base -c conda-forge mamba -y || true
-          conda env list
-          mamba env create -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || mamba env update -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || conda env create -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || true
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-bootstrap.txt
 
-      - name: Run adapter + mistral dry-run tests (conda)
+      - name: Run adapter + mistral dry-run tests
         run: |
-          ./scripts/run_with_env.sh mamba run -n ${CANONICAL_ENV} pytest -q || ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} pytest -q \
+          pytest -q \
             tests/adapters \
             tests/agents/test_mistral_adapters.py \
             tests/agents/synthesizer/test_synthesizer_mistral_integration.py \
@@ -41,10 +37,8 @@ jobs:
   adapter-provider-integration:
     name: Adapter provider integration (gated)
     runs-on: ubuntu-latest
-    # Only run when provider secrets or hints are present
     if: ${{ secrets.OPENAI_API_KEY != '' || secrets.HF_TEST_MODEL != '' }}
     env:
-      CANONICAL_ENV: justnews-py312-phase3
       RUN_PROVIDER_TESTS: 1
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       HF_TEST_MODEL: ${{ secrets.HF_TEST_MODEL }}
@@ -52,18 +46,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Miniconda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          auto-activate-base: false
 
-      - name: Create / update project environment (using mamba if available)
+      - name: Install dependencies
         run: |
-          conda install -n base -c conda-forge mamba -y || true
-          conda env list
-          mamba env create -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || mamba env update -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || conda env create -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase3.yml -n ${CANONICAL_ENV} || true
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-bootstrap.txt
 
       - name: Run provider integration tests (OpenAI/HF)
         run: |
-          ./scripts/run_with_env.sh mamba run -n ${CANONICAL_ENV} pytest -q tests/adapters/test_openai_adapter_integration.py tests/adapters/test_hf_adapter_integration.py -q || ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} pytest -q tests/adapters/test_openai_adapter_integration.py tests/adapters/test_hf_adapter_integration.py -q
+          pytest -q tests/adapters/test_openai_adapter_integration.py tests/adapters/test_hf_adapter_integration.py -q

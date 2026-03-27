@@ -19,7 +19,7 @@ configuration, secrets management, and troubleshooting
 
 - Phase 1: Python 3.12 & Miniconda installation
 
-- Phase 2: Conda environment creation (justnews-py312)
+- Phase 2: UV .venv environment creation
 
 - Phase 3: Global environment configuration setup
 

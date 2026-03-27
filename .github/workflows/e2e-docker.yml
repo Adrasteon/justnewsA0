@@ -11,8 +11,6 @@ on:
 jobs:
   e2e-docker:
     runs-on: ubuntu-latest
-    env:
-      CANONICAL_ENV: justnews-py312-phase2
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,44 +45,31 @@ jobs:
           chmod +x scripts/dev/e2e_smoke.sh
           scripts/dev/e2e_smoke.sh
 
-      - name: Install Miniconda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-          auto-activate-base: false
+          python-version: ${{ github.event.inputs.python_version }}
 
-      - name: Create / update project environment (using mamba if available)
+      - name: Install dependencies
         run: |
-          conda install -n base -c conda-forge mamba -y || true
-          conda env list
-          mamba env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || mamba env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env create -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || conda env update -f conda/environment.phase2.yml -n ${CANONICAL_ENV} || true
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-bootstrap.txt
 
-      - name: Install dependencies (conda)
+      - name: Run representative E2E smoke tests
         run: |
-          ./scripts/run_with_env.sh mamba run -n ${CANONICAL_ENV} python -m pip install --upgrade pip || ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} python -m pip install --upgrade pip
-          ./scripts/run_with_env.sh mamba run -n ${CANONICAL_ENV} python -m pip install -r requirements.txt || ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} python -m pip install -r requirements.txt || true
+          pytest -q tests/e2e/test_docker_poc_representative.py -q -s
 
-      - name: Install Python & deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-${{ github.event.inputs.python_version }} python3-pip
-          python3 -m pip install -r requirements.txt
-
-      - name: Run representative E2E smoke tests (conda)
-        run: |
-          ./scripts/run_with_env.sh mamba run -n ${CANONICAL_ENV} pytest -q tests/e2e/test_docker_poc_representative.py -q -s || ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} pytest -q tests/e2e/test_docker_poc_representative.py -q -s
-
-      - name: Run full E2E tests (conda)
+      - name: Run full E2E tests
         run: |
           export MARIADB_HOST=127.0.0.1
           export MARIADB_PORT=13306
           export MARIADB_DB=justnews_test
           export MARIADB_USER=justnews
-          export MARIADB_PASSWORD=test
+          export MARIADB_PASSWORD=justnews123
           export REDIS_URL=redis://127.0.0.1:16379
           export E2E_REAL=1
           export PYTEST_RUNNING=1
-          ./scripts/run_with_env.sh mamba run -n ${CANONICAL_ENV} pytest tests/e2e -q -s || ./scripts/run_with_env.sh conda run -n ${CANONICAL_ENV} pytest tests/e2e -q -s
+          pytest tests/e2e -q -s
 
       - name: Tear down
         if: always()

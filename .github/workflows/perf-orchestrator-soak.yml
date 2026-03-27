@@ -26,9 +26,17 @@ jobs:
       - name: Ensure script executable
         run: chmod +x scripts/perf/orchestrator_soak.sh
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-bootstrap.txt
+
       - name: Run orchestrator soak
-        env:
-          CANONICAL_ENV: justnews-py312-phase3
         run: |
           ./scripts/perf/orchestrator_soak.sh --requests ${{ github.event.inputs.requests }} $([[ "${{ github.event.inputs.sweep }}" == "1" ]] && echo --sweep --sweep-max 2) --model "${{ github.event.inputs.model }}"
 
