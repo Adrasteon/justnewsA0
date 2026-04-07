@@ -1,0 +1,22 @@
+{
+  "dataset_version": "test-fixture-1",
+  "generated_at": "2025-10-25T12:00:00Z",
+  "facts": [
+    {
+      "fact_id": "fact-2025-10-25-ap-election-001",
+      "article_id": "article-2025-10-25-ap-001",
+      "cluster_id": "cluster-2025-10-election-security-001",
+      "evidence_ids": ["evidence-2025-10-25-ap-001"],
+      "last_updated": "2025-10-25T12:00:00Z"
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": "cluster-2025-10-election-security-001",
+      "member_articles": [
+        {"article_id": "article-2025-10-25-ap-001"},
+        {"article_id": "article-2025-10-24-reuters-003"}
+      ]
+    }
+  ]
+}

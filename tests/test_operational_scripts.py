@@ -175,10 +175,8 @@ class TestDeploymentScripts:
         """Test service startup script execution"""
         mock_run.return_value = Mock(returncode=0, stdout="Services started", stderr="")
 
-        # Simulate starting services
-        result = mock_run(
-            ["bash", "scripts/start_services_daemon.sh"], capture_output=True, text=True
-        )
+        # Simulate starting services via canonical Docker wrapper
+        result = mock_run(["bash", "start_all_services.sh"], capture_output=True, text=True)
 
         assert result.returncode == 0
         assert "Services started" in result.stdout
@@ -188,10 +186,8 @@ class TestDeploymentScripts:
         """Test service shutdown script execution"""
         mock_run.return_value = Mock(returncode=0, stdout="Services stopped", stderr="")
 
-        # Simulate stopping services
-        result = mock_run(
-            ["bash", "scripts/stop_services.sh"], capture_output=True, text=True
-        )
+        # Simulate stopping services via canonical Docker wrapper
+        result = mock_run(["bash", "stop_all_services.sh"], capture_output=True, text=True)
 
         assert result.returncode == 0
         assert "Services stopped" in result.stdout

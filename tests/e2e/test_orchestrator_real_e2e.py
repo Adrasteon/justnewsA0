@@ -16,6 +16,7 @@ requires_real_e2e = pytest.mark.skipif(
 )
 
 
+@requires_real_e2e
 def test_e2e_job_submission_and_processing():
     """Submit a job to the real Redis + MariaDB and verify a Worker processing pass completes the job.
 

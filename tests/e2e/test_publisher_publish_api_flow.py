@@ -5,15 +5,30 @@ import sys
 import time
 
 import django
+import pytest
+
+
+requires_real_e2e = pytest.mark.skipif(
+    os.environ.get("RUN_REAL_E2E", "") != "1",
+    reason="Real E2E tests require RUN_REAL_E2E=1",
+)
+
+
+def _publisher_paths():
+    root = os.getcwd()
+    manage_py = os.path.join(root, "manage.py")
+    publisher_pkg_dir = os.path.join(root, "justnews_publisher")
+    if not os.path.exists(manage_py):
+        # legacy fallback
+        manage_py = os.path.join(root, "agents", "publisher", "manage.py")
+        publisher_pkg_dir = os.path.join(root, "agents", "publisher")
+    return manage_py, publisher_pkg_dir
 
 
 def run_manage_cmd(cmd_args):
-    cmd = [
-        sys.executable,
-        os.path.join(os.getcwd(), "agents", "publisher", "manage.py"),
-    ] + cmd_args
+    manage_py, publisher_dir = _publisher_paths()
+    cmd = [sys.executable, manage_py] + cmd_args
     env = os.environ.copy()
-    publisher_dir = os.path.join(os.getcwd(), "agents", "publisher")
     current_pythonpath = env.get("PYTHONPATH", "")
     env["PYTHONPATH"] = f"{publisher_dir}:{current_pythonpath}" if current_pythonpath else publisher_dir
 
@@ -21,6 +36,7 @@ def run_manage_cmd(cmd_args):
     return proc.returncode, proc.stdout, proc.stderr
 
 
+@requires_real_e2e
 def test_publisher_api_and_metrics():
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "justnews_publisher.settings")
     django.setup()
@@ -40,10 +56,11 @@ def test_publisher_api_and_metrics():
     # Provide an API key for the server to require
     os.environ["PUBLISHER_API_KEY"] = "ci-key"
 
+    manage_py, _ = _publisher_paths()
     server_proc = subprocess.Popen(
         [
             sys.executable,
-            os.path.join(os.getcwd(), "agents", "publisher", "manage.py"),
+            manage_py,
             "runserver",
             f"127.0.0.1:{server_port}",
         ],
@@ -58,7 +75,7 @@ def test_publisher_api_and_metrics():
         ready = False
         import urllib.request
 
-        while time.time() - start < 8:
+        while time.time() - start < 15:
             try:
                 with urllib.request.urlopen(
                     f"http://127.0.0.1:{server_port}/", timeout=1

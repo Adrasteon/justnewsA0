@@ -34,11 +34,10 @@ Follow this sequence for reproducible startup in the canonical Docker runtime:
 - [ ] Verify key health endpoints from containers/services are healthy
 - [ ] Confirm database/vector/cache container health
 
-1. Optional legacy/systemd path (transition-only)
+1. Legacy/systemd note
 
-- [ ] If required temporarily, enable legacy wrappers:
-  - `JUSTNEWS_ENABLE_LEGACY_START_STOP=1 ./start_all_services.sh`
-- [ ] Use systemd app-orchestration only for migration fallback, not canonical flow
+- [ ] Use systemd app-orchestration only for explicit fallback operations.
+- [ ] `start_all_services.sh` and `stop_all_services.sh` are Docker-canonical wrappers.
 
 Notes:
 

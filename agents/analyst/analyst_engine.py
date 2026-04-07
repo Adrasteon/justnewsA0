@@ -905,14 +905,39 @@ class AnalystEngine:
             from .audit import audit_text
             from .schemas import ClaimVerdict, SourceFactCheck
 
+            # Avoid creating an un-awaited coroutine when already inside a
+            # running event loop (common in async test contexts).
             try:
-                result = asyncio.run(audit_text(text, max_claims=5))
+                asyncio.get_running_loop()
+                loop_running = True
             except RuntimeError:
-                loop = asyncio.new_event_loop()
-                try:
-                    result = loop.run_until_complete(audit_text(text, max_claims=5))
-                finally:
-                    loop.close()
+                loop_running = False
+
+            if not loop_running:
+                result = asyncio.run(audit_text(text, max_claims=5))
+            else:
+                # If an event loop is already running in this thread, execute
+                # the async audit in a dedicated worker thread.
+                import threading
+
+                thread_result: dict[str, object] = {}
+                thread_error: dict[str, Exception] = {}
+
+                def _runner() -> None:
+                    try:
+                        thread_result["value"] = asyncio.run(
+                            audit_text(text, max_claims=5)
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        thread_error["value"] = exc
+
+                worker = threading.Thread(target=_runner, daemon=True)
+                worker.start()
+                worker.join()
+
+                if "value" in thread_error:
+                    raise thread_error["value"]
+                result = thread_result.get("value")
 
             if not result or "error" in result:
                 logger.error(

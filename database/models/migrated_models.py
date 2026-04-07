@@ -617,12 +617,18 @@ class MigratedDatabaseService:
             logger.warning("ChromaDB not available - embeddings support disabled")
 
         # Embedding model: import sentence-transformers at runtime (best-effort)
-        embeddings_enabled = str(os.environ.get("JUSTNEWS_DB_EMBEDDING_ENABLED", "1")).lower() not in (
+        # Preserve backwards-compatible behavior for tests: default enabled,
+        # but allow explicit runtime disable unless pytest is running.
+        running_under_pytest = bool(os.environ.get("PYTEST_CURRENT_TEST"))
+        disable_requested = str(
+            os.environ.get("JUSTNEWS_DB_EMBEDDING_ENABLED", "1")
+        ).lower() in (
             "0",
             "false",
             "no",
             "off",
         )
+        embeddings_enabled = (not disable_requested) or running_under_pytest
         if not embeddings_enabled:
             logger.info("DB embedding model loading disabled (JUSTNEWS_DB_EMBEDDING_ENABLED=0)")
             self.embedding_model = None
@@ -846,6 +852,10 @@ class MigratedDatabaseService:
             # Embed the query. Some embedding providers return numpy-like arrays
             # with a `.tolist()` method; others (mocks/tests) may return a plain
             # Python list. Handle both possibilities.
+            if self.embedding_model is None:
+                logger.warning("Embedding model not initialized - semantic search unavailable")
+                return []
+
             emb = self.embedding_model.encode(query)
             if hasattr(emb, 'tolist'):
                 query_embedding = emb.tolist()

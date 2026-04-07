@@ -5,14 +5,24 @@ ROOT_DIR=${ROOT_DIR:-/app}
 INDEX_DIR=${INDEX_DIR:-.cache/code_index}
 TELEMETRY_PATH=${TELEMETRY_PATH:-run/indexing_telemetry.jsonl}
 CHAT_MODEL_BINDING_PATH=${CHAT_MODEL_BINDING_PATH:-run/copilot_chat_model.env}
-BOOTSTRAP_CMD=(python3 scripts/indexing/bootstrap_context.py --root . --index-dir "$INDEX_DIR" --telemetry-path "$TELEMETRY_PATH" --json)
 DAEMON_SCRIPT=scripts/indexing/index_autoupdate_daemon.sh
 
 cd "$ROOT_DIR"
 
+INDEX_PY=${INDEX_PY:-}
+if [[ -z "$INDEX_PY" ]]; then
+  if [[ -x "$ROOT_DIR/.venv/bin/python" ]]; then
+    INDEX_PY="$ROOT_DIR/.venv/bin/python"
+  else
+    INDEX_PY="python3"
+  fi
+fi
+
+BOOTSTRAP_CMD=("$INDEX_PY" scripts/indexing/bootstrap_context.py --root . --index-dir "$INDEX_DIR" --telemetry-path "$TELEMETRY_PATH" --json)
+
 # Build index on first run if artifacts are missing.
 if [[ ! -f "$INDEX_DIR/manifest.json" || ! -f "$INDEX_DIR/entries.jsonl" ]]; then
-  python3 scripts/indexing/build_code_index.py --root . --index-dir "$INDEX_DIR" --telemetry-path "$TELEMETRY_PATH" >/dev/null 2>&1 || true
+  "$INDEX_PY" scripts/indexing/build_code_index.py --root . --index-dir "$INDEX_DIR" --telemetry-path "$TELEMETRY_PATH" >/dev/null 2>&1 || true
 fi
 
 # Persist selected chat model to make tokenizer behavior deterministic for this session.

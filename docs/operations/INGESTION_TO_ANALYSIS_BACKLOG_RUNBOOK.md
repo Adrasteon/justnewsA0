@@ -93,7 +93,7 @@ Edit `config/system_config.json` under `orchestrator` (add section if absent) wi
 ```
 
 ## 1B. Analyst worker parallelism
-In `start_all_services.sh`, for `analyst` startup, run with workers:
+In Docker-canonical runtime, tune analyst worker settings via compose/env configuration (not `start_all_services.sh` internals):
 - initial: `--workers 2`
 - if stable after 15m: increase to `--workers 3`
 - optional max in this phase: `--workers 4`

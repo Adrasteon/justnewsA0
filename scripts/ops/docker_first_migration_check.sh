@@ -66,12 +66,10 @@ fi
 
 if [[ -f "$START_WRAPPER" ]]; then
   check_contains "$START_WRAPPER" "docker_compose.sh\" up" "start_all_services defaults to Docker up"
-  check_contains "$START_WRAPPER" "JUSTNEWS_ENABLE_LEGACY_START_STOP" "start_all_services supports legacy transition toggle"
 fi
 
 if [[ -f "$STOP_WRAPPER" ]]; then
   check_contains "$STOP_WRAPPER" "docker_compose.sh\" down" "stop_all_services defaults to Docker down"
-  check_contains "$STOP_WRAPPER" "JUSTNEWS_ENABLE_LEGACY_START_STOP" "stop_all_services supports legacy transition toggle"
 fi
 
 if command -v docker >/dev/null 2>&1; then

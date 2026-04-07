@@ -490,37 +490,47 @@ class TestTraceabilityHelpers:
         assert statements[0]["relation_type"] == "speaker"
         assert quotes[0]["quote_text"] == "Quote"
 
+        query_service = MagicMock()
+        query_service.mb_conn = MagicMock()
+        mock_query_cursor = MagicMock()
+        mock_query_cursor.fetchall.return_value = [("result1",), ("result2",)]
+        query_service.mb_conn.cursor.return_value = mock_query_cursor
+
         results = execute_mariadb_query(
-            mock_service, "SELECT * FROM test", ("param1",), fetch=True
+            query_service, "SELECT * FROM test", ("param1",), fetch=True
         )
 
         assert results == [("result1",), ("result2",)]
-        mock_cursor.execute.assert_called_with("SELECT * FROM test", ("param1",))
-        mock_cursor.close.assert_called_once()
+        mock_query_cursor.execute.assert_called_with("SELECT * FROM test", ("param1",))
+        mock_query_cursor.close.assert_called_once()
 
-    def test_execute_query_no_fetch(self, mock_service):
+    def test_execute_query_no_fetch(self):
         """Test query execution without fetching results"""
+        service = MagicMock()
+        service.mb_conn = MagicMock()
         mock_cursor = MagicMock()
-        mock_service.mb_conn.cursor.return_value = mock_cursor
+        service.mb_conn.cursor.return_value = mock_cursor
 
         results = execute_mariadb_query(
-            mock_service, "INSERT INTO test VALUES (?)", ("value",), fetch=False
+            service, "INSERT INTO test VALUES (?)", ("value",), fetch=False
         )
 
         assert results == []
-        mock_service.mb_conn.commit.assert_called_once()
+        service.mb_conn.commit.assert_called_once()
         mock_cursor.close.assert_called_once()
 
-    def test_execute_query_exception(self, mock_service):
+    def test_execute_query_exception(self):
         """Test query execution with exception"""
+        service = MagicMock()
+        service.mb_conn = MagicMock()
         mock_cursor = MagicMock()
         mock_cursor.execute.side_effect = Exception("Query error")
-        mock_service.mb_conn.cursor.return_value = mock_cursor
+        service.mb_conn.cursor.return_value = mock_cursor
 
-        results = execute_mariadb_query(mock_service, "SELECT * FROM test")
+        results = execute_mariadb_query(service, "SELECT * FROM test")
 
         assert results == []
-        mock_service.mb_conn.rollback.assert_called_once()
+        service.mb_conn.rollback.assert_called_once()
 
 
 class TestExecuteQueryAsync:

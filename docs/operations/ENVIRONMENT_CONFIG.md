@@ -317,9 +317,9 @@ Memory pressure mitigation note:
 Startup RAM guardrail notes:
 
 - `JUSTNEWS_RAM_CAP_ENFORCE=1`
-	- Enables host RAM gate in `start_all_services.sh` before each agent/publisher launch.
+	- Enables startup RAM guard behavior for lifecycle control paths that implement host-side gating.
 - `JUSTNEWS_RAM_CAP_PERCENT`
-	- Blocks additional service startup while host RAM usage is at/above this threshold (use `85` to reserve ~15% headroom).
+	- Blocks additional startup while host RAM usage is at/above this threshold (use `85` to reserve ~15% headroom).
 - `JUSTNEWS_RAM_CAP_WAIT_SECONDS` and `JUSTNEWS_RAM_CAP_CHECK_INTERVAL_SECONDS`
 	- Control how long startup waits for memory pressure to subside before aborting.
 

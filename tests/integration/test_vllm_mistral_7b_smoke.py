@@ -20,8 +20,10 @@ def load_vllm_config(config_path: str = "config/vllm_mistral_7b.yaml") -> dict:
     and the current Mistral config which places endpoint under `base_models.mistral-7b.endpoint`.
     It prefers `VLLM_BASE_URL` / `VLLM_API_KEY` from the environment if present.
     """
-    with open(config_path) as f:
-        cfg = yaml.safe_load(f)
+    cfg = {}
+    if os.path.exists(config_path):
+        with open(config_path) as f:
+            cfg = yaml.safe_load(f) or {}
 
     # Prefer env vars if set (useful for CI/local overrides)
     env_base = os.environ.get("VLLM_BASE_URL")

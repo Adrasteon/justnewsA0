@@ -44,6 +44,9 @@ class MistralAdapter(BaseAdapter):
             system_prompt=self.system_prompt,
         )
 
+        # Backwards-compatible alias expected by older helper methods/tests.
+        self._base = self.openai
+
         # self.openai.load() is called later in self.load()
 
         self._agent_impl: object | None = None
@@ -79,7 +82,8 @@ class MistralAdapter(BaseAdapter):
         )
         self._dry_run = self.dry_run or env_dry_run
         if self._dry_run:
-            self.openai.dry_run = True
+            # BaseAdapter exposes dry_run as read-only property; set private flag.
+            self.openai._dry_run = True
 
     def load(self, model_id: str | None = None, config: dict | None = None) -> None:
         """Connect to vLLM (check health)."""

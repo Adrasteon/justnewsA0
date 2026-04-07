@@ -755,7 +755,21 @@ def check_database_connections(service: MigratedDatabaseService) -> bool:
         else:
             try:
                 # Retrieve expected dimensions from config or default to 384 for backward comp.
-                expected_dims = service.config['database']['embedding'].get('dimensions', 384)
+                try:
+                    configured_dims = service.config["database"]["embedding"].get(
+                        "dimensions", 384
+                    )
+                    if isinstance(configured_dims, bool):
+                        expected_dims = 384
+                    elif isinstance(configured_dims, (int, float)):
+                        expected_dims = int(configured_dims)
+                    elif isinstance(configured_dims, str) and configured_dims.strip().isdigit():
+                        expected_dims = int(configured_dims.strip())
+                    else:
+                        expected_dims = 384
+                except Exception:
+                    expected_dims = 384
+
                 test_embedding = service.embedding_model.encode("test")
                 if len(test_embedding) != expected_dims:
                     logger.error(

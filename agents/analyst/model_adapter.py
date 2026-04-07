@@ -52,8 +52,8 @@ class AnalystModelAdapter:
             api_key=os.environ.get("VLLM_API_KEY", "unused"),
             system_prompt=SYSTEM_PROMPT,
             temperature=0.15,
-            max_tokens=360,
-            timeout=40.0
+            max_tokens=700,
+            timeout=40.0,
         )
 
     def classify(self, text: str) -> AdapterResult | None:
@@ -84,8 +84,21 @@ class AnalystModelAdapter:
         return self._normalize(doc, elapsed)
 
     def _parse_response(self, text: str) -> dict[str, Any] | None:
+        clean = text.replace("```json", "").replace("```", "").strip()
+        # Dry-run compatibility: synthesize structured payload when adapter returns plain text.
+        if clean.startswith("[DRYRUN-openai:"):
+            return {
+                "sentiment_label": "neutral",
+                "sentiment_confidence": 0.75,
+                "sentiment_intensity": "mild",
+                "sentiment_positive": 0.4,
+                "sentiment_negative": 0.3,
+                "bias_level": "minimal",
+                "bias_score": 0.2,
+                "bias_confidence": 0.7,
+                "rationale": "Dry-run simulated analyst classification.",
+            }
         try:
-            clean = text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean)
         except Exception:
             return None

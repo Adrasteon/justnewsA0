@@ -63,8 +63,8 @@ class CriticModelAdapter:
             api_key=os.environ.get("VLLM_API_KEY", "unused"),
             system_prompt=SYSTEM_PROMPT,
             temperature=float(os.environ.get("CRITIC_TEMPERATURE", "0.2")),
-            max_tokens=400,
-            timeout=50.0
+            max_tokens=700,
+            timeout=50.0,
         )
 
         self._last_hash: int | None = None
@@ -100,6 +100,17 @@ class CriticModelAdapter:
 
     def _parse_completion(self, completion: str) -> dict[str, Any] | None:
         snippet = completion.strip()
+        if snippet.startswith("[DRYRUN-openai:"):
+            return {
+                "quality_score": 0.8,
+                "bias_score": 0.2,
+                "consistency_score": 0.78,
+                "readability_score": 0.8,
+                "originality_score": 0.82,
+                "overall_score": 0.8,
+                "assessment": "Dry-run simulated critic assessment.",
+                "recommendations": ["Proceed with normal editorial checks."],
+            }
         fenced = re.search(r"```(?:json)?(.*?)```", snippet, flags=re.DOTALL)
         if fenced:
             snippet = fenced.group(1)

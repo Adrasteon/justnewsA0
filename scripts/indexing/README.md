@@ -35,6 +35,7 @@ make index-bootstrap
 make index-bootstrap-json
 make index-hermes-daily
 make index-telemetry-summary
+make index-status-report
 ```
 
 Use bootstrap for fresh chats or handoffs. It reports index artifact status,
@@ -117,6 +118,18 @@ Summarize recent telemetry:
 make index-telemetry-summary
 python scripts/indexing/telemetry_summary.py --path run/indexing_telemetry.jsonl --last 1000
 ```
+
+Report token reduction trend and explicit health confirmation:
+
+```bash
+make index-status-report
+python scripts/indexing/token_health_report.py --telemetry-path run/indexing_telemetry.jsonl --index-dir .cache/code_index --daemon-script scripts/indexing/index_autoupdate_daemon.sh
+```
+
+The report includes direct confirmation lines for:
+- `DAEMON_ACTIVE: YES|NO`
+- `INDEX_HEALTHY: YES|NO`
+- `TOKEN_REDUCTION_ACTIVE: YES|NO`
 
 ## Autonomous Behavior
 

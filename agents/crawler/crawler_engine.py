@@ -840,6 +840,23 @@ class CrawlerEngine:
         domain = site_config.domain.lower()
         source_id = site_config.source_id
 
+        # Force AI-enhanced for known complex/paywalled sites (before cache)
+        # so stale cached strategies cannot override deterministic policy.
+        if any(
+            d in domain
+            for d in [
+                "nytimes.com",
+                "wsj.com",
+                "washingtonpost.com",
+                "theatlantic.com",
+                "newyorker.com",
+            ]
+        ):
+            logger.info(
+                f"Found known complex site {domain}, forcing 'ai_enhanced' strategy."
+            )
+            return "ai_enhanced"
+
         # Check cache first
         cache_key = f"{domain}_{source_id}"
         if cache_key in self.strategy_cache:
@@ -883,22 +900,6 @@ class CrawlerEngine:
         # DISABLED: User requested to disable forced ultra_fast mode
         # if any(d in domain for d in ["bbc.co.uk", "cnn.com", "reuters.com"]):
         #     return "ultra_fast"
-
-        # Force AI-enhanced for known complex/paywalled sites
-        if any(
-            d in domain
-            for d in [
-                "nytimes.com",
-                "wsj.com",
-                "washingtonpost.com",
-                "theatlantic.com",
-                "newyorker.com",
-            ]
-        ):
-            logger.info(
-                f"Found known complex site {domain}, forcing 'ai_enhanced' strategy."
-            )
-            return "ai_enhanced"
 
         # 2. Check database for historical performance
         if domain not in self.performance_history:
@@ -2171,7 +2172,7 @@ class CrawlerEngine:
         lane1_expansion_stats: dict[str, Any] | None = None
 
         lane1_plan_enabled = _env_bool(
-            "UNIFIED_CRAWLER_LANE1_COMPARATIVE_PLAN_ENABLED", default=True
+            "UNIFIED_CRAWLER_LANE1_COMPARATIVE_PLAN_ENABLED", default=False
         )
         if lane1_plan_enabled and all_articles:
             try:

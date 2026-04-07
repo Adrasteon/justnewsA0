@@ -30,8 +30,8 @@ class JournalistModelAdapter:
             api_key=os.environ.get("VLLM_API_KEY", "unused"),
             system_prompt=SYSTEM_PROMPT,
             temperature=0.25,
-            max_tokens=400,
-            timeout=45.0
+            max_tokens=700,
+            timeout=45.0,
         )
 
     def generate_story_brief(
@@ -67,8 +67,17 @@ class JournalistModelAdapter:
             return None
 
     def _parse_response(self, text: str) -> dict[str, Any] | None:
+        clean = text.replace("```json", "").replace("```", "").strip()
+        if clean.startswith("[DRYRUN-openai:"):
+            return {
+                "headline": "Dry-run headline",
+                "summary": "Dry-run simulated journalist brief.",
+                "key_points": ["Point A", "Point B"],
+                "leads": ["Lead 1"],
+                "follow_up_questions": ["What additional source confirms this?"],
+                "risk_flags": [],
+            }
         try:
-            clean = text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean)
         except Exception:
             return None

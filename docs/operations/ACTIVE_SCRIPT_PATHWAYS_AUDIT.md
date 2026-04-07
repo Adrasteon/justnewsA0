@@ -18,7 +18,7 @@ This document maps active script-driven pathways in JustNews after conda depreca
 ## Global lifecycle model
 
 1) Environment bootstrap (UV/.venv)
-2) Service startup and orchestration (systemd-first)
+2) Service startup and orchestration (Docker-first canonical runtime)
 3) Data pipeline execution (crawl → ingest → memory/archive → orchestrator)
 4) Observability and governance controls
 5) CI/test/lint quality gates
@@ -29,9 +29,10 @@ This document maps active script-driven pathways in JustNews after conda depreca
 
 | Script | Role | Inbound callers |
 |---|---|---|
-| `infrastructure/systemd/scripts/enable_all.sh` | systemd fleet lifecycle orchestrator | - |
-| `infrastructure/systemd/scripts/justnews-start-agent.sh` | per-agent startup runtime gate | - |
-| `scripts/ops/start_services_daemon.sh` | non-systemd daemon launcher (dev/ops) | - |
+| `start_all_services.sh` | Docker-canonical lifecycle wrapper (`docker_compose.sh up`) | operator/manual |
+| `stop_all_services.sh` | Docker-canonical lifecycle wrapper (`docker_compose.sh down`) | operator/manual |
+| `scripts/ops/docker_compose.sh` | Docker compose lifecycle wrapper (`up/down/status/logs/ps`) | Makefile, wrappers |
+| `scripts/ops/docker_preflight.sh` | Docker runtime preflight validation | Makefile |
 | `scripts/ops/run_crawl_schedule.py` | scheduler trigger for crawler jobs | infrastructure/systemd/scripts/run_crawl_schedule.sh |
 | `scripts/run_with_env.sh` | global env/secrets command wrapper | scripts/dev/run_e2e_with_env.sh |
 | `scripts/run_tests_with_env.sh` | preset-based test launcher | - |
@@ -44,47 +45,36 @@ This document maps active script-driven pathways in JustNews after conda depreca
 | `scripts/indexing/query_code_index.py` | code index query tool | Makefile |
 | `scripts/indexing/index_autoupdate_daemon.sh` | index auto-update daemon | Makefile, scripts/indexing/session_chat_init.sh |
 
-## Systemd-first operational pathway (primary production path)
+## Docker-canonical operational pathway (primary path)
 
 Primary control scripts:
-- `infrastructure/systemd/scripts/enable_all.sh`
-- `infrastructure/systemd/scripts/justnews-start-agent.sh`
-- `infrastructure/systemd/scripts/justnews-preflight-check.sh` / `preflight.sh`
-- unit template: `infrastructure/systemd/units/justnews@.service`
+- `scripts/ops/docker_preflight.sh`
+- `scripts/ops/docker_compose.sh`
+- `start_all_services.sh` / `stop_all_services.sh` (thin wrappers)
+- compose file: `infrastructure/docker/docker-compose.canonical.yml`
 
 Flow:
-1. Operator invokes `enable_all.sh` with lifecycle action (enable/start/stop/restart/status).
-2. Script verifies systemd prerequisites and helper scripts in `/usr/local/bin`.
-3. Observability services are handled before agent services (start-first/stop-last ordering).
-4. Agent unit launch calls `justnews-start-agent.sh <agent_name>`.
-5. `justnews-start-agent.sh` resolves project root, loads `/etc/justnews/global.env` and optional per-agent env files.
-6. Runtime gates execute: dependency checks, MCP readiness (for non-bus agents), python/runtime checks, optional bootstrap.
-7. Agent process starts with canonical UV/.venv python path fallback logic.
-8. Health/status endpoints become available and are consumed by orchestration/monitoring.
+1. Operator runs preflight (`make docker-preflight` or script directly).
+2. Operator starts stack via `make deploy-docker` or `./start_all_services.sh`.
+3. Compose brings up canonical services/agents.
+4. Operator checks status/logs via Makefile or compose wrapper.
+5. Operator stops stack via `make deploy-docker-stop` or `./stop_all_services.sh`.
 
-Agent startup order in `enable_all.sh` (current):
-- gpu_orchestrator" # GPU Orchestrator (port 8014) — MUST start before mcp_bus, mcp_bus, chief_editor
-
-Observability units (managed separately):
-- otel-central, otel-node, prometheus, grafana, node-exporter, dcgm-exporter, sensor-logger
-
-Branch pathways in systemd flow:
-- Branch A: `AUTO_BOOTSTRAP_VENV=1` + missing `.venv` -> invoke `scripts/bootstrap_venv.sh` (deprecated wrapper fallback available).
-- Branch B: `SAFE_MODE=true` -> CPU-forced conservative runtime flags for stability.
-- Branch C: `REQUIRE_BUS=0` -> skip MCP bus wait gate for dependent services.
-- Branch D: agent-specific env present at `/etc/justnews/<agent>.env` -> overlay config path.
-- Branch E: optional `AUTO_INSTALL_ALERTMANAGER=1` on MCP bus startup -> install/enable alertmanager unit best-effort.
+Branch pathways in Docker flow:
+- Branch A: `JUSTNEWS_COMPOSE_FILE` override selects alternate compose file.
+- Branch B: direct compose wrapper usage (`up/down/status/logs/ps`) for targeted operations.
+- Branch C: optional systemd fallback only for explicit non-canonical/legacy operations.
 
 ## Non-systemd daemon pathway (secondary/legacy active path)
 
-`scripts/ops/start_services_daemon.sh` remains active for environments that do not use systemd orchestration.
+Legacy daemon scripts (`scripts/ops/start_services_daemon.sh`, `scripts/ops/stop_services.sh`) remain available only as non-canonical fallback paths.
 Flow highlights:
-- resolves UV/.venv python, sets model/cache/database defaults, enforces writable directories, clears conflicting ports, then launches uvicorn apps.
-- includes optional source seeding and detached vs foreground behavior.
+- direct host process orchestration without Docker compose canonical lifecycle.
+- retained for constrained transition scenarios and historical troubleshooting only.
 Branch pathways:
-- port conflict branch -> graceful shutdown endpoint attempt then forced PID cleanup.
-- mount-path branch -> `/media/adra/Data` vs `/media/adra/data` vs home fallback for model store/spool roots.
-- DB branch -> MariaDB vars as primary with legacy compatibility env mapping.
+- port conflict handling and forced PID cleanup.
+- mount-path fallback logic for model/spool roots.
+- legacy env compatibility mapping.
 
 ## Crawl scheduling and ingestion pathway
 
@@ -169,7 +159,7 @@ Branch pathways:
 
 | Workflow | Primary path | Branches / alternates |
 |---|---|---|
-| Service lifecycle | systemd `enable_all.sh` -> `justnews-start-agent.sh` | optional daemon launcher (`start_services_daemon.sh`); SAFE_MODE; REQUIRE_BUS; AUTO_BOOTSTRAP_VENV |
+| Service lifecycle | Docker compose wrapper (`docker_compose.sh`) via Makefile/wrappers | `JUSTNEWS_COMPOSE_FILE` override; direct compose subcommands; optional explicit systemd fallback |
 | Crawl execution | `run_crawl_schedule.py` -> crawler jobs -> ingest | dry-run, testrun, DB/source schedule branch, profile override branch, timeout/error branch |
 | Orchestrator policy control | `workflow_orchestrator` runtime APIs | validate failure branch, apply/rollback branch, tier actuation branch |
 | Test execution | `pytest.sh` / `run_full_pytest_safe.sh` | .venv vs uv vs pytest fallback; preset branches in `run_tests_with_env.sh` |

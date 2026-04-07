@@ -59,6 +59,38 @@ class OpenAIAdapter(BaseAdapter):
         messages.append({"role": "user", "content": prompt})
         return messages
 
+    # Compatibility helpers expected by legacy shim adapters -----------------
+    def _truncate_content(self, text: str, limit: int = 4000) -> str:
+        if text is None:
+            return ""
+        return text[:limit]
+
+    def _ensure_loaded(self) -> bool:
+        if self.is_loaded():
+            return True
+        try:
+            self.load(None)
+        except Exception:
+            return False
+        return self.is_loaded()
+
+    def _chat_json(self, messages: list[dict[str, str]]) -> dict | None:
+        if not messages:
+            return None
+        prompt_parts = [m.get("content", "") for m in messages if isinstance(m, dict)]
+        prompt = "\n\n".join(part for part in prompt_parts if part)
+        result = self.infer(prompt)
+        text = (result or {}).get("text", "") if isinstance(result, dict) else ""
+        if not text:
+            return None
+        import json
+
+        cleaned = text.replace("```json", "").replace("```", "").strip()
+        try:
+            return json.loads(cleaned)
+        except Exception:
+            return {"text": text}
+
     def _client_kwargs(self) -> dict[str, Any]:
         data: dict[str, Any] = {
             "model": self._model,
@@ -85,12 +117,12 @@ class OpenAIAdapter(BaseAdapter):
             # For vLLM, API key might be optional, but OpenAI client usually requires it.
             # We'll allow a dummy key if base_url is set, to support vLLM usage easily.
             if self._base_url:
-                self._api_key = "unused"
+                self._api_key = "***"
             else:
-               raise AdapterError("openai-missing-api-key")
+                raise AdapterError("openai-missing-api-key")
 
         try:
-            from openai import OpenAI
+            import openai as openai_module
 
             client_args = {"api_key": self._api_key}
             if self._base_url:
@@ -98,12 +130,30 @@ class OpenAIAdapter(BaseAdapter):
             if self._extra_headers:
                 client_args["default_headers"] = self._extra_headers
 
-            self._client = OpenAI(**client_args)
+            # New SDK path
+            OpenAI_cls = getattr(openai_module, "OpenAI", None)
+            if OpenAI_cls is not None:
+                self._client = OpenAI_cls(**client_args)
+            else:
+                # Legacy/testing shim path: rely on module-level ChatCompletion API
+                self._client = openai_module
+
             self.mark_loaded()
         except Exception as exc:  # pragma: no cover
             raise AdapterError(f"openai-load-failed: {exc}") from exc
 
     # ------------------------------------------------------------------
+    def ensure_loaded(self) -> None:
+        """Compatibility: lazy-load on first use for legacy adapter callers."""
+        if self.is_loaded():
+            return
+        try:
+            self.load(None)
+        except Exception as exc:
+            raise AdapterError(f"openai-adapter-load-failed: {exc}") from exc
+        if not self.is_loaded():
+            raise AdapterError("openai-adapter-not-loaded")
+
     def infer(self, prompt: str, **overrides: Any) -> dict:
         self.ensure_loaded()
 
@@ -145,7 +195,11 @@ class OpenAIAdapter(BaseAdapter):
         for attempt in range(1, self._max_retries + 1):
             start = time.time()
             try:
-                resp = self._client.chat.completions.create(**payload)
+                if hasattr(self._client, "chat") and hasattr(self._client.chat, "completions"):
+                    resp = self._client.chat.completions.create(**payload)
+                else:
+                    # Compatibility path for module-level legacy/testing shims.
+                    resp = self._client.ChatCompletion.create(**payload)
                 duration = time.time() - start
 
                 # Extract content
@@ -193,6 +247,23 @@ class OpenAIAdapter(BaseAdapter):
     def unload(self) -> None:
         self._client = None
         self.mark_unloaded()
+
+    @property
+    def model(self):
+        return self._model
+
+    @model.setter
+    def model(self, value):
+        self._model = value
+
+    @property
+    def tokenizer(self):
+        # Maintained for compatibility with adapters that clear tokenizer on unload.
+        return getattr(self, "_tokenizer", None)
+
+    @tokenizer.setter
+    def tokenizer(self, value):
+        self._tokenizer = value
 
     def metadata(self) -> dict:
         return {

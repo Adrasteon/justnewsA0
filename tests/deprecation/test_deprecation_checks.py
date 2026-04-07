@@ -16,11 +16,15 @@ EXCLUDE_DIRS = {
     "third_party",
     ".mypy_cache",
     "__pycache__",
+    ".venv",
+    "venv",
+    "site-packages",
     "tests/deprecation",
     "tests/codemod",
     "codemod",
     "deprecations",
     "codemods",
+    "fact_checker_deprecation_archive",
 }
 
 
@@ -41,6 +45,9 @@ def _scan_repo():
             regex = re.compile(pat)
             for i, line in enumerate(text.splitlines(), start=1):
                 if regex.search(line):
+                    # Ignore explicitly deprecated archive paths.
+                    if "fact_checker_deprecation_archive" in str(p):
+                        continue
                     results[pat].append(
                         {"path": str(p), "line": i, "content": line.strip()}
                     )

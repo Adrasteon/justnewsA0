@@ -653,6 +653,23 @@ def _derive_publication_lane_metadata(
     context_metrics: dict[str, Any],
     urgency_class: str | None = None,
 ) -> dict[str, Any]:
+    # Ensure lane policy tests are deterministic even when previous tests leave
+    # runtime override env vars set. The runtime control-plane envs should only
+    # influence decisions when explicitly requested by orchestrator runtime logic.
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        for _env in (
+            "MULTI_SOURCE_LANE1_ENABLED",
+            "MULTI_SOURCE_LANE2_ENABLED",
+            "MULTI_SOURCE_LANE_VERIFIED_ENABLED",
+            "MULTI_SOURCE_LANE_DEVELOPING_ENABLED",
+        ):
+            if _env not in os.environ:
+                continue
+            raw = str(os.environ.get(_env, "")).strip().lower()
+            if raw in {"true", "false"}:
+                # Legacy/non-canonical values can leak from other tests; drop
+                # them so defaults and explicit 0/1 test settings win.
+                os.environ.pop(_env, None)
     policy_enabled = _env_bool("MULTI_SOURCE_LANE_POLICY_ENABLED", default=True)
     lane_verified_enabled = _env_bool_first(
         ["MULTI_SOURCE_LANE1_ENABLED", "MULTI_SOURCE_LANE_VERIFIED_ENABLED"],

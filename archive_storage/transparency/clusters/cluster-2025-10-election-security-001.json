@@ -1,0 +1,8 @@
+{
+  "cluster_id": "cluster-2025-10-election-security-001",
+  "fact_ids": ["fact-2025-10-25-ap-election-001"],
+  "member_articles": [
+    {"article_id": "article-2025-10-25-ap-001", "source": "AP"},
+    {"article_id": "article-2025-10-24-reuters-003", "source": "Reuters"}
+  ]
+}

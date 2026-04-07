@@ -20,13 +20,13 @@ Due to persistent zombie processes and heavy resource consumption in the origina
 - `start_agents_devcontainer.sh` runs the shim on `8018` and forwards `fact_check` requests to the backend on `8003`.
 
 ### 2. File Structure
-- **Active Implementation:** `agents/fact_checker/shim.py`
-  - A lightweight FastAPI proxy that executes real verification paths.
-  - `verify_article` now performs DB load → backend verification → DB persistence (`fact_check_status`, `factual_accuracy_score`, `fact_check_details`).
+- **Active Runtime Surface:**
+  - Shim: `agents/fact_checker/shim.py`
+  - External backend service container: `mcp_fact_checker_server/` (served separately from shim)
+  - `verify_article` performs DB load → backend verification → DB persistence (`fact_check_status`, `factual_accuracy_score`, `fact_check_details`).
   - Active MCP tool surface is intentionally minimal: `verify_article`, `verify_claim`, `fact_check`.
-- **Archived Implementation:** `fact_checker_deprecation_archive/`
-  - The original heavy implementation (`main.py`, `fact_checker_engine.py`, etc.) has been moved here.
-  - This preserves the logic for future reference or reinstatement without polluting the active namespace.
+- **Archived in-process implementation:** `fact_checker_deprecation_archive/`
+  - Original monolithic in-process classes (`main.py`, `fact_checker_engine.py`, etc.) are archived and are not canonical runtime.
 
 ### 3. Client Updates
 - `agents/analyst/audit.py` now defaults to `localhost:8018`.

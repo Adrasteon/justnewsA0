@@ -1,266 +1,218 @@
-#!/bin/bash
-# Deployment Validation Script for JustNews
-# Comprehensive validation of deployment configuration and health
+#!/usr/bin/env bash
+# Deployment Validation Script for JustNews (Docker-first canonical runtime)
 
-set -e
+set -euo pipefail
 
-# Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-DEPLOY_ROOT="$PROJECT_ROOT/deploy/refactor"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+DEPLOY_ROOT="$PROJECT_ROOT"
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Validation results
 VALIDATION_PASSED=true
 ISSUES_FOUND=()
 
-# Logging functions
 log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+  echo -e "${BLUE}[INFO]${NC} $1"
 }
 
 log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+  echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
 log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-    ISSUES_FOUND+=("WARNING: $1")
+  echo -e "${YELLOW}[WARNING]${NC} $1"
+  ISSUES_FOUND+=("WARNING: $1")
 }
 
 log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-    ISSUES_FOUND+=("ERROR: $1")
-    VALIDATION_PASSED=false
+  echo -e "${RED}[ERROR]${NC} $1"
+  ISSUES_FOUND+=("ERROR: $1")
+  VALIDATION_PASSED=false
 }
 
-# Check if command exists
 command_exists() {
-    command -v "$1" >/dev/null 2>&1
+  command -v "$1" >/dev/null 2>&1
 }
 
-# Validate directory structure
-validate_directory_structure() {
-    log_info "Validating directory structure..."
+validate_canonical_paths() {
+  log_info "Validating canonical Docker-first paths..."
 
-    required_dirs=(
-        "docker"
-        # Kubernetes manifests are deprecated and not part of the active deployment
-        # kube overlays removed; systemd is the deployment target
-        "systemd/services"
-        "systemd/timers"
-        "config/environments"
-        "scripts"
-        "templates"
-    )
+  local required_files=(
+    "infrastructure/docker/docker-compose.canonical.yml"
+    "scripts/ops/docker_compose.sh"
+    "scripts/ops/docker_preflight.sh"
+    "start_all_services.sh"
+    "stop_all_services.sh"
+    "infrastructure/scripts/health-check.sh"
+  )
 
-    for dir in "${required_dirs[@]}"; do
-        if [[ ! -d "$DEPLOY_ROOT/$dir" ]]; then
-            log_error "Missing required directory: $dir"
-        else
-            log_success "Found directory: $dir"
-        fi
-    done
+  for rel in "${required_files[@]}"; do
+    if [[ -f "$DEPLOY_ROOT/$rel" ]]; then
+      log_success "Found: $rel"
+    else
+      log_error "Missing required file: $rel"
+    fi
+  done
 }
 
-# Validate configuration files
-validate_configuration() {
-    log_info "Validating configuration files..."
+validate_tooling() {
+  log_info "Validating required tooling..."
 
-    # Check environment files
-    env_files=("development.env" "staging.env" "production.env")
-    for env_file in "${env_files[@]}"; do
-        env_path="$DEPLOY_ROOT/config/environments/$env_file"
-        if [[ ! -f "$env_path" ]]; then
-            log_warning "Environment file not found: $env_file"
-            log_info "Run: python scripts/generate-config.py"
-        else
-            log_success "Found environment file: $env_file"
-            # Basic validation of required variables
-            # Prefer MariaDB variables; allow Postgres vars for backward compatibility
-            required_vars=("MARIADB_HOST" "MARIADB_DB" "MCP_BUS_HOST")
-            for var in "${required_vars[@]}"; do
-                if ! grep -q "^$var=" "$env_path"; then
-                    log_error "Missing required variable '$var' in $env_file"
-                fi
-            done
-        fi
-    done
+  if ! command_exists docker; then
+    log_error "docker command not found"
+    return
+  fi
+  log_success "docker command available"
+
+  if ! docker compose version >/dev/null 2>&1; then
+    log_error "docker compose plugin unavailable"
+    return
+  fi
+  log_success "docker compose plugin available"
 }
 
-# Validate Docker configuration
-validate_docker() {
-    log_warning "Docker Compose is deprecated; skipping Docker validation"
-    return 0
-}
-    for service in "${required_services[@]}"; do
-        if ! grep -q -E "^  (${service}):" "$compose_file"; then
-            log_warning "Missing recommended service ('$service') in docker-compose.yml (docker-compose deprecated)"
-        fi
-    done
+validate_compose_config() {
+  log_info "Validating Docker compose configuration..."
+
+  local compose_file="$DEPLOY_ROOT/infrastructure/docker/docker-compose.canonical.yml"
+  if [[ ! -f "$compose_file" ]]; then
+    log_error "Compose file not found: $compose_file"
+    return
+  fi
+
+  if command_exists docker && docker compose version >/dev/null 2>&1; then
+    if docker compose -f "$compose_file" config >/dev/null 2>&1; then
+      log_success "Compose file validation passed"
+    else
+      log_error "Compose file validation failed"
+    fi
+  else
+    log_warning "Skipping compose config validation because docker compose is unavailable"
+  fi
+
+  local required_services=(mariadb chromadb redis mcp-bus)
+  local service
+  for service in "${required_services[@]}"; do
+    if grep -q -E "^  ${service}:" "$compose_file"; then
+      log_success "Required compose service present: $service"
+    else
+      log_error "Required compose service missing: $service"
+    fi
+  done
 }
 
-validate_kubernetes() {
-    log_warning "Kubernetes manifests are deprecated and have been removed from this workspace. Skipping Kubernetes validation."
-    return 0
-}
+validate_wrapper_defaults() {
+  log_info "Validating start/stop wrapper defaults..."
 
-# Validate systemd configuration
-validate_systemd() {
-    log_info "Validating systemd configuration..."
+  local start_wrapper="$DEPLOY_ROOT/start_all_services.sh"
+  local stop_wrapper="$DEPLOY_ROOT/stop_all_services.sh"
 
-    if ! command_exists systemctl; then
-        log_warning "systemctl not available, skipping systemd validation"
-        return 0
+  if [[ -f "$start_wrapper" ]]; then
+    if grep -q 'docker_compose.sh" up' "$start_wrapper"; then
+      log_success "start_all_services.sh defaults to docker compose up"
+    else
+      log_error "start_all_services.sh does not default to docker compose up"
     fi
 
-    services_dir="$DEPLOY_ROOT/systemd/services"
-    if [[ ! -d "$services_dir" ]]; then
-        log_error "Systemd services directory not found: $services_dir"
-        return 1
+    if grep -q 'docker_compose.sh" up' "$start_wrapper"; then
+      log_success "start_all_services.sh remains pinned to docker compose"
+    fi
+  fi
+
+  if [[ -f "$stop_wrapper" ]]; then
+    if grep -q 'docker_compose.sh" down' "$stop_wrapper"; then
+      log_success "stop_all_services.sh defaults to docker compose down"
+    else
+      log_error "stop_all_services.sh does not default to docker compose down"
     fi
 
-    # Basic service file validation
-    find "$services_dir" -name "*.service" | while read -r service_file; do
-        # Check for required sections
-        if grep -q "\[Unit\]" "$service_file" && grep -q "\[Service\]" "$service_file"; then
-            log_success "Valid systemd service: $(basename "$service_file")"
-        else
-            log_error "Invalid systemd service file: $(basename "$service_file")"
-        fi
-    done
-}
-
-# Validate scripts
-validate_scripts() {
-    log_info "Validating deployment scripts..."
-
-    required_scripts=(
-        "scripts/deploy.sh"
-        "scripts/health-check.sh"
-        "scripts/rollback.sh"
-        "scripts/generate-config.py"
-    )
-
-    for script in "${required_scripts[@]}"; do
-        script_path="$DEPLOY_ROOT/$script"
-        if [[ ! -f "$script_path" ]]; then
-            log_error "Missing required script: $script"
-        else
-            log_success "Found script: $script"
-            # Check if executable
-            if [[ ! -x "$script_path" ]]; then
-                log_warning "Script is not executable: $script"
-            fi
-        fi
-    done
-}
-
-# Validate templates
-validate_templates() {
-    log_info "Validating templates..."
-
-    template_dir="$DEPLOY_ROOT/templates"
-    if [[ ! -d "$template_dir" ]]; then
-        log_error "Templates directory not found: $template_dir"
-        return 1
+    if grep -q 'docker_compose.sh" down' "$stop_wrapper"; then
+      log_success "stop_all_services.sh remains pinned to docker compose"
     fi
-
-    # Check for required templates
-    required_templates=(
-        "environment.env.j2"
-    )
-
-    for template in "${required_templates[@]}"; do
-        template_path="$template_dir/$template"
-        if [[ ! -f "$template_path" ]]; then
-            log_error "Missing required template: $template"
-        else
-            log_success "Found template: $template"
-        fi
-    done
+  fi
 }
 
-# Validate security configuration
-validate_security() {
-    log_info "Validating security configuration..."
+validate_legacy_conflicts() {
+  log_info "Checking for contradictory legacy runtime messaging in canonical paths..."
 
-    # Check for hardcoded secrets in environment files
-    find "$DEPLOY_ROOT/config" -name "*.env" -type f | while read -r env_file; do
-        if grep -q "change_me_in_production\|password\|secret" "$env_file"; then
-            log_warning "Found placeholder secrets in: $(basename "$env_file")"
-            log_info "Please update with actual secure values"
-        fi
-    done
-
-    # Check file permissions
-    find "$DEPLOY_ROOT" -name "*.env" -o -name "*secret*" -o -name "*password*" | while read -r secret_file; do
-        if [[ -f "$secret_file" ]]; then
-            permissions=$(stat -c "%a" "$secret_file")
-            if [[ "$permissions" != "600" ]] && [[ "$permissions" != "400" ]]; then
-                log_warning "Insecure permissions on secret file: $(basename "$secret_file") ($permissions)"
-            fi
-        fi
-    done
+  local compose_file="$DEPLOY_ROOT/infrastructure/docker/docker-compose.canonical.yml"
+  if [[ -f "$compose_file" ]]; then
+    if grep -qi 'docker compose is deprecated' "$compose_file"; then
+      log_error "Canonical compose file still claims Docker compose is deprecated"
+    else
+      log_success "Canonical compose file has no Docker-deprecated messaging"
+    fi
+  fi
 }
 
-# Generate validation report
 generate_report() {
-    log_info "Generating validation report..."
+  log_info "Generating validation report..."
 
-    report_file="$DEPLOY_ROOT/validation-report-$(date +%Y%m%d-%H%M%S).json"
+  local report_file="$DEPLOY_ROOT/validation-report-$(date +%Y%m%d-%H%M%S).json"
 
-    cat > "$report_file" << EOF
+  if command_exists jq; then
+    cat > "$report_file" <<EOF
 {
   "timestamp": "$(date -Iseconds)",
   "validation_passed": $VALIDATION_PASSED,
-  "issues_found": $(printf '%s\n' "${ISSUES_FOUND[@]}" | jq -R . | jq -s .),
+  "issues_found": $(printf '%s\n' "${ISSUES_FOUND[@]:-}" | sed '/^$/d' | jq -R . | jq -s .),
   "checks_performed": [
-    "directory_structure",
-    "configuration_files",
-    "docker_configuration",
-    "kubernetes_configuration",
-    "systemd_configuration",
-    "scripts_validation",
-    "templates_validation",
-    "security_configuration"
+    "canonical_paths",
+    "tooling",
+    "compose_config",
+    "wrapper_defaults",
+    "legacy_conflicts"
   ]
 }
 EOF
+  else
+    {
+      echo "{";
+      echo "  \"timestamp\": \"$(date -Iseconds)\",";
+      echo "  \"validation_passed\": $VALIDATION_PASSED,";
+      echo "  \"issues_found\": [";
+      local i=0
+      local total=${#ISSUES_FOUND[@]}
+      for item in "${ISSUES_FOUND[@]}"; do
+        i=$((i + 1))
+        if [[ $i -lt $total ]]; then
+          printf '    "%s",\n' "${item//\"/\\\"}"
+        else
+          printf '    "%s"\n' "${item//\"/\\\"}"
+        fi
+      done
+      echo "  ]";
+      echo "}";
+    } > "$report_file"
+  fi
 
-    log_info "Validation report saved to: $report_file"
+  log_info "Validation report saved to: $report_file"
 
-    if [[ "$VALIDATION_PASSED" == "true" ]]; then
-        log_success "All validation checks passed!"
-        return 0
-    else
-        log_error "Validation found ${#ISSUES_FOUND[@]} issue(s)"
-        printf '  - %s\n' "${ISSUES_FOUND[@]}"
-        return 1
-    fi
+  if [[ "$VALIDATION_PASSED" == "true" ]]; then
+    log_success "All validation checks passed"
+    return 0
+  fi
+
+  echo -e "${RED}[ERROR]${NC} Validation found ${#ISSUES_FOUND[@]} issue(s)"
+  printf '  - %s\n' "${ISSUES_FOUND[@]}"
+  return 1
 }
 
-# Main validation function
 main() {
-    log_info "JustNews Deployment Validation"
-    log_info "Starting comprehensive validation checks..."
+  log_info "JustNews deployment validation (Docker-first)"
 
-    validate_directory_structure
-    validate_configuration
-    # Validate systemd only; docker and kubernetes are deprecated
-    validate_systemd
-    validate_scripts
-    validate_templates
-    validate_security
+  validate_canonical_paths
+  validate_tooling
+  validate_compose_config
+  validate_wrapper_defaults
+  validate_legacy_conflicts
 
-    generate_report
+  generate_report
 }
 
-# Run main function
 main "$@"

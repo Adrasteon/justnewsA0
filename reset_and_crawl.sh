@@ -14,7 +14,7 @@ systemctl --user stop vllm-qwen-14b.service || echo "vllm already stopped"
 # Kill all agent python processes (excluding this script)
 pkill -f "agents\..*\.main" || echo "No agents running"
 pkill -f "uvicorn" || echo "No uvicorn running"
-pkill -f "start_services_daemon.sh" || echo "Daemon not running"
+./stop_all_services.sh || echo "Docker stack not running"
 
 # 2. Filesystem Cleanup
 echo ">>> Cleaning Filesystem..."
@@ -53,8 +53,8 @@ systemctl --user start vllm-qwen-14b.service
 echo "Waiting for vLLM to warm up (10s)..."
 # sleep 10
 
-echo "Starting Agents..."
-nohup scripts/ops/start_services_daemon.sh > logs/orchestrator.log 2>&1 &
+echo "Starting Docker-canonical stack..."
+nohup ./start_all_services.sh > logs/orchestrator.log 2>&1 &
 
 # Explicitly start Crawler (missing from manifest?)
 # global.env already sourced above with CRAWLER_AGENT_PORT, JOURNALIST_PORT

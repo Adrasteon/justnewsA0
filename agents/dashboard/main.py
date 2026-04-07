@@ -1074,13 +1074,15 @@ def public_articles(n: int = 10):
             "total_results": len(articles),
             "articles": [
                 {
-                    "id": a.article_id,
-                    "title": a.title,
-                    "summary": (a.content[:300] + "...")
-                    if len(a.content) > 300
-                    else a.content,
-                    "source": a.source_name,
-                    "published_date": a.published_date,
+                    "id": getattr(a, "article_id", getattr(a, "id", None)),
+                    "title": getattr(a, "title", ""),
+                    "summary": (
+                        (getattr(a, "content", "")[:300] + "...")
+                        if len(getattr(a, "content", "")) > 300
+                        else getattr(a, "content", "")
+                    ),
+                    "source": getattr(a, "source_name", getattr(a, "source", None)),
+                    "published_date": getattr(a, "published_date", None),
                     "sentiment_score": getattr(a, "sentiment_score", 0),
                     "fact_check_score": getattr(a, "fact_check_score", None),
                     "url": getattr(a, "url", None),

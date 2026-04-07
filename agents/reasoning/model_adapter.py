@@ -29,8 +29,8 @@ class ReasoningModelAdapter:
             api_key=os.environ.get("VLLM_API_KEY", "unused"),
             system_prompt=SYSTEM_PROMPT,
             temperature=0.2,
-            max_tokens=420,
-            timeout=45.0
+            max_tokens=700,
+            timeout=45.0,
         )
 
     def analyze(
@@ -51,8 +51,16 @@ class ReasoningModelAdapter:
             return None
 
     def _parse_response(self, text: str) -> dict[str, Any] | None:
+        clean = text.replace("```json", "").replace("```", "").strip()
+        if clean.startswith("[DRYRUN-openai:"):
+            return {
+                "hypothesis": "Dry-run hypothesis",
+                "chain_of_thought": ["Step 1", "Step 2"],
+                "verdict": "unclear",
+                "confidence": 0.7,
+                "follow_up_questions": ["What additional evidence is available?"],
+            }
         try:
-            clean = text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean)
         except Exception:
             return None

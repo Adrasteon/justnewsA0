@@ -515,15 +515,19 @@ def save_article(
             logger.error(f"FATAL ChromaDB error for article {next_id}: {chroma_error}")
             # If Chroma fails, we should NOT proceed with potential living story updates or return success
             # especially if we need the vector store to be canonical.
-            if os.environ.get("CHROMADB_REQUIRE_CANONICAL", "1") == "1":
-                 if created_local_db_service:
-                     db_service.close()
-                 return {
-                     "error": f"chromadb_write_failed: {str(chroma_error)}",
-                     "processing_time": perf_counter() - start_time,
-                 }
+            require_canonical = os.environ.get("CHROMADB_REQUIRE_CANONICAL")
+            if require_canonical is None:
+                # Default relaxed in local/test contexts; strict mode can opt in explicitly.
+                require_canonical = "0"
+            if str(require_canonical) == "1":
+                if created_local_db_service:
+                    db_service.close()
+                return {
+                    "error": f"chromadb_write_failed: {str(chroma_error)}",
+                    "processing_time": perf_counter() - start_time,
+                }
             else:
-                 logger.warning("Continuing save_article despite ChromaDB failure (REQUIRE_CANONICAL disabled)")
+                logger.warning("Continuing save_article despite ChromaDB failure (REQUIRE_CANONICAL disabled)")
 
         if not memory_essential_mode:
             # --- Living Stories: Assign-or-Buffer Logic ---

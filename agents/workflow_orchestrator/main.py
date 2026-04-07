@@ -18,6 +18,7 @@ from database.utils.migrated_database_utils import (
     get_db_config,
 )
 
+from . import policies as _policies
 from .engine import OrchestratorEngine
 from .runtime_config import (
     RUNTIME_KEY_REGISTRY,
@@ -53,6 +54,9 @@ except Exception as e:
 engine = OrchestratorEngine()
 runtime_store = RuntimeConfigStore()
 metrics = get_metrics("workflow_orchestrator")
+# Keep policy metric writers and /metrics endpoint on the exact same registry
+# instance, even when test import order creates multiple module instances.
+_policies._ORCH_METRICS = metrics
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

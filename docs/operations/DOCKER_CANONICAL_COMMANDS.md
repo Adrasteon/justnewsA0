@@ -29,14 +29,12 @@ Default:
 Override:
 - `JUSTNEWS_COMPOSE_FILE=/path/to/compose.yml bash scripts/ops/docker_compose.sh up`
 
-## Legacy compatibility wrappers
+## Canonical lifecycle wrappers
 
-- `./start_all_services.sh` -> Docker up (default)
-- `./stop_all_services.sh` -> Docker down (default)
+- `./start_all_services.sh` -> Docker up
+- `./stop_all_services.sh` -> Docker down
 
-If you explicitly need legacy in-script behavior during migration:
-- `JUSTNEWS_ENABLE_LEGACY_START_STOP=1 ./start_all_services.sh`
-- `JUSTNEWS_ENABLE_LEGACY_START_STOP=1 ./stop_all_services.sh`
+Wrappers are intentionally minimal and always Docker-canonical.
 
 ## Quick incident flow
 

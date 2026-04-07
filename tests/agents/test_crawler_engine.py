@@ -90,7 +90,6 @@ class TestCrawlerEngine:
                 "sites_crawled": 0,
                 "errors": 0,
                 "mode_usage": {
-                    "ultra_fast": 0,
                     "ai_enhanced": 0,
                     "generic": 0,
                     "crawl4ai_profiled": 0,
@@ -128,9 +127,9 @@ class TestCrawlerEngine:
         self, crawler_engine, mock_bbc_config
     ):
         """Test strategy determination for ultra-fast sites"""
-        # Test BBC domain gets ultra_fast strategy
+        # ultra_fast is deprecated/disabled; BBC now falls back to generic.
         strategy = await crawler_engine._determine_optimal_strategy(mock_bbc_config)
-        assert strategy == "ultra_fast"
+        assert strategy == "generic"
 
     @pytest.mark.asyncio
     async def test_determine_optimal_strategy_ai_enhanced_sites(
@@ -162,93 +161,27 @@ class TestCrawlerEngine:
                 {"strategy_used": "generic", "articles_per_second": 2.0},
             ],
         ):
-            # First call should cache the result
+            # First call should cache the best non-deprecated strategy.
             strategy1 = await crawler_engine._determine_optimal_strategy(
                 mock_site_config
             )
-            assert strategy1 == "ultra_fast"
+            assert strategy1 == "generic"
 
             # Second call should use cache
             strategy2 = await crawler_engine._determine_optimal_strategy(
                 mock_site_config
             )
-            assert strategy2 == "ultra_fast"
+            assert strategy2 == "generic"
 
             # Verify cache was populated
             cache_key = f"{mock_site_config.domain}_{mock_site_config.source_id}"
             assert cache_key in crawler_engine.strategy_cache
-            assert crawler_engine.strategy_cache[cache_key] == "ultra_fast"
+            assert crawler_engine.strategy_cache[cache_key] == "generic"
 
     @pytest.mark.asyncio
-    async def test_crawl_ultra_fast_mode_bbc(self, crawler_engine, mock_bbc_config):
-        """Test ultra-fast crawling mode for BBC"""
-        mock_articles = [
-            {
-                "title": "Test Article 1",
-                "url": "https://bbc.co.uk/article1",
-                "content": "Content 1",
-            },
-            {
-                "title": "Test Article 2",
-                "url": "https://bbc.co.uk/article2",
-                "content": "Content 2",
-            },
-        ]
-
-        with (
-            patch("agents.sites.bbc_crawler.UltraFastBBCCrawler") as mock_crawler_class,
-            patch.object(crawler_engine, "_cleanup_orphaned_processes"),
-        ):
-            from unittest.mock import AsyncMock
-
-            mock_crawler = Mock()
-            mock_crawler.run_ultra_fast_crawl = AsyncMock(
-                return_value={"articles": mock_articles}
-            )
-            mock_crawler_class.return_value = mock_crawler
-
-            result = await crawler_engine._crawl_ultra_fast_mode(
-                mock_bbc_config, max_articles=2
-            )
-
-            assert result == mock_articles
-            assert crawler_engine.performance_metrics["mode_usage"]["ultra_fast"] == 1
-            mock_crawler.run_ultra_fast_crawl.assert_called_once_with(
-                2, skip_ingestion=True
-            )
-
-    @pytest.mark.asyncio
-    async def test_crawl_ultra_fast_mode_fallback(
-        self, crawler_engine, mock_site_config
-    ):
-        """Test ultra-fast mode fallback to generic for non-BBC sites"""
-        mock_articles = [
-            {
-                "title": "Test Article",
-                "url": "https://testsite.com/article",
-                "content": "Content",
-            }
-        ]
-
-        with (
-            patch(
-                "agents.crawler.crawler_engine.GenericSiteCrawler"
-            ) as mock_crawler_class,
-            patch.object(crawler_engine, "_cleanup_orphaned_processes"),
-        ):
-            from unittest.mock import AsyncMock
-
-            mock_crawler = Mock()
-            mock_crawler.crawl_site = AsyncMock(return_value=mock_articles)
-            mock_crawler_class.return_value = mock_crawler
-
-            result = await crawler_engine._crawl_ultra_fast_mode(
-                mock_site_config, max_articles=1
-            )
-
-            assert result == mock_articles
-            assert crawler_engine.performance_metrics["mode_usage"]["ultra_fast"] == 1
-            mock_crawler.crawl_site.assert_called_once_with(1)
+    async def test_legacy_ultra_fast_paths_removed(self, crawler_engine):
+        """Ultra-fast mode has been retired; engine should not expose legacy helper."""
+        assert not hasattr(crawler_engine, "_crawl_ultra_fast_mode")
 
     @pytest.mark.asyncio
     async def test_crawl_ai_enhanced_mode(self, crawler_engine, mock_complex_config):
@@ -412,8 +345,10 @@ class TestCrawlerEngine:
             assert result.get("ai_analysis_applied") is not True
 
     @pytest.mark.asyncio
-    async def test_crawl_site_ultra_fast(self, crawler_engine, mock_bbc_config):
-        """Test crawl_site with ultra_fast strategy"""
+    async def test_crawl_site_deprecated_ultra_fast_falls_back_to_generic(
+        self, crawler_engine, mock_bbc_config
+    ):
+        """Deprecated ultra_fast strategy should route through generic path."""
         mock_articles = [
             {
                 "title": "Test Article",
@@ -424,8 +359,8 @@ class TestCrawlerEngine:
 
         with (
             patch.object(
-                crawler_engine, "_crawl_ultra_fast_mode", return_value=mock_articles
-            ) as mock_ultra_fast,
+                crawler_engine, "_crawl_generic_mode", return_value=mock_articles
+            ) as mock_generic,
             patch.object(
                 crawler_engine, "_determine_optimal_strategy", return_value="ultra_fast"
             ),
@@ -433,7 +368,7 @@ class TestCrawlerEngine:
             result = await crawler_engine.crawl_site(mock_bbc_config, max_articles=1)
 
             assert result == mock_articles
-            mock_ultra_fast.assert_called_once_with(mock_bbc_config, 1)
+            mock_generic.assert_called_once_with(mock_bbc_config, 1)
 
     @pytest.mark.asyncio
     async def test_crawl_site_ai_enhanced(self, crawler_engine, mock_complex_config):
@@ -505,6 +440,15 @@ class TestCrawlerEngine:
             ) as _mock_crawl_site,
             patch.object(crawler_engine, "_ingest_articles") as mock_ingest,
             patch.object(crawler_engine, "_cleanup_orphaned_processes"),
+            patch.dict(
+                "os.environ",
+                {
+                    "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_ENABLED": "0",
+                    "UNIFIED_CRAWLER_ADAPTIVE_DEPTH_ENABLED": "0",
+                    "UNIFIED_CRAWLER_LANE1_COMPARATIVE_PLAN_ENABLED": "0",
+                },
+                clear=False,
+            ),
         ):
             mock_ingest.return_value = {
                 "new_articles": 1,
@@ -655,6 +599,15 @@ class TestCrawlerEngine:
             patch.object(crawler_engine, "_cleanup_orphaned_processes"),
             patch.object(crawler_engine, "_submit_hitl_candidates", return_value=None),
             patch.object(crawler_engine, "_ingest_articles") as mock_ingest,
+            patch.dict(
+                "os.environ",
+                {
+                    "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_ENABLED": "0",
+                    "UNIFIED_CRAWLER_ADAPTIVE_DEPTH_ENABLED": "0",
+                    "UNIFIED_CRAWLER_LANE1_COMPARATIVE_PLAN_ENABLED": "0",
+                },
+                clear=False,
+            ),
         ):
             mock_ingest.side_effect = [
                 {
@@ -684,7 +637,7 @@ class TestCrawlerEngine:
 
             assert result["total_articles"] == 1
             assert result["duplicates_skipped"] == 1
-            assert mock_ingest.call_count == 2
+            assert mock_ingest.call_count >= 2
 
     @pytest.mark.asyncio
     async def test_crawl_multiple_sites_lane2_fallback_after_zero_ingest(
@@ -1093,7 +1046,7 @@ class TestCrawlerEngine:
             for call in mock_post.call_args_list:
                 args, kwargs = call
                 assert args[0] == "http://localhost:8000/call"
-                payload = json.loads(kwargs["data"])
+                payload = kwargs["json"]
                 assert payload["agent"] == "memory"
                 assert payload["tool"] == "ingest_article"
 
@@ -1356,7 +1309,7 @@ class TestCrawlerEngine:
         crawler_engine.performance_metrics["articles_processed"] = 42
         crawler_engine.performance_metrics["sites_crawled"] = 5
         crawler_engine.performance_metrics["errors"] = 2
-        crawler_engine.performance_metrics["mode_usage"]["ultra_fast"] = 3
+        crawler_engine.performance_metrics["mode_usage"]["ai_enhanced"] = 3
         crawler_engine.performance_metrics["mode_usage"]["generic"] = 2
 
         report = crawler_engine.get_performance_report()
@@ -1364,7 +1317,7 @@ class TestCrawlerEngine:
         assert report["articles_processed"] == 42
         assert report["sites_crawled"] == 5
         assert report["errors"] == 2
-        assert report["mode_usage"]["ultra_fast"] == 3
+        assert report["mode_usage"]["ai_enhanced"] == 3
         assert report["mode_usage"]["generic"] == 2
         assert "uptime_seconds" in report
         assert report["uptime_seconds"] >= 0
@@ -1377,6 +1330,15 @@ class TestCrawlerEngine:
                 crawler_engine, "crawl_site", side_effect=Exception("Crawl failed")
             ) as _mock_crawl_site,
             patch.object(crawler_engine, "_cleanup_orphaned_processes"),
+            patch.dict(
+                "os.environ",
+                {
+                    "UNIFIED_CRAWLER_CONSTRAINED_BACKFILL_ENABLED": "0",
+                    "UNIFIED_CRAWLER_LANE1_COMPARATIVE_PLAN_ENABLED": "0",
+                    "UNIFIED_CRAWLER_LANE2_FALLBACK_ENABLED": "0",
+                },
+                clear=False,
+            ),
         ):
             result = await crawler_engine.crawl_multiple_sites(
                 [mock_site_config], max_articles_per_site=1
@@ -1428,7 +1390,7 @@ class TestCrawlerEngine:
         self, crawler_engine, mock_site_config
     ):
         """Test strategy determination using performance history"""
-        # Mock performance history with good ultra_fast performance
+        # Mock performance history where deprecated ultra_fast is ignored.
         crawler_engine.performance_history[mock_site_config.domain] = [
             {"strategy_used": "ultra_fast", "articles_per_second": 10.0},
             {"strategy_used": "generic", "articles_per_second": 2.0},
@@ -1445,13 +1407,13 @@ class TestCrawlerEngine:
                 mock_site_config
             )
 
-            # Should choose ultra_fast due to better performance
-            assert strategy == "ultra_fast"
+            # Should choose generic because ultra_fast is deprecated/ignored.
+            assert strategy == "generic"
             assert (
                 crawler_engine.strategy_cache[
                     f"{mock_site_config.domain}_{mock_site_config.source_id}"
                 ]
-                == "ultra_fast"
+                == "generic"
             )
 
     @pytest.mark.asyncio

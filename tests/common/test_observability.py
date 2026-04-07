@@ -72,8 +72,14 @@ class TestObservability:
         assert logger1.name == "module1"
         assert logger2.name == "module2"
 
-    def test_get_logger_file_rotation(self):
-        """Test that file handler has correct rotation settings"""
+    def test_get_logger_file_rotation(self, monkeypatch):
+        """Test that file handler has expected default rotation settings.
+
+        Force explicit defaults so ambient process env cannot make this flaky.
+        """
+        monkeypatch.setenv("LOG_MAX_BYTES", str(10 * 1024 * 1024))
+        monkeypatch.setenv("LOG_BACKUP_COUNT", "5")
+
         logger = get_logger("test_module")
 
         file_handler = None

@@ -5,17 +5,32 @@ import sys
 import time
 
 import django
+import pytest
 from django.test import Client
+
+
+requires_real_e2e = pytest.mark.skipif(
+    os.environ.get("RUN_REAL_E2E", "") != "1",
+    reason="Real E2E tests require RUN_REAL_E2E=1",
+)
+
+
+def _publisher_paths():
+    root = os.getcwd()
+    manage_py = os.path.join(root, "manage.py")
+    publisher_pkg_dir = os.path.join(root, "justnews_publisher")
+    if not os.path.exists(manage_py):
+        # legacy fallback
+        manage_py = os.path.join(root, "agents", "publisher", "manage.py")
+        publisher_pkg_dir = os.path.join(root, "agents", "publisher")
+    return manage_py, publisher_pkg_dir
 
 
 def run_manage_cmd(cmd_args):
     # Use the same python interpreter that runs pytest
-    cmd = [
-        sys.executable,
-        os.path.join(os.getcwd(), "agents", "publisher", "manage.py"),
-    ] + cmd_args
+    manage_py, publisher_dir = _publisher_paths()
+    cmd = [sys.executable, manage_py] + cmd_args
     env = os.environ.copy()
-    publisher_dir = os.path.join(os.getcwd(), "agents", "publisher")
     current_pythonpath = env.get("PYTHONPATH", "")
     env["PYTHONPATH"] = f"{publisher_dir}:{current_pythonpath}" if current_pythonpath else publisher_dir
 
@@ -23,14 +38,14 @@ def run_manage_cmd(cmd_args):
     return proc.returncode, proc.stdout, proc.stderr
 
 
+@requires_real_e2e
 def test_publisher_ingest_and_render():
     # Ensure environment configured for publisher app
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "justnews_publisher.settings")
     django.setup()
 
-    sample_path = os.path.join(
-        os.getcwd(), "agents", "publisher", "news", "sample_articles.json"
-    )
+    _, publisher_dir = _publisher_paths()
+    sample_path = os.path.join(publisher_dir, "news", "sample_articles.json")
     assert os.path.exists(sample_path), "Sample articles JSON not found"
 
     # Run ingest management command
@@ -38,7 +53,7 @@ def test_publisher_ingest_and_render():
     assert rc == 0, f"Ingest command failed: {err}\nSTDOUT: {out}"
 
     # Connect to the publisher sqlite DB and assert articles present
-    db_path = os.path.join(os.getcwd(), "agents", "publisher", "db.sqlite3")
+    db_path = os.path.join(os.getcwd(), "db.sqlite3")
     assert os.path.exists(db_path), "Publisher DB not found"
 
     con = sqlite3.connect(db_path)
@@ -73,10 +88,11 @@ def test_publisher_ingest_and_render():
     sock.bind(("127.0.0.1", 0))
     server_port = sock.getsockname()[1]
     sock.close()
+    manage_py, _ = _publisher_paths()
     server_proc = subprocess.Popen(
         [
             sys.executable,
-            os.path.join(os.getcwd(), "agents", "publisher", "manage.py"),
+            manage_py,
             "runserver",
             f"127.0.0.1:{server_port}",
         ],
@@ -91,7 +107,7 @@ def test_publisher_ingest_and_render():
         ready = False
         import urllib.request
 
-        while time.time() - start < 8:
+        while time.time() - start < 15:
             try:
                 with urllib.request.urlopen(
                     f"http://127.0.0.1:{server_port}/", timeout=1

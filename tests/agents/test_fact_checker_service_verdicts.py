@@ -8,6 +8,7 @@ def test_backend_normalize_verdict_canonical():
 
 
 def test_backend_normalize_verdict_legacy_and_unknown():
+    # Backend keeps compatibility aliases for external callers.
     assert service.normalize_verdict("proven") == "True"
     assert service.normalize_verdict("plausible") == "Likely True"
     assert service.normalize_verdict("unverified") == "Uncertain"

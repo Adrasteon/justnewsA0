@@ -75,6 +75,8 @@ python3 scripts/ops/validate_crawl_lane_behavior.py
 ```
 
 If full-suite pytest is known to fail from unrelated legacy deps, prefer focused suites for local validation.
+Note: `make ci-check` remains the authoritative blocking gate for merge/release decisions.
+Focused suites are a developer productivity aid, not a replacement for CI gate enforcement.
 
 ## PR Preflight Workflow
 
@@ -145,11 +147,23 @@ In this dev container, systemd user service may be unavailable. Use background p
 nohup hermes gateway run --replace >/root/.hermes/logs/gateway.out 2>&1 &
 ```
 
+Equivalent Make target:
+
+```bash
+make hermes-gateway-run
+```
+
 Health checks:
 
 ```bash
 ps -ef | grep -E 'hermes gateway run|gateway/run.py' | grep -v grep
 tail -n 80 /root/.hermes/logs/gateway.out
+```
+
+Full Hermes stack status (Hermes + Honcho + Gateway):
+
+```bash
+make hermes-stack-status
 ```
 
 ## Memory and Continuity Rules

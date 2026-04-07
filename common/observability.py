@@ -14,6 +14,17 @@ if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
 
+def _env_int(name: str, default: int) -> int:
+    """Safely parse integer env vars with fallback to defaults."""
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return int(str(raw).strip())
+    except Exception:
+        return default
+
+
 def get_logger(name: str) -> logging.Logger:
     """
     Get a configured logger instance for the given name.
@@ -36,13 +47,24 @@ def get_logger(name: str) -> logging.Logger:
     # just because handlers exist; tests rely on specific handlers and levels.
     logger.setLevel(logging.DEBUG)
 
-    # Create or attach a rotating file handler if none present
-    has_file = any(isinstance(h, RotatingFileHandler) for h in logger.handlers)
-    if not has_file:
+    # Create or attach a rotating file handler if none present.
+    # IMPORTANT: ignore invalid env values and avoid sticky contamination from
+    # prior tests/process state by resetting existing handler settings to
+    # validated defaults each call.
+    expected_max_bytes = _env_int("LOG_MAX_BYTES", 10 * 1024 * 1024)
+    expected_backup_count = _env_int("LOG_BACKUP_COUNT", 5)
+
+    file_handler = None
+    for handler in logger.handlers:
+        if isinstance(handler, RotatingFileHandler):
+            file_handler = handler
+            break
+
+    if file_handler is None:
         file_handler = RotatingFileHandler(
             log_file_path,
-            maxBytes=int(os.environ.get('LOG_MAX_BYTES', 512000)),  # 10 MB
-            backupCount=int(os.environ.get('LOG_BACKUP_COUNT', 3)),
+            maxBytes=expected_max_bytes,
+            backupCount=expected_backup_count,
             encoding="utf-8",
         )
         formatter = logging.Formatter(
@@ -51,6 +73,10 @@ def get_logger(name: str) -> logging.Logger:
         )
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
+    else:
+        # Keep handler settings deterministic per current environment/config.
+        file_handler.maxBytes = expected_max_bytes
+        file_handler.backupCount = expected_backup_count
 
     # Ensure a console handler exists. File handlers are also StreamHandlers, so
     # we explicitly ensure we don't treat file handlers as console handlers.

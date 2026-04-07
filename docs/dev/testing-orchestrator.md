@@ -62,8 +62,11 @@ py312}`conda env and sets`PYTHONPATH` to the repo root. Use it for consistent lo
 - `scripts/dev/install_hooks.sh`— installs local git hooks (from`scripts/dev/git-hooks/`) into`.git/hooks`(opt-in).
   The`pre-push`hook prints guidance and can optionally run a quick smoke test when`GIT_STRICT_TEST_HOOK=1`.
 
-- `tests/conftest.py`includes a safety check that enforces that local pytest runs are in`${CANONICAL_ENV:-justnews-
-  py312}`by default. CI bypasses this check; developers can bypass locally by setting`ALLOW_ANY_PYTEST_ENV=1`.
+- `tests/conftest.py` includes a safety check that enforces local pytest runs in supported envs
+  (project `.venv` / `/deps/.venv` / canonical phase envs) by default.
+  CI bypasses this check.
+  Developers may bypass locally with `ALLOW_ANY_PYTEST_ENV=1` only for temporary debugging,
+  and must not use that bypass in canonical CI or release validation paths.
 
 Practical commands
 

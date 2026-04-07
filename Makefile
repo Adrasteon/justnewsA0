@@ -48,7 +48,10 @@ help:
 	@echo "  index-bootstrap-json    Write new-chat bootstrap snapshot as JSON"
 	@echo "  index-hermes-daily      Run daily Hermes refresh workflow"
 	@echo "  index-telemetry-summary Summarize lightweight indexing telemetry"
+	@echo "  index-status-report     Show token trend plus index health/daemon status"
 	@echo "  index-telemetry-tail    Show recent telemetry events"
+	@echo "  hermes-gateway-run      Run Hermes Telegram gateway in container mode"
+	@echo "  hermes-stack-status     Show Hermes plus Honcho plus Telegram gateway status"
 	@echo ""
 	@echo "Environment variables:"
 	@echo "  ENV         Target environment (development/staging/production)"
@@ -63,17 +66,34 @@ VERSION ?= $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.1.0")
 DOCKER_TAG ?= latest
 
 # Python and tools
-PYTHON ?= python3
+# Prefer Python 3.12+ when available; fall back to python3 for non-test targets.
+PYTHON ?= $(shell command -v python3.12 >/dev/null 2>&1 && command -v python3.12 || command -v python3)
 PIP := $(PYTHON) -m pip
 VENV_DIR ?= .venv
 VENV_PY := $(VENV_DIR)/bin/python
 
-# Prefer project-local UV/venv interpreter when available.
-ifeq ($(wildcard $(VENV_PY)),)
-RUN_PY := $(PYTHON)
-else
-RUN_PY := $(VENV_PY)
-endif
+# Prefer project-local venv only when it satisfies test/runtime minimum (3.12+).
+# Otherwise use a discovered 3.12 interpreter when available.
+RUN_PY ?= $(shell \
+	if [ -x "$(VENV_PY)" ] && "$(VENV_PY)" -c "import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)" >/dev/null 2>&1; then \
+		echo "$(VENV_PY)"; \
+	elif command -v python3.12 >/dev/null 2>&1; then \
+		command -v python3.12; \
+	elif command -v python3 >/dev/null 2>&1; then \
+		command -v python3; \
+	else \
+		echo python3; \
+	fi)
+
+# Indexing scripts require repo-specific compatibility; always prefer venv python.
+INDEX_PY ?= $(shell \
+	if [ -x "$(VENV_PY)" ]; then \
+		echo "$(VENV_PY)"; \
+	elif command -v python3 >/dev/null 2>&1; then \
+		command -v python3; \
+	else \
+		echo python3; \
+	fi)
 
 # Directories
 ROOT_DIR := $(shell pwd)
@@ -139,7 +159,7 @@ ensure-dev-tools:
 check-python-version:
 	@printf '$(BLUE)[INFO]$(NC) %s\n' "Validating Python runtime for tests (Python 3.12+ required)"
 	@$(RUN_PY) -c "import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)" || \
-		(printf '$(RED)[ERROR]$(NC) %s\n' "Tests require Python 3.12+ (datetime.UTC is used across code/tests). Activate /app/.venv (UV-managed) env."; exit 1)
+		(printf '$(RED)[ERROR]$(NC) %s\n' "Tests require Python 3.12+. Current RUN_PY=$(RUN_PY). Create/use a 3.12 venv (e.g., 'uv python install 3.12 && uv venv --python 3.12 .venv && uv pip install --python .venv/bin/python -r requirements-bootstrap.txt')."; exit 1)
 	$(call log_success,"Python runtime is compatible with tests")
 
 # Local pytest wrapper target via project-local UV/venv.
@@ -171,7 +191,7 @@ test-performance:
 LINT_RUFF_PATHS ?= scripts/ci scripts/checks tests/unit
 LINT_MYPY_PATHS ?= scripts/ci scripts/checks
 LINT_NO_CONTAINERS_PATHS ?= scripts/ci scripts/checks tests/unit
-lint: ensure-dev-tools check-processing-time lint-code lint-docs lint-no-containers
+lint: ensure-dev-tools check-processing-time lint-code lint-docs lint-no-containers lint-docker-canonical-runtime
 	$(call log_success,"Code quality checks passed")
 
 lint-full: ensure-dev-tools check-processing-time
@@ -202,6 +222,11 @@ lint-no-containers:
 	$(call log_info,"Checking for disallowed container/orchestration references in code...")
 	$(PYTHON) scripts/checks/no_container_refs.py $(LINT_NO_CONTAINERS_PATHS) || (printf '\033[0;31m[ERROR]\033[0m %s\n' "Disallowed container/orchestration references found in lint scope, see output above."; exit 1)
 	$(call log_success,"No disallowed container/orchestration references outside allowed folders.")
+
+lint-docker-canonical-runtime:
+	$(call log_info,"Checking canonical Docker runtime files for contradictory legacy messaging...")
+	$(PYTHON) scripts/checks/docker_canonical_runtime_guard.py
+	$(call log_success,"Canonical Docker runtime messaging guard passed")
 
 format:
 	$(call log_info,"Formatting code...")
@@ -278,14 +303,14 @@ docker-migration-check:
 	bash scripts/ops/docker_first_migration_check.sh
 
 deploy-staging: deploy-check
-	$(call log_info,"Deploying to staging environment using systemd...")
-	$(MAKE) deploy-systemd
-	$(call log_success,"Staging deployment completed (via systemd)")
+	$(call log_info,"Deploying to staging environment using Docker (canonical runtime)...")
+	$(MAKE) deploy-docker
+	$(call log_success,"Staging deployment completed (via Docker)")
 
 deploy-production: deploy-check
-	$(call log_info,"Deploying to production environment using systemd...")
-	$(MAKE) deploy-systemd
-	$(call log_success,"Production deployment completed (via systemd)")
+	$(call log_info,"Deploying to production environment using Docker (canonical runtime)...")
+	$(MAKE) deploy-docker
+	$(call log_success,"Production deployment completed (via Docker)")
 
 # Documentation targets
 docs: docs-generate docs-validate
@@ -312,12 +337,12 @@ BOOTSTRAP_JSON_PATH ?= run/index_bootstrap.json
 
 index-build:
 	$(call log_info,"Building incremental local code index...")
-	python3 scripts/indexing/build_code_index.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
+	$(INDEX_PY) scripts/indexing/build_code_index.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
 	$(call log_success,"Local code index refreshed")
 
 index-build-full:
 	$(call log_info,"Building full local code index (no reuse)...")
-	python3 scripts/indexing/build_code_index.py --root . --index-dir .cache/code_index --full --telemetry-path "$(TELEMETRY_PATH)"
+	$(INDEX_PY) scripts/indexing/build_code_index.py --root . --index-dir .cache/code_index --full --telemetry-path "$(TELEMETRY_PATH)"
 	$(call log_success,"Full local code index rebuilt")
 
 index-query:
@@ -326,7 +351,7 @@ index-query:
 		exit 1; \
 	fi
 	$(call log_info,"Querying local code index...")
-	python3 scripts/indexing/query_code_index.py "$(QUERY)" --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
+	$(INDEX_PY) scripts/indexing/query_code_index.py "$(QUERY)" --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
 
 index-auto-install:
 	$(call log_info,"Installing code index auto-update user units")
@@ -368,17 +393,17 @@ index-auto-status:
 
 index-auto-run-now:
 	$(call log_info,"Running immediate autonomous index refresh")
-	@python3 scripts/indexing/autonomous_index_update.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
+	@$(INDEX_PY) scripts/indexing/autonomous_index_update.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
 	$(call log_success,"Autonomous index refresh completed")
 
 index-bootstrap:
 	$(call log_info,"Collecting new-chat bootstrap context")
-	@python3 scripts/indexing/bootstrap_context.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
+	@$(INDEX_PY) scripts/indexing/bootstrap_context.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)"
 
 index-bootstrap-json:
 	$(call log_info,"Writing new-chat bootstrap JSON snapshot")
 	@mkdir -p "$(dir $(BOOTSTRAP_JSON_PATH))"
-	@python3 scripts/indexing/bootstrap_context.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)" --json > "$(BOOTSTRAP_JSON_PATH)"
+	@$(INDEX_PY) scripts/indexing/bootstrap_context.py --root . --index-dir .cache/code_index --telemetry-path "$(TELEMETRY_PATH)" --json > "$(BOOTSTRAP_JSON_PATH)"
 	@echo "Wrote $(BOOTSTRAP_JSON_PATH)"
 
 index-hermes-daily:
@@ -388,11 +413,44 @@ index-hermes-daily:
 
 index-telemetry-summary:
 	$(call log_info,"Summarizing indexing telemetry")
-	@python3 scripts/indexing/telemetry_summary.py --path "$(TELEMETRY_PATH)"
+	@$(INDEX_PY) scripts/indexing/telemetry_summary.py --path "$(TELEMETRY_PATH)"
+
+index-status-report:
+	$(call log_info,"Reporting indexer health and daemon status with token trend")
+	@$(INDEX_PY) scripts/indexing/token_health_report.py --telemetry-path "$(TELEMETRY_PATH)" --index-dir .cache/code_index --daemon-script scripts/indexing/index_autoupdate_daemon.sh
 
 index-telemetry-tail:
 	$(call log_info,"Showing recent indexing telemetry events")
 	@tail -n 20 "$(TELEMETRY_PATH)" || true
+
+hermes-gateway-run:
+	$(call log_info,"Starting Hermes Telegram gateway in container mode")
+	@mkdir -p /root/.hermes/logs
+	@nohup hermes gateway run --replace >/root/.hermes/logs/gateway.out 2>&1 &
+	@sleep 2
+	@ps -ef | grep -E 'hermes gateway run|gateway/run.py' | grep -v grep || true
+	@echo "gateway log: /root/.hermes/logs/gateway.out"
+	$(call log_success,"Hermes gateway background run requested")
+
+hermes-stack-status:
+	$(call log_info,"Checking Hermes Honcho and Telegram gateway status")
+	@echo "=== Hermes status ==="
+	@hermes status || true
+	@echo ""
+	@echo "=== Honcho status ==="
+	@hermes honcho status || true
+	@echo ""
+	@echo "=== Honcho mode ==="
+	@hermes honcho mode || true
+	@echo ""
+	@echo "=== Gateway process check (container-safe) ==="
+	@ps -ef | grep -E 'hermes gateway run|gateway/run.py' | grep -v grep || echo "Gateway process not found"
+	@echo ""
+	@echo "=== Gateway service status (systemd user) ==="
+	@hermes gateway status || true
+	@echo ""
+	@echo "=== Gateway log tail ==="
+	@tail -n 60 /root/.hermes/logs/gateway.out 2>/dev/null || echo "No gateway log found at /root/.hermes/logs/gateway.out"
 
 # Validate global.env has PYTHON_BIN (CI-friendly check; does not require root)
 .PHONY: check-global-env
@@ -403,7 +461,7 @@ check-global-env:
 
 security-check:
 	$(call log_info,"Running security checks...")
-	$(RUN_PY) -m pip check
+	$(PIP) check
 	@if command -v bandit >/dev/null 2>&1; then \
 		bandit -q -r . -x tests,build,dist,.venv || exit 1; \
 	else \
@@ -481,7 +539,7 @@ dev-update:
 	$(call log_success,"Dependencies updated")
 
 # GPU Monitor management
-.PHONY: monitor-install monitor-enable monitor-disable monitor-install-rotate monitor-status monitor-tail alertmanager-install alertmanager-enable alertmanager-disable alertmanager-status alertmanager-test index-auto-install index-auto-enable index-auto-disable index-auto-status index-auto-run-now index-bootstrap index-bootstrap-json index-hermes-daily index-telemetry-summary index-telemetry-tail
+.PHONY: monitor-install monitor-enable monitor-disable monitor-install-rotate monitor-status monitor-tail alertmanager-install alertmanager-enable alertmanager-disable alertmanager-status alertmanager-test index-auto-install index-auto-enable index-auto-disable index-auto-status index-auto-run-now index-bootstrap index-bootstrap-json index-hermes-daily index-telemetry-summary index-status-report index-telemetry-tail hermes-gateway-run hermes-stack-status
 
 monitor-install:
 	$(call log_info,"Installing GPU monitor user systemd unit (copies example to ~/.config/systemd/user)")

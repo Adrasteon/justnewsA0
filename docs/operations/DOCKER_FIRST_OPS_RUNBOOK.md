@@ -31,7 +31,7 @@ Override with env:
 
 ## Systemd role during transition
 
-- systemd app-orchestration scripts are legacy compatibility paths.
+- systemd app-orchestration scripts are non-canonical and should remain out of normal app operations.
 - systemd may still be used for host-level wrappers only (optional), such as:
   - auto-starting Docker Compose at boot,
   - host monitoring/alerting units.
@@ -52,5 +52,6 @@ Override with env:
 
 If Docker path fails during transition:
 - revert to previous known-good compose file or image tags,
-- use legacy systemd app path only as temporary fallback,
+- avoid restoring systemd app orchestration as a normal fallback path;
+  if emergency host-level intervention is required, treat it as a one-off incident action and document it,
 - capture failure logs and update compose health/dependency configuration.

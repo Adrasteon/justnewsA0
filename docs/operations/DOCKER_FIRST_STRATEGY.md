@@ -7,7 +7,7 @@ description: Near-term Docker canonical runtime, systemd role reduction, and Kub
 
 Decision
 - JustNews runtime is moving to Docker-first for near-term production/dev operations.
-- systemd remains optional for host-level wrappers and legacy compatibility during transition.
+- systemd remains optional only for explicit host-level wrappers and constrained fallback operations.
 
 Why
 - Align runtime with current operational reality and reduce split-brain deployment modes.
@@ -15,8 +15,8 @@ Why
 
 Current policy
 - Canonical app runtime: Docker Compose managed services.
-- systemd app orchestration: legacy compatibility path (not preferred).
-- systemd host wrappers: allowed for bootstrapping host-level processes if needed.
+- systemd app orchestration: non-canonical and should not be used for normal app lifecycle operations.
+- systemd host wrappers: allowed only for host-level bootstrapping/monitoring when strictly required.
 
 Transition phases
 
@@ -39,5 +39,5 @@ Guardrails
 - Changes should be reversible during transition.
 
 Operational note
-- During transition, avoid introducing new systemd-first app orchestration dependencies.
+- Do not introduce new systemd app-orchestration dependencies into active runtime paths.
 - Prefer docker lifecycle entrypoints and compose-native health semantics.

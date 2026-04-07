@@ -118,8 +118,11 @@ class GPUOrchestratorEngine:
         # Ensure VLLM and related attributes exist even in lightweight test mode
         self._vllm_process = None
         # Allow tests to pre-set _vllm_enabled; only set from env if not already present
-        if not hasattr(self, '_vllm_enabled'):
+        prior_vllm_enabled = getattr(self, "_vllm_enabled", None)
+        if prior_vllm_enabled is None:
             self._vllm_enabled = os.environ.get("VLLM_ENABLED", "false").lower() == "true"
+        else:
+            self._vllm_enabled = bool(prior_vllm_enabled)
         self._model_spec = None
         self.vllm_restart_counter = Counter(
             "gpu_orchestrator_vllm_restarts_total",
@@ -137,8 +140,10 @@ class GPUOrchestratorEngine:
             registry=self.metrics.registry,
         )
 
-        # make instance file path writable so tests can monkeypatch engine.__file__
-        self.__file__ = __file__
+        # Make instance file path writable so tests can monkeypatch engine.__file__.
+        # Preserve an existing injected value across re-initialization.
+        if not getattr(self, "__file__", None):
+            self.__file__ = __file__
 
         # If vLLM is enabled, attempt to load canonical spec and start it; run even in lightweight mode
         if self._vllm_enabled and not SAFE_MODE:
@@ -154,7 +159,12 @@ class GPUOrchestratorEngine:
 
             # If a canonical spec exists in config, prefer orchestrator-managed start
             try:
-                cfg_file = Path(getattr(self, '__file__', __file__)).resolve().parents[2] / "config" / "vllm_mistral_7b.yaml"
+                base_file = Path(getattr(self, "__file__", __file__)).resolve()
+                candidates = [
+                    base_file.parents[1] / "config" / "vllm_mistral_7b.yaml",
+                    base_file.parents[2] / "config" / "vllm_mistral_7b.yaml",
+                ]
+                cfg_file = next((c for c in candidates if c.exists()), candidates[0])
                 if cfg_file.exists():
                     try:
                         import yaml
@@ -168,15 +178,19 @@ class GPUOrchestratorEngine:
                             dtype=model_cfg.get("dtype", "bf16"),
                             max_length=model_cfg.get("max_length", 4096),
                             max_batch_size=model_cfg.get("max_batch_size", 4),
-                            max_tokens_per_request=model_cfg.get("max_tokens_per_request", 1024),
+                            max_tokens_per_request=model_cfg.get(
+                                "max_tokens_per_request", 1024
+                            ),
                             num_workers=model_cfg.get("num_workers", 1),
                             gpu_memory_util=runtime.get("gpu_memory_util", 0.75),
-                            py_torch_alloc_conf=runtime.get("py_torch_alloc_conf", "expandable_segments:True"),
+                            py_torch_alloc_conf=runtime.get(
+                                "py_torch_alloc_conf", "expandable_segments:True"
+                            ),
                             service_unit=service.get("systemd_unit"),
                             memory_max=service.get("memory_max"),
                             cpu_quota=service.get("cpu_quota"),
                         )
-                        self.logger.info("Loaded canonical model spec from config/vllm_mistral_7b.yaml")
+
                         self.ensure_model_installed(spec)
                         # Only start if it is safe to do so
                         if self.can_start_model(spec):
@@ -257,7 +271,7 @@ class GPUOrchestratorEngine:
 
         # VLLM server management (attributes initialized earlier to support lightweight/test mode)
         self._vllm_process = None
-        self._vllm_enabled = os.environ.get("VLLM_ENABLED", "false").lower() == "true"
+        self._vllm_enabled = bool(getattr(self, "_vllm_enabled", False))
         self._model_spec = None
 
         # vLLM configuration/start block moved to execute earlier so tests and lightweight modes can exercise startup logic

@@ -110,14 +110,18 @@ class TestAnalystTools:
             )
 
             assert result["error"] == "Unknown analysis type: unknown"
-            assert result["supported_types"] == [
+            supported = result["supported_types"]
+            assert isinstance(supported, list)
+            # Keep baseline contract while allowing newly added analysis types.
+            for expected in [
                 "sentiment",
                 "entities",
                 "statistics",
                 "metrics",
                 "bias",
                 "sentiment_and_bias",
-            ]
+            ]:
+                assert expected in supported
 
     @pytest.mark.asyncio
     async def test_process_analysis_request_engine_error(self):

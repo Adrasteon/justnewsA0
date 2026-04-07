@@ -147,6 +147,14 @@ try:
 except Exception:  # pragma: no cover - best-effort during test startup
     pass
 
+# Skip deprecation-archive test trees by default; they may reference retired
+# modules that are no longer importable in canonical runtime paths.
+def pytest_ignore_collect(collection_path, config):
+    path_str = str(collection_path)
+    if "fact_checker_deprecation_archive/tests" in path_str:
+        return os.environ.get("RUN_DEPRECATION_ARCHIVE_TESTS", "0") != "1"
+    return False
+
 # Mock ChromaDB for unit tests to avoid importing the real package and
 # pulling in optional telemetry dependencies (opentelemetry/google.rpc).
 # Tests that require a real Chroma client (integration tests) should

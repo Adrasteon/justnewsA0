@@ -49,9 +49,13 @@ Scripts for system maintenance, monitoring, and health checks.
 
 Scripts for operational tasks and service management.
 
-- `start_services_daemon.sh` - Start all JustNews services
+- `docker_compose.sh` - Canonical Docker compose lifecycle wrapper (`up|down|status|logs|ps`)
 
-- `stop_services.sh` - Stop all JustNews services
+- `docker_preflight.sh` - Canonical Docker runtime preflight checks
+
+- `start_services_daemon.sh` - Legacy daemon launcher (non-canonical path; transition/historical use only)
+
+- `stop_services.sh` - Legacy daemon stop helper (non-canonical path; transition/historical use only)
 
 - `download_agent_models.py` - Download and setup AI models
 
@@ -84,8 +88,12 @@ python scripts/deploy/init_database.py --dry-run
 ## Basic usage
 ./scripts/dev/setup_dev_environment.sh
 
-## With options (varies by script)
-./scripts/ops/start_services_daemon.sh --help
+## Canonical lifecycle wrappers
+./start_all_services.sh
+./stop_all_services.sh
+
+## Canonical compose wrapper options
+./scripts/ops/docker_compose.sh --help
 
 ## Roo Code workspace indexing helper (Qdrant)
 

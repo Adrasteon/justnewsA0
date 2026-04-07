@@ -136,6 +136,8 @@ class ChiefEditorEngine:
         self.device = self.config.device
         # Use shared model adapter wrapper for consistent dry-run & Qwen behavior
         self.qwen_adapter = ChiefEditorModelAdapter()
+        # Backward-compat alias for tests/callers still using mistral_adapter name.
+        self.mistral_adapter = self.qwen_adapter
 
         # Model containers
         self.pipelines = {}

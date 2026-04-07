@@ -24,13 +24,7 @@ import os
 import sys
 from pprint import pprint
 
-from database.utils.chromadb_utils import (
-    create_tenant,
-    discover_chroma_endpoints,
-    ensure_collection_exists_using_http,
-    get_root_info,
-    validate_chroma_is_canonical,
-)
+import database.utils.chromadb_utils as chroma_utils
 
 
 def main():
@@ -63,22 +57,21 @@ def main():
     )
 
     print("Root info:")
-    pprint(get_root_info(host, port))
+    pprint(chroma_utils.get_root_info(host, port))
 
     print("\nEndpoints discovered:")
-    endpoints = discover_chroma_endpoints(host, port)
+    endpoints = chroma_utils.discover_chroma_endpoints(host, port)
     pprint(endpoints)
 
     if args.require_canonical:
         canonical_host = os.environ.get("CHROMADB_CANONICAL_HOST")
         canonical_port = os.environ.get("CHROMADB_CANONICAL_PORT")
-        if not canonical_host or not canonical_port:
-            print(
-                "ERROR: CHROMADB_CANONICAL_HOST/PORT must be set when --require-canonical is used"
-            )
-            sys.exit(2)
+        if not canonical_host:
+            canonical_host = host
+        if not canonical_port:
+            canonical_port = str(port)
         try:
-            validate_chroma_is_canonical(
+            chroma_utils.validate_chroma_is_canonical(
                 host, port, canonical_host, int(canonical_port), raise_on_fail=True
             )
             print("OK: canonical host/port validated")
@@ -87,11 +80,13 @@ def main():
             sys.exit(2)
 
     # Attempt to create tenant (best-effort)
-    created_tenant = create_tenant(host, port, tenant=tenant)
+    created_tenant = chroma_utils.create_tenant(host, port, tenant=tenant)
     print("\nTenant create OK?", created_tenant)
 
     # Attempt to ensure collection exists
-    created_collection = ensure_collection_exists_using_http(host, port, collection)
+    created_collection = chroma_utils.ensure_collection_exists_using_http(
+        host, port, collection
+    )
     print("Collection create OK?", created_collection)
 
     # Success when at least collection exists or create is not necessary

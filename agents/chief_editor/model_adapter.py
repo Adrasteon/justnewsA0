@@ -41,9 +41,10 @@ class ChiefEditorModelAdapter:
             api_key=os.environ.get("VLLM_API_KEY", "unused"),
             system_prompt=SYSTEM_PROMPT,
             temperature=0.15,
-            max_tokens=380,
-            timeout=45.0
+            max_tokens=800,
+            timeout=45.0,
         )
+
         if self.enabled:
             try:
                 self.adapter.load()
@@ -120,8 +121,18 @@ class ChiefEditorModelAdapter:
             return None
 
     def _parse_response(self, text: str) -> dict[str, Any] | None:
+        clean = text.replace("```json", "").replace("```", "").strip()
+        if clean.startswith("[DRYRUN-openai:"):
+            return {
+                "priority": "medium",
+                "stage": "review",
+                "confidence": 0.75,
+                "assessment": "Dry-run simulated chief editor review.",
+                "risk_flags": [],
+                "next_actions": ["Proceed to standard editorial review"],
+                "notes": "Qwen dry-run compatibility payload",
+            }
         try:
-            clean = text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean)
         except Exception:
             return None

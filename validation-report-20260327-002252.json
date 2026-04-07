@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-03-27T00:22:52+00:00",
+  "validation_passed": false,
+  "issues_found": [
+    "ERROR: docker compose plugin unavailable",
+    "WARNING: Skipping compose config validation because docker compose is unavailable"
+  ]
+}
