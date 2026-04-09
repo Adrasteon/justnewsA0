@@ -19,6 +19,12 @@ Use this playbook for:
 - Honcho is enabled and connected for cross-session memory continuity.
 - Local indexing scripts are available under scripts/indexing.
 
+## Model Policy
+
+- Primary model: `gpt-5.4` for coding, debugging, review, planning, and other complex tasks.
+- Simple-turn model: `gpt-5-mini` for short routine turns that are not code-heavy or tool-heavy.
+- Smart model routing should stay conservative so code and diagnostic work remains on `gpt-5.4` by default.
+
 ## Daily Workflow
 
 ### 1. Morning bootstrap

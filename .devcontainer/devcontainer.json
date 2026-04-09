@@ -46,12 +46,11 @@
         9100,
         9411
     ],
-    "initializeCommand": "bash .devcontainer/scripts/pre-build-cleanup.sh || bash /app/.devcontainer/scripts/pre-build-cleanup.sh || true",
+    "initializeCommand": "cd \"${localWorkspaceFolder}\" && bash .devcontainer/scripts/pre-build-cleanup.sh || echo [WARN] pre-build cleanup skipped",
     "postCreateCommand": "/usr/local/bin/create_deps_venv.sh",
     "remoteUser": "root",
     "remoteEnv": {
         "DOCKER_BUILDKIT": "1",
         "COMPOSE_DOCKER_CLI_BUILD": "1"
-    },
-    "runArgs": ["--memory=22gb", "--memory-swap=22gb"]
+    }
 }

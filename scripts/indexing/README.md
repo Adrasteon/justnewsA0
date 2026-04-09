@@ -100,7 +100,7 @@ python scripts/indexing/autonomous_index_update.py --root . --index-dir .cache/c
 python scripts/indexing/query_code_index.py "publish republish taxonomy" --root . --index-dir .cache/code_index --chars-per-token 4.0
 
 # optional: force a specific tokenizer model or encoding fallback
-python scripts/indexing/query_code_index.py "publish republish taxonomy" --root . --index-dir .cache/code_index --tokenizer-model gpt-5.3-codex --tokenizer-fallback-encoding o200k_base
+python scripts/indexing/query_code_index.py "publish republish taxonomy" --root . --index-dir .cache/code_index --tokenizer-model gpt-5.4 --tokenizer-fallback-encoding o200k_base
 
 # default behavior reads selected chat model env vars, then persisted binding file, then default
 python scripts/indexing/session_chat_init.sh

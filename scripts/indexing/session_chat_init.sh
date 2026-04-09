@@ -39,7 +39,7 @@ for var_name in COPILOT_CHAT_MODEL GITHUB_COPILOT_CHAT_MODEL VSCODE_COPILOT_CHAT
 done
 
 if [[ -z "$resolved_chat_model" ]]; then
-  resolved_chat_model="gpt-5.3-codex"
+  resolved_chat_model="gpt-5.4"
   resolved_chat_model_source="bootstrap-default"
 fi
 

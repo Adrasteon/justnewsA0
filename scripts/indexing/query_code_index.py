@@ -677,7 +677,7 @@ def _resolve_tokenizer_model(tokenizer_model_arg: str, root: Path) -> tuple[str,
         return persisted_model, f"file:{persisted_source}"
 
     # Default to the active assistant model family if no explicit session value is exposed.
-    return "gpt-5.3-codex", "default"
+    return "gpt-5.4", "default"
 
 
 def _encoding_hint_for_model(model_name: str, fallback_encoding: str) -> str:

@@ -575,12 +575,13 @@ EOF
 fi
 
 # Step 4: Wait for vLLM to be accessible (with polling)
-# NOTE: vLLM model loading can take 2-5 minutes; this step is non-critical
+# NOTE: vLLM is OPTIONAL for app startup; only required by fact-checker service
+# This step is non-blocking and continues even if vLLM never becomes ready
 log_info ""
-log_info "Step 4: Checking vLLM accessibility (non-blocking)..."
+log_info "Step 4: Checking vLLM accessibility (OPTIONAL - non-blocking)..."
 VLLM_HOST="${VLLM_HOST:-vllm}"
 VLLM_PORT="${VLLM_PORT:-8010}"
-VLLM_MAX_WAIT=20
+VLLM_MAX_WAIT=10  # Reduced timeout since this is optional
 VLLM_WAIT=0
 
 while [ $VLLM_WAIT -lt $VLLM_MAX_WAIT ]; do
@@ -621,8 +622,9 @@ EOF
 done
 
 if [ $VLLM_READY -eq 0 ]; then
-    log_info "  ⓘ vLLM still initializing (model loading may take 2-5 minutes in background)"
-    log_info "  → You can check model status later with: curl http://vllm:8001/v1/models"
+    log_info "  ⓘ vLLM still initializing or unavailable (OPTIONAL - does not block app startup)"
+    log_info "  → This is expected if vLLM is slow to start or not needed for your current work"
+    log_info "  → fact-checker agent will retry vLLM connection when needed"
 fi
 
 # Step 6: Final health summary
@@ -658,7 +660,7 @@ if [ $INIT_FAILURES -eq 0 ]; then
     if [ "$VLLM_READY" -eq 1 ]; then
         log_info "  • vLLM: Accessible (model loading may continue in background)"
     else
-        log_info "  • vLLM: Still initializing (not reachable within startup window)"
+        log_info "  • vLLM: Not immediately available (OPTIONAL - fact-checker will retry when needed)"
     fi
 
     if [ "$CHROMADB_REQUIRED_COLLECTIONS_STATUS" = "ok" ]; then

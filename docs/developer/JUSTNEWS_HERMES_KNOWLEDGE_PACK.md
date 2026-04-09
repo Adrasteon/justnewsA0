@@ -30,6 +30,7 @@ How to use:
 ## Operations Facts
 - Gateway and long-lived services may require background process fallback in containerized environments when user systemd bus is missing.
 - For Hermes messaging gateway in this environment, background run mode with nohup is the reliable default.
+- Hermes primary model policy is `gpt-5.4` for coding and complex work, with `gpt-5-mini` reserved for short routine turns via conservative smart routing.
 - Verify runtime health with status and doctor commands after config changes.
 
 ## Codebase Learning Protocol

@@ -11,8 +11,18 @@ services:
     gpus: all
     user: root
     depends_on:
-      - vllm
+      mariadb:
+        condition: service_started
+      chromadb:
+        condition: service_started
+    # vLLM is intentionally NOT a hard dependency
+    # The app can start without vLLM; vLLM will be accessed on-demand with retries
+    environment:
+      - VLLM_OPTIONAL=true
+      - VLLM_CONNECT_TIMEOUT=30
+      - VLLM_RETRY_ATTEMPTS=5
     command: sleep infinity
+    restart: unless-stopped
     labels:
       service: "app"
       component: "web-application"
@@ -20,9 +30,10 @@ services:
       owner: "infrastructure"
       gpu_required: "false"
       memory_required: "2GB"
-      healthcheck: "curl http://localhost:8000/health"
-      restart_policy: "always"
-      dependencies: "mariadb,chromadb,vllm"
+      healthcheck: "manual: curl http://localhost:8000/health after starting the app server inside the devcontainer"
+      restart_policy: "unless-stopped"
+      dependencies: "mariadb,chromadb"
+      optional_dependencies: "vllm"
 
   fact-checker:
     container_name: fact-checker
@@ -32,6 +43,9 @@ services:
       - FACT_CHECKER_API_KEY=dev_key_123
       - VLLM_BASE_URL=http://vllm:8010/v1
       - VLLM_FACT_CHECKER_MODEL=Qwen/Qwen2.5-14B-Instruct-AWQ
+      - VLLM_OPTIONAL=true
+      - VLLM_CONNECT_TIMEOUT=60
+      - VLLM_RETRY_ATTEMPTS=10
       - MODEL_STORE_ROOT=/app/model_store
       - MODEL_STORE_EMBEDDING_AGENT=fact_checker
       - STRICT_MODEL_STORE=1
@@ -48,15 +62,17 @@ services:
       - justnews_deps:/deps
     ports:
       - "8003:8000"
-    # Use default CMD from Dockerfile (port 8000) to align with HEALTHCHECK
-    # command: uvicorn app.main:app --host 0.0.0.0 --port 8003
     restart: unless-stopped
     depends_on:
-      - vllm
+      # Removed vllm health check dependency
+      # fact-checker will handle vLLM unavailability gracefully
+      app:
+        condition: service_started
     labels:
       service: "fact-checker"
       component: "agent"
       owner: "backend"
+      optional_dependencies: "vllm"
 
   mariadb:
     container_name: mariadb
@@ -118,6 +134,13 @@ services:
     command: --model Qwen/Qwen2.5-14B-Instruct-AWQ --port 8010
     ports:
       - "8010:8010"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8010/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
     labels:
       service: "vllm"
       component: "llm-inference"
@@ -131,8 +154,8 @@ services:
       model_quantization: "AWQ"
       model_download_size: "14GB"
       model_load_time_seconds: "300"
-      healthcheck: "curl -f http://localhost:8000/v1/models"
-      restart_policy: "always"
+      healthcheck: "curl -f http://localhost:8010/v1/models"
+      restart_policy: "unless-stopped"
       startup_timeout_seconds: "600"
       alert_on_slow_inference: "true"
       max_concurrent_requests: "5"
